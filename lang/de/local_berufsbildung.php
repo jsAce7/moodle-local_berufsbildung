@@ -31,7 +31,7 @@ $string['berufsbildung:viewzuordnung'] = 'Zuordnungsübersicht einsehen, ohne zu
 $string['settings:profilefield_beruf'] = 'Profilfeld: Beruf';
 $string['settings:profilefield_beruf_desc'] = 'Benutzerdefiniertes Profilfeld, das den Beruf (z. B. \'AU_EFZ\') enthält.';
 $string['settings:profilefield_jahrgang'] = 'Profilfeld: Jahrgang';
-$string['settings:profilefield_jahrgang_desc'] = 'Benutzerdefiniertes Profilfeld, das das Jahr des Lehrbeginns enthält.';
+$string['settings:profilefield_jahrgang_desc'] = 'Benutzerdefiniertes Profilfeld, das das Jahr des Lehrbeginns enthält. Es genügt ein reines Jahr ("2026"); ein kombiniertes Feld, das zusätzlich den Beruf enthält (z. B. "AU 2026", etwa für die automatische Kursgruppierung), wird ebenfalls erkannt — die Jahreszahl wird daraus extrahiert, der Beruf kommt trotzdem aus dem oben konfigurierten Profilfeld.';
 $string['settings:profilefield_none'] = '— keine benutzerdefinierten Profilfelder vorhanden —';
 $string['settings:startmonat'] = 'Startmonat der Lehre';
 $string['settings:startmonat_desc'] = 'Monat, in dem alle Lehren beginnen (1 = Januar, 12 = Dezember). Standard: 8 (August).';

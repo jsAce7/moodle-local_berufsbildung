@@ -242,6 +242,49 @@ final class api_test extends advanced_testcase {
         $this->assertSame(1, $stand->lehrjahr);
     }
 
+    /**
+     * Das Jahrgang-Profilfeld darf auch ein kombiniertes Feld sein, das
+     * zusaetzlich den Beruf enthaelt (z.B. "AU 2026" fuer die automatische
+     * Kursgruppierung) - die Jahreszahl wird daraus extrahiert, der Beruf
+     * kommt trotzdem aus dem separat konfigurierten Profilfeld.
+     */
+    public function test_get_ausbildungsstand_mit_kombiniertem_jahrgangsfeld(): void {
+        $this->resetAfterTest();
+        $this->lege_profilfelder_an();
+
+        $jetzt = time();
+        $jahrgang = (int) date('n', $jetzt) >= 8 ? (int) date('Y', $jetzt) : (int) date('Y', $jetzt) - 1;
+
+        $lernende = $this->getDataGenerator()->create_user([
+            'profile_field_beruf' => 'AU_EFZ',
+            'profile_field_jahrgang' => 'AU ' . $jahrgang,
+        ]);
+
+        $stand = api::get_ausbildungsstand((int) $lernende->id);
+
+        $this->assertNotNull($stand);
+        $this->assertSame('AU_EFZ', $stand->beruf);
+        $this->assertSame($jahrgang, $stand->jahrgang);
+        $this->assertSame(1, $stand->semester);
+    }
+
+    /**
+     * Randfall: enthaelt das Jahrgang-Profilfeld keine erkennbare
+     * vierstellige Jahreszahl, gilt der Ausbildungsstand als nicht
+     * aufloesbar - fail-safe, kein Fehler.
+     */
+    public function test_get_ausbildungsstand_jahrgangsfeld_ohne_erkennbare_jahreszahl_ist_null(): void {
+        $this->resetAfterTest();
+        $this->lege_profilfelder_an();
+
+        $lernende = $this->getDataGenerator()->create_user([
+            'profile_field_beruf' => 'AU_EFZ',
+            'profile_field_jahrgang' => 'AU',
+        ]);
+
+        $this->assertNull(api::get_ausbildungsstand((int) $lernende->id));
+    }
+
     public function test_get_ausbildungsstand_ohne_profildaten_ist_null(): void {
         $this->resetAfterTest();
 

@@ -31,7 +31,7 @@ $string['berufsbildung:viewzuordnung'] = 'View the assignment overview without c
 $string['settings:profilefield_beruf'] = 'Profile field: occupation';
 $string['settings:profilefield_beruf_desc'] = 'Custom profile field holding the occupation (e.g. \'AU_EFZ\').';
 $string['settings:profilefield_jahrgang'] = 'Profile field: cohort year';
-$string['settings:profilefield_jahrgang_desc'] = 'Custom profile field holding the year training started.';
+$string['settings:profilefield_jahrgang_desc'] = 'Custom profile field holding the year training started. A plain year ("2026") is enough; a combined field that also holds the occupation (e.g. "AU 2026", used for automatic course grouping) is recognised too — the year is extracted from it, while the occupation still comes from the field configured above.';
 $string['settings:profilefield_none'] = '— no custom profile fields exist yet —';
 $string['settings:startmonat'] = 'Training start month';
 $string['settings:startmonat_desc'] = 'Month in which all training programmes start (1 = January, 12 = December). Default: 8 (August).';

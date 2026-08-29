@@ -179,9 +179,14 @@ class api {
 
         $profil = profile_user_record($lernendeid, false);
         $beruf = $profil->{$feldbeziehung} ?? null;
-        $jahrgang = $profil->{$feldjahrgang} ?? null;
+        $jahrgangroh = $profil->{$feldjahrgang} ?? null;
 
-        if (empty($beruf) || empty($jahrgang)) {
+        if (empty($beruf) || empty($jahrgangroh)) {
+            return null;
+        }
+
+        $jahrgang = self::extrahiere_jahrgang((string) $jahrgangroh);
+        if ($jahrgang === null) {
             return null;
         }
 
@@ -196,10 +201,30 @@ class api {
 
         return [
             'beruf' => (string) $beruf,
-            'jahrgang' => (int) $jahrgang,
+            'jahrgang' => $jahrgang,
             'startmonat' => $startmonat,
             'lehrdauer' => $lehrdauer,
         ];
+    }
+
+    /**
+     * Extrahiert die vierstellige Jahreszahl aus dem Jahrgang-Profilfeld.
+     * Unterstuetzt sowohl ein reines Jahr ("2026") als auch ein
+     * kombiniertes Feld, das zusaetzlich den Beruf enthaelt ("AU 2026",
+     * fuer die automatische Kursgruppierung nach Beruf und Jahr genutzt) -
+     * der Beruf kommt in diesem Fall ohnehin aus dem eigenen, separat
+     * konfigurierten Profilfeld (profilefield_beruf) und wird hier
+     * ignoriert.
+     *
+     * @param string $wert
+     * @return int|null null, wenn keine vierstellige Jahreszahl gefunden wird
+     */
+    private static function extrahiere_jahrgang(string $wert): ?int {
+        if (preg_match('/\d{4}/', $wert, $treffer) !== 1) {
+            return null;
+        }
+
+        return (int) $treffer[0];
     }
 
     /**
