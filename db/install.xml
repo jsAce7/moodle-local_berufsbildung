@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/berufsbildung/db" VERSION="20260830" COMMENT="XMLDB file for Moodle local/berufsbildung"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="local_berufsbildung_zuordnung" COMMENT="Zuordnung zwischen Berufsbildner/in und Lernenden, zeitlich begrenzt via gueltig_von/gueltig_bis">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="berufsbildnerid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK auf user.id, Berufsbildner/in"/>
+        <FIELD NAME="lernendeid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK auf user.id, lernende Person"/>
+        <FIELD NAME="beruf" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false" COMMENT="'AU_EFZ' | 'KR_EFZ' | 'PM_EFZ'"/>
+        <FIELD NAME="rolle" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="hauptverantwortlich" SEQUENCE="false" COMMENT="Pro (lernendeid, rolle) ist immer nur eine Zuordnung laufend; verschiedene Rollen duerfen gleichzeitig laufen"/>
+        <FIELD NAME="gueltig_von" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Beginn der Zuordnung (Timestamp)"/>
+        <FIELD NAME="gueltig_bis" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Ende der Zuordnung (Timestamp); NULL = laufend"/>
+        <FIELD NAME="kohorten_link_id" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="FK auf local_berufsbildung_kohorten_link.id, falls durch den Kohorten-Sync erzeugt; NULL = manuell angelegt"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="usermodified" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="bb_lernende_gueltigvon" TYPE="unique" FIELDS="berufsbildnerid, lernendeid, gueltig_von" COMMENT="Verhindert doppelte Zuordnung derselben Person zum selben Stichtag"/>
+        <KEY NAME="kohortenlinkid" TYPE="foreign" FIELDS="kohorten_link_id" REFTABLE="local_berufsbildung_kohorten_link" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="lernendeid_gueltigbis" UNIQUE="false" FIELDS="lernendeid, gueltig_bis" COMMENT="Fuer die Stichtag-Abfrage der Zuordnungen einer lernenden Person"/>
+        <INDEX NAME="berufsbildnerid_gueltigbis" UNIQUE="false" FIELDS="berufsbildnerid, gueltig_bis" COMMENT="Fuer die Stichtag-Abfrage der Zuordnungen einer/eines Berufsbildner/in"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_berufsbildung_kohorten_link" COMMENT="Laufende Verknuepfung: alle Mitglieder dieser Kohorte werden dieser/diesem Berufsbildner/in zugeordnet, laufend nachgefuehrt vom Scheduled Task">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="cohortid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK auf cohort.id"/>
+        <FIELD NAME="berufsbildnerid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK auf user.id, Berufsbildner/in"/>
+        <FIELD NAME="rolle" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="hauptverantwortlich" SEQUENCE="false"/>
+        <FIELD NAME="beruf" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false" COMMENT="Leer = je Person aus dem Profil uebernehmen, wie bei set_zuordnung()"/>
+        <FIELD NAME="aktiv" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Inaktive Links werden vom Sync-Task uebersprungen; bereits erzeugte Zuordnungen bleiben unangetastet"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="usermodified" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="cohort_bb_rolle" TYPE="unique" FIELDS="cohortid, berufsbildnerid, rolle" COMMENT="Verhindert doppelt angelegte, identische Links"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="aktiv" UNIQUE="false" FIELDS="aktiv" COMMENT="Fuer die Abfrage des Sync-Tasks"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_berufsbildung_block" COMMENT="Ausbildungsblock aus dem Versetzungsplan - Spiegel, nicht in Moodle editierbar ausser der Kompetenzabdeckung">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="nummer" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="Exakt wie in der Versetzungsplan-Zelle"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Klartext, in Moodle gepflegt"/>
+        <FIELD NAME="ist_betrieb" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="0 fuer Schule, ueK, Ferien, Militaer - zaehlt dann nicht zur Kompetenzabdeckung"/>
+        <FIELD NAME="aktiv" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="usermodified" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="nummer" TYPE="unique" FIELDS="nummer"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="local_berufsbildung_block_hk" COMMENT="Kompetenzabdeckung eines Ausbildungsblocks - der einzige Teil, der in Moodle gepflegt wird">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="blockid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK auf local_berufsbildung_block.id"/>
+        <FIELD NAME="competencyid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK auf core_competency.id"/>
+        <FIELD NAME="intensitaet" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="schwerpunkt" SEQUENCE="false" COMMENT="'schwerpunkt' | 'teilweise'"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="usermodified" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="blockid" TYPE="foreign" FIELDS="blockid" REFTABLE="local_berufsbildung_block" REFFIELDS="id"/>
+        <KEY NAME="block_competency" TYPE="unique" FIELDS="blockid, competencyid"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="local_berufsbildung_einsatz" COMMENT="Betrieblicher Einsatz einer lernenden Person in einem Ausbildungsblock, aus dem Versetzungsplan gespiegelt">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK auf user.id, lernende Person"/>
+        <FIELD NAME="blockid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK auf local_berufsbildung_block.id"/>
+        <FIELD NAME="von" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Montag der ersten Kalenderwoche"/>
+        <FIELD NAME="bis" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Sonntag der letzten Kalenderwoche, 23:59:59"/>
+        <FIELD NAME="kw_von" TYPE="char" LENGTH="8" NOTNULL="true" SEQUENCE="false" COMMENT="z.B. '2027-W15', fuer Rueckverfolgung"/>
+        <FIELD NAME="kw_bis" TYPE="char" LENGTH="8" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="importid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK auf local_berufsbildung_plan_import.id, aus welchem Importlauf"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="usermodified" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="blockid" TYPE="foreign" FIELDS="blockid" REFTABLE="local_berufsbildung_block" REFFIELDS="id"/>
+        <KEY NAME="importid" TYPE="foreign" FIELDS="importid" REFTABLE="local_berufsbildung_plan_import" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="userid_von" UNIQUE="false" FIELDS="userid, von"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_berufsbildung_plan_import" COMMENT="Protokoll je Importlauf des Versetzungsplans">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="quelle" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false" COMMENT="'webservice' | 'upload', oder Freitext zur Herkunft"/>
+        <FIELD NAME="daten_hash" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false" COMMENT="Unveraenderte Lieferung wird nicht erneut verarbeitet"/>
+        <FIELD NAME="zeitpunkt" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="ausgefuehrt_von" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK auf user.id, Dienstkonto oder manueller Upload"/>
+        <FIELD NAME="zeilen_gelesen" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="personen_verarbeitet" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="zeilen_ausserhalb_geltungsbereich" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Bekannte Person ohne aktive Zuordnung - kein Fehler, nur gezaehlt"/>
+        <FIELD NAME="einsaetze_erzeugt" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="ok" SEQUENCE="false" COMMENT="'ok' | 'mit_warnungen' | 'abgewiesen' | 'fehlgeschlagen'"/>
+        <FIELD NAME="protokoll" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Zeile fuer Zeile, was nicht zugeordnet werden konnte"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="usermodified" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="ausgefuehrtvon" TYPE="foreign" FIELDS="ausgefuehrt_von" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="status_zeitpunkt" UNIQUE="false" FIELDS="status, zeitpunkt" COMMENT="Fuer den Alterungshinweis (letzter erfolgreicher Import)"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_berufsbildung_aufbewahrung" COMMENT="Dokumentierte Aufbewahrungspflicht fuer eine lernende Person - verhindert die automatische Retention-Loeschung ihrer Zuordnungen und (ueber lokal_lerndokumentation) der Lerndoku-Inhalte waehrend der Gueltigkeit">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="lernendeid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK auf user.id, betroffene lernende Person"/>
+        <FIELD NAME="grund" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Begruendung/Rechtsgrundlage, Freitext, Pflichtfeld"/>
+        <FIELD NAME="gueltig_von" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Beginn der Aufbewahrungspflicht (Timestamp)"/>
+        <FIELD NAME="gueltig_bis" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Ende der Aufbewahrungspflicht (Timestamp); NULL = unbefristet, bis auf Widerruf"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="usermodified" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="lernendeid_gueltigbis" UNIQUE="false" FIELDS="lernendeid, gueltig_bis" COMMENT="Fuer die Stichtag-Abfrage, analog zur Zuordnungstabelle"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>
