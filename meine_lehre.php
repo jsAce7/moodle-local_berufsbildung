@@ -27,6 +27,7 @@ require_once(__DIR__ . '/../../config.php');
 
 use local_berufsbildung\api;
 use local_berufsbildung\nachweis\collector;
+use local_berufsbildung\output\luecken_liste;
 use local_berufsbildung\output\nachweis_liste;
 
 require_login();
@@ -51,6 +52,10 @@ if ($stand === null) {
         'lehrjahr' => $stand->lehrjahr,
         'semester' => $stand->semester,
     ]));
+
+    if (api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null) {
+        echo luecken_liste::render(api::get_luecken($lernendeid));
+    }
 
     $collector = new collector();
     $nachweise = $collector->get_nachweise($lernendeid, $lernendeid, 0, time());

@@ -40,7 +40,11 @@ $string['settings:lehrdauer_semester_desc'] = 'Number of semesters until complet
 $string['settings:beruf_dauer'] = 'Training length per occupation';
 $string['settings:beruf_dauer_desc'] = 'Overrides the training length for individual occupations, one line per occupation in the format CODE=semesters, e.g. "PM_EFZ=6" for a three-year programme. Occupations not listed here use the default length above.';
 $string['settings:beruf_rahmen_mapping'] = 'Competency framework per occupation';
-$string['settings:beruf_rahmen_mapping_desc'] = 'Maps each occupation to its core_competency framework, one line per occupation in the format CODE=framework_idnumber, e.g. "AU_EFZ=au-2022". Used for the gap analysis and for HKB selection in plugins built on top. Occupations not listed here have no framework assigned.';
+$string['settings:beruf_rahmen_mapping_desc'] = 'Maps each occupation to its core_competency framework, one line per occupation in the format CODE=framework_idnumber, e.g. "AU_EFZ=au-2022". Used for the gap analysis and for HKB selection in plugins built on top. Occupations not listed here have no framework assigned.
+
+A framework containing only the competencies taught at the workplace is entirely sufficient, and is actually the better fit than a full framework that also includes competencies taught at school or in inter-company courses: both the learning journal (workplace activities only, per Art. 12 BiVo) and the rotation plan\'s competency coverage (`get_ausgebildete_kompetenzen()`, only blocks with `ist_betrieb = true`) only ever show or evaluate workplace-relevant competencies anyway.
+
+The framework does not need to be separately assigned to the trainee (no learning plan or course link required) - recording evidence (`core_competency\\api::add_evidence()`) creates the `user_competency` record automatically on the first entry.';
 $string['settings:versetzungsplan_schwelle_prozent'] = 'Threshold for incomplete deliveries (%)';
 $string['settings:versetzungsplan_schwelle_prozent_desc'] = 'If a rotation-plan delivery contains significantly fewer processed people than the previous one, it is rejected instead of processed. Default: 20 (a drop of more than 20% counts as incomplete).';
 $string['settings:versetzungsplan_alterung_tage'] = 'Aging warning after (days)';
@@ -54,6 +58,8 @@ $string['nav:meine_lehre'] = 'My training';
 $string['nav:meine_lernenden'] = 'My trainees';
 $string['form:ausbildungsstand'] = '{$a->beruf}, year {$a->lehrjahr} (semester {$a->semester})';
 $string['form:keine_taetigkeiten'] = 'No activities recorded.';
+$string['luecken:titel'] = 'Competencies not yet trained';
+$string['luecken:keine'] = 'All competencies in the framework are already covered.';
 $string['meine_lernenden:keine_lernenden'] = 'You currently have no assigned trainees.';
 $string['meine_lehre:kein_ausbildungsstand'] = 'No occupation or cohort year is set on your profile.';
 $string['error:keinezustaendigkeit'] = 'Not responsible for this trainee.';

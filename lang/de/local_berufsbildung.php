@@ -40,7 +40,11 @@ $string['settings:lehrdauer_semester_desc'] = 'Anzahl Semester bis zum Lehrabsch
 $string['settings:beruf_dauer'] = 'Lehrdauer je Beruf';
 $string['settings:beruf_dauer_desc'] = 'Abweichende Lehrdauer für einzelne Berufe, eine Zeile pro Beruf im Format CODE=Semester, z. B. "PM_EFZ=6" für eine dreijährige Lehre. Berufe, die hier nicht aufgeführt sind, verwenden die Lehrdauer oben.';
 $string['settings:beruf_rahmen_mapping'] = 'Kompetenzrahmen je Beruf';
-$string['settings:beruf_rahmen_mapping_desc'] = 'Ordnet jedem Beruf seinen core_competency-Kompetenzrahmen zu, eine Zeile je Beruf im Format CODE=framework_idnumber, z. B. "AU_EFZ=au-2022". Wird für die Lückenanalyse und die HKB-Auswahl in aufsetzenden Plugins verwendet. Berufe, die hier nicht aufgeführt sind, haben keinen Rahmen zugeordnet.';
+$string['settings:beruf_rahmen_mapping_desc'] = 'Ordnet jedem Beruf seinen core_competency-Kompetenzrahmen zu, eine Zeile je Beruf im Format CODE=framework_idnumber, z. B. "AU_EFZ=au-2022". Wird für die Lückenanalyse und die HKB-Auswahl in aufsetzenden Plugins verwendet. Berufe, die hier nicht aufgeführt sind, haben keinen Rahmen zugeordnet.
+
+Ein Rahmen mit ausschliesslich den betrieblich vermittelten Handlungskompetenzbereichen genügt vollständig und ist die passendere Wahl als ein vollständiger Rahmen mit schulisch/überbetrieblich vermittelten HKB: Sowohl die Lerndokumentation (nur betriebliche Tätigkeiten, Art. 12 BiVo) als auch die Kompetenzabdeckung des Versetzungsplans (`get_ausgebildete_kompetenzen()`, nur Blöcke mit `ist_betrieb = true`) zeigen ohnehin nur betriebsrelevante Kompetenzen an bzw. werten sie aus.
+
+Der Rahmen muss der lernenden Person nicht zusätzlich zugewiesen werden (kein Lernplan, keine Kurs-Verknüpfung nötig) - der Kompetenznachweis (`core_competency\\api::add_evidence()`) legt den `user_competency`-Datensatz beim ersten Eintrag automatisch an.';
 $string['settings:versetzungsplan_schwelle_prozent'] = 'Schwelle für unvollständige Lieferungen (%)';
 $string['settings:versetzungsplan_schwelle_prozent_desc'] = 'Enthält eine Versetzungsplan-Lieferung deutlich weniger verarbeitete Personen als die vorherige, wird sie abgewiesen statt verarbeitet. Standard: 20 (ein Rückgang um mehr als 20 % gilt als unvollständig).';
 $string['settings:versetzungsplan_alterung_tage'] = 'Alterungshinweis nach (Tagen)';
@@ -54,6 +58,8 @@ $string['nav:meine_lehre'] = 'Meine Lehre';
 $string['nav:meine_lernenden'] = 'Meine Lernenden';
 $string['form:ausbildungsstand'] = '{$a->beruf}, {$a->lehrjahr}. Lehrjahr (Semester {$a->semester})';
 $string['form:keine_taetigkeiten'] = 'Keine Tätigkeiten vorhanden.';
+$string['luecken:titel'] = 'Noch nicht ausgebildete Handlungskompetenzen';
+$string['luecken:keine'] = 'Alle Handlungskompetenzen des Rahmens sind bereits abgedeckt.';
 $string['meine_lernenden:keine_lernenden'] = 'Sie haben aktuell keine zugeordneten Lernenden.';
 $string['meine_lehre:kein_ausbildungsstand'] = 'Für Ihr Profil ist kein Beruf oder Jahrgang hinterlegt.';
 $string['error:keinezustaendigkeit'] = 'Keine Zuständigkeit für diese lernende Person.';

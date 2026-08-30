@@ -12,7 +12,7 @@ Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentati
 - **Aufbewahrung**: eine konfigurierbare Frist (Standard 12 Monate) nach dem berechneten Lehrabschluss löscht Zuordnungen automatisch endgültig, ausser eine Aufbewahrungspflicht ist dokumentiert. Dieselbe Regel steuert über `\local_berufsbildung\api` auch die Lerndoku-Inhalte in `local_lerndokumentation`.
 - **Ausbildungsstand**: Beruf, Lehrjahr und Semester werden aus zwei Profilfeldern (Beruf, Jahrgang) berechnet, mit konfigurierbarer Lehrdauer je Beruf.
 - **Versetzungsplan**: wöchentlicher CSV-Import (Webservice oder manueller Upload) der betrieblichen Einsätze, mit Kompetenzabdeckung je Ausbildungsblock.
-- **Nachweis-Sammlung**: aufsetzende Plugins registrieren sich als Nachweis-Provider; "Meine Lernenden" (Berufsbildner/in) und "Meine Lehre" (Lernende) zeigen eingesammelte Nachweise über Plugin-Grenzen hinweg.
+- **Nachweis-Sammlung**: aufsetzende Plugins registrieren sich als Nachweis-Provider; "Meine Lernenden" (Berufsbildner/in) und "Meine Lehre" (Lernende) zeigen eingesammelte Nachweise über Plugin-Grenzen hinweg — sowie, falls ein Kompetenzrahmen konfiguriert ist, die noch nicht abgedeckten Handlungskompetenzbereiche (`api::get_luecken()`).
 
 ## Voraussetzungen
 
@@ -38,6 +38,10 @@ Alle Einstellungen unter *Site administration ▸ Plugins ▸ Local plugins ▸ 
 | Threshold for incomplete deliveries | Vollständigkeitsschutz beim Versetzungsplan-Import |
 | Aging warning after (days) | Alterungshinweis, wenn der letzte Import zu lange zurückliegt |
 | Retention period after training completion (months) | Frist bis zur automatischen Löschung von Zuordnungen (und, über `local_lerndokumentation`, der Lerndoku-Inhalte) nach Lehrabschluss. Standard: 12. |
+
+**Welcher Kompetenzrahmen?** Ein Rahmen mit ausschliesslich den betrieblich vermittelten Handlungskompetenzbereichen genügt vollständig — und ist die passendere Wahl als ein vollständiger Rahmen mit schulisch/überbetrieblich vermittelten HKB. Sowohl die Lerndokumentation (nur betriebliche Tätigkeiten, Art. 12 BiVo) als auch die Kompetenzabdeckung des Versetzungsplans (`get_ausgebildete_kompetenzen()`, nur Blöcke mit `ist_betrieb = true`) zeigen bzw. werten ohnehin nur betriebsrelevante Kompetenzen aus — ein vollständiger Rahmen würde im Lerndoku-Dropdown nur nie sinnvoll auswählbare Einträge zusätzlich anzeigen.
+
+Der Rahmen muss der lernenden Person dafür **nicht zusätzlich zugewiesen** werden (kein Lernplan, keine Kurs-Verknüpfung nötig) — `\core_competency\api::add_evidence()` legt den `user_competency`-Datensatz beim ersten Kompetenznachweis automatisch an.
 
 Dokumentierte Aufbewahrungspflichten (Ausnahmen von der automatischen Löschung) werden auf einer eigenen Seite verwaltet: *Site administration ▸ Plugins ▸ Local plugins ▸ Vocational training ▸ Retention obligations*, Capability `local/berufsbildung:manageaufbewahrung`.
 
