@@ -1,0 +1,63 @@
+/*
+ * Farben kommen ausschliesslich ueber Bootstrap-/Theme-Klassen im Markup
+ * (bg-primary, border, badge bg-*, text-muted ...) - diese Datei regelt
+ * nur Form, Groesse und Abstand, nie Farbwerte.
+ */
+
+.local-berufsbildung-stepper {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0.5rem 0 1rem;
+}
+
+.local-berufsbildung-stepper-lehrjahr {
+    display: flex;
+    gap: 0.35rem;
+    padding-right: 0.35rem;
+    border-right: 1px solid currentColor;
+    opacity: 0.9;
+}
+
+.local-berufsbildung-stepper-lehrjahr:last-child {
+    border-right: 0;
+    padding-right: 0;
+}
+
+.local-berufsbildung-stepper-punkt {
+    display: inline-block;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+}
+
+.local-berufsbildung-stepper-punkt-aktuell {
+    width: 0.9rem;
+    height: 0.9rem;
+}
+
+.local-berufsbildung-stepper-kompakt .local-berufsbildung-stepper-punkt {
+    width: 0.4rem;
+    height: 0.4rem;
+}
+
+.local-berufsbildung-stepper-kompakt .local-berufsbildung-stepper-punkt-aktuell {
+    width: 0.65rem;
+    height: 0.65rem;
+}
+
+.local-berufsbildung-herokarte .local-berufsbildung-stepper {
+    margin-top: 0.75rem;
+}
+
+.local-berufsbildung-lernendenkarte .card-title {
+    margin-bottom: 0.15rem;
+}
+
+.local-berufsbildung-nachweisgruppe:last-child {
+    margin-bottom: 0 !important;
+}
+
+.local-berufsbildung-nachweis:last-child {
+    border-bottom: 0 !important;
+}

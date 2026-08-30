@@ -1,0 +1,49 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_berufsbildung/nachweis_liste
+
+    Nachweise gruppiert nach Quelle (quelle_key), neueste zuerst je Gruppe.
+
+    Context variables required for this template:
+    * gruppen - array of {name, nachweise: [{bezeichnung, datum, hasergebnis, ergebnis, hasurl, url}]}
+    * hasgruppen - bool
+    * leertext - string, wenn keine Nachweise vorhanden sind
+}}
+<div class="local-berufsbildung-nachweise">
+    {{#hasgruppen}}
+        {{#gruppen}}
+            <div class="local-berufsbildung-nachweisgruppe mb-3">
+                <h4 class="local-berufsbildung-quellenname h6 text-uppercase text-muted mb-2">{{name}}</h4>
+                <ul class="list-unstyled mb-0">
+                    {{#nachweise}}
+                        <li class="local-berufsbildung-nachweis d-flex justify-content-between align-items-baseline py-1 border-bottom">
+                            <span class="local-berufsbildung-nachweis-titel">
+                                {{#hasurl}}<a href="{{url}}">{{/hasurl}}{{bezeichnung}}{{#hasurl}}</a> <i class="icon fa fa-external-link-alt fa-fw" aria-hidden="true"></i>{{/hasurl}}
+                                {{#hasergebnis}}<span class="badge bg-secondary ml-2">{{ergebnis}}</span>{{/hasergebnis}}
+                            </span>
+                            <span class="local-berufsbildung-nachweis-datum text-muted small text-nowrap ml-2">{{datum}}</span>
+                        </li>
+                    {{/nachweise}}
+                </ul>
+            </div>
+        {{/gruppen}}
+    {{/hasgruppen}}
+    {{^hasgruppen}}
+        <p class="text-muted mb-0">{{leertext}}</p>
+    {{/hasgruppen}}
+</div>

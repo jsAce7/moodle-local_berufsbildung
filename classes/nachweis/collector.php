@@ -91,4 +91,19 @@ class collector {
 
         return $ergebnis;
     }
+
+    /**
+     * Anzeigenamen aller registrierten Quellen, fuer die gruppierte
+     * Darstellung von Nachweisen nach Quelle (siehe nachweis_liste::render()).
+     *
+     * @return array<string, string> Quelle-Key => Anzeigename
+     */
+    public function get_quelle_namen(): array {
+        $namen = [];
+        foreach ($this->providers as $einzelprovider) {
+            $namen[$einzelprovider->get_quelle_key()] = $einzelprovider->get_quelle_name();
+        }
+
+        return $namen;
+    }
 }

@@ -240,6 +240,7 @@ final class api_test extends advanced_testcase {
         $this->assertSame($jahrgang, $stand->jahrgang);
         $this->assertSame(1, $stand->semester);
         $this->assertSame(1, $stand->lehrjahr);
+        $this->assertSame(8, $stand->gesamtsemester);
     }
 
     /**
@@ -346,7 +347,9 @@ final class api_test extends advanced_testcase {
         $waehrend_semester6 = mktime(0, 0, 0, 3, 1, 2029);
         $nach_lehrabschluss = mktime(0, 0, 0, 9, 1, 2029);
 
-        $this->assertSame(6, api::get_ausbildungsstand((int) $lernende->id, $waehrend_semester6)->semester);
+        $stand = api::get_ausbildungsstand((int) $lernende->id, $waehrend_semester6);
+        $this->assertSame(6, $stand->semester);
+        $this->assertSame(6, $stand->gesamtsemester);
         $this->assertNull(api::get_ausbildungsstand((int) $lernende->id, $nach_lehrabschluss));
     }
 

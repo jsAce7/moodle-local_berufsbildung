@@ -1,0 +1,35 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_berufsbildung/semester_stepper
+
+    Dekorativer Fortschritts-Stepper - die gleiche Information steht als
+    Text daneben (form:ausbildungsstand), deshalb aria-hidden.
+
+    Context variables required for this template:
+    * gruppen - array of {punkte: [{istvergangen, istaktuell}]}, ein Eintrag je Lehrjahr
+    * kompakt - bool
+}}
+<div class="local-berufsbildung-stepper{{#kompakt}} local-berufsbildung-stepper-kompakt{{/kompakt}}" aria-hidden="true">
+    {{#gruppen}}
+        <div class="local-berufsbildung-stepper-lehrjahr">
+            {{#punkte}}
+                <span class="local-berufsbildung-stepper-punkt{{#istaktuell}} local-berufsbildung-stepper-punkt-aktuell bg-primary{{/istaktuell}}{{#istvergangen}} bg-primary{{/istvergangen}}{{^istvergangen}}{{^istaktuell}} border bg-light{{/istaktuell}}{{/istvergangen}}"></span>
+            {{/punkte}}
+        </div>
+    {{/gruppen}}
+</div>

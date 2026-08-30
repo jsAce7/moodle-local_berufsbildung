@@ -15,8 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Rendert eine Liste von Nachweisen, gemeinsam genutzt von meine_lehre.php
- * und meine_lernenden.php.
+ * Rendert Nachweise gruppiert nach Quelle, gemeinsam genutzt von
+ * meine_lehre.php und meine_lernenden.php.
  *
  * @package    local_berufsbildung
  * @copyright  2026 jsAce7
@@ -27,35 +27,48 @@ declare(strict_types=1);
 
 namespace local_berufsbildung\output;
 
-use html_writer;
 use local_berufsbildung\nachweis\nachweis;
 
 class nachweis_liste {
 
     /**
-     * @param nachweis[] $nachweise
+     * @param nachweis[] $nachweise Bereits nach Datum sortiert (siehe
+     *                               collector::get_nachweise()) - die
+     *                               Reihenfolge je Gruppe bleibt erhalten,
+     *                               es wird nicht neu sortiert.
+     * @param array<string, string> $quellennamen Quelle-Key => Anzeigename,
+     *                                              siehe collector::get_quelle_namen()
      */
-    public static function render(array $nachweise): string {
-        if (empty($nachweise)) {
-            return html_writer::tag('p', get_string('form:keine_taetigkeiten', 'local_berufsbildung'));
-        }
+    public static function render(array $nachweise, array $quellennamen): string {
+        global $OUTPUT;
 
-        $zeilen = [];
+        $nachweisenachquelle = [];
         foreach ($nachweise as $einzelnachweis) {
-            $text = format_string($einzelnachweis->bezeichnung)
-                . ' — ' . userdate($einzelnachweis->datum, get_string('strftimedate', 'langconfig'));
-
-            if ($einzelnachweis->ergebnis !== null && $einzelnachweis->ergebnis !== '') {
-                $text .= ' (' . s($einzelnachweis->ergebnis) . ')';
-            }
-
-            if ($einzelnachweis->url !== null) {
-                $text = html_writer::link($einzelnachweis->url, $text);
-            }
-
-            $zeilen[] = html_writer::tag('li', $text);
+            $nachweisenachquelle[$einzelnachweis->quelle_key][] = $einzelnachweis;
         }
 
-        return html_writer::tag('ul', implode('', $zeilen));
+        $gruppen = [];
+        foreach ($nachweisenachquelle as $quellekey => $einzelnachweise) {
+            $gruppen[] = [
+                'name' => format_string($quellennamen[$quellekey] ?? $quellekey),
+                'nachweise' => array_map(static function (nachweis $einzelnachweis): array {
+                    $ergebnis = $einzelnachweis->ergebnis;
+                    return [
+                        'bezeichnung' => format_string($einzelnachweis->bezeichnung),
+                        'datum' => userdate($einzelnachweis->datum, get_string('strftimedate', 'langconfig')),
+                        'hasergebnis' => $ergebnis !== null && $ergebnis !== '',
+                        'ergebnis' => $ergebnis !== null ? s($ergebnis) : '',
+                        'hasurl' => $einzelnachweis->url !== null,
+                        'url' => $einzelnachweis->url ?? '',
+                    ];
+                }, $einzelnachweise),
+            ];
+        }
+
+        return $OUTPUT->render_from_template('local_berufsbildung/nachweis_liste', [
+            'gruppen' => $gruppen,
+            'hasgruppen' => !empty($gruppen),
+            'leertext' => get_string('form:keine_taetigkeiten', 'local_berufsbildung'),
+        ]);
     }
 }

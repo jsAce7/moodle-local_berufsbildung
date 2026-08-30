@@ -27,12 +27,12 @@ declare(strict_types=1);
 
 namespace local_berufsbildung\output;
 
-use html_writer;
 use core_competency\competency;
 
 /**
  * Nur ein Vorschlag fuer die Ausbildungsplanung, keine Festlegung
- * (Architekturregel 6) - siehe api::get_luecken().
+ * (Architekturregel 6) - siehe api::get_luecken(). Deshalb bewusst als
+ * dezenter Hinweis gerendert, nicht als Warnung/Fehler.
  */
 class luecken_liste {
 
@@ -40,20 +40,23 @@ class luecken_liste {
      * @param int[] $competencyids Ergebnis von api::get_luecken()
      */
     public static function render(array $competencyids): string {
-        $zeilen = [];
+        global $OUTPUT;
+
+        $kompetenzen = [];
         foreach ($competencyids as $competencyid) {
             $kompetenz = competency::get_record(['id' => $competencyid]);
             if ($kompetenz === false) {
                 continue;
             }
-            $zeilen[] = html_writer::tag('li', format_string($kompetenz->get('shortname')));
+            $kompetenzen[] = ['shortname' => format_string($kompetenz->get('shortname'))];
         }
 
-        if (empty($zeilen)) {
-            return html_writer::tag('p', get_string('luecken:keine', 'local_berufsbildung'));
-        }
-
-        return html_writer::tag('p', get_string('luecken:titel', 'local_berufsbildung'))
-            . html_writer::tag('ul', implode('', $zeilen));
+        return $OUTPUT->render_from_template('local_berufsbildung/luecken_liste', [
+            'hasluecken' => !empty($kompetenzen),
+            'anzahl' => count($kompetenzen),
+            'kompetenzen' => $kompetenzen,
+            'titel' => get_string('luecken:titel', 'local_berufsbildung'),
+            'keinetext' => get_string('luecken:keine', 'local_berufsbildung'),
+        ]);
     }
 }

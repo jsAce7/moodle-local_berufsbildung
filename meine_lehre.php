@@ -29,6 +29,7 @@ use local_berufsbildung\api;
 use local_berufsbildung\nachweis\collector;
 use local_berufsbildung\output\luecken_liste;
 use local_berufsbildung\output\nachweis_liste;
+use local_berufsbildung\output\semester_stepper;
 
 require_login();
 
@@ -47,11 +48,16 @@ $stand = api::get_ausbildungsstand($lernendeid);
 if ($stand === null) {
     echo $OUTPUT->notification(get_string('meine_lehre:kein_ausbildungsstand', 'local_berufsbildung'), 'info');
 } else {
+    echo html_writer::start_tag('div', ['class' => 'card local-berufsbildung-herokarte']);
+    echo html_writer::start_tag('div', ['class' => 'card-body']);
+
     echo html_writer::tag('p', get_string('form:ausbildungsstand', 'local_berufsbildung', (object) [
         'beruf' => $stand->beruf,
         'lehrjahr' => $stand->lehrjahr,
         'semester' => $stand->semester,
-    ]));
+    ]), ['class' => 'text-muted mb-0']);
+
+    echo semester_stepper::render($stand->semester, $stand->gesamtsemester);
 
     if (api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null) {
         echo luecken_liste::render(api::get_luecken($lernendeid));
@@ -59,7 +65,10 @@ if ($stand === null) {
 
     $collector = new collector();
     $nachweise = $collector->get_nachweise($lernendeid, $lernendeid, 0, time());
-    echo nachweis_liste::render($nachweise);
+    echo nachweis_liste::render($nachweise, $collector->get_quelle_namen());
+
+    echo html_writer::end_tag('div');
+    echo html_writer::end_tag('div');
 }
 
 echo $OUTPUT->footer();

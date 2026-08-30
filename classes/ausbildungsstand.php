@@ -39,10 +39,13 @@ class ausbildungsstand {
     /**
      * @param string $beruf 'AU_EFZ' | 'KR_EFZ' | 'PM_EFZ'
      * @param int $jahrgang Jahr des Lehrbeginns
-     * @param int $semester 1..8
-     * @param int $lehrjahr 1..4
+     * @param int $semester 1..gesamtsemester
+     * @param int $lehrjahr 1..(gesamtsemester / 2)
      * @param int $semester_von Timestamp, Beginn des Semesters
      * @param int $semester_bis Timestamp, Ende des Semesters
+     * @param int $gesamtsemester Lehrdauer in Semestern, je nach Beruf unterschiedlich
+     *                             (siehe lehrdauer_resolver) - fuer Fortschrittsanzeigen,
+     *                             nicht zur Semesterberechnung selbst noetig.
      */
     public function __construct(
         public readonly string $beruf,
@@ -51,6 +54,7 @@ class ausbildungsstand {
         public readonly int $lehrjahr,
         public readonly int $semester_von,
         public readonly int $semester_bis,
+        public readonly int $gesamtsemester,
     ) {
     }
 }

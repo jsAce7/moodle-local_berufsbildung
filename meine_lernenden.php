@@ -30,6 +30,7 @@ use local_berufsbildung\api;
 use local_berufsbildung\nachweis\collector;
 use local_berufsbildung\output\luecken_liste;
 use local_berufsbildung\output\nachweis_liste;
+use local_berufsbildung\output\semester_stepper;
 
 require_login();
 
@@ -54,12 +55,14 @@ if (empty($namen)) {
 }
 
 $collector = new collector();
+$quellennamen = $collector->get_quelle_namen();
 
 foreach ($namen as $lernendeid => $name) {
-    echo html_writer::start_tag('div', ['class' => 'local-berufsbildung-lernende']);
+    echo html_writer::start_tag('div', ['class' => 'card mb-3 local-berufsbildung-lernendenkarte']);
+    echo html_writer::start_tag('div', ['class' => 'card-body']);
 
     $profilurl = new moodle_url('/user/profile.php', ['id' => $lernendeid]);
-    echo html_writer::tag('h3', html_writer::link($profilurl, $name));
+    echo html_writer::tag('h3', html_writer::link($profilurl, $name), ['class' => 'h5 card-title']);
 
     $stand = api::get_ausbildungsstand($lernendeid);
     if ($stand !== null) {
@@ -67,7 +70,9 @@ foreach ($namen as $lernendeid => $name) {
             'beruf' => $stand->beruf,
             'lehrjahr' => $stand->lehrjahr,
             'semester' => $stand->semester,
-        ]));
+        ]), ['class' => 'text-muted mb-0']);
+
+        echo semester_stepper::render($stand->semester, $stand->gesamtsemester, kompakt: true);
 
         if (api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null) {
             echo luecken_liste::render(api::get_luecken($lernendeid));
@@ -75,8 +80,13 @@ foreach ($namen as $lernendeid => $name) {
     }
 
     $nachweise = $collector->get_nachweise($berufsbildnerid, $lernendeid, 0, time());
-    echo nachweis_liste::render($nachweise);
+    $zusammenfassung = html_writer::tag(
+        'summary',
+        get_string('meine_lernenden:taetigkeiten_anzahl', 'local_berufsbildung', count($nachweise))
+    );
+    echo html_writer::tag('details', $zusammenfassung . nachweis_liste::render($nachweise, $quellennamen), ['class' => 'mt-2']);
 
+    echo html_writer::end_tag('div');
     echo html_writer::end_tag('div');
 }
 

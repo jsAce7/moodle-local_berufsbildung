@@ -155,6 +155,7 @@ class api {
             lehrjahr: (int) ceil($semester / 2),
             semester_von: $semestervon,
             semester_bis: $semesterbis,
+            gesamtsemester: $parameter['lehrdauer'],
         );
     }
 

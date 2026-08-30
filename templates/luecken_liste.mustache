@@ -1,0 +1,48 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_berufsbildung/luecken_liste
+
+    Luecken-Analyse: nur ein Vorschlag fuer die Ausbildungsplanung, nie
+    eine Festlegung (Architekturregel 6) - deshalb bewusst als dezenter
+    Hinweis, nicht als Warnung/Fehler.
+
+    Context variables required for this template:
+    * hasluecken - bool
+    * anzahl - int
+    * kompetenzen - array of {shortname}
+    * titel - string, aria-label fuer die Kompetenzenliste
+    * keinetext - string, wenn keine Luecken vorhanden sind
+}}
+<div class="local-berufsbildung-luecken">
+    {{#hasluecken}}
+        <p class="mb-1">
+            <span class="badge bg-light text-dark border">
+                <i class="icon fa fa-lightbulb fa-fw" aria-hidden="true"></i>
+                {{#str}} luecken:titel_anzahl, local_berufsbildung, {{anzahl}} {{/str}}
+            </span>
+        </p>
+        <ul class="local-berufsbildung-luecken-liste small text-muted mb-2" aria-label="{{titel}}">
+            {{#kompetenzen}}
+                <li>{{shortname}}</li>
+            {{/kompetenzen}}
+        </ul>
+    {{/hasluecken}}
+    {{^hasluecken}}
+        <p class="small text-muted mb-2">{{keinetext}}</p>
+    {{/hasluecken}}
+</div>
