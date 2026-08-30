@@ -75,9 +75,14 @@ $string['zuordnung_beruf'] = 'Beruf';
 $string['zuordnung_beruf_help'] = 'Leer lassen, um den Beruf aus dem Profil der/des Lernenden zu übernehmen. Bei einer Auswahl mehrerer Personen wird das für jede Person einzeln aufgelöst. Nur nötig, wenn das Profil (noch) keinen Beruf enthält oder ein davon abweichender Wert für diese Zuordnung gelten soll.';
 $string['zuordnung:rolle'] = 'Rolle';
 $string['zuordnung_rolle'] = 'Rolle';
-$string['zuordnung_rolle_help'] = 'Pro Rolle ist je Lernende/r immer nur eine Zuordnung laufend - eine neue mit derselben Rolle beendet automatisch die bisherige. Verschiedene Rollen dürfen gleichzeitig laufen, z. B. "hauptverantwortlich" und zusätzlich "stellvertretung" für dieselbe Person. Standard: hauptverantwortlich.';
-$string['zuordnung:rolle_hauptverantwortlich'] = 'hauptverantwortlich';
-$string['zuordnung:rolle_stellvertretung'] = 'stellvertretung';
+$string['zuordnung_rolle_help'] = 'Pro Rolle ist je Lernende/r immer nur eine Zuordnung laufend - eine neue mit derselben Rolle beendet automatisch die bisherige. Verschiedene Rollen dürfen gleichzeitig laufen, z. B. "Hauptverantwortlich" und zusätzlich "Stellvertretung" für dieselbe Person. Standard: hauptverantwortlich.
+
+"Hauptverantwortlich": die/der Berufsbildner/in, die/der die Ausbildung dieser Person hauptsächlich verantwortet - der Normalfall.
+"Stellvertretung": eine zusätzliche, gleichzeitig laufende Zuständigkeit für dieselbe Person, z. B. während einer Ferienabwesenheit der/des Hauptverantwortlichen.
+
+Für die Zuständigkeitsprüfung (is_zustaendig(), Sichtbarkeit in aufsetzenden Plugins) sind beide Rollen aktuell gleichwertig - es gibt heute keine unterschiedlichen Berechtigungen zwischen ihnen, der Unterschied ist rein organisatorisch.';
+$string['zuordnung:rolle_hauptverantwortlich'] = 'Hauptverantwortlich';
+$string['zuordnung:rolle_stellvertretung'] = 'Stellvertretung';
 $string['zuordnung:gueltig_von'] = 'Gültig ab';
 $string['zuordnung:gueltig_bis'] = 'Gültig bis';
 $string['zuordnung:fehler_gleiche_person'] = 'Berufsbildner/in und Lernende/r dürfen nicht dieselbe Person sein.';

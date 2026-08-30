@@ -75,9 +75,14 @@ $string['zuordnung_beruf'] = 'Occupation';
 $string['zuordnung_beruf_help'] = 'Leave empty to take the occupation from the trainee\'s profile. When selecting several people, this is resolved separately for each one. Only needed if the profile does not (yet) hold an occupation, or a different value should apply to this assignment.';
 $string['zuordnung:rolle'] = 'Role';
 $string['zuordnung_rolle'] = 'Role';
-$string['zuordnung_rolle_help'] = 'Within a role, a trainee only ever has one running assignment - a new one with the same role automatically ends the previous one. Different roles may run at the same time, e.g. "hauptverantwortlich" plus a separate "stellvertretung" for the same person. Default: hauptverantwortlich.';
-$string['zuordnung:rolle_hauptverantwortlich'] = 'hauptverantwortlich (primary)';
-$string['zuordnung:rolle_stellvertretung'] = 'stellvertretung (deputy)';
+$string['zuordnung_rolle_help'] = 'Within a role, a trainee only ever has one running assignment - a new one with the same role automatically ends the previous one. Different roles may run at the same time, e.g. "Hauptverantwortlich" plus a separate "Stellvertretung" for the same person. Default: hauptverantwortlich.
+
+"Hauptverantwortlich" (primary): the trainer who is mainly responsible for this person\'s training - the normal case.
+"Stellvertretung" (deputy): an additional, concurrently running assignment for the same person, e.g. covering for the primary trainer\'s holiday absence.
+
+For the responsibility check (is_zustaendig(), visibility in plugins built on top), both roles are currently equivalent - there is no difference in permissions between them today, the distinction is purely organisational.';
+$string['zuordnung:rolle_hauptverantwortlich'] = 'Hauptverantwortlich (primary)';
+$string['zuordnung:rolle_stellvertretung'] = 'Stellvertretung (deputy)';
 $string['zuordnung:gueltig_von'] = 'Valid from';
 $string['zuordnung:gueltig_bis'] = 'Valid until';
 $string['zuordnung:fehler_gleiche_person'] = 'Trainer and trainee cannot be the same person.';
