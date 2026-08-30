@@ -59,7 +59,9 @@ class kohorten_link extends persistent {
                 'default' => 'hauptverantwortlich',
             ],
             'beruf' => [
-                'type' => PARAM_ALPHANUMEXT,
+                // Freitext, siehe zuordnung::beruf - leer = je Person aus
+                // dem Profil uebernehmen.
+                'type' => PARAM_TEXT,
                 'default' => '',
             ],
             'aktiv' => [

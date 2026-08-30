@@ -81,13 +81,20 @@ class zuordnung_form extends \moodleform {
         }
 
         $mform->addElement('text', 'beruf', get_string('zuordnung:beruf', 'local_berufsbildung'));
-        $mform->setType('beruf', PARAM_ALPHANUMEXT);
+        $mform->setType('beruf', PARAM_TEXT);
         $mform->addHelpButton('beruf', 'zuordnung_beruf', 'local_berufsbildung');
 
-        $mform->addElement('text', 'rolle', get_string('zuordnung:rolle', 'local_berufsbildung'));
+        // Feste Auswahl der heute tatsaechlich genutzten Rollen - das Feld
+        // selbst bleibt bewusst Freitext ohne 'choices'-Einschraenkung
+        // (siehe CLAUDE.md Architekturregel 4: "wird abgefragt, nicht
+        // angenommen"), nur die Formularoberflaeche schraenkt auf die
+        // aktuell bekannten Werte ein.
+        $mform->addElement('select', 'rolle', get_string('zuordnung:rolle', 'local_berufsbildung'), [
+            'hauptverantwortlich' => get_string('zuordnung:rolle_hauptverantwortlich', 'local_berufsbildung'),
+            'stellvertretung' => get_string('zuordnung:rolle_stellvertretung', 'local_berufsbildung'),
+        ]);
         $mform->setType('rolle', PARAM_ALPHA);
         $mform->setDefault('rolle', 'hauptverantwortlich');
-        $mform->addRule('rolle', null, 'required');
         $mform->addHelpButton('rolle', 'zuordnung_rolle', 'local_berufsbildung');
 
         $mform->addElement('date_selector', 'gueltig_von', get_string('zuordnung:gueltig_von', 'local_berufsbildung'));

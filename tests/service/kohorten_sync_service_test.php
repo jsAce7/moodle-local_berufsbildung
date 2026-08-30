@@ -159,6 +159,33 @@ final class kohorten_sync_service_test extends advanced_testcase {
     }
 
     /**
+     * Regression: ein Kohorten-Mitglied, dessen Beruf-Profilfeld die
+     * ausgeschriebene Bezeichnung enthaelt (z.B. "Automatiker/in EFZ" statt
+     * eines Kurzcodes), durfte die automatische Beruf-Uebernahme aus dem
+     * Profil (Link-Beruf leer gelassen) nicht mit einer
+     * invalid_persistent_exception zum Absturz bringen.
+     */
+    public function test_mitglied_mit_ausgeschriebenem_beruf_wird_korrekt_zugeordnet(): void {
+        $this->resetAfterTest();
+
+        $kohorte = $this->getDataGenerator()->create_cohort();
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_lernende([
+            'beruf' => 'Automatiker/in EFZ',
+            'jahrgang' => (string) date('Y'),
+        ]);
+        cohort_add_member($kohorte->id, $lernende->id);
+
+        $link = $this->lege_link_an((int) $kohorte->id, (int) $berufsbildner->id);
+        $ergebnis = (new kohorten_sync_service())->synchronisiere_link($link);
+
+        $this->assertSame(1, $ergebnis['erzeugt']);
+        $zuordnungen = zuordnung::get_records(['kohorten_link_id' => (int) $link->get('id')]);
+        $this->assertCount(1, $zuordnungen);
+        $this->assertSame('Automatiker/in EFZ', reset($zuordnungen)->get('beruf'));
+    }
+
+    /**
      * Ohne diesen Schutz wuerde eine bereits per Retention geloeschte
      * Zuordnung einer abgeschlossenen Lehre beim naechsten Sync-Lauf
      * einfach wieder auferstehen (siehe Klassendocblock).

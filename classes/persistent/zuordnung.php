@@ -52,7 +52,12 @@ class zuordnung extends persistent {
                 'type' => PARAM_INT,
             ],
             'beruf' => [
-                'type' => PARAM_ALPHANUMEXT,
+                // Freitext: Kurzcode ("AU_EFZ") oder ausgeschriebene
+                // Berufsbezeichnung ("Automatiker/in EFZ"), je nachdem was
+                // das konfigurierte Profilfeld enthaelt - kein enger
+                // Zeichensatz wie PARAM_ALPHANUMEXT, der z.B. Schraegstriche
+                // oder Leerzeichen ablehnen wuerde.
+                'type' => PARAM_TEXT,
             ],
             'rolle' => [
                 'type' => PARAM_ALPHA,

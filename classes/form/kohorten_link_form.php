@@ -53,14 +53,18 @@ class kohorten_link_form extends \moodleform {
         $mform->addRule('berufsbildnerid', null, 'required');
         $mform->setType('berufsbildnerid', PARAM_INT);
 
-        $mform->addElement('text', 'rolle', get_string('zuordnung:rolle', 'local_berufsbildung'));
+        // Siehe zuordnung_form.php: feste Auswahl der aktuell genutzten
+        // Rollen nur auf Formularebene, das Feld selbst bleibt Freitext.
+        $mform->addElement('select', 'rolle', get_string('zuordnung:rolle', 'local_berufsbildung'), [
+            'hauptverantwortlich' => get_string('zuordnung:rolle_hauptverantwortlich', 'local_berufsbildung'),
+            'stellvertretung' => get_string('zuordnung:rolle_stellvertretung', 'local_berufsbildung'),
+        ]);
         $mform->setType('rolle', PARAM_ALPHA);
         $mform->setDefault('rolle', 'hauptverantwortlich');
-        $mform->addRule('rolle', null, 'required');
         $mform->addHelpButton('rolle', 'zuordnung_rolle', 'local_berufsbildung');
 
         $mform->addElement('text', 'beruf', get_string('zuordnung:beruf', 'local_berufsbildung'));
-        $mform->setType('beruf', PARAM_ALPHANUMEXT);
+        $mform->setType('beruf', PARAM_TEXT);
         $mform->addHelpButton('beruf', 'zuordnung_beruf', 'local_berufsbildung');
 
         $this->add_action_buttons(true, get_string('kohortenlink:anlegen', 'local_berufsbildung'));

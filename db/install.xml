@@ -12,7 +12,7 @@
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="berufsbildnerid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK auf user.id, Berufsbildner/in"/>
         <FIELD NAME="lernendeid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK auf user.id, lernende Person"/>
-        <FIELD NAME="beruf" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false" COMMENT="'AU_EFZ' | 'KR_EFZ' | 'PM_EFZ'"/>
+        <FIELD NAME="beruf" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Freitext - Kurzcode (z.B. 'AU_EFZ') oder ausgeschriebene Berufsbezeichnung, je nachdem was das konfigurierte Profilfeld enthaelt"/>
         <FIELD NAME="rolle" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="hauptverantwortlich" SEQUENCE="false" COMMENT="Pro (lernendeid, rolle) ist immer nur eine Zuordnung laufend; verschiedene Rollen duerfen gleichzeitig laufen"/>
         <FIELD NAME="gueltig_von" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Beginn der Zuordnung (Timestamp)"/>
         <FIELD NAME="gueltig_bis" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Ende der Zuordnung (Timestamp); NULL = laufend"/>
@@ -38,7 +38,7 @@
         <FIELD NAME="cohortid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK auf cohort.id"/>
         <FIELD NAME="berufsbildnerid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK auf user.id, Berufsbildner/in"/>
         <FIELD NAME="rolle" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="hauptverantwortlich" SEQUENCE="false"/>
-        <FIELD NAME="beruf" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false" COMMENT="Leer = je Person aus dem Profil uebernehmen, wie bei set_zuordnung()"/>
+        <FIELD NAME="beruf" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Leer = je Person aus dem Profil uebernehmen, wie bei set_zuordnung(); Freitext, siehe local_berufsbildung_zuordnung.beruf"/>
         <FIELD NAME="aktiv" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Inaktive Links werden vom Sync-Task uebersprungen; bereits erzeugte Zuordnungen bleiben unangetastet"/>
       </FIELDS>
       <KEYS>

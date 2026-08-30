@@ -93,6 +93,32 @@ final class zuordnung_csv_importer_test extends advanced_testcase {
     }
 
     /**
+     * Regression: eine ausgeschriebene Berufsbezeichnung in der CSV-Spalte
+     * "beruf" darf nicht auf Buchstaben/Zahlen zusammengestutzt werden -
+     * das fruehere clean_param(..., PARAM_ALPHANUMEXT) haette hier
+     * "Automatikerin EFZ" (Schraegstrich und Leerzeichen entfernt) daraus
+     * gemacht.
+     */
+    public function test_verarbeite_zeile_ausgeschriebener_beruf_bleibt_unveraendert(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user(['username' => 'bb_csv']);
+        $this->getDataGenerator()->create_user(['username' => 'lern_csv']);
+
+        $importer = new zuordnung_csv_importer();
+        $ergebnis = $importer->verarbeite_zeile([
+            'berufsbildner' => 'bb_csv',
+            'lernende' => 'lern_csv',
+            'beruf' => 'Automatiker/in EFZ',
+            'gueltig_von' => '2027-08-01',
+        ], true);
+
+        $this->assertNull($ergebnis['fehler']);
+        $zuordnungen = zuordnung::get_records(['berufsbildnerid' => (int) $berufsbildner->id]);
+        $this->assertSame('Automatiker/in EFZ', reset($zuordnungen)->get('beruf'));
+    }
+
+    /**
      * Randfall: leerer Beruf in der CSV wird wie beim manuellen Formular aus
      * dem Profil uebernommen, nicht als Fehler behandelt.
      */

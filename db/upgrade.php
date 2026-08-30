@@ -244,5 +244,25 @@ function xmldb_local_berufsbildung_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026083002, 'local', 'berufsbildung');
     }
 
+    if ($oldversion < 2026083003) {
+        // Beruf-Feld verbreitern: reale Profilfelder enthalten oft die
+        // ausgeschriebene Berufsbezeichnung (z.B. "Automatiker/in EFZ")
+        // statt eines Kurzcodes - 50 Zeichen waren dafuer zu knapp.
+        $table = new xmldb_table('local_berufsbildung_zuordnung');
+        $field = new xmldb_field('beruf', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->change_field_precision($table, $field);
+        }
+
+        $table = new xmldb_table('local_berufsbildung_kohorten_link');
+        $field = new xmldb_field('beruf', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->change_field_precision($table, $field);
+        }
+
+        // Berufsbildung savepoint reached.
+        upgrade_plugin_savepoint(true, 2026083003, 'local', 'berufsbildung');
+    }
+
     return true;
 }

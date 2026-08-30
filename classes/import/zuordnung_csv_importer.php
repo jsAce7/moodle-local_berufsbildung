@@ -110,7 +110,7 @@ class zuordnung_csv_importer {
         }
         $gueltigvon = strtotime($zeile['gueltig_von'] . ' 00:00:00');
 
-        $beruf = clean_param($zeile['beruf'], PARAM_ALPHANUMEXT);
+        $beruf = clean_param($zeile['beruf'], PARAM_TEXT);
 
         if ($anlegen) {
             api::set_zuordnung((int) $berufsbildner->id, (int) $lernende->id, $beruf, $gueltigvon);

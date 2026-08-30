@@ -59,4 +59,28 @@ final class zuordnung_test extends advanced_testcase {
         $this->assertSame($gueltigvon, $geladen->get('gueltig_von'));
         $this->assertNull($geladen->get('gueltig_bis'));
     }
+
+    /**
+     * Regression: manche Schulen pflegen im Beruf-Profilfeld die
+     * ausgeschriebene Bezeichnung statt eines Kurzcodes - Schraegstriche,
+     * Leerzeichen und Bindestriche muessen daher erlaubt sein, nicht nur
+     * PARAM_ALPHANUMEXT-vertraegliche Zeichen.
+     */
+    public function test_create_mit_ausgeschriebener_berufsbezeichnung(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+
+        $zuordnung = new zuordnung(0, (object) [
+            'berufsbildnerid' => $berufsbildner->id,
+            'lernendeid' => $lernende->id,
+            'beruf' => 'Automatiker/in EFZ',
+            'gueltig_von' => time(),
+        ]);
+        $zuordnung->create();
+
+        $geladen = new zuordnung((int) $zuordnung->get('id'));
+        $this->assertSame('Automatiker/in EFZ', $geladen->get('beruf'));
+    }
 }

@@ -47,7 +47,7 @@ local_berufsbildung_zuordnung
   id
   berufsbildnerid    int(10)        -- FK -> user.id
   lernendeid         int(10)        -- FK -> user.id
-  beruf              varchar(50)    -- 'AU_EFZ' | 'KR_EFZ' | 'PM_EFZ'
+  beruf              varchar(255)   -- Freitext: Kurzcode ('AU_EFZ') oder ausgeschriebene Bezeichnung ('Automatiker/in EFZ'), je nach Profilfeld
   rolle              varchar(20)    -- v1: immer 'hauptverantwortlich'
   gueltig_von        int(10)
   gueltig_bis        int(10)        -- NULL = laufend
