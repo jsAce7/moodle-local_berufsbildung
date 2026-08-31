@@ -88,6 +88,7 @@ class kohorten_sync_service {
         $entfernt = array_diff($getracktelernendeids, $aktuellemitglieder);
 
         $erzeugt = 0;
+        $jetzt = time();
         foreach ($neu as $lernendeid) {
             if (api::ist_ausbildung_beendet((int) $lernendeid)) {
                 // Abgeschlossene Lehre: keine neue Zuordnung mehr erzeugen -
@@ -95,18 +96,29 @@ class kohorten_sync_service {
                 continue;
             }
 
+            // Ein Kohorten-Link darf eine manuelle Zuordnung oder einen
+            // anderen Link derselben Rolle nicht verdraengen. Erst wenn
+            // die andere Zuordnung endet, darf dieser Link wieder greifen.
+            $hatanderezustaendigkeit = zuordnung::record_exists_select(
+                'lernendeid = :lernendeid AND rolle = :rolle
+                 AND gueltig_von <= :jetzt1 AND (gueltig_bis IS NULL OR gueltig_bis >= :jetzt2)',
+                ['lernendeid' => $lernendeid, 'rolle' => $link->get('rolle'), 'jetzt1' => $jetzt, 'jetzt2' => $jetzt]
+            );
+            if ($hatanderezustaendigkeit) {
+                continue;
+            }
+
             api::set_zuordnung(
                 $berufsbildnerid,
                 (int) $lernendeid,
                 (string) $link->get('beruf'),
-                time(),
+                $jetzt,
                 (string) $link->get('rolle'),
                 $linkid
             );
             $erzeugt++;
         }
 
-        $jetzt = time();
         foreach ($getrackt as $einzelne) {
             if (in_array((int) $einzelne->get('lernendeid'), $entfernt, true)) {
                 api::beende_zuordnung((int) $einzelne->get('id'), $jetzt);

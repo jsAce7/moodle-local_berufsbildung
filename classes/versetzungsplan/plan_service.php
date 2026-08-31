@@ -30,6 +30,7 @@ namespace local_berufsbildung\versetzungsplan;
 use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\block_hk;
 use local_berufsbildung\persistent\einsatz;
+use core_competency\competency;
 
 class plan_service {
 
@@ -90,11 +91,35 @@ class plan_service {
             }
 
             foreach (block_hk::get_records(['blockid' => $blockid]) as $abdeckung) {
-                $kompetenzen[(int) $abdeckung->get('competencyid')] = true;
+                // Ein Ausbildungsblock wird auf Ebene LK gepflegt. Fuer die
+                // Ausbildungsplanung zählt diese LK zugleich für alle ihre
+                // übergeordneten Handlungskompetenzen.
+                foreach ($this->mit_uebergeordneten_kompetenzen((int) $abdeckung->get('competencyid')) as $kompetenzid) {
+                    $kompetenzen[$kompetenzid] = true;
+                }
             }
         }
 
         return array_keys($kompetenzen);
+    }
+
+    /**
+     * @param int $kompetenzid
+     * @return int[] Kompetenz selbst, gefolgt von ihren Vorfahren
+     */
+    private function mit_uebergeordneten_kompetenzen(int $kompetenzid): array {
+        $ids = [$kompetenzid];
+        $kompetenz = competency::get_record(['id' => $kompetenzid]);
+
+        // Bei alten oder extern gelöschten Referenzen bleibt die direkte
+        // Zuordnung sichtbar; sie darf nicht den übrigen Plan blockieren.
+        while ($kompetenz !== false && (int) $kompetenz->get('parentid') !== 0) {
+            $elternid = (int) $kompetenz->get('parentid');
+            $ids[] = $elternid;
+            $kompetenz = competency::get_record(['id' => $elternid]);
+        }
+
+        return $ids;
     }
 
     /**

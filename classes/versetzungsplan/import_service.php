@@ -87,6 +87,26 @@ class import_service {
             return $this->ergebnis('fehlgeschlagen', false, $geparst['zeilen_gelesen'], 0, 0, 0, $geparst['fehler']);
         }
 
+        // Eine syntaktisch oder zeitlich fehlerhafte Lieferung darf nie
+        // teilweise uebernommen werden: sonst wuerden beim Ersetzen die
+        // gueltigen Restzeilen den bestehenden Plan ausduennen.
+        if (!empty($geparst['fehler'])) {
+            if (!$testlauf) {
+                $this->schreibe_protokoll(
+                    $quelle,
+                    $hash,
+                    $ausgefuehrtvon,
+                    $geparst['zeilen_gelesen'],
+                    0,
+                    0,
+                    0,
+                    'fehlgeschlagen',
+                    $geparst['fehler']
+                );
+            }
+            return $this->ergebnis('fehlgeschlagen', false, $geparst['zeilen_gelesen'], 0, 0, 0, $geparst['fehler']);
+        }
+
         $aufgeloest = $this->zeilen_aufloesen($geparst['eintraege']);
         $protokoll = array_merge($geparst['fehler'], $aufgeloest['protokoll']);
         $personenverarbeitet = count($aufgeloest['nachuserid']);
@@ -181,14 +201,13 @@ class import_service {
         $bekanntebloecke = [];
 
         foreach ($eintraege as $eintrag) {
-            $nutzer = $DB->get_record('user', ['email' => $eintrag['email'], 'deleted' => 0], 'id', IGNORE_MULTIPLE);
-
-            if (!$nutzer) {
+            $nutzer = $DB->get_records('user', ['email' => $eintrag['email'], 'deleted' => 0], '', 'id');
+            if (count($nutzer) !== 1) {
                 $protokoll[] = "Mailadresse {$eintrag['email']} keinem Moodle-Konto zugeordnet – übersprungen";
                 continue;
             }
 
-            $userid = (int) $nutzer->id;
+            $userid = (int) reset($nutzer)->id;
 
             if (empty(api::get_berufsbildner_for($userid))) {
                 $ausserhalbgeltungsbereich++;
@@ -381,8 +400,7 @@ class import_service {
 
     private function schwelle_prozent(): int {
         $wert = get_config('local_berufsbildung', 'versetzungsplan_schwelle_prozent');
-
-        return $wert !== false ? (int) $wert : 20;
+        return min(100, max(0, $wert !== false ? (int) $wert : 20));
     }
 
     /**

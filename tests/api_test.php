@@ -507,6 +507,29 @@ final class api_test extends advanced_testcase {
         $this->assertSame($bis, $zuordnung->get('gueltig_bis'));
     }
 
+    public function test_beende_zuordnung_lehnt_enddatum_vor_beginn_ab(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $von = strtotime('2027-08-01 00:00:00');
+        $zuordnung = $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $lernende->id, $von);
+
+        $this->expectException(\moodle_exception::class);
+        api::beende_zuordnung((int) $zuordnung->get('id'), $von - 1);
+    }
+
+    public function test_loesche_zuordnung_entfernt_falschen_datensatz(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $zuordnung = $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $lernende->id, time());
+
+        api::loesche_zuordnung((int) $zuordnung->get('id'));
+        $this->assertFalse(zuordnung::record_exists((int) $zuordnung->get('id')));
+    }
+
     public function test_set_zuordnung_leerer_beruf_wird_aus_profil_uebernommen(): void {
         $this->resetAfterTest();
         $this->lege_profilfelder_an();
@@ -518,6 +541,26 @@ final class api_test extends advanced_testcase {
         ]);
 
         $zuordnung = api::set_zuordnung((int) $berufsbildner->id, (int) $lernende->id, '', strtotime('2026-08-01 00:00:00'));
+
+        $this->assertSame('KR_EFZ', $zuordnung->get('beruf'));
+    }
+
+    public function test_set_zuordnung_leerer_beruf_wird_fuer_zukuenftigen_start_uebernommen(): void {
+        $this->resetAfterTest();
+        $this->lege_profilfelder_an();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user([
+            'profile_field_beruf' => 'KR_EFZ',
+            'profile_field_jahrgang' => '2027',
+        ]);
+
+        $zuordnung = api::set_zuordnung(
+            (int) $berufsbildner->id,
+            (int) $lernende->id,
+            '',
+            strtotime('2027-08-01 00:00:00')
+        );
 
         $this->assertSame('KR_EFZ', $zuordnung->get('beruf'));
     }

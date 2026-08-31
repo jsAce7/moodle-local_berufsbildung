@@ -215,15 +215,18 @@ class csv_parser {
         foreach ($nachemail as $email => $indizes) {
             usort($indizes, static fn (int $a, int $b): int => $eintraege[$a]['von'] <=> $eintraege[$b]['von']);
 
-            for ($i = 1; $i < count($indizes); $i++) {
-                $vorher = $eintraege[$indizes[$i - 1]];
-                $jetzt = $eintraege[$indizes[$i]];
-
-                if ($jetzt['von'] <= $vorher['bis']) {
+            $laengster = null;
+            foreach ($indizes as $index) {
+                $jetzt = $eintraege[$index];
+                if ($laengster !== null && $jetzt['von'] <= $eintraege[$laengster]['bis']) {
+                    $vorher = $eintraege[$laengster];
                     $fehler[] = "Überschneidung für {$email}: {$vorher['kw_von']}-{$vorher['kw_bis']} und "
                         . "{$jetzt['kw_von']}-{$jetzt['kw_bis']} - beide übersprungen.";
-                    $abgewiesen[$indizes[$i - 1]] = true;
-                    $abgewiesen[$indizes[$i]] = true;
+                    $abgewiesen[$laengster] = true;
+                    $abgewiesen[$index] = true;
+                }
+                if ($laengster === null || $jetzt['bis'] > $eintraege[$laengster]['bis']) {
+                    $laengster = $index;
                 }
             }
         }

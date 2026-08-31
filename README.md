@@ -8,7 +8,7 @@ Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentati
 
 ## Was dieses Plugin macht
 
-- **Zuordnung**: Berufsbildner/innen werden Lernenden zugeordnet, einzeln, in Bulk oder per Kohorte (einmalig oder laufend synchronisiert). Zuordnungen werden nie von Hand gelöscht, nur mit Enddatum versehen — mit einer Ausnahme, siehe "Aufbewahrung" unten.
+- **Zuordnung**: Berufsbildner/innen werden Lernenden zugeordnet, einzeln, in Bulk oder per Kohorte (einmalig oder laufend synchronisiert). Regulär werden sie mit einem Enddatum beendet; eine bestätigte Löschaktion ist für eindeutig falsch erfasste Zuordnungen verfügbar.
 - **Aufbewahrung**: eine konfigurierbare Frist (Standard 12 Monate) nach dem berechneten Lehrabschluss löscht Zuordnungen automatisch endgültig, ausser eine Aufbewahrungspflicht ist dokumentiert. Dieselbe Regel steuert über `\local_berufsbildung\api` auch die Lerndoku-Inhalte in `local_lerndokumentation`.
 - **Ausbildungsstand**: Beruf, Lehrjahr und Semester werden aus zwei Profilfeldern (Beruf, Jahrgang) berechnet, mit konfigurierbarer Lehrdauer je Beruf.
 - **Versetzungsplan**: wöchentlicher CSV-Import (Webservice oder manueller Upload) der betrieblichen Einsätze, mit Kompetenzabdeckung je Ausbildungsblock.
@@ -39,7 +39,7 @@ Alle Einstellungen unter *Site administration ▸ Plugins ▸ Local plugins ▸ 
 | Aging warning after (days) | Alterungshinweis, wenn der letzte Import zu lange zurückliegt |
 | Retention period after training completion (months) | Frist bis zur automatischen Löschung von Zuordnungen (und, über `local_lerndokumentation`, der Lerndoku-Inhalte) nach Lehrabschluss. Standard: 12. |
 
-**Welcher Kompetenzrahmen?** Ein Rahmen mit ausschliesslich den betrieblich vermittelten Handlungskompetenzbereichen genügt vollständig — und ist die passendere Wahl als ein vollständiger Rahmen mit schulisch/überbetrieblich vermittelten HKB. Sowohl die Lerndokumentation (nur betriebliche Tätigkeiten, Art. 12 BiVo) als auch die Kompetenzabdeckung des Versetzungsplans (`get_ausgebildete_kompetenzen()`, nur Blöcke mit `ist_betrieb = true`) zeigen bzw. werten ohnehin nur betriebsrelevante Kompetenzen aus — ein vollständiger Rahmen würde im Lerndoku-Dropdown nur nie sinnvoll auswählbare Einträge zusätzlich anzeigen.
+**Welcher Kompetenzrahmen?** Die obersten Knoten sind die betrieblichen Handlungskompetenzen (HK); darunter können die konkreten Lernkompetenzen (LK) liegen. Im Versetzungsplan werden die LK dem Ausbildungsblock zugeordnet. Das Plugin rechnet eine LK bei der Lückenanalyse auf alle übergeordneten HK hoch und zeigt deshalb nur noch offene Pflicht-HK. Die in der AU-Umsetzung als `W` gekennzeichneten HK sind standardmässig als Wahlpflicht hinterlegt und erscheinen nicht als Lücke; die Zuordnung lässt sich in der Einstellung *Wahlpflicht-Handlungskompetenzen je Beruf* an den verwendeten Berufscode und die ID-Nummern des Rahmens anpassen.
 
 Der Rahmen muss der lernenden Person dafür **nicht zusätzlich zugewiesen** werden (kein Lernplan, keine Kurs-Verknüpfung nötig) — `\core_competency\api::add_evidence()` legt den `user_competency`-Datensatz beim ersten Kompetenznachweis automatisch an.
 
@@ -90,7 +90,7 @@ Zuordnung folgt seit dem Retention-Feature einer feineren Regel (Architekturrege
 
 - Eine erste Behat-Abdeckung existiert (`tests/behat/`), aber nicht für jede Seite. Eine CI-Pipeline (`.github/workflows/ci.yml`) liegt bereit, ist aber noch nie gegen einen echten Remote gelaufen — dieses Repo hat noch keinen Git-Remote.
 - Mehrere offene Fachfragen (Lehrverlängerung/Wiederholung, Stellvertretung) sind bewusst zurückgestellt, siehe `docs/plan.md` §13.
-- Die Lücken-Analyse (`api::get_luecken()`) hat noch keine Oberfläche — wartet auf `local_bildungsbericht`.
+- Der Bildungsbericht (`local_bildungsbericht`) als weitere Nachweisquelle existiert noch nicht.
 
 ## Lizenz
 

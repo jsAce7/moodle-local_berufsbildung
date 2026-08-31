@@ -122,6 +122,36 @@ final class plan_service_test extends advanced_testcase {
         $this->assertSame([], (new plan_service())->get_ausgebildete_kompetenzen((int) $lernende->id, 1000, 2000));
     }
 
+    public function test_lernkompetenz_deckt_uebergeordnete_handlungskompetenz_ab(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $lernende = $this->getDataGenerator()->create_user();
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework(['idnumber' => 'au-lk-test']);
+        $hk = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'idnumber' => '7777 a.01',
+        ]);
+        $lk = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'parentid' => $hk->get('id'),
+            'idnumber' => 'AU a1 01',
+        ]);
+        $block = $this->lege_block_an('4');
+        (new block_hk(0, (object) [
+            'blockid' => $block->get('id'),
+            'competencyid' => $lk->get('id'),
+            'intensitaet' => 'schwerpunkt',
+        ]))->create();
+        $this->lege_einsatz_an((int) $lernende->id, (int) $block->get('id'), 1000, 2000);
+
+        $kompetenzen = (new plan_service())->get_ausgebildete_kompetenzen((int) $lernende->id, 1000, 2000);
+        sort($kompetenzen);
+
+        $this->assertSame([(int) $hk->get('id'), (int) $lk->get('id')], $kompetenzen);
+    }
+
     public function test_get_aktueller_einsatz_normalfall(): void {
         $this->resetAfterTest();
 

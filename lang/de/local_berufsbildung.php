@@ -45,6 +45,8 @@ $string['settings:beruf_rahmen_mapping_desc'] = 'Ordnet jedem Beruf seinen core_
 Ein Rahmen mit ausschliesslich den betrieblich vermittelten Handlungskompetenzbereichen genügt vollständig und ist die passendere Wahl als ein vollständiger Rahmen mit schulisch/überbetrieblich vermittelten HKB: Sowohl die Lerndokumentation (nur betriebliche Tätigkeiten, Art. 12 BiVo) als auch die Kompetenzabdeckung des Versetzungsplans (`get_ausgebildete_kompetenzen()`, nur Blöcke mit `ist_betrieb = true`) zeigen ohnehin nur betriebsrelevante Kompetenzen an bzw. werten sie aus.
 
 Der Rahmen muss der lernenden Person nicht zusätzlich zugewiesen werden (kein Lernplan, keine Kurs-Verknüpfung nötig) - der Kompetenznachweis (`core_competency\\api::add_evidence()`) legt den `user_competency`-Datensatz beim ersten Eintrag automatisch an.';
+$string['settings:beruf_wahlpflicht_hk'] = 'Wahlpflicht-Handlungskompetenzen je Beruf';
+$string['settings:beruf_wahlpflicht_hk_desc'] = 'Wahlpflicht-HK werden in der Lückenanalyse nicht als fehlend ausgewiesen. Eine Zeile je Beruf im Format CODE=HK-ID,HK-ID, zum Beispiel "AU_EFZ=7777 a.04,7777 a.05". Die HK-ID ist die ID-Nummer des obersten Knotens im Kompetenzrahmen. Für die AU-Datei sind dies die als W markierten HK.';
 $string['settings:versetzungsplan_schwelle_prozent'] = 'Schwelle für unvollständige Lieferungen (%)';
 $string['settings:versetzungsplan_schwelle_prozent_desc'] = 'Enthält eine Versetzungsplan-Lieferung deutlich weniger verarbeitete Personen als die vorherige, wird sie abgewiesen statt verarbeitet. Standard: 20 (ein Rückgang um mehr als 20 % gilt als unvollständig).';
 $string['settings:versetzungsplan_alterung_tage'] = 'Alterungshinweis nach (Tagen)';
@@ -54,15 +56,16 @@ $string['settings:retention_monate_desc'] = 'Nach wie vielen Monaten seit dem be
 $string['role:berufsbildner'] = 'Berufsbildner/in';
 $string['role:berufsbildner_desc'] = 'Zugewiesen im Nutzerkontext einer lernenden Person, sobald eine Zuordnung besteht. Traegt selbst keine Capabilities - die vergeben die aufsetzenden Plugins.';
 
-$string['nav:meine_lehre'] = 'Meine Lehre';
+$string['nav:meine_lehre'] = 'Meine Ausbildung';
 $string['nav:meine_lernenden'] = 'Meine Lernenden';
 $string['form:ausbildungsstand'] = '{$a->beruf}, {$a->lehrjahr}. Lehrjahr (Semester {$a->semester})';
 $string['form:keine_taetigkeiten'] = 'Keine Tätigkeiten vorhanden.';
-$string['luecken:titel'] = 'Noch nicht ausgebildete Handlungskompetenzen';
+$string['luecken:titel'] = 'Noch nicht ausgebildete Pflicht-Handlungskompetenzen';
 $string['luecken:titel_anzahl'] = '{$a} Lücken im Kompetenzrahmen';
-$string['luecken:keine'] = 'Alle Handlungskompetenzen des Rahmens sind bereits abgedeckt.';
+$string['luecken:keine'] = 'Alle Pflicht-Handlungskompetenzen des Rahmens sind bereits abgedeckt.';
 $string['meine_lernenden:keine_lernenden'] = 'Sie haben aktuell keine zugeordneten Lernenden.';
 $string['meine_lernenden:taetigkeiten_anzahl'] = '{$a} Tätigkeiten anzeigen';
+$string['meine_lernenden:profil_oeffnen'] = 'Profil und Lerndokumentation öffnen';
 $string['meine_lehre:kein_ausbildungsstand'] = 'Für Ihr Profil ist kein Beruf oder Jahrgang hinterlegt.';
 $string['error:keinezustaendigkeit'] = 'Keine Zuständigkeit für diese lernende Person.';
 $string['error:aufbewahrunggrundleer'] = 'Die Aufbewahrungspflicht benötigt eine Begründung.';
@@ -95,6 +98,11 @@ $string['zuordnung:gueltig_von'] = 'Gültig ab';
 $string['zuordnung:gueltig_bis'] = 'Gültig bis';
 $string['zuordnung:fehler_gleiche_person'] = 'Berufsbildner/in und Lernende/r dürfen nicht dieselbe Person sein.';
 $string['zuordnung:fehler_keine_lernenden'] = 'Mindestens eine Lernende/ein Lernender oder eine globale Gruppe auswählen.';
+$string['zuordnung:fehler_enddatum'] = 'Das Enddatum darf nicht vor dem Startdatum liegen.';
+$string['zuordnung:fehler_ueberschneidung'] = 'Diese Zuordnung würde sich mit einer bestehenden Zuordnung derselben Rolle überschneiden.';
+$string['zuordnung:loeschen'] = 'Zuordnung löschen';
+$string['zuordnung:geloescht'] = 'Die falsche Zuordnung wurde gelöscht.';
+$string['zuordnung:loeschen_bestaetigung'] = 'Die Zuordnung „{$a}“ wird endgültig gelöscht. Dies ist nur für falsch erfasste Zuordnungen gedacht. Fortfahren?';
 $string['zuordnung:angelegt'] = '{$a} Zuordnung(en) angelegt.';
 $string['zuordnung:beendet_erfolgreich'] = 'Zuordnung beendet.';
 $string['zuordnung:wiedereroeffnet'] = 'Zuordnung ist wieder laufend.';
@@ -167,12 +175,12 @@ $string['block:aktiv'] = 'Aktiv';
 $string['block:bearbeiten'] = 'Bearbeiten';
 $string['block:anlegen'] = 'Block anlegen';
 $string['block:speichern'] = 'Speichern';
-$string['block:kompetenzen'] = 'Kompetenzen';
+$string['block:kompetenzen'] = 'Lern- und Handlungskompetenzen';
 $string['block:angelegt'] = 'Block gespeichert.';
 $string['block:fehler_nummer_existiert'] = 'Ein Block mit dieser Nummer besteht bereits.';
 
 $string['blockhk:uebersicht'] = 'Kompetenzabdeckung für Block {$a}';
-$string['blockhk:kompetenz'] = 'Handlungskompetenz';
+$string['blockhk:kompetenz'] = 'Lern- oder Handlungskompetenz';
 $string['blockhk:intensitaet'] = 'Intensität';
 $string['blockhk:intensitaet_schwerpunkt'] = 'Schwerpunkt';
 $string['blockhk:intensitaet_teilweise'] = 'teilweise';

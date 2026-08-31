@@ -65,4 +65,12 @@ class aufbewahrung_form extends \moodleform {
 
         $this->add_action_buttons(true, get_string('aufbewahrung:speichern', 'local_berufsbildung'));
     }
+
+    public function validation($data, $files): array {
+        $errors = parent::validation($data, $files);
+        if (!empty($data['gueltig_bis']) && (int) $data['gueltig_bis'] < (int) $data['gueltig_von']) {
+            $errors['gueltig_bis'] = get_string('zuordnung:fehler_enddatum', 'local_berufsbildung');
+        }
+        return $errors;
+    }
 }

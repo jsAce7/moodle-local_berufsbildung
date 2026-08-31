@@ -87,10 +87,10 @@ final class role_sync_service_test extends advanced_testcase {
     }
 
     /**
-     * Randfall: die Zuordnung ist beendet - die vom Task selbst vergebene
-     * Rolle wird wieder entzogen.
+     * Beendete Zuordnungen behalten ihre Rolle fuer historische,
+     * weiterhin stichtagsgepruefte Einsicht.
      */
-    public function test_beendete_zuordnung_entzieht_selbst_vergebene_rolle(): void {
+    public function test_beendete_zuordnung_behaelt_rolle_fuer_historische_pruefung(): void {
         global $DB;
         $this->resetAfterTest();
         $roleid = $this->stelle_rolle_sicher();
@@ -111,10 +111,10 @@ final class role_sync_service_test extends advanced_testcase {
         $ergebnis = $service->synchronisiere();
 
         $this->assertSame(0, $ergebnis['zugewiesen']);
-        $this->assertSame(1, $ergebnis['entzogen']);
+        $this->assertSame(0, $ergebnis['entzogen']);
 
         $context = context_user::instance((int) $lernende->id);
-        $this->assertFalse($DB->record_exists('role_assignments', [
+        $this->assertTrue($DB->record_exists('role_assignments', [
             'roleid' => $roleid,
             'userid' => (int) $berufsbildner->id,
             'contextid' => $context->id,

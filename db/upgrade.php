@@ -264,5 +264,41 @@ function xmldb_local_berufsbildung_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026083003, 'local', 'berufsbildung');
     }
 
+    if ($oldversion < 2026083100) {
+        $table = new xmldb_table('local_berufsbildung_zuordnung');
+        $oldindex = new xmldb_index('bb_lernende_gueltigvon', XMLDB_INDEX_UNIQUE, ['berufsbildnerid', 'lernendeid', 'gueltig_von']);
+        if ($dbman->index_exists($table, $oldindex)) {
+            $dbman->drop_index($table, $oldindex);
+        }
+        $newindex = new xmldb_index(
+            'bb_lernende_rolle_gueltigvon',
+            XMLDB_INDEX_UNIQUE,
+            ['berufsbildnerid', 'lernendeid', 'rolle', 'gueltig_von']
+        );
+        if (!$dbman->index_exists($table, $newindex)) {
+            $dbman->add_index($table, $newindex);
+        }
+
+        upgrade_plugin_savepoint(true, 2026083100, 'local', 'berufsbildung');
+    }
+
+    // Repariert Installationen, die 2026083100 mit der historischen
+    // KEY-API ausgefuehrt haben; UNIQUE-Keys sind in Moodle Indizes.
+    if ($oldversion < 2026083102) {
+        $table = new xmldb_table('local_berufsbildung_zuordnung');
+        $oldindex = new xmldb_index('bb_lernende_gueltigvon', XMLDB_INDEX_UNIQUE, ['berufsbildnerid', 'lernendeid', 'gueltig_von']);
+        if ($dbman->index_exists($table, $oldindex)) {
+            $dbman->drop_index($table, $oldindex);
+        }
+        $newindex = new xmldb_index('bb_lernende_rolle_gueltigvon', XMLDB_INDEX_UNIQUE, [
+            'berufsbildnerid', 'lernendeid', 'rolle', 'gueltig_von',
+        ]);
+        if (!$dbman->index_exists($table, $newindex)) {
+            $dbman->add_index($table, $newindex);
+        }
+
+        upgrade_plugin_savepoint(true, 2026083102, 'local', 'berufsbildung');
+    }
+
     return true;
 }

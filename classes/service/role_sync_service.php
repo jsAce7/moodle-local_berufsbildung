@@ -31,8 +31,9 @@ use context_user;
 use local_berufsbildung\persistent\zuordnung;
 
 /**
- * Aktive Zuordnung ohne Rollenzuweisung -> zuweisen. Rollenzuweisung ohne
- * aktive Zuordnung -> entziehen. Bestehende, unveraenderte -> unangetastet.
+ * Bereits begonnene Zuordnung ohne Rollenzuweisung -> zuweisen.
+ * Rollenzuweisungen bleiben bis zur Datenbereinigung erhalten, damit eine
+ * historische Zuständigkeit nach einem Betreuerwechsel noch aufgelöst wird.
  *
  * Setzt component = 'local_berufsbildung' bei jeder selbst vergebenen
  * Zuweisung und erkennt daran seine eigenen wieder - manuell (component =
@@ -40,6 +41,33 @@ use local_berufsbildung\persistent\zuordnung;
  * keine Zuordnung (mehr) dahintersteht (siehe docs/plan.md Abschnitt 7).
  */
 class role_sync_service {
+
+    /**
+     * Gleicht ein einzelnes Paar sofort ab, damit eine gerade angelegte
+     * aktuelle Zuordnung nicht bis zum stündlichen Task warten muss.
+     */
+    public function synchronisiere_paar(int $berufsbildnerid, int $lernendeid): void {
+        global $DB;
+
+        $roleid = $DB->get_field('role', 'id', ['shortname' => 'berufsbildner'], MUST_EXIST);
+        $context = context_user::instance($lernendeid);
+        $besteht = zuordnung::record_exists_select(
+            'berufsbildnerid = :berufsbildnerid AND lernendeid = :lernendeid AND gueltig_von <= :jetzt',
+            ['berufsbildnerid' => $berufsbildnerid, 'lernendeid' => $lernendeid, 'jetzt' => time()]
+        );
+        $zuweisung = $DB->get_record('role_assignments', [
+            'roleid' => $roleid,
+            'userid' => $berufsbildnerid,
+            'contextid' => $context->id,
+            'component' => 'local_berufsbildung',
+        ]);
+
+        if ($besteht && !$zuweisung) {
+            role_assign($roleid, $berufsbildnerid, $context->id, 'local_berufsbildung');
+        } else if (!$besteht && $zuweisung) {
+            role_unassign($roleid, $berufsbildnerid, $context->id, 'local_berufsbildung');
+        }
+    }
 
     /**
      * @return array{zugewiesen: int, entzogen: int}
@@ -50,13 +78,11 @@ class role_sync_service {
         $roleid = $DB->get_field('role', 'id', ['shortname' => 'berufsbildner'], MUST_EXIST);
         $jetzt = time();
 
-        // Soll-Zustand: alle zum jetzigen Stichtag aktiven Zuordnungen,
-        // unabhaengig von der Rolle in der Zuordnung selbst - die
-        // Moodle-Rolle sagt nur "grundsaetzlich zustaendig", nicht welche
-        // Art von Zustaendigkeit.
+        // Die Rolle liefert nur die Moodle-Capability. Der konkrete Zugriff
+        // bleibt an api::is_zustaendig() zum jeweiligen Stichtag gebunden.
         $aktive = zuordnung::get_records_select(
-            'gueltig_von <= :jetzt1 AND (gueltig_bis IS NULL OR gueltig_bis >= :jetzt2)',
-            ['jetzt1' => $jetzt, 'jetzt2' => $jetzt]
+            'gueltig_von <= :jetzt',
+            ['jetzt' => $jetzt]
         );
 
         $soll = [];

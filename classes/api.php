@@ -32,6 +32,8 @@ use local_berufsbildung\persistent\einsatz;
 use local_berufsbildung\persistent\zuordnung;
 use local_berufsbildung\service\lehrdauer_resolver;
 use local_berufsbildung\service\rahmen_resolver;
+use local_berufsbildung\service\zuordnung_service;
+use local_berufsbildung\service\wahlpflicht_resolver;
 use local_berufsbildung\service\semester_calculator;
 use local_berufsbildung\versetzungsplan\luecken_analyse;
 use local_berufsbildung\versetzungsplan\plan_service;
@@ -193,8 +195,8 @@ class api {
 
         $startmonat = get_config('local_berufsbildung', 'startmonat');
         $lehrdauer_standard = get_config('local_berufsbildung', 'lehrdauer_semester');
-        $startmonat = $startmonat !== false ? (int) $startmonat : 8;
-        $lehrdauer_standard = $lehrdauer_standard !== false ? (int) $lehrdauer_standard : 8;
+        $startmonat = min(12, max(1, $startmonat !== false ? (int) $startmonat : 8));
+        $lehrdauer_standard = min(8, max(1, $lehrdauer_standard !== false ? (int) $lehrdauer_standard : 8));
 
         $beruf_dauer_konfiguration = get_config('local_berufsbildung', 'beruf_dauer');
         $beruf_dauer_konfiguration = $beruf_dauer_konfiguration !== false ? (string) $beruf_dauer_konfiguration : '';
@@ -318,7 +320,7 @@ class api {
             return false;
         }
 
-        $retentionmonate = (int) (get_config('local_berufsbildung', 'retention_monate') ?: 12);
+        $retentionmonate = min(120, max(1, (int) (get_config('local_berufsbildung', 'retention_monate') ?: 12)));
         $ablauf = strtotime("+{$retentionmonate} months", $ende);
 
         return $stichtag >= $ablauf && !self::hat_aufbewahrungspflicht($lernendeid, $stichtag);
@@ -359,30 +361,19 @@ class api {
         ?int $kohorten_link_id = null
     ): zuordnung {
         if ($beruf === '') {
-            $beruf = self::get_ausbildungsstand($lernendeid)?->beruf ?? '';
+            // Bei vorgezogenen Zuordnungen den Beruf am Starttag statt
+            // ausschliesslich zum heutigen Zeitpunkt aufloesen.
+            $beruf = self::get_ausbildungsstand($lernendeid, $gueltig_von)?->beruf ?? '';
         }
 
-        $laufende = zuordnung::get_records_select(
-            'lernendeid = :lernendeid AND rolle = :rolle AND gueltig_bis IS NULL',
-            ['lernendeid' => $lernendeid, 'rolle' => $rolle]
+        return (new zuordnung_service())->anlegen(
+            $berufsbildnerid,
+            $lernendeid,
+            $beruf,
+            $gueltig_von,
+            $rolle,
+            $kohorten_link_id
         );
-
-        foreach ($laufende as $einzelne) {
-            self::beende_zuordnung((int) $einzelne->get('id'), $gueltig_von - 1);
-        }
-
-        $neue = new zuordnung(0, (object) [
-            'berufsbildnerid' => $berufsbildnerid,
-            'lernendeid' => $lernendeid,
-            'beruf' => $beruf,
-            'rolle' => $rolle,
-            'gueltig_von' => $gueltig_von,
-            'gueltig_bis' => null,
-            'kohorten_link_id' => $kohorten_link_id,
-        ]);
-        $neue->create();
-
-        return $neue;
     }
 
     /**
@@ -395,9 +386,12 @@ class api {
      * @param int|null $gueltig_bis Timestamp, null = wieder laufend
      */
     public static function beende_zuordnung(int $zuordnungid, ?int $gueltig_bis): void {
-        $zuordnung = new zuordnung($zuordnungid);
-        $zuordnung->set('gueltig_bis', $gueltig_bis);
-        $zuordnung->update();
+        (new zuordnung_service())->beenden($zuordnungid, $gueltig_bis);
+    }
+
+    /** Loescht eine nachweislich falsch erfasste Zuordnung endgueltig. */
+    public static function loesche_zuordnung(int $zuordnungid): void {
+        (new zuordnung_service())->loeschen($zuordnungid);
     }
 
     /**
@@ -425,6 +419,20 @@ class api {
      */
     public static function get_ausgebildete_kompetenzen(int $lernendeid, int $von, int $bis): array {
         return (new plan_service())->get_ausgebildete_kompetenzen($lernendeid, $von, $bis);
+    }
+
+    /**
+     * Idnumbers der Wahlpflicht-HK eines Berufs. Wahlpflicht-HK erscheinen
+     * nicht als Lücke, wenn sie im individuellen Ausbildungsweg nicht
+     * gewählt wurden.
+     *
+     * @param string $beruf Beruf-Code
+     * @return string[]
+     */
+    public static function get_wahlpflicht_hk_for_beruf(string $beruf): array {
+        $konfiguration = get_config('local_berufsbildung', 'beruf_wahlpflicht_hk');
+
+        return (new wahlpflicht_resolver())->loese_auf($beruf, $konfiguration !== false ? (string) $konfiguration : '');
     }
 
     /**

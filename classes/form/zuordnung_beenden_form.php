@@ -50,4 +50,13 @@ class zuordnung_beenden_form extends \moodleform {
 
         $this->add_action_buttons(true, get_string('zuordnung:speichern', 'local_berufsbildung'));
     }
+
+    public function validation($data, $files): array {
+        $errors = parent::validation($data, $files);
+        if (!empty($data['gueltig_bis']) && isset($this->_customdata['gueltig_von'])
+                && (int) $data['gueltig_bis'] < (int) $this->_customdata['gueltig_von']) {
+            $errors['gueltig_bis'] = get_string('zuordnung:fehler_enddatum', 'local_berufsbildung');
+        }
+        return $errors;
+    }
 }

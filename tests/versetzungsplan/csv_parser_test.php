@@ -146,6 +146,18 @@ final class csv_parser_test extends advanced_testcase {
         $this->assertNotEmpty($ergebnis['fehler']);
     }
 
+    public function test_verschachtelte_ueberschneidungen_werden_vollstaendig_abgewiesen(): void {
+        $csv = "email;block;kw_von;kw_bis\n"
+            . "anna.muster@firma.ch;4;2027-W15;2027-W25\n"
+            . "anna.muster@firma.ch;7;2027-W17;2027-W18\n"
+            . "anna.muster@firma.ch;9;2027-W20;2027-W21\n";
+
+        $ergebnis = (new csv_parser())->parsen($csv);
+
+        $this->assertSame([], $ergebnis['eintraege']);
+        $this->assertNotEmpty($ergebnis['fehler']);
+    }
+
     public function test_direkt_anschliessende_zeitraeume_ueberschneiden_sich_nicht(): void {
         $csv = "email;block;kw_von;kw_bis\n"
             . "anna.muster@firma.ch;4;2027-W15;2027-W20\n"

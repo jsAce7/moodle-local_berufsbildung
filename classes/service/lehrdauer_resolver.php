@@ -54,11 +54,12 @@ class lehrdauer_resolver {
             }
 
             [$code, $semester] = array_map('trim', explode('=', $zeile, 2));
-            if ($code === $beruf && $semester !== '' && ctype_digit($semester)) {
+            if ($code === $beruf && $semester !== '' && ctype_digit($semester)
+                    && (int) $semester >= 1 && (int) $semester <= 8) {
                 return (int) $semester;
             }
         }
 
-        return $standard;
+        return min(8, max(1, $standard));
     }
 }

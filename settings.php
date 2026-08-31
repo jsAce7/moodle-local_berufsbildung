@@ -64,20 +64,20 @@ if ($hassiteconfig) {
         $profilefields
     ));
 
-    $settings->add(new admin_setting_configtext(
+    $settings->add(new admin_setting_configselect(
         'local_berufsbildung/startmonat',
         new lang_string('settings:startmonat', 'local_berufsbildung'),
         new lang_string('settings:startmonat_desc', 'local_berufsbildung'),
         '8',
-        PARAM_INT
+        array_combine(range(1, 12), range(1, 12))
     ));
 
-    $settings->add(new admin_setting_configtext(
+    $settings->add(new admin_setting_configselect(
         'local_berufsbildung/lehrdauer_semester',
         new lang_string('settings:lehrdauer_semester', 'local_berufsbildung'),
         new lang_string('settings:lehrdauer_semester_desc', 'local_berufsbildung'),
         '8',
-        PARAM_INT
+        array_combine(range(1, 8), range(1, 8))
     ));
 
     $settings->add(new admin_setting_configtextarea(
@@ -93,6 +93,15 @@ if ($hassiteconfig) {
         new lang_string('settings:beruf_rahmen_mapping', 'local_berufsbildung'),
         new lang_string('settings:beruf_rahmen_mapping_desc', 'local_berufsbildung'),
         '',
+        PARAM_RAW
+    ));
+
+    $settings->add(new admin_setting_configtextarea(
+        'local_berufsbildung/beruf_wahlpflicht_hk',
+        new lang_string('settings:beruf_wahlpflicht_hk', 'local_berufsbildung'),
+        new lang_string('settings:beruf_wahlpflicht_hk_desc', 'local_berufsbildung'),
+        'AU_EFZ=7777 a.04,7777 a.05,7777 a.06,7777 b.06,7777 b.07,7777 c.04,' .
+            '7777 c.05,7777 c.06,7777 d.04,7777 d.05,7777 d.06,7777 d.07',
         PARAM_RAW
     ));
 

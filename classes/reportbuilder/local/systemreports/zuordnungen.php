@@ -150,5 +150,15 @@ class zuordnungen extends system_report {
             return $row->gueltig_bis !== null
                 && has_capability('local/berufsbildung:managezuordnung', context_system::instance());
         }));
+
+        $this->add_action((new action(
+            new moodle_url('/local/berufsbildung/zuordnung_loeschen.php', ['id' => ':id']),
+            new pix_icon('t/delete', '', 'core'),
+            [],
+            false,
+            new lang_string('zuordnung:loeschen', 'local_berufsbildung')
+        ))->add_callback(static function (): bool {
+            return has_capability('local/berufsbildung:managezuordnung', context_system::instance());
+        }));
     }
 }

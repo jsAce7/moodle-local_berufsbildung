@@ -45,6 +45,8 @@ $string['settings:beruf_rahmen_mapping_desc'] = 'Maps each occupation to its cor
 A framework containing only the competencies taught at the workplace is entirely sufficient, and is actually the better fit than a full framework that also includes competencies taught at school or in inter-company courses: both the learning journal (workplace activities only, per Art. 12 BiVo) and the rotation plan\'s competency coverage (`get_ausgebildete_kompetenzen()`, only blocks with `ist_betrieb = true`) only ever show or evaluate workplace-relevant competencies anyway.
 
 The framework does not need to be separately assigned to the trainee (no learning plan or course link required) - recording evidence (`core_competency\\api::add_evidence()`) creates the `user_competency` record automatically on the first entry.';
+$string['settings:beruf_wahlpflicht_hk'] = 'Elective competency areas per occupation';
+$string['settings:beruf_wahlpflicht_hk_desc'] = 'Elective competency areas are not shown as missing in the gap analysis. One line per occupation in the format CODE=COMPETENCY-ID,COMPETENCY-ID, for example "AU_EFZ=7777 a.04,7777 a.05". The competency ID is the idnumber of the framework’s top-level node.';
 $string['settings:versetzungsplan_schwelle_prozent'] = 'Threshold for incomplete deliveries (%)';
 $string['settings:versetzungsplan_schwelle_prozent_desc'] = 'If a rotation-plan delivery contains significantly fewer processed people than the previous one, it is rejected instead of processed. Default: 20 (a drop of more than 20% counts as incomplete).';
 $string['settings:versetzungsplan_alterung_tage'] = 'Aging warning after (days)';
@@ -54,15 +56,16 @@ $string['settings:retention_monate_desc'] = 'How many months after the computed 
 $string['role:berufsbildner'] = 'Trainer';
 $string['role:berufsbildner_desc'] = 'Assigned in a trainee\'s user context once an assignment exists. Carries no capabilities of its own - those come from the plugins built on top.';
 
-$string['nav:meine_lehre'] = 'My training';
+$string['nav:meine_lehre'] = 'My vocational training';
 $string['nav:meine_lernenden'] = 'My trainees';
 $string['form:ausbildungsstand'] = '{$a->beruf}, year {$a->lehrjahr} (semester {$a->semester})';
 $string['form:keine_taetigkeiten'] = 'No activities recorded.';
-$string['luecken:titel'] = 'Competencies not yet trained';
+$string['luecken:titel'] = 'Required competency areas not yet trained';
 $string['luecken:titel_anzahl'] = '{$a} gaps in the competency framework';
-$string['luecken:keine'] = 'All competencies in the framework are already covered.';
+$string['luecken:keine'] = 'All required competency areas in the framework are already covered.';
 $string['meine_lernenden:keine_lernenden'] = 'You currently have no assigned trainees.';
 $string['meine_lernenden:taetigkeiten_anzahl'] = 'Show {$a} activities';
+$string['meine_lernenden:profil_oeffnen'] = 'Open profile and learning journal';
 $string['meine_lehre:kein_ausbildungsstand'] = 'No occupation or cohort year is set on your profile.';
 $string['error:keinezustaendigkeit'] = 'Not responsible for this trainee.';
 $string['error:aufbewahrunggrundleer'] = 'The retention obligation needs a reason.';
@@ -95,6 +98,11 @@ $string['zuordnung:gueltig_von'] = 'Valid from';
 $string['zuordnung:gueltig_bis'] = 'Valid until';
 $string['zuordnung:fehler_gleiche_person'] = 'Trainer and trainee cannot be the same person.';
 $string['zuordnung:fehler_keine_lernenden'] = 'Select at least one trainee or cohort.';
+$string['zuordnung:fehler_enddatum'] = 'The end date must not be before the start date.';
+$string['zuordnung:fehler_ueberschneidung'] = 'This assignment would overlap an existing assignment with the same role.';
+$string['zuordnung:loeschen'] = 'Delete assignment';
+$string['zuordnung:geloescht'] = 'The incorrect assignment has been deleted.';
+$string['zuordnung:loeschen_bestaetigung'] = 'The assignment “{$a}” will be permanently deleted. This is intended only for incorrectly recorded assignments. Continue?';
 $string['zuordnung:angelegt'] = '{$a} assignment(s) created.';
 $string['zuordnung:beendet_erfolgreich'] = 'Assignment ended.';
 $string['zuordnung:wiedereroeffnet'] = 'Assignment is active again.';
@@ -167,12 +175,12 @@ $string['block:aktiv'] = 'Active';
 $string['block:bearbeiten'] = 'Edit';
 $string['block:anlegen'] = 'Create block';
 $string['block:speichern'] = 'Save';
-$string['block:kompetenzen'] = 'Competencies';
+$string['block:kompetenzen'] = 'Learning and competency areas';
 $string['block:angelegt'] = 'Block saved.';
 $string['block:fehler_nummer_existiert'] = 'A block with this number already exists.';
 
 $string['blockhk:uebersicht'] = 'Competency coverage for block {$a}';
-$string['blockhk:kompetenz'] = 'Competency';
+$string['blockhk:kompetenz'] = 'Learning or competency area';
 $string['blockhk:intensitaet'] = 'Intensity';
 $string['blockhk:intensitaet_schwerpunkt'] = 'main focus';
 $string['blockhk:intensitaet_teilweise'] = 'partial';

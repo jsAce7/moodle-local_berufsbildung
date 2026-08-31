@@ -61,9 +61,19 @@ class luecken_analyse {
             return [];
         }
 
+        // Ausgewertet werden nur die obersten Handlungskompetenzen. Die LK
+        // darunter werden den Ausbildungsblöcken zugeordnet und über
+        // plan_service auf ihre HK hochgerechnet.
+        $wahlpflicht = array_flip(api::get_wahlpflicht_hk_for_beruf($ausbildungsstand->beruf));
         $sollkompetenzen = array_map(
             static fn (competency $kompetenz): int => (int) $kompetenz->get('id'),
-            competency::get_records(['competencyframeworkid' => (int) $framework->get('id')])
+            array_filter(
+                competency::get_records([
+                    'competencyframeworkid' => (int) $framework->get('id'),
+                    'parentid' => 0,
+                ], 'sortorder'),
+                static fn (competency $kompetenz): bool => !isset($wahlpflicht[$kompetenz->get('idnumber')])
+            )
         );
 
         // Kein unterer Rand (0 = Unix-Epoche): der Versetzungsplan enthaelt

@@ -100,6 +100,32 @@ final class luecken_analyse_test extends advanced_testcase {
         $this->assertSame([], (new luecken_analyse())->get_luecken((int) $lernende->id));
     }
 
+    public function test_wahlpflicht_hk_wird_nicht_als_luecke_ausgewiesen(): void {
+        $this->resetAfterTest();
+        $this->lege_profilfelder_an();
+        set_config('beruf_rahmen_mapping', 'AU_EFZ=au-2022', 'local_berufsbildung');
+        set_config('beruf_wahlpflicht_hk', 'AU_EFZ=7777 a.04', 'local_berufsbildung');
+
+        $lernende = $this->getDataGenerator()->create_user([
+            'profile_field_beruf' => 'AU_EFZ',
+            'profile_field_jahrgang' => (string) $this->laufender_jahrgang(),
+        ]);
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework(['idnumber' => 'au-2022']);
+        $pflicht = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'idnumber' => '7777 a.01',
+        ]);
+        $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'idnumber' => '7777 a.04',
+        ]);
+
+        $luecken = (new luecken_analyse())->get_luecken((int) $lernende->id);
+
+        $this->assertSame([(int) $pflicht->get('id')], $luecken);
+    }
+
     /**
      * Randfall: die Lehre hat zum Stichtag noch nicht begonnen -
      * get_ausbildungsstand() liefert null, die Luecken-Analyse muss das

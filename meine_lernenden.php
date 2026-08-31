@@ -62,7 +62,7 @@ foreach ($namen as $lernendeid => $name) {
     echo html_writer::start_tag('div', ['class' => 'card-body']);
 
     $profilurl = new moodle_url('/user/profile.php', ['id' => $lernendeid]);
-    echo html_writer::tag('h3', html_writer::link($profilurl, $name), ['class' => 'h5 card-title']);
+    echo html_writer::tag('h3', s($name), ['class' => 'h5 card-title']);
 
     $stand = api::get_ausbildungsstand($lernendeid);
     if ($stand !== null) {
@@ -85,6 +85,10 @@ foreach ($namen as $lernendeid => $name) {
         get_string('meine_lernenden:taetigkeiten_anzahl', 'local_berufsbildung', count($nachweise))
     );
     echo html_writer::tag('details', $zusammenfassung . nachweis_liste::render($nachweise, $quellennamen), ['class' => 'mt-2']);
+    echo html_writer::div(html_writer::link(
+        $profilurl,
+        get_string('meine_lernenden:profil_oeffnen', 'local_berufsbildung')
+    ), 'mt-3');
 
     echo html_writer::end_tag('div');
     echo html_writer::end_tag('div');
