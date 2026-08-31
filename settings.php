@@ -27,14 +27,6 @@ defined('MOODLE_INTERNAL') || die();
 if ($hassiteconfig) {
     global $DB;
 
-    // Eigene Kategorie statt zweier unverbundener Eintraege unter "Local
-    // plugins" - sonst ist der Zuordnungs-Uebersicht nicht anzusehen, dass
-    // sie zu diesem Plugin gehoert.
-    $ADMIN->add('localplugins', new admin_category(
-        'local_berufsbildung',
-        new lang_string('pluginname', 'local_berufsbildung')
-    ));
-
     if (!$ADMIN->locate('ausbildungsverwaltung')) {
         $ADMIN->add('root', new admin_category(
             'ausbildungsverwaltung',
@@ -42,18 +34,26 @@ if ($hassiteconfig) {
         ));
     }
 
-    $ADMIN->add('ausbildungsverwaltung', new admin_externalpage(
-        'local_berufsbildung_uebersicht',
-        new lang_string('admin:menu_uebersicht', 'local_berufsbildung'),
-        new moodle_url('/local/berufsbildung/uebersicht.php'),
-        'moodle/site:config'
-    ));
+    $adminbereiche = [
+        'ausbildungsverwaltung_organisation' => 'admin:organisation',
+        'ausbildungsverwaltung_planung' => 'admin:planung',
+        'ausbildungsverwaltung_lernbegleitung' => 'admin:lernbegleitung',
+        'ausbildungsverwaltung_system' => 'admin:system',
+    ];
+    foreach ($adminbereiche as $name => $string) {
+        if (!$ADMIN->locate($name)) {
+            $ADMIN->add('ausbildungsverwaltung', new admin_category(
+                $name,
+                new lang_string($string, 'local_berufsbildung')
+            ));
+        }
+    }
 
     $settings = new admin_settingpage(
         'local_berufsbildung_settings',
         new lang_string('settings:einstellungen', 'local_berufsbildung')
     );
-    $ADMIN->add('local_berufsbildung', $settings);
+    $ADMIN->add('ausbildungsverwaltung_system', $settings);
 
     // Auswahlliste aus den vorhandenen benutzerdefinierten Profilfeldern,
     // statt den Kurznamen frei eintippen zu lassen.
@@ -143,35 +143,35 @@ if ($hassiteconfig) {
         PARAM_INT
     ));
 
-    $ADMIN->add('local_berufsbildung', new admin_externalpage(
+    $ADMIN->add('ausbildungsverwaltung_organisation', new admin_externalpage(
         'local_berufsbildung_zuordnung',
         new lang_string('zuordnung:uebersicht', 'local_berufsbildung'),
         new moodle_url('/local/berufsbildung/zuordnung.php'),
         'local/berufsbildung:viewzuordnung'
     ));
 
-    $ADMIN->add('local_berufsbildung', new admin_externalpage(
+    $ADMIN->add('ausbildungsverwaltung_organisation', new admin_externalpage(
         'local_berufsbildung_kohortenlinks',
         new lang_string('kohortenlink:uebersicht', 'local_berufsbildung'),
         new moodle_url('/local/berufsbildung/kohorten_links.php'),
         'local/berufsbildung:managezuordnung'
     ));
 
-    $ADMIN->add('local_berufsbildung', new admin_externalpage(
+    $ADMIN->add('ausbildungsverwaltung_planung', new admin_externalpage(
         'local_berufsbildung_bloecke',
         new lang_string('bloecke:uebersicht', 'local_berufsbildung'),
         new moodle_url('/local/berufsbildung/bloecke.php'),
         'local/berufsbildung:manageblocks'
     ));
 
-    $ADMIN->add('local_berufsbildung', new admin_externalpage(
+    $ADMIN->add('ausbildungsverwaltung_planung', new admin_externalpage(
         'local_berufsbildung_importplan',
         new lang_string('planimport:titel', 'local_berufsbildung'),
         new moodle_url('/local/berufsbildung/import_plan.php'),
         'local/berufsbildung:importplan'
     ));
 
-    $ADMIN->add('local_berufsbildung', new admin_externalpage(
+    $ADMIN->add('ausbildungsverwaltung_system', new admin_externalpage(
         'local_berufsbildung_aufbewahrung',
         new lang_string('aufbewahrung:uebersicht', 'local_berufsbildung'),
         new moodle_url('/local/berufsbildung/aufbewahrung.php'),
