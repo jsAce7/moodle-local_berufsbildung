@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'Berufsbildung';
 $string['settings:einstellungen'] = 'Einstellungen';
-$string['admin:uebersicht'] = 'Ausbildungsverwaltung';
+$string['admin:uebersicht'] = 'Berufsbildung';
 $string['admin:organisation'] = 'Zuordnungen und Gruppen';
 $string['admin:planung'] = 'Ausbildungsplanung';
 $string['admin:lernbegleitung'] = 'Lernbegleitung';
