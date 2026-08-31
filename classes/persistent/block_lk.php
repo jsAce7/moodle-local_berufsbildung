@@ -29,13 +29,13 @@ namespace local_berufsbildung\persistent;
 use core\persistent;
 
 /**
- * Verknuepfung eines Ausbildungsblocks mit einer Handlungskompetenz aus
- * core_competency.
+ * Verknuepfung eines Ausbildungsblocks mit einer Lern- oder
+ * Handlungskompetenz (LK) aus core_competency.
  */
-class block_hk extends persistent {
+class block_lk extends persistent {
 
     /** Tabellenname. */
-    const TABLE = 'local_berufsbildung_block_hk';
+    const TABLE = 'local_berufsbildung_block_lk';
 
     /**
      * @return array

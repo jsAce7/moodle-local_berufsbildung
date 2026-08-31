@@ -24,9 +24,12 @@
 
 require_once(__DIR__ . '/../../config.php');
 
-use local_berufsbildung\form\block_hk_form;
+use core_competency\competency;
+use core_competency\competency_framework;
+use local_berufsbildung\api;
+use local_berufsbildung\form\block_lk_form;
 use local_berufsbildung\persistent\block;
-use local_berufsbildung\persistent\block_hk;
+use local_berufsbildung\persistent\block_lk;
 
 require_login();
 require_capability('local/berufsbildung:manageblocks', context_system::instance());
@@ -36,7 +39,7 @@ $block = new block($id);
 
 $PAGE->set_context(context_system::instance());
 $PAGE->set_url(new moodle_url('/local/berufsbildung/block_kompetenzen.php', ['id' => $id]));
-$titel = get_string('blockhk:uebersicht', 'local_berufsbildung', $block->get('nummer'));
+$titel = get_string('blocklk:uebersicht', 'local_berufsbildung', $block->get('nummer'));
 $PAGE->set_title($titel);
 $PAGE->set_heading($titel);
 $PAGE->navbar->add(
@@ -47,37 +50,49 @@ $PAGE->navbar->add($titel);
 
 $returnurl = new moodle_url('/local/berufsbildung/block_kompetenzen.php', ['id' => $id]);
 
+// Die LK-Auswahl wird auf den Kompetenzrahmen des Berufs dieses Blocks
+// eingeschraenkt - sonst stehen bei mehreren konfigurierten Berufen alle
+// Rahmen gemischt in einem Dropdown (siehe luecken_analyse.php fuer das
+// gleiche Aufloesungsmuster: Beruf -> Rahmen-idnumber -> Framework-Datensatz).
+$beruf = (string) $block->get('beruf');
+$framework = null;
 $kompetenzen = [];
-if (get_config('core_competency', 'enabled')) {
-    foreach (\core_competency\api::list_competencies([], 'shortname', 'ASC', 0, 1000) as $kompetenz) {
-        $kompetenzen[(int) $kompetenz->get('id')] = format_string($kompetenz->get('shortname'));
+
+if (get_config('core_competency', 'enabled') && $beruf !== '') {
+    $frameworkidnumber = api::get_kompetenzrahmen_for_beruf($beruf);
+    $framework = $frameworkidnumber !== null ? competency_framework::get_record(['idnumber' => $frameworkidnumber]) : false;
+
+    if ($framework) {
+        foreach (competency::get_records(['competencyframeworkid' => (int) $framework->get('id')], 'shortname', 'ASC', 0, 1000) as $kompetenz) {
+            $kompetenzen[(int) $kompetenz->get('id')] = format_string($kompetenz->get('shortname'));
+        }
     }
 }
 
-$form = new block_hk_form(null, ['blockid' => $id, 'kompetenzen' => $kompetenzen]);
+$form = new block_lk_form(null, ['blockid' => $id, 'kompetenzen' => $kompetenzen]);
 
 if (!empty($kompetenzen) && $data = $form->get_data()) {
-    $verknuepfung = new block_hk(0, (object) [
+    $verknuepfung = new block_lk(0, (object) [
         'blockid' => $id,
         'competencyid' => (int) $data->competencyid,
         'intensitaet' => $data->intensitaet,
     ]);
     $verknuepfung->create();
 
-    redirect($returnurl, get_string('blockhk:hinzugefuegt', 'local_berufsbildung'), null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect($returnurl, get_string('blocklk:hinzugefuegt', 'local_berufsbildung'), null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
 echo $OUTPUT->header();
 
-$abdeckungen = block_hk::get_records(['blockid' => $id], 'id', 'ASC');
+$abdeckungen = block_lk::get_records(['blockid' => $id], 'id', 'ASC');
 
 if (empty($abdeckungen)) {
-    echo $OUTPUT->notification(get_string('blockhk:keine', 'local_berufsbildung'), 'info');
+    echo $OUTPUT->notification(get_string('blocklk:keine', 'local_berufsbildung'), 'info');
 } else {
     $table = new html_table();
     $table->head = [
-        get_string('blockhk:kompetenz', 'local_berufsbildung'),
-        get_string('blockhk:intensitaet', 'local_berufsbildung'),
+        get_string('blocklk:kompetenz', 'local_berufsbildung'),
+        get_string('blocklk:intensitaet', 'local_berufsbildung'),
         '',
     ];
 
@@ -86,10 +101,10 @@ if (empty($abdeckungen)) {
         $bezeichnung = $kompetenzen[$kompetenzid] ?? "#{$kompetenzid}";
 
         $intensitaet = $abdeckung->get('intensitaet') === 'teilweise'
-            ? get_string('blockhk:intensitaet_teilweise', 'local_berufsbildung')
-            : get_string('blockhk:intensitaet_schwerpunkt', 'local_berufsbildung');
+            ? get_string('blocklk:intensitaet_teilweise', 'local_berufsbildung')
+            : get_string('blocklk:intensitaet_schwerpunkt', 'local_berufsbildung');
 
-        $entfernenurl = new moodle_url('/local/berufsbildung/block_hk_entfernen.php', [
+        $entfernenurl = new moodle_url('/local/berufsbildung/block_lk_entfernen.php', [
             'id' => $abdeckung->get('id'),
             'blockid' => $id,
             'sesskey' => sesskey(),
@@ -98,7 +113,7 @@ if (empty($abdeckungen)) {
         $table->data[] = [
             $bezeichnung,
             $intensitaet,
-            html_writer::link($entfernenurl, get_string('blockhk:entfernen', 'local_berufsbildung')),
+            html_writer::link($entfernenurl, get_string('blocklk:entfernen', 'local_berufsbildung')),
         ];
     }
 
@@ -106,14 +121,24 @@ if (empty($abdeckungen)) {
 }
 
 if (empty($kompetenzen)) {
-    echo $OUTPUT->notification(get_string('blockhk:keine_kompetenzen', 'local_berufsbildung'), 'info');
+    if (!get_config('core_competency', 'enabled')) {
+        $hinweis = get_string('blocklk:keine_kompetenzen', 'local_berufsbildung');
+    } else if ($beruf === '') {
+        $hinweis = get_string('blocklk:kein_beruf', 'local_berufsbildung');
+    } else if (!$framework) {
+        $hinweis = get_string('blocklk:kein_rahmen', 'local_berufsbildung', s($beruf));
+    } else {
+        $hinweis = get_string('blocklk:keine_kompetenzen', 'local_berufsbildung');
+    }
+
+    echo $OUTPUT->notification($hinweis, 'info');
 } else {
     $form->display();
 }
 
 echo html_writer::link(
     new moodle_url('/local/berufsbildung/bloecke.php'),
-    get_string('blockhk:zurueck', 'local_berufsbildung')
+    get_string('blocklk:zurueck', 'local_berufsbildung')
 );
 
 echo $OUTPUT->footer();

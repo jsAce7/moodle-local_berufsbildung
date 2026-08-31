@@ -28,7 +28,7 @@ namespace local_berufsbildung\versetzungsplan;
 
 use advanced_testcase;
 use local_berufsbildung\persistent\block;
-use local_berufsbildung\persistent\block_hk;
+use local_berufsbildung\persistent\block_lk;
 use local_berufsbildung\persistent\einsatz;
 
 /**
@@ -72,7 +72,7 @@ final class luecken_analyse_test extends advanced_testcase {
 
         $block = new block(0, (object) ['nummer' => '4', 'name' => '4', 'ist_betrieb' => true, 'aktiv' => true]);
         $block->create();
-        (new block_hk(0, (object) [
+        (new block_lk(0, (object) [
             'blockid' => $block->get('id'), 'competencyid' => $abgedeckt->get('id'), 'intensitaet' => 'schwerpunkt',
         ]))->create();
 

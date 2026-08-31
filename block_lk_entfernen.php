@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Entfernt eine Handlungskompetenz-Zuordnung von einem Ausbildungsblock.
+ * Entfernt eine LK-Zuordnung von einem Ausbildungsblock.
  *
  * @package    local_berufsbildung
  * @copyright  2026 jsAce7
@@ -24,7 +24,7 @@
 
 require_once(__DIR__ . '/../../config.php');
 
-use local_berufsbildung\persistent\block_hk;
+use local_berufsbildung\persistent\block_lk;
 
 require_login();
 require_capability('local/berufsbildung:manageblocks', context_system::instance());
@@ -34,16 +34,16 @@ $id = required_param('id', PARAM_INT);
 $blockid = required_param('blockid', PARAM_INT);
 
 $PAGE->set_context(context_system::instance());
-$PAGE->set_url(new moodle_url('/local/berufsbildung/block_hk_entfernen.php', ['id' => $id, 'blockid' => $blockid]));
+$PAGE->set_url(new moodle_url('/local/berufsbildung/block_lk_entfernen.php', ['id' => $id, 'blockid' => $blockid]));
 
-$verknuepfung = new block_hk($id);
+$verknuepfung = new block_lk($id);
 if ((int) $verknuepfung->get('blockid') === $blockid) {
     $verknuepfung->delete();
 }
 
 redirect(
     new moodle_url('/local/berufsbildung/block_kompetenzen.php', ['id' => $blockid]),
-    get_string('blockhk:entfernt', 'local_berufsbildung'),
+    get_string('blocklk:entfernt', 'local_berufsbildung'),
     null,
     \core\output\notification::NOTIFY_SUCCESS
 );

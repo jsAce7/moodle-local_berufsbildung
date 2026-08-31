@@ -176,14 +176,18 @@ local_berufsbildung_block
   id
   nummer             varchar(20)    -- exakt wie in der Excel-Zelle
   name               varchar(255)   -- Klartext, in Moodle gepflegt
+  beruf              varchar(255)   -- Freitext wie zuordnung.beruf; steuert den Kompetenzrahmen
+                                     -- bei der LK-Zuordnung. Leer = berufsübergreifend
   ist_betrieb        int(1)         -- 0 für Schule, üK, Ferien, Militär
   aktiv              int(1)
 
   UNIQUE KEY (nummer)
 ```
 
+`beruf` wird beim manuellen Anlegen des Blocks gesetzt (Auswahl aus den in der Einstellung „Kompetenzrahmen je Beruf" konfigurierten Codes) und schränkt die LK-Auswahl in `block_lk` auf den zum Beruf konfigurierten Kompetenzrahmen ein — ohne dieses Feld standen bei mehreren konfigurierten Berufen alle Rahmen gemischt in einem Dropdown. Leer bleibt es typischerweise bei berufsübergreifenden `ist_betrieb=0`-Blöcken (Schule, üK, Ferien, Militär), die für alle Berufe denselben Blockcode verwenden — `nummer` bleibt deshalb weiterhin der alleinige, berufsunabhängige Schlüssel aus der Excel-Zelle (siehe §5.1); der Import kennt `beruf` nicht und muss es auch nicht kennen, da Blöcke ohnehin manuell gepflegt werden.
+
 ```
-local_berufsbildung_block_hk
+local_berufsbildung_block_lk
   id
   blockid            int(10)
   competencyid       int(10)
@@ -449,7 +453,7 @@ local/berufsbildung/
 │   ├── persistent/
 │   │   ├── zuordnung.php
 │   │   ├── block.php
-│   │   ├── block_hk.php
+│   │   ├── block_lk.php
 │   │   ├── einsatz.php
 │   │   └── plan_import.php
 │   ├── form/

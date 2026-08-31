@@ -28,7 +28,7 @@ namespace local_berufsbildung\versetzungsplan;
 
 use advanced_testcase;
 use local_berufsbildung\persistent\block;
-use local_berufsbildung\persistent\block_hk;
+use local_berufsbildung\persistent\block_lk;
 use local_berufsbildung\persistent\einsatz;
 
 /**
@@ -101,9 +101,9 @@ final class plan_service_test extends advanced_testcase {
         $betrieb = $this->lege_block_an('4', true);
         $schule = $this->lege_block_an('uek', false);
 
-        (new block_hk(0, (object) ['blockid' => $betrieb->get('id'), 'competencyid' => 10, 'intensitaet' => 'schwerpunkt']))->create();
-        (new block_hk(0, (object) ['blockid' => $betrieb->get('id'), 'competencyid' => 20, 'intensitaet' => 'teilweise']))->create();
-        (new block_hk(0, (object) ['blockid' => $schule->get('id'), 'competencyid' => 99, 'intensitaet' => 'schwerpunkt']))->create();
+        (new block_lk(0, (object) ['blockid' => $betrieb->get('id'), 'competencyid' => 10, 'intensitaet' => 'schwerpunkt']))->create();
+        (new block_lk(0, (object) ['blockid' => $betrieb->get('id'), 'competencyid' => 20, 'intensitaet' => 'teilweise']))->create();
+        (new block_lk(0, (object) ['blockid' => $schule->get('id'), 'competencyid' => 99, 'intensitaet' => 'schwerpunkt']))->create();
 
         $this->lege_einsatz_an((int) $lernende->id, (int) $betrieb->get('id'), 1000, 2000);
         $this->lege_einsatz_an((int) $lernende->id, (int) $schule->get('id'), 2100, 3000);
@@ -139,7 +139,7 @@ final class plan_service_test extends advanced_testcase {
             'idnumber' => 'AU a1 01',
         ]);
         $block = $this->lege_block_an('4');
-        (new block_hk(0, (object) [
+        (new block_lk(0, (object) [
             'blockid' => $block->get('id'),
             'competencyid' => $lk->get('id'),
             'intensitaet' => 'schwerpunkt',

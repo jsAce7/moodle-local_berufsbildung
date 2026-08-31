@@ -25,7 +25,7 @@
 require_once(__DIR__ . '/../../config.php');
 
 use local_berufsbildung\persistent\block;
-use local_berufsbildung\persistent\block_hk;
+use local_berufsbildung\persistent\block_lk;
 
 require_login();
 require_capability('local/berufsbildung:manageblocks', context_system::instance());
@@ -52,6 +52,7 @@ if (empty($bloecke)) {
     $table->head = [
         get_string('block:nummer', 'local_berufsbildung'),
         get_string('block:name', 'local_berufsbildung'),
+        get_string('block:beruf', 'local_berufsbildung'),
         get_string('block:ist_betrieb', 'local_berufsbildung'),
         get_string('block:aktiv', 'local_berufsbildung'),
         get_string('block:kompetenzen', 'local_berufsbildung'),
@@ -60,14 +61,17 @@ if (empty($bloecke)) {
 
     foreach ($bloecke as $block) {
         $blockid = (int) $block->get('id');
-        $anzahlkompetenzen = block_hk::count_records(['blockid' => $blockid]);
+        $anzahlkompetenzen = block_lk::count_records(['blockid' => $blockid]);
 
         $bearbeitenurl = new moodle_url('/local/berufsbildung/block_bearbeiten.php', ['id' => $blockid]);
         $kompetenzenurl = new moodle_url('/local/berufsbildung/block_kompetenzen.php', ['id' => $blockid]);
 
+        $beruf = (string) $block->get('beruf');
+
         $table->data[] = [
             s($block->get('nummer')),
             s($block->get('name')),
+            $beruf !== '' ? s($beruf) : get_string('block:beruf_leer', 'local_berufsbildung'),
             $block->get('ist_betrieb') ? get_string('yes') : get_string('no'),
             $block->get('aktiv') ? get_string('yes') : get_string('no'),
             html_writer::link($kompetenzenurl, (string) $anzahlkompetenzen),

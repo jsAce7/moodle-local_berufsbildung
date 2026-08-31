@@ -58,6 +58,7 @@
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="nummer" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="Exakt wie in der Versetzungsplan-Zelle"/>
         <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Klartext, in Moodle gepflegt"/>
+        <FIELD NAME="beruf" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Freitext, wie local_berufsbildung_zuordnung.beruf; steuert den Kompetenzrahmen bei der LK-Zuordnung. Leer = berufsuebergreifend (typischerweise ist_betrieb=0)"/>
         <FIELD NAME="ist_betrieb" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="0 fuer Schule, ueK, Ferien, Militaer - zaehlt dann nicht zur Kompetenzabdeckung"/>
         <FIELD NAME="aktiv" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
       </FIELDS>
@@ -67,7 +68,7 @@
         <KEY NAME="nummer" TYPE="unique" FIELDS="nummer"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="local_berufsbildung_block_hk" COMMENT="Kompetenzabdeckung eines Ausbildungsblocks - der einzige Teil, der in Moodle gepflegt wird">
+    <TABLE NAME="local_berufsbildung_block_lk" COMMENT="Kompetenzabdeckung eines Ausbildungsblocks - der einzige Teil, der in Moodle gepflegt wird">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>

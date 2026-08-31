@@ -31,7 +31,13 @@ use core\persistent;
 /**
  * Ausbildungsblock aus dem Versetzungsplan. Die Zeitachse (Einsaetze)
  * kommt aus dem Import; Name und Kompetenzabdeckung werden in Moodle
- * gepflegt (siehe block_hk).
+ * gepflegt (siehe block_lk).
+ *
+ * 'beruf' wird beim manuellen Anlegen gesetzt (Freitext, wie
+ * zuordnung::beruf) und steuert, welcher Kompetenzrahmen bei der
+ * LK-Zuordnung zur Auswahl steht (siehe api::get_kompetenzrahmen_for_beruf()).
+ * Leer = berufsuebergreifend, typischerweise fuer ist_betrieb=0-Bloecke
+ * wie Schule, ueK, Ferien oder Militaer.
  */
 class block extends persistent {
 
@@ -47,6 +53,10 @@ class block extends persistent {
                 'type' => PARAM_TEXT,
             ],
             'name' => [
+                'type' => PARAM_TEXT,
+                'default' => '',
+            ],
+            'beruf' => [
                 'type' => PARAM_TEXT,
                 'default' => '',
             ],

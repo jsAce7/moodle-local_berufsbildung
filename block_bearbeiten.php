@@ -26,6 +26,7 @@ require_once(__DIR__ . '/../../config.php');
 
 use local_berufsbildung\form\block_form;
 use local_berufsbildung\persistent\block;
+use local_berufsbildung\service\rahmen_resolver;
 
 require_login();
 require_capability('local/berufsbildung:manageblocks', context_system::instance());
@@ -48,7 +49,10 @@ $PAGE->navbar->add($titel);
 $returnurl = new moodle_url('/local/berufsbildung/bloecke.php');
 $block = $id ? new block($id) : null;
 
-$form = new block_form();
+$konfiguration = get_config('local_berufsbildung', 'beruf_rahmen_mapping');
+$berufe = (new rahmen_resolver())->alle_codes($konfiguration !== false ? (string) $konfiguration : '');
+
+$form = new block_form(null, ['berufe' => $berufe]);
 
 if ($form->is_cancelled()) {
     redirect($returnurl);
@@ -59,6 +63,7 @@ if (!$form->is_submitted() && $block !== null) {
         'id' => $id,
         'nummer' => $block->get('nummer'),
         'name' => $block->get('name'),
+        'beruf' => $block->get('beruf'),
         'ist_betrieb' => $block->get('ist_betrieb') ? 1 : 0,
         'aktiv' => $block->get('aktiv') ? 1 : 0,
     ]);
@@ -69,6 +74,7 @@ if ($data = $form->get_data()) {
         $block = new block(0, (object) [
             'nummer' => $data->nummer,
             'name' => $data->name,
+            'beruf' => $data->beruf,
             'ist_betrieb' => (bool) $data->ist_betrieb,
             'aktiv' => (bool) $data->aktiv,
         ]);
@@ -76,6 +82,7 @@ if ($data = $form->get_data()) {
     } else {
         $block->set('nummer', $data->nummer);
         $block->set('name', $data->name);
+        $block->set('beruf', $data->beruf);
         $block->set('ist_betrieb', (bool) $data->ist_betrieb);
         $block->set('aktiv', (bool) $data->aktiv);
         $block->update();

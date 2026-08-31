@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace local_berufsbildung\versetzungsplan;
 
 use local_berufsbildung\persistent\block;
-use local_berufsbildung\persistent\block_hk;
+use local_berufsbildung\persistent\block_lk;
 use local_berufsbildung\persistent\einsatz;
 use core_competency\competency;
 
@@ -90,7 +90,7 @@ class plan_service {
                 continue;
             }
 
-            foreach (block_hk::get_records(['blockid' => $blockid]) as $abdeckung) {
+            foreach (block_lk::get_records(['blockid' => $blockid]) as $abdeckung) {
                 // Ein Ausbildungsblock wird auf Ebene LK gepflegt. Fuer die
                 // Ausbildungsplanung zählt diese LK zugleich für alle ihre
                 // übergeordneten Handlungskompetenzen.

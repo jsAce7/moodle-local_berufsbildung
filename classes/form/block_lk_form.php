@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Formular zum Zuordnen einer Handlungskompetenz zu einem Ausbildungsblock.
+ * Formular zum Zuordnen einer Lern- oder Handlungskompetenz (LK) zu einem
+ * Ausbildungsblock.
  *
  * @package    local_berufsbildung
  * @copyright  2026 jsAce7
@@ -30,9 +31,9 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
 
-use local_berufsbildung\persistent\block_hk;
+use local_berufsbildung\persistent\block_lk;
 
-class block_hk_form extends \moodleform {
+class block_lk_form extends \moodleform {
 
     protected function definition(): void {
         $mform = $this->_form;
@@ -40,13 +41,13 @@ class block_hk_form extends \moodleform {
         $blockid = (int) $this->_customdata['blockid'];
         $kompetenzen = $this->_customdata['kompetenzen'] ?? [];
 
-        $mform->addElement('select', 'competencyid', get_string('blockhk:kompetenz', 'local_berufsbildung'), $kompetenzen);
+        $mform->addElement('select', 'competencyid', get_string('blocklk:kompetenz', 'local_berufsbildung'), $kompetenzen);
         $mform->setType('competencyid', PARAM_INT);
         $mform->addRule('competencyid', null, 'required');
 
-        $mform->addElement('select', 'intensitaet', get_string('blockhk:intensitaet', 'local_berufsbildung'), [
-            'schwerpunkt' => get_string('blockhk:intensitaet_schwerpunkt', 'local_berufsbildung'),
-            'teilweise' => get_string('blockhk:intensitaet_teilweise', 'local_berufsbildung'),
+        $mform->addElement('select', 'intensitaet', get_string('blocklk:intensitaet', 'local_berufsbildung'), [
+            'schwerpunkt' => get_string('blocklk:intensitaet_schwerpunkt', 'local_berufsbildung'),
+            'teilweise' => get_string('blocklk:intensitaet_teilweise', 'local_berufsbildung'),
         ]);
         $mform->setType('intensitaet', PARAM_ALPHA);
 
@@ -58,7 +59,7 @@ class block_hk_form extends \moodleform {
         $mform->addElement('hidden', 'id', $blockid);
         $mform->setType('id', PARAM_INT);
 
-        $this->add_action_buttons(false, get_string('blockhk:hinzufuegen', 'local_berufsbildung'));
+        $this->add_action_buttons(false, get_string('blocklk:hinzufuegen', 'local_berufsbildung'));
     }
 
     /**
@@ -70,13 +71,13 @@ class block_hk_form extends \moodleform {
         $errors = parent::validation($data, $files);
 
         if (!empty($data['competencyid'])) {
-            $existiert = block_hk::record_exists_select(
+            $existiert = block_lk::record_exists_select(
                 'blockid = :blockid AND competencyid = :competencyid',
                 ['blockid' => (int) $data['id'], 'competencyid' => (int) $data['competencyid']]
             );
 
             if ($existiert) {
-                $errors['competencyid'] = get_string('blockhk:fehler_existiert', 'local_berufsbildung');
+                $errors['competencyid'] = get_string('blocklk:fehler_existiert', 'local_berufsbildung');
             }
         }
 

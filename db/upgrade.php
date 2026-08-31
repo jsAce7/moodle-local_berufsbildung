@@ -300,5 +300,34 @@ function xmldb_local_berufsbildung_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026083102, 'local', 'berufsbildung');
     }
 
+    if ($oldversion < 2026083115) {
+        // Blocknummern sind berufsspezifisch (ausser bei berufsuebergreifenden
+        // Bloecken wie Schule/ueK/Ferien/Militaer, dort bleibt beruf leer) -
+        // steuert die Rahmen-Filterung bei der LK-Zuordnung.
+        $table = new xmldb_table('local_berufsbildung_block');
+        $field = new xmldb_field('beruf', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'name');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_plugin_savepoint(true, 2026083115, 'local', 'berufsbildung');
+    }
+
+    if ($oldversion < 2026083116) {
+        // local_berufsbildung_block_hk speichert eigentlich die einzelnen
+        // Leistungsziele (LK) je Block, nicht die obersten
+        // Handlungskompetenzen (HK) - siehe luecken_analyse.php, wo genau
+        // diese Unterscheidung fuer die Lueckenanalyse gebraucht wird. Der
+        // Tabellenname war irrefuehrend, deshalb Umbenennung. Guard, weil
+        // ein frischer Install ueber db/install.xml die Tabelle bereits
+        // korrekt benannt anlegt und diese Tabelle dann gar nie existiert.
+        $altetabelle = new xmldb_table('local_berufsbildung_block_hk');
+        if ($dbman->table_exists($altetabelle)) {
+            $dbman->rename_table($altetabelle, 'local_berufsbildung_block_lk');
+        }
+
+        upgrade_plugin_savepoint(true, 2026083116, 'local', 'berufsbildung');
+    }
+
     return true;
 }

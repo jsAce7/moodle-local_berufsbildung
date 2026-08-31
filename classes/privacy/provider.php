@@ -40,7 +40,7 @@ use local_berufsbildung\service\zuordnung_retention_service;
 
 /**
  * Alle personenbezogenen Daten dieses Plugins haengen an context_user, nie
- * an einem Kurskontext (Architekturregel 1). block/block_hk enthalten
+ * an einem Kurskontext (Architekturregel 1). block/block_lk enthalten
  * bewusst keine personenbezogenen Daten - reine Ausbildungsstruktur, wie
  * core_competency\competency_framework selbst.
  */

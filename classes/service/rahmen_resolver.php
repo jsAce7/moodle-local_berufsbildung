@@ -63,4 +63,30 @@ class rahmen_resolver {
 
         return null;
     }
+
+    /**
+     * Alle in der Konfiguration hinterlegten Beruf-Codes, in der
+     * vorkommenden Reihenfolge - fuer Auswahllisten (z.B. beim manuellen
+     * Anlegen eines Ausbildungsblocks).
+     *
+     * @param string $konfiguration Format wie bei loese_auf()
+     * @return string[]
+     */
+    public function alle_codes(string $konfiguration): array {
+        $codes = [];
+
+        foreach (preg_split('/\r\n|\r|\n/', $konfiguration) as $zeile) {
+            $zeile = trim($zeile);
+            if ($zeile === '' || !str_contains($zeile, '=')) {
+                continue;
+            }
+
+            [$code, $idnumber] = array_map('trim', explode('=', $zeile, 2));
+            if ($code !== '' && $idnumber !== '') {
+                $codes[$code] = true;
+            }
+        }
+
+        return array_keys($codes);
+    }
 }

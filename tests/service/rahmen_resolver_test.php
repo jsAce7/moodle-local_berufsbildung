@@ -71,4 +71,24 @@ final class rahmen_resolver_test extends advanced_testcase {
 
         $this->assertSame('pm-2022', $resolver->loese_auf('PM_EFZ', ' PM_EFZ = pm-2022 '));
     }
+
+    public function test_alle_codes_liefert_konfigurierte_berufe(): void {
+        $resolver = new rahmen_resolver();
+        $konfiguration = "AU_EFZ=au-2022\nPM_EFZ=pm-2022";
+
+        $this->assertSame(['AU_EFZ', 'PM_EFZ'], $resolver->alle_codes($konfiguration));
+    }
+
+    public function test_alle_codes_bei_leerer_konfiguration_liefert_leeres_array(): void {
+        $resolver = new rahmen_resolver();
+
+        $this->assertSame([], $resolver->alle_codes(''));
+    }
+
+    public function test_alle_codes_uebergeht_fehlerhafte_zeilen(): void {
+        $resolver = new rahmen_resolver();
+        $konfiguration = "keine_gleichheitszeichen\nAU_EFZ=\nPM_EFZ=pm-2022";
+
+        $this->assertSame(['PM_EFZ'], $resolver->alle_codes($konfiguration));
+    }
 }
