@@ -32,7 +32,7 @@ class kohorten_link_service {
      * @return void
      */
     public function loeschen(int $linkid): void {
-        if (zuordnung::record_exists(['kohorten_link_id' => $linkid])) {
+        if (zuordnung::record_exists_select('kohorten_link_id = :linkid', ['linkid' => $linkid])) {
             throw new \moodle_exception('kohortenlink:loeschen_mit_zuordnungen', 'local_berufsbildung');
         }
 
