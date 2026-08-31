@@ -142,4 +142,30 @@ final class collector_test extends advanced_testcase {
 
         $this->assertCount(1, $nachweise);
     }
+
+    public function test_historische_semesteransicht_prueft_zustaendigkeit_am_semesterende(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $semesterende = time() - WEEKSECS;
+        $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_zuordnung([
+            'berufsbildnerid' => (int) $berufsbildner->id,
+            'lernendeid' => (int) $lernende->id,
+            'gueltig_von' => $semesterende - YEARSECS,
+            'gueltig_bis' => $semesterende,
+        ]);
+        $provider = new collector_test_provider([new nachweis('uekkn', 'üK 2', $semesterende, '5.0', null, null)]);
+
+        $nachweise = (new collector([$provider]))->get_nachweise(
+            (int) $berufsbildner->id,
+            (int) $lernende->id,
+            $semesterende - (30 * DAYSECS),
+            $semesterende,
+            $semesterende
+        );
+
+        $this->assertCount(1, $nachweise);
+        $this->assertTrue($provider->wurde_aufgerufen);
+    }
 }

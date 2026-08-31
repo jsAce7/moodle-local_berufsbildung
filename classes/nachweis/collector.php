@@ -73,10 +73,20 @@ class collector {
      * @param int $lernendeid Fuer wen
      * @param int $von Timestamp
      * @param int $bis Timestamp
+     * @param int|null $berechtigungsstichtag Zuständigkeit wird zu diesem
+     *        Zeitpunkt geprüft; null bedeutet jetzt. Eine historische
+     *        Semesteransicht übergibt ihr Semesterende.
      * @return nachweis[]
      */
-    public function get_nachweise(int $abrufendeid, int $lernendeid, int $von, int $bis): array {
-        if ($abrufendeid !== $lernendeid && !api::is_zustaendig($abrufendeid, $lernendeid)) {
+    public function get_nachweise(
+        int $abrufendeid,
+        int $lernendeid,
+        int $von,
+        int $bis,
+        ?int $berechtigungsstichtag = null
+    ): array {
+        if ($abrufendeid !== $lernendeid
+                && !api::is_zustaendig($abrufendeid, $lernendeid, $berechtigungsstichtag)) {
             throw new moodle_exception('error:keinezustaendigkeit', 'local_berufsbildung');
         }
 
