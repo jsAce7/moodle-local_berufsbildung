@@ -35,14 +35,7 @@ if ($hassiteconfig) {
         new lang_string('pluginname', 'local_berufsbildung')
     ));
 
-    if (!$ADMIN->locate('ausbildungsverwaltung')) {
-        $ADMIN->add('root', new admin_category(
-            'ausbildungsverwaltung',
-            new lang_string('admin:uebersicht', 'local_berufsbildung')
-        ));
-    }
-
-    $ADMIN->add('ausbildungsverwaltung', new admin_externalpage(
+    $ADMIN->add('root', new admin_externalpage(
         'local_berufsbildung_uebersicht',
         new lang_string('admin:uebersicht', 'local_berufsbildung'),
         new moodle_url('/local/berufsbildung/uebersicht.php'),
