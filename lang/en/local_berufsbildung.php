@@ -90,6 +90,9 @@ $string['zuordnung:beruf'] = 'Occupation';
 $string['zuordnung_beruf'] = 'Occupation';
 $string['zuordnung_beruf_help'] = 'Leave empty to take the occupation from the trainee\'s profile. When selecting several people, this is resolved separately for each one. Only needed if the profile does not (yet) hold an occupation, or a different value should apply to this assignment.';
 $string['zuordnung:rolle'] = 'Role';
+$string['zuordnung:herkunft'] = 'Origin';
+$string['zuordnung:herkunft_manuell'] = 'Manual';
+$string['zuordnung:herkunft_kohorte'] = 'Cohort: {$a}';
 $string['zuordnung_rolle'] = 'Role';
 $string['zuordnung_rolle_help'] = 'Within a role, a trainee only ever has one running assignment - a new one with the same role automatically ends the previous one. Different roles may run at the same time, e.g. "Hauptverantwortlich" plus a separate "Stellvertretung" for the same person. Default: hauptverantwortlich.
 

@@ -90,6 +90,9 @@ $string['zuordnung:beruf'] = 'Beruf';
 $string['zuordnung_beruf'] = 'Beruf';
 $string['zuordnung_beruf_help'] = 'Leer lassen, um den Beruf aus dem Profil der/des Lernenden zu übernehmen. Bei einer Auswahl mehrerer Personen wird das für jede Person einzeln aufgelöst. Nur nötig, wenn das Profil (noch) keinen Beruf enthält oder ein davon abweichender Wert für diese Zuordnung gelten soll.';
 $string['zuordnung:rolle'] = 'Rolle';
+$string['zuordnung:herkunft'] = 'Herkunft';
+$string['zuordnung:herkunft_manuell'] = 'Manuell';
+$string['zuordnung:herkunft_kohorte'] = 'Kohorte: {$a}';
 $string['zuordnung_rolle'] = 'Rolle';
 $string['zuordnung_rolle_help'] = 'Pro Rolle ist je Lernende/r immer nur eine Zuordnung laufend - eine neue mit derselben Rolle beendet automatisch die bisherige. Verschiedene Rollen dürfen gleichzeitig laufen, z. B. "Hauptverantwortlich" und zusätzlich "Stellvertretung" für dieselbe Person. Standard: hauptverantwortlich.
 

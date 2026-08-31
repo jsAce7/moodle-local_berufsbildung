@@ -77,6 +77,8 @@ class zuordnung extends base {
      */
     protected function get_all_columns(): array {
         $alias = $this->get_table_alias('local_berufsbildung_zuordnung');
+        $kohortenlinkalias = 'lbkl';
+        $kohortenalias = 'lbc';
 
         $columns[] = (new column(
             'rolle',
@@ -97,6 +99,27 @@ class zuordnung extends base {
             ->set_type(column::TYPE_TEXT)
             ->add_fields("{$alias}.beruf")
             ->set_is_sortable(true);
+
+        $columns[] = (new column(
+            'herkunft',
+            new lang_string('zuordnung:herkunft', 'local_berufsbildung'),
+            $this->get_entity_name()
+        ))
+            ->add_joins($this->get_joins())
+            ->add_join("LEFT JOIN {local_berufsbildung_kohorten_link} {$kohortenlinkalias}
+                ON {$kohortenlinkalias}.id = {$alias}.kohorten_link_id")
+            ->add_join("LEFT JOIN {cohort} {$kohortenalias} ON {$kohortenalias}.id = {$kohortenlinkalias}.cohortid")
+            ->set_type(column::TYPE_TEXT)
+            ->add_fields("{$alias}.kohorten_link_id, {$kohortenalias}.name AS kohortenname")
+            ->set_is_sortable(true)
+            ->add_callback(static function (?int $kohortenlinkid, \stdClass $row): string {
+                if ($kohortenlinkid === null) {
+                    return get_string('zuordnung:herkunft_manuell', 'local_berufsbildung');
+                }
+
+                return get_string('zuordnung:herkunft_kohorte', 'local_berufsbildung',
+                    format_string($row->kohortenname ?? '-'));
+            });
 
         $columns[] = (new column(
             'status',

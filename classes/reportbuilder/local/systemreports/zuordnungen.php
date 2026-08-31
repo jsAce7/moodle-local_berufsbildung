@@ -96,6 +96,7 @@ class zuordnungen extends system_report {
             ->set_title(new lang_string('zuordnung:berufsbildner', 'local_berufsbildung'));
         $this->add_column_from_entity('zuordnung:rolle');
         $this->add_column_from_entity('zuordnung:beruf');
+        $this->add_column_from_entity('zuordnung:herkunft');
 
         // Berechnet ueber api::get_ausbildungsstand(), nicht ueber SQL - die
         // Semesterberechnung (inkl. Lehrdauer je Beruf) lebt bewusst nur an
