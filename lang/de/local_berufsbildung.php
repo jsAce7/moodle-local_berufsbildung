@@ -27,6 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 $string['pluginname'] = 'Berufsbildung';
 $string['settings:einstellungen'] = 'Einstellungen';
 $string['admin:uebersicht'] = 'Ausbildungsverwaltung';
+$string['admin:menu_uebersicht'] = 'Übersicht';
 $string['admin:uebersicht_beschreibung'] = 'Zentraler Zugang zu den Funktionen für die berufliche Grundbildung.';
 $string['admin:organisation'] = 'Organisation und Planung';
 $string['admin:lernbegleitung'] = 'Lernbegleitung und üK';
