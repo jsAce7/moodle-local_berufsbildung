@@ -31,7 +31,7 @@ if ($hassiteconfig) {
         $ADMIN->add('root', new admin_category(
             'ausbildungsverwaltung',
             new lang_string('admin:uebersicht', 'local_berufsbildung')
-        ));
+        ), 'ai');
     }
 
     $adminbereiche = [
