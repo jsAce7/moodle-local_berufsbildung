@@ -38,10 +38,10 @@ $PAGE->set_heading($titel);
 
 echo $OUTPUT->header();
 
-echo $OUTPUT->single_button(
+echo html_writer::div($OUTPUT->single_button(
     new moodle_url('/local/berufsbildung/kohorten_link_anlegen.php'),
     get_string('kohortenlink:neu', 'local_berufsbildung')
-);
+), 'mb-3');
 
 $links = kohorten_link::get_records([], 'timecreated', 'DESC');
 

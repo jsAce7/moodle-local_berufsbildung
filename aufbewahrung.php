@@ -37,10 +37,10 @@ $PAGE->set_heading($titel);
 
 echo $OUTPUT->header();
 
-echo $OUTPUT->single_button(
+echo html_writer::div($OUTPUT->single_button(
     new moodle_url('/local/berufsbildung/aufbewahrung_bearbeiten.php'),
     get_string('aufbewahrung:neu', 'local_berufsbildung')
-);
+), 'mb-3');
 
 $eintraege = aufbewahrung::get_records([], 'gueltig_von', 'DESC');
 

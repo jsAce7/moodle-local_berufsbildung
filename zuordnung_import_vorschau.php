@@ -186,8 +186,11 @@ if ($bestaetigt) {
             'bestaetigt' => 1,
             'sesskey' => sesskey(),
         ]);
-        echo $OUTPUT->single_button($bestaetigenurl, get_string('import:bestaetigen', 'local_berufsbildung'));
-        echo html_writer::link($uploadurl, get_string('import:abbrechen', 'local_berufsbildung'));
+        echo html_writer::div(
+            $OUTPUT->single_button($bestaetigenurl, get_string('import:bestaetigen', 'local_berufsbildung'))
+            . html_writer::link($uploadurl, get_string('import:abbrechen', 'local_berufsbildung'), ['class' => 'ml-2']),
+            'mt-3'
+        );
     }
 
     echo $OUTPUT->footer();

@@ -39,13 +39,15 @@ $PAGE->set_heading($titel);
 echo $OUTPUT->header();
 
 if (has_capability('local/berufsbildung:managezuordnung', $context)) {
-    echo $OUTPUT->single_button(
-        new moodle_url('/local/berufsbildung/zuordnung_anlegen.php'),
-        get_string('zuordnung:neue_zuordnung', 'local_berufsbildung')
-    );
-    echo $OUTPUT->single_button(
-        new moodle_url('/local/berufsbildung/zuordnung_import.php'),
-        get_string('import:titel', 'local_berufsbildung')
+    echo html_writer::div(
+        $OUTPUT->single_button(
+            new moodle_url('/local/berufsbildung/zuordnung_anlegen.php'),
+            get_string('zuordnung:neue_zuordnung', 'local_berufsbildung')
+        ) . $OUTPUT->single_button(
+            new moodle_url('/local/berufsbildung/zuordnung_import.php'),
+            get_string('import:titel', 'local_berufsbildung')
+        ),
+        'mb-3'
     );
 }
 

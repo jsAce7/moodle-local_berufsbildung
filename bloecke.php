@@ -38,10 +38,10 @@ $PAGE->set_heading($titel);
 
 echo $OUTPUT->header();
 
-echo $OUTPUT->single_button(
+echo html_writer::div($OUTPUT->single_button(
     new moodle_url('/local/berufsbildung/block_bearbeiten.php'),
     get_string('bloecke:neu', 'local_berufsbildung')
-);
+), 'mb-3');
 
 $bloecke = block::get_records([], 'nummer', 'ASC');
 
