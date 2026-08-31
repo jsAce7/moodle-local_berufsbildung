@@ -395,6 +395,16 @@ class api {
     }
 
     /**
+     * Loescht eine Kohorten-Verknuepfung ohne erzeugte Zuordnungen.
+     *
+     * @param int $kohortenlinkid ID der Kohorten-Verknuepfung.
+     * @return void
+     */
+    public static function loesche_kohorten_link(int $kohortenlinkid): void {
+        (new \local_berufsbildung\service\kohorten_link_service())->loeschen($kohortenlinkid);
+    }
+
+    /**
      * Einsaetze einer lernenden Person aus dem Versetzungsplan, optional
      * auf einen Zeitraum eingeschraenkt. Nur teilweise ueberschneidende
      * Einsaetze zaehlen mit (siehe versetzungsplan\plan_service).

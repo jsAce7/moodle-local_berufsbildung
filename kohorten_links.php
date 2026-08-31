@@ -73,6 +73,9 @@ if (empty($links)) {
         $toggletext = $aktiv
             ? get_string('kohortenlink:deaktivieren', 'local_berufsbildung')
             : get_string('kohortenlink:aktivieren', 'local_berufsbildung');
+        $loeschenurl = new moodle_url('/local/berufsbildung/kohorten_link_loeschen.php', [
+            'id' => $link->get('id'),
+        ]);
 
         $table->data[] = [
             format_string($kohortennamen[$cohortid] ?? '-'),
@@ -82,7 +85,8 @@ if (empty($links)) {
             $aktiv
                 ? get_string('kohortenlink:status_aktiv', 'local_berufsbildung')
                 : get_string('kohortenlink:status_inaktiv', 'local_berufsbildung'),
-            html_writer::link($toggleurl, $toggletext),
+            html_writer::link($toggleurl, $toggletext) . ' | ' .
+                html_writer::link($loeschenurl, get_string('kohortenlink:loeschen', 'local_berufsbildung')),
         ];
     }
 
