@@ -191,12 +191,12 @@ $string['block:aktiv'] = 'Active';
 $string['block:bearbeiten'] = 'Edit';
 $string['block:anlegen'] = 'Create block';
 $string['block:speichern'] = 'Save';
-$string['block:kompetenzen'] = 'Learning and competency areas';
+$string['block:kompetenzen'] = 'Performance criteria';
 $string['block:angelegt'] = 'Block saved.';
 $string['block:fehler_nummer_existiert'] = 'A block with this number already exists.';
 
 $string['blocklk:uebersicht'] = 'Competency coverage for block {$a}';
-$string['blocklk:kompetenz'] = 'Learning or competency area';
+$string['blocklk:kompetenz'] = 'Performance criterion';
 $string['blocklk:intensitaet'] = 'Intensity';
 $string['blocklk:intensitaet_schwerpunkt'] = 'main focus';
 $string['blocklk:intensitaet_teilweise'] = 'partial';

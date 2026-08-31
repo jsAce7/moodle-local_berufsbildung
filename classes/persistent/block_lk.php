@@ -29,8 +29,9 @@ namespace local_berufsbildung\persistent;
 use core\persistent;
 
 /**
- * Verknuepfung eines Ausbildungsblocks mit einer Lern- oder
- * Handlungskompetenz (LK) aus core_competency.
+ * Verknuepfung eines Ausbildungsblocks mit einem Leistungskriterium (LK)
+ * aus core_competency - unterste Ebene des Kompetenzrahmens
+ * (Handlungskompetenzbereich -> Handlungskompetenz -> Leistungskriterium).
  */
 class block_lk extends persistent {
 

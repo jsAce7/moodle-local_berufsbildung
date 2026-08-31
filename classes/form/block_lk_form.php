@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Formular zum Zuordnen einer Lern- oder Handlungskompetenz (LK) zu einem
+ * Formular zum Zuordnen eines Leistungskriteriums (LK) zu einem
  * Ausbildungsblock.
  *
  * @package    local_berufsbildung

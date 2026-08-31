@@ -315,12 +315,14 @@ function xmldb_local_berufsbildung_upgrade($oldversion) {
 
     if ($oldversion < 2026083116) {
         // local_berufsbildung_block_hk speichert eigentlich die einzelnen
-        // Leistungsziele (LK) je Block, nicht die obersten
-        // Handlungskompetenzen (HK) - siehe luecken_analyse.php, wo genau
-        // diese Unterscheidung fuer die Lueckenanalyse gebraucht wird. Der
-        // Tabellenname war irrefuehrend, deshalb Umbenennung. Guard, weil
-        // ein frischer Install ueber db/install.xml die Tabelle bereits
-        // korrekt benannt anlegt und diese Tabelle dann gar nie existiert.
+        // Leistungskriterien (LK) je Block - unterste Ebene des Rahmens
+        // (Handlungskompetenzbereich -> Handlungskompetenz ->
+        // Leistungskriterium), nicht die Handlungskompetenzen selbst. Siehe
+        // luecken_analyse.php, wo genau diese Unterscheidung fuer die
+        // Lueckenanalyse gebraucht wird. Der Tabellenname war irrefuehrend,
+        // deshalb Umbenennung. Guard, weil ein frischer Install ueber
+        // db/install.xml die Tabelle bereits korrekt benannt anlegt und
+        // diese Tabelle dann gar nie existiert.
         $altetabelle = new xmldb_table('local_berufsbildung_block_hk');
         if ($dbman->table_exists($altetabelle)) {
             $dbman->rename_table($altetabelle, 'local_berufsbildung_block_lk');

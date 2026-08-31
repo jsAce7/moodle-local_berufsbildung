@@ -30,6 +30,7 @@ use local_berufsbildung\api;
 use local_berufsbildung\form\block_lk_form;
 use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\block_lk;
+use local_berufsbildung\service\kompetenz_baum;
 
 require_login();
 require_capability('local/berufsbildung:manageblocks', context_system::instance());
@@ -63,7 +64,9 @@ if (get_config('core_competency', 'enabled') && $beruf !== '') {
     $framework = $frameworkidnumber !== null ? competency_framework::get_record(['idnumber' => $frameworkidnumber]) : false;
 
     if ($framework) {
-        foreach (competency::get_records(['competencyframeworkid' => (int) $framework->get('id')], 'shortname', 'ASC', 0, 1000) as $kompetenz) {
+        $rahmenkompetenzen = competency::get_records(['competencyframeworkid' => (int) $framework->get('id')], 'shortname', 'ASC', 0, 1000);
+
+        foreach ((new kompetenz_baum())->nur_blaetter($rahmenkompetenzen) as $kompetenz) {
             $kompetenzen[(int) $kompetenz->get('id')] = format_string($kompetenz->get('shortname'));
         }
     }
