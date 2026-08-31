@@ -26,6 +26,11 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'Vocational training';
 $string['settings:einstellungen'] = 'Settings';
+$string['admin:uebersicht'] = 'Vocational training administration';
+$string['admin:uebersicht_beschreibung'] = 'Central access to vocational training administration functions.';
+$string['admin:organisation'] = 'Organisation and planning';
+$string['admin:lernbegleitung'] = 'Learning support and inter-company courses';
+$string['admin:system'] = 'Settings and data protection';
 $string['berufsbildung:managezuordnung'] = 'Manage assignments between trainers and trainees';
 $string['berufsbildung:viewzuordnung'] = 'View the assignment overview without changing it';
 $string['settings:profilefield_beruf'] = 'Profile field: occupation';

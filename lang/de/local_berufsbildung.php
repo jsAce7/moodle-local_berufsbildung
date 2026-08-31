@@ -26,6 +26,11 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'Berufsbildung';
 $string['settings:einstellungen'] = 'Einstellungen';
+$string['admin:uebersicht'] = 'Ausbildungsverwaltung';
+$string['admin:uebersicht_beschreibung'] = 'Zentraler Zugang zu den Funktionen für die berufliche Grundbildung.';
+$string['admin:organisation'] = 'Organisation und Planung';
+$string['admin:lernbegleitung'] = 'Lernbegleitung und üK';
+$string['admin:system'] = 'Einstellungen und Datenschutz';
 $string['berufsbildung:managezuordnung'] = 'Zuordnungen zwischen Berufsbildner/innen und Lernenden verwalten';
 $string['berufsbildung:viewzuordnung'] = 'Zuordnungsübersicht einsehen, ohne zu ändern';
 $string['settings:profilefield_beruf'] = 'Profilfeld: Beruf';

@@ -35,6 +35,13 @@ if ($hassiteconfig) {
         new lang_string('pluginname', 'local_berufsbildung')
     ));
 
+    $ADMIN->add('local_berufsbildung', new admin_externalpage(
+        'local_berufsbildung_uebersicht',
+        new lang_string('admin:uebersicht', 'local_berufsbildung'),
+        new moodle_url('/local/berufsbildung/uebersicht.php'),
+        'moodle/site:config'
+    ));
+
     $settings = new admin_settingpage(
         'local_berufsbildung_settings',
         new lang_string('settings:einstellungen', 'local_berufsbildung')
