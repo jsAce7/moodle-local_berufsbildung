@@ -51,7 +51,7 @@ Ein Rahmen mit ausschliesslich den betrieblich vermittelten Handlungskompetenzbe
 
 Der Rahmen muss der lernenden Person nicht zusätzlich zugewiesen werden (kein Lernplan, keine Kurs-Verknüpfung nötig) - der Kompetenznachweis (`core_competency\\api::add_evidence()`) legt den `user_competency`-Datensatz beim ersten Eintrag automatisch an.';
 $string['settings:beruf_wahlpflicht_hk'] = 'Wahlpflicht-Handlungskompetenzen je Beruf';
-$string['settings:beruf_wahlpflicht_hk_desc'] = 'Wahlpflicht-HK werden in der Lückenanalyse nicht als fehlend ausgewiesen. Eine Zeile je Beruf im Format CODE=HK-ID,HK-ID, zum Beispiel "AU_EFZ=7777 a.04,7777 a.05". Die HK-ID ist die ID-Nummer des obersten Knotens im Kompetenzrahmen. Für die AU-Datei sind dies die als W markierten HK.';
+$string['settings:beruf_wahlpflicht_hk_desc'] = 'Wahlpflicht-HK werden in der Lückenanalyse nicht als fehlend ausgewiesen. Eine Zeile je Beruf im Format CODE=HK-ID,HK-ID, zum Beispiel "AU_EFZ=7777 a.04,7777 a.05". Die HK-ID ist die ID-Nummer einer Handlungskompetenz (zweite Ebene des Kompetenzrahmens, unterhalb der Handlungskompetenzbereiche). Für die AU-Datei sind dies die als W markierten HK.';
 $string['settings:versetzungsplan_schwelle_prozent'] = 'Schwelle für unvollständige Lieferungen (%)';
 $string['settings:versetzungsplan_schwelle_prozent_desc'] = 'Enthält eine Versetzungsplan-Lieferung deutlich weniger verarbeitete Personen als die vorherige, wird sie abgewiesen statt verarbeitet. Standard: 20 (ein Rückgang um mehr als 20 % gilt als unvollständig).';
 $string['settings:versetzungsplan_alterung_tage'] = 'Alterungshinweis nach (Tagen)';

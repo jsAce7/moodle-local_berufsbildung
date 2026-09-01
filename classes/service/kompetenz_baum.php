@@ -31,11 +31,10 @@ use core_competency\competency;
 /**
  * Unsere Kompetenzrahmen sind dreistufig aufgebaut:
  * Handlungskompetenzbereich -> Handlungskompetenz -> Leistungskriterium
- * (LK). Ein Ausbildungsblock wird auf Ebene LK gepflegt (siehe
- * classes/persistent/block_lk.php) - diese Klasse trennt die Blattknoten
- * eines Rahmens von den Kompetenzrahmen selbst, damit block_kompetenzen.php
- * beim Zuordnen nur LK zur Auswahl anbietet, keine Handlungskompetenzen
- * oder -bereiche.
+ * (LK). Diese Klasse trennt die Ebenen eines Rahmens auseinander: die
+ * Blattknoten (LK) fuer die Blockzuordnung (block_kompetenzen.php, siehe
+ * classes/persistent/block_lk.php) und die mittlere Ebene (HK) fuer die
+ * Luecken-Analyse (luecken_analyse.php).
  */
 class kompetenz_baum {
 
@@ -61,6 +60,30 @@ class kompetenz_baum {
         return array_values(array_filter(
             $kompetenzen,
             static fn (competency $kompetenz): bool => !isset($elternids[(int) $kompetenz->get('id')])
+        ));
+    }
+
+    /**
+     * Nur die Handlungskompetenzen - die zweite Ebene, direkte Kinder der
+     * obersten Handlungskompetenzbereiche (parentid = 0). Fuer die
+     * Luecken-Analyse: die oberste Ebene selbst waere zu grob (mehrere HK
+     * je Bereich koennten unbemerkt fehlen), die LK-Ebene zu fein (siehe
+     * luecken_analyse.php).
+     *
+     * @param competency[] $kompetenzen Alle Kompetenzen eines Rahmens
+     * @return competency[] Nur die Handlungskompetenzen, gleiche Reihenfolge
+     */
+    public function nur_handlungskompetenzen(array $kompetenzen): array {
+        $oberste = [];
+        foreach ($kompetenzen as $kompetenz) {
+            if ((int) $kompetenz->get('parentid') === 0) {
+                $oberste[(int) $kompetenz->get('id')] = true;
+            }
+        }
+
+        return array_values(array_filter(
+            $kompetenzen,
+            static fn (competency $kompetenz): bool => isset($oberste[(int) $kompetenz->get('parentid')])
         ));
     }
 }

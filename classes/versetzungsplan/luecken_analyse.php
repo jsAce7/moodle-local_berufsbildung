@@ -30,6 +30,7 @@ namespace local_berufsbildung\versetzungsplan;
 use core_competency\competency;
 use core_competency\competency_framework;
 use local_berufsbildung\api;
+use local_berufsbildung\service\kompetenz_baum;
 
 /**
  * Ein Vorschlag fuer die Ausbildungsplanung, keine Festlegung
@@ -61,17 +62,17 @@ class luecken_analyse {
             return [];
         }
 
-        // Ausgewertet werden nur die obersten Handlungskompetenzen. Die LK
-        // darunter werden den Ausbildungsblöcken zugeordnet und über
-        // plan_service auf ihre HK hochgerechnet.
+        // Ausgewertet werden die Handlungskompetenzen (zweite Ebene, siehe
+        // kompetenz_baum), nicht die obersten Handlungskompetenzbereiche -
+        // sonst koennte innerhalb eines Bereichs eine einzelne fehlende HK
+        // unbemerkt bleiben. Die LK darunter werden den Ausbildungsblöcken
+        // zugeordnet und über plan_service auf ihre HK hochgerechnet.
         $wahlpflicht = array_flip(api::get_wahlpflicht_hk_for_beruf($ausbildungsstand->beruf));
+        $rahmenkompetenzen = competency::get_records(['competencyframeworkid' => (int) $framework->get('id')], 'sortorder');
         $sollkompetenzen = array_map(
             static fn (competency $kompetenz): int => (int) $kompetenz->get('id'),
             array_filter(
-                competency::get_records([
-                    'competencyframeworkid' => (int) $framework->get('id'),
-                    'parentid' => 0,
-                ], 'sortorder'),
+                (new kompetenz_baum())->nur_handlungskompetenzen($rahmenkompetenzen),
                 static fn (competency $kompetenz): bool => !isset($wahlpflicht[$kompetenz->get('idnumber')])
             )
         );

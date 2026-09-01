@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Tests fuer die Blattknoten-Ermittlung im Kompetenzrahmen.
+ * Tests fuer die Ebenen-Ermittlung im Kompetenzrahmen.
  *
  * @package    local_berufsbildung
  * @copyright  2026 jsAce7
@@ -85,5 +85,54 @@ final class kompetenz_baum_test extends advanced_testcase {
 
     public function test_nur_blaetter_bei_leerer_liste_ist_leer(): void {
         $this->assertSame([], (new kompetenz_baum())->nur_blaetter([]));
+    }
+
+    /**
+     * Dreistufiger Rahmen: nur die zweite Ebene (HK) darf zurueckkommen -
+     * weder die obersten Handlungskompetenzbereiche noch die LK darunter.
+     */
+    public function test_nur_handlungskompetenzen_liefert_zweite_ebene(): void {
+        $this->resetAfterTest();
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework(['idnumber' => 'au-2022']);
+
+        $hkb = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id')]);
+        $hk1 = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'parentid' => $hkb->get('id'),
+        ]);
+        $hk2 = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'parentid' => $hkb->get('id'),
+        ]);
+        $lk = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'parentid' => $hk1->get('id'),
+        ]);
+
+        $hks = (new kompetenz_baum())->nur_handlungskompetenzen([$hkb, $hk1, $hk2, $lk]);
+        $hkids = array_map(static fn ($k) => (int) $k->get('id'), $hks);
+
+        $this->assertEqualsCanonicalizing([(int) $hk1->get('id'), (int) $hk2->get('id')], $hkids);
+    }
+
+    /**
+     * Randfall: ein Rahmen ohne Hierarchie - dann gibt es keine zweite
+     * Ebene, die Liste ist leer statt faelschlich die obersten Knoten
+     * zurueckzugeben.
+     */
+    public function test_nur_handlungskompetenzen_ohne_hierarchie_ist_leer(): void {
+        $this->resetAfterTest();
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework(['idnumber' => 'flach-2022']);
+        $eins = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id')]);
+
+        $this->assertSame([], (new kompetenz_baum())->nur_handlungskompetenzen([$eins]));
+    }
+
+    public function test_nur_handlungskompetenzen_bei_leerer_liste_ist_leer(): void {
+        $this->assertSame([], (new kompetenz_baum())->nur_handlungskompetenzen([]));
     }
 }

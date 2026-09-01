@@ -51,7 +51,7 @@ A framework containing only the competencies taught at the workplace is entirely
 
 The framework does not need to be separately assigned to the trainee (no learning plan or course link required) - recording evidence (`core_competency\\api::add_evidence()`) creates the `user_competency` record automatically on the first entry.';
 $string['settings:beruf_wahlpflicht_hk'] = 'Elective competency areas per occupation';
-$string['settings:beruf_wahlpflicht_hk_desc'] = 'Elective competency areas are not shown as missing in the gap analysis. One line per occupation in the format CODE=COMPETENCY-ID,COMPETENCY-ID, for example "AU_EFZ=7777 a.04,7777 a.05". The competency ID is the idnumber of the framework’s top-level node.';
+$string['settings:beruf_wahlpflicht_hk_desc'] = 'Elective competency areas are not shown as missing in the gap analysis. One line per occupation in the format CODE=COMPETENCY-ID,COMPETENCY-ID, for example "AU_EFZ=7777 a.04,7777 a.05". The competency ID is the idnumber of a competency (second level of the framework, below the top-level competency areas).';
 $string['settings:versetzungsplan_schwelle_prozent'] = 'Threshold for incomplete deliveries (%)';
 $string['settings:versetzungsplan_schwelle_prozent_desc'] = 'If a rotation-plan delivery contains significantly fewer processed people than the previous one, it is rejected instead of processed. Default: 20 (a drop of more than 20% counts as incomplete).';
 $string['settings:versetzungsplan_alterung_tage'] = 'Aging warning after (days)';

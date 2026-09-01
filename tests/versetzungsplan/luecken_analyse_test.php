@@ -65,15 +65,27 @@ final class luecken_analyse_test extends advanced_testcase {
             'profile_field_jahrgang' => (string) $this->laufender_jahrgang(),
         ]);
 
+        // Dreistufiger Rahmen wie in der Praxis: Handlungskompetenzbereich
+        // (hkb) -> Handlungskompetenz (hk_abgedeckt/hk_luecke) ->
+        // Leistungskriterium (lk). Die Luecken-Analyse wertet die
+        // HK-Ebene aus, der Block wird auf LK-Ebene gepflegt.
         $competencygenerator = $this->getDataGenerator()->get_plugin_generator('core_competency');
         $framework = $competencygenerator->create_framework(['idnumber' => 'au-2022']);
-        $abgedeckt = $competencygenerator->create_competency(['competencyframeworkid' => $framework->get('id')]);
-        $luecke = $competencygenerator->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $hkb = $competencygenerator->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $hkabgedeckt = $competencygenerator->create_competency([
+            'competencyframeworkid' => $framework->get('id'), 'parentid' => $hkb->get('id'),
+        ]);
+        $hkluecke = $competencygenerator->create_competency([
+            'competencyframeworkid' => $framework->get('id'), 'parentid' => $hkb->get('id'),
+        ]);
+        $lk = $competencygenerator->create_competency([
+            'competencyframeworkid' => $framework->get('id'), 'parentid' => $hkabgedeckt->get('id'),
+        ]);
 
         $block = new block(0, (object) ['nummer' => '4', 'name' => '4', 'ist_betrieb' => true, 'aktiv' => true]);
         $block->create();
         (new block_lk(0, (object) [
-            'blockid' => $block->get('id'), 'competencyid' => $abgedeckt->get('id'), 'intensitaet' => 'schwerpunkt',
+            'blockid' => $block->get('id'), 'competencyid' => $lk->get('id'), 'intensitaet' => 'schwerpunkt',
         ]))->create();
 
         (new einsatz(0, (object) [
@@ -84,7 +96,7 @@ final class luecken_analyse_test extends advanced_testcase {
 
         $luecken = (new luecken_analyse())->get_luecken((int) $lernende->id);
 
-        $this->assertSame([(int) $luecke->get('id')], $luecken);
+        $this->assertSame([(int) $hkluecke->get('id')], $luecken);
     }
 
     public function test_get_luecken_ohne_rahmen_konfiguration_ist_leer(): void {
@@ -112,12 +124,15 @@ final class luecken_analyse_test extends advanced_testcase {
         ]);
         $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
         $rahmen = $generator->create_framework(['idnumber' => 'au-2022']);
+        $hkb = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id')]);
         $pflicht = $generator->create_competency([
             'competencyframeworkid' => $rahmen->get('id'),
+            'parentid' => $hkb->get('id'),
             'idnumber' => '7777 a.01',
         ]);
         $generator->create_competency([
             'competencyframeworkid' => $rahmen->get('id'),
+            'parentid' => $hkb->get('id'),
             'idnumber' => '7777 a.04',
         ]);
 
