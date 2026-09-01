@@ -184,7 +184,7 @@ local_berufsbildung_block
   UNIQUE KEY (nummer)
 ```
 
-`beruf` wird beim manuellen Anlegen des Blocks gesetzt (Auswahl aus den in der Einstellung „Kompetenzrahmen je Beruf" konfigurierten Codes) und schränkt die LK-Auswahl in `block_lk` auf den zum Beruf konfigurierten Kompetenzrahmen ein — ohne dieses Feld standen bei mehreren konfigurierten Berufen alle Rahmen gemischt in einem Dropdown. Leer bleibt es typischerweise bei berufsübergreifenden `ist_betrieb=0`-Blöcken (Schule, üK, Ferien, Militär), die für alle Berufe denselben Blockcode verwenden — `nummer` bleibt deshalb weiterhin der alleinige, berufsunabhängige Schlüssel aus der Excel-Zelle (siehe §5.1); der Import kennt `beruf` nicht und muss es auch nicht kennen, da Blöcke ohnehin manuell gepflegt werden.
+`beruf` wird beim manuellen Anlegen des Blocks gesetzt (Auswahl aus den auf der Seite „Kompetenzrahmen je Beruf" konfigurierten Codes) und schränkt die LK-Auswahl in `block_lk` auf den zum Beruf konfigurierten Kompetenzrahmen ein — ohne dieses Feld standen bei mehreren konfigurierten Berufen alle Rahmen gemischt in einem Dropdown. Leer bleibt es typischerweise bei berufsübergreifenden `ist_betrieb=0`-Blöcken (Schule, üK, Ferien, Militär), die für alle Berufe denselben Blockcode verwenden — `nummer` bleibt deshalb weiterhin der alleinige, berufsunabhängige Schlüssel aus der Excel-Zelle (siehe §5.1); der Import kennt `beruf` nicht und muss es auch nicht kennen, da Blöcke ohnehin manuell gepflegt werden.
 
 ```
 local_berufsbildung_block_lk

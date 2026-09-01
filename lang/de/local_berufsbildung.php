@@ -44,12 +44,6 @@ $string['settings:lehrdauer_semester'] = 'Lehrdauer in Semestern (Standard)';
 $string['settings:lehrdauer_semester_desc'] = 'Anzahl Semester bis zum Lehrabschluss, sofern der Beruf nicht unten unter "Lehrdauer je Beruf" abweichend eingetragen ist. Standard: 8 (vier Lehrjahre).';
 $string['settings:beruf_dauer'] = 'Lehrdauer je Beruf';
 $string['settings:beruf_dauer_desc'] = 'Abweichende Lehrdauer für einzelne Berufe, eine Zeile pro Beruf im Format CODE=Semester, z. B. "PM_EFZ=6" für eine dreijährige Lehre. Berufe, die hier nicht aufgeführt sind, verwenden die Lehrdauer oben.';
-$string['settings:beruf_rahmen_mapping'] = 'Kompetenzrahmen je Beruf';
-$string['settings:beruf_rahmen_mapping_desc'] = 'Ordnet jedem Beruf seinen core_competency-Kompetenzrahmen zu, eine Zeile je Beruf im Format CODE=framework_idnumber, z. B. "AU_EFZ=au-2022". Wird für die Lückenanalyse und die HKB-Auswahl in aufsetzenden Plugins verwendet. Berufe, die hier nicht aufgeführt sind, haben keinen Rahmen zugeordnet.
-
-Ein Rahmen mit ausschliesslich den betrieblich vermittelten Handlungskompetenzbereichen genügt vollständig und ist die passendere Wahl als ein vollständiger Rahmen mit schulisch/überbetrieblich vermittelten HKB: Sowohl die Lerndokumentation (nur betriebliche Tätigkeiten, Art. 12 BiVo) als auch die Kompetenzabdeckung des Versetzungsplans (`get_ausgebildete_kompetenzen()`, nur Blöcke mit `ist_betrieb = true`) zeigen ohnehin nur betriebsrelevante Kompetenzen an bzw. werten sie aus.
-
-Der Rahmen muss der lernenden Person nicht zusätzlich zugewiesen werden (kein Lernplan, keine Kurs-Verknüpfung nötig) - der Kompetenznachweis (`core_competency\\api::add_evidence()`) legt den `user_competency`-Datensatz beim ersten Eintrag automatisch an.';
 $string['settings:beruf_wahlpflicht_hk'] = 'Wahlpflicht-Handlungskompetenzen je Beruf';
 $string['settings:beruf_wahlpflicht_hk_desc'] = 'Wahlpflicht-HK werden in der Lückenanalyse nicht als fehlend ausgewiesen. Eine Zeile je Beruf im Format CODE=HK-ID,HK-ID, zum Beispiel "AU_EFZ=7777 a.04,7777 a.05". Die HK-ID ist die ID-Nummer einer Handlungskompetenz (zweite Ebene des Kompetenzrahmens, unterhalb der Handlungskompetenzbereiche). Für die AU-Datei sind dies die als W markierten HK.';
 $string['settings:versetzungsplan_schwelle_prozent'] = 'Schwelle für unvollständige Lieferungen (%)';
@@ -206,10 +200,28 @@ $string['blocklk:keine'] = 'Für diesen Block ist noch keine Kompetenz hinterleg
 $string['blocklk:fehler_existiert'] = 'Diese Kompetenz ist diesem Block bereits zugeordnet.';
 $string['blocklk:keine_kompetenzen'] = 'Es sind keine Leistungskriterien vorhanden - core_competency zuerst einrichten.';
 $string['blocklk:kein_beruf'] = 'Für diesen Block ist kein Beruf hinterlegt. Beruf zuerst beim Block setzen, um Kompetenzen zuordnen zu können.';
-$string['blocklk:kein_rahmen'] = 'Für den Beruf "{$a}" ist kein Kompetenzrahmen konfiguriert (siehe Einstellung "Kompetenzrahmen je Beruf").';
+$string['blocklk:kein_rahmen'] = 'Für den Beruf "{$a}" ist kein Kompetenzrahmen konfiguriert (siehe Seite "Kompetenzrahmen je Beruf").';
 $string['blocklk:hinzugefuegt'] = 'Kompetenz hinzugefügt.';
 $string['blocklk:entfernt'] = 'Kompetenz entfernt.';
 $string['blocklk:zurueck'] = 'Zurück zu den Ausbildungsblöcken';
+
+$string['berufrahmen:uebersicht'] = 'Kompetenzrahmen je Beruf';
+$string['berufrahmen:einleitung'] = 'Ordnet jedem Beruf seinen core_competency-Kompetenzrahmen zu. Wird für die Lückenanalyse und die Filterung der Leistungskriterien bei der Blockzuordnung verwendet. Berufe, die hier nicht aufgeführt sind, haben keinen Rahmen zugeordnet.
+
+Ein Rahmen mit ausschliesslich den betrieblich vermittelten Handlungskompetenzbereichen genügt vollständig und ist die passendere Wahl als ein vollständiger Rahmen mit schulisch/überbetrieblich vermittelten Bereichen: Sowohl die Lerndokumentation (nur betriebliche Tätigkeiten, Art. 12 BiVo) als auch die Kompetenzabdeckung des Versetzungsplans (get_ausgebildete_kompetenzen(), nur Blöcke mit ist_betrieb = true) zeigen ohnehin nur betriebsrelevante Kompetenzen an bzw. werten sie aus.
+
+Der Rahmen muss der lernenden Person nicht zusätzlich zugewiesen werden (kein Lernplan, keine Kurs-Verknüpfung nötig) - der Kompetenznachweis (core_competency\\api::add_evidence()) legt den user_competency-Datensatz beim ersten Eintrag automatisch an.';
+$string['berufrahmen:beruf'] = 'Beruf';
+$string['berufrahmen_beruf'] = 'Beruf';
+$string['berufrahmen_beruf_help'] = 'Muss exakt dem Wert entsprechen, den lernende Personen dieses Berufs im konfigurierten Profilfeld "Beruf" stehen haben, und exakt dem Wert, der beim jeweiligen Ausbildungsblock als Beruf ausgewählt wird.';
+$string['berufrahmen:rahmen'] = 'Kompetenzrahmen';
+$string['berufrahmen:hinzufuegen'] = 'Zuordnung hinzufügen';
+$string['berufrahmen:entfernen'] = 'Entfernen';
+$string['berufrahmen:keine'] = 'Es ist noch kein Beruf einem Kompetenzrahmen zugeordnet.';
+$string['berufrahmen:keine_rahmen'] = 'Es sind keine Kompetenzrahmen vorhanden - core_competency zuerst einrichten.';
+$string['berufrahmen:fehler_existiert'] = 'Dieser Beruf ist bereits einem Rahmen zugeordnet - zuerst entfernen, um die Zuordnung zu ändern.';
+$string['berufrahmen:hinzugefuegt'] = 'Zuordnung gespeichert.';
+$string['berufrahmen:entfernt'] = 'Zuordnung entfernt.';
 
 $string['planimport:titel'] = 'Versetzungsplan-Import';
 $string['planimport:beschreibung'] = 'Rückfallweg für den Fall, dass der wöchentliche Webservice-Import (noch) nicht läuft, oder wenn ausserplanmässig etwas nachgezogen werden muss. Nimmt dieselbe CSV entgegen wie der Webservice - siehe docs/schnittstelle_versetzungsplan.md.';

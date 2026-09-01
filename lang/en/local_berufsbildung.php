@@ -44,12 +44,6 @@ $string['settings:lehrdauer_semester'] = 'Training length in semesters (default)
 $string['settings:lehrdauer_semester_desc'] = 'Number of semesters until completion, unless overridden for a specific occupation below under "Training length per occupation". Default: 8 (four years).';
 $string['settings:beruf_dauer'] = 'Training length per occupation';
 $string['settings:beruf_dauer_desc'] = 'Overrides the training length for individual occupations, one line per occupation in the format CODE=semesters, e.g. "PM_EFZ=6" for a three-year programme. Occupations not listed here use the default length above.';
-$string['settings:beruf_rahmen_mapping'] = 'Competency framework per occupation';
-$string['settings:beruf_rahmen_mapping_desc'] = 'Maps each occupation to its core_competency framework, one line per occupation in the format CODE=framework_idnumber, e.g. "AU_EFZ=au-2022". Used for the gap analysis and for HKB selection in plugins built on top. Occupations not listed here have no framework assigned.
-
-A framework containing only the competencies taught at the workplace is entirely sufficient, and is actually the better fit than a full framework that also includes competencies taught at school or in inter-company courses: both the learning journal (workplace activities only, per Art. 12 BiVo) and the rotation plan\'s competency coverage (`get_ausgebildete_kompetenzen()`, only blocks with `ist_betrieb = true`) only ever show or evaluate workplace-relevant competencies anyway.
-
-The framework does not need to be separately assigned to the trainee (no learning plan or course link required) - recording evidence (`core_competency\\api::add_evidence()`) creates the `user_competency` record automatically on the first entry.';
 $string['settings:beruf_wahlpflicht_hk'] = 'Elective competency areas per occupation';
 $string['settings:beruf_wahlpflicht_hk_desc'] = 'Elective competency areas are not shown as missing in the gap analysis. One line per occupation in the format CODE=COMPETENCY-ID,COMPETENCY-ID, for example "AU_EFZ=7777 a.04,7777 a.05". The competency ID is the idnumber of a competency (second level of the framework, below the top-level competency areas).';
 $string['settings:versetzungsplan_schwelle_prozent'] = 'Threshold for incomplete deliveries (%)';
@@ -206,10 +200,28 @@ $string['blocklk:keine'] = 'No competency has been assigned to this block yet.';
 $string['blocklk:fehler_existiert'] = 'This competency is already assigned to this block.';
 $string['blocklk:keine_kompetenzen'] = 'No competencies exist - set up core_competency first.';
 $string['blocklk:kein_beruf'] = 'No occupation is set for this block. Set the occupation on the block first to be able to assign competencies.';
-$string['blocklk:kein_rahmen'] = 'No competency framework is configured for occupation "{$a}" (see the "Competency framework per occupation" setting).';
+$string['blocklk:kein_rahmen'] = 'No competency framework is configured for occupation "{$a}" (see the "Competency framework per occupation" page).';
 $string['blocklk:hinzugefuegt'] = 'Competency added.';
 $string['blocklk:entfernt'] = 'Competency removed.';
 $string['blocklk:zurueck'] = 'Back to training blocks';
+
+$string['berufrahmen:uebersicht'] = 'Competency framework per occupation';
+$string['berufrahmen:einleitung'] = 'Maps each occupation to its core_competency framework. Used for the gap analysis and to filter the performance criteria offered when assigning them to a block. Occupations not listed here have no framework assigned.
+
+A framework containing only the competencies taught at the workplace is entirely sufficient, and is actually the better fit than a full framework that also includes competencies taught at school or in inter-company courses: both the learning journal (workplace activities only, per Art. 12 BiVo) and the rotation plan\'s competency coverage (get_ausgebildete_kompetenzen(), only blocks with ist_betrieb = true) only ever show or evaluate workplace-relevant competencies anyway.
+
+The framework does not need to be separately assigned to the trainee (no learning plan or course link required) - recording evidence (core_competency\\api::add_evidence()) creates the user_competency record automatically on the first entry.';
+$string['berufrahmen:beruf'] = 'Occupation';
+$string['berufrahmen_beruf'] = 'Occupation';
+$string['berufrahmen_beruf_help'] = 'Must match exactly the value trainees in this occupation have in the configured "Occupation" profile field, and exactly the value selected as the occupation on the relevant training block.';
+$string['berufrahmen:rahmen'] = 'Competency framework';
+$string['berufrahmen:hinzufuegen'] = 'Add mapping';
+$string['berufrahmen:entfernen'] = 'Remove';
+$string['berufrahmen:keine'] = 'No occupation is mapped to a competency framework yet.';
+$string['berufrahmen:keine_rahmen'] = 'No competency frameworks exist - set up core_competency first.';
+$string['berufrahmen:fehler_existiert'] = 'This occupation is already mapped to a framework - remove it first to change the mapping.';
+$string['berufrahmen:hinzugefuegt'] = 'Mapping saved.';
+$string['berufrahmen:entfernt'] = 'Mapping removed.';
 
 $string['planimport:titel'] = 'Rotation-plan import';
 $string['planimport:beschreibung'] = 'Fallback for when the weekly webservice import is not (yet) running, or when something needs to be applied outside the schedule. Accepts the same CSV as the webservice - see docs/schnittstelle_versetzungsplan.md.';

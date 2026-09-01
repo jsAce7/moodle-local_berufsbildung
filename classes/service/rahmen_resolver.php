@@ -36,44 +36,15 @@ namespace local_berufsbildung\service;
 class rahmen_resolver {
 
     /**
-     * Framework-idnumber fuer einen Beruf, oder null wenn nicht
-     * konfiguriert. Absichtlich die idnumber (nicht die id) - core_competency
-     * bleibt die geteilte Grundlage, hier wird nur der Zeiger darauf verwaltet
-     * (siehe CLAUDE.md "Was nicht in dieses Plugin gehört").
-     *
-     * @param string $beruf Beruf-Code, z. B. 'AU_EFZ'
      * @param string $konfiguration Eine Zeile je Beruf im Format
      *                               'CODE=framework_idnumber', z. B.
      *                               "AU_EFZ=au-2022\nPM_EFZ=pm-2022". Zeilen
      *                               ohne '=' werden uebersprungen.
-     * @return string|null
+     * @return array<string, string> Beruf-Code => Framework-idnumber, in der
+     *                                vorkommenden Reihenfolge
      */
-    public function loese_auf(string $beruf, string $konfiguration): ?string {
-        foreach (preg_split('/\r\n|\r|\n/', $konfiguration) as $zeile) {
-            $zeile = trim($zeile);
-            if ($zeile === '' || !str_contains($zeile, '=')) {
-                continue;
-            }
-
-            [$code, $idnumber] = array_map('trim', explode('=', $zeile, 2));
-            if ($code === $beruf && $idnumber !== '') {
-                return $idnumber;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Alle in der Konfiguration hinterlegten Beruf-Codes, in der
-     * vorkommenden Reihenfolge - fuer Auswahllisten (z.B. beim manuellen
-     * Anlegen eines Ausbildungsblocks).
-     *
-     * @param string $konfiguration Format wie bei loese_auf()
-     * @return string[]
-     */
-    public function alle_codes(string $konfiguration): array {
-        $codes = [];
+    private function parse(string $konfiguration): array {
+        $paare = [];
 
         foreach (preg_split('/\r\n|\r|\n/', $konfiguration) as $zeile) {
             $zeile = trim($zeile);
@@ -83,10 +54,64 @@ class rahmen_resolver {
 
             [$code, $idnumber] = array_map('trim', explode('=', $zeile, 2));
             if ($code !== '' && $idnumber !== '') {
-                $codes[$code] = true;
+                $paare[$code] = $idnumber;
             }
         }
 
-        return array_keys($codes);
+        return $paare;
+    }
+
+    /**
+     * Framework-idnumber fuer einen Beruf, oder null wenn nicht
+     * konfiguriert. Absichtlich die idnumber (nicht die id) - core_competency
+     * bleibt die geteilte Grundlage, hier wird nur der Zeiger darauf verwaltet
+     * (siehe CLAUDE.md "Was nicht in dieses Plugin gehört").
+     *
+     * @param string $beruf Beruf-Code, z. B. 'AU_EFZ'
+     * @param string $konfiguration Format wie bei parse()
+     * @return string|null
+     */
+    public function loese_auf(string $beruf, string $konfiguration): ?string {
+        return $this->parse($konfiguration)[$beruf] ?? null;
+    }
+
+    /**
+     * Alle in der Konfiguration hinterlegten Beruf-Codes, in der
+     * vorkommenden Reihenfolge - fuer Auswahllisten (z.B. beim manuellen
+     * Anlegen eines Ausbildungsblocks).
+     *
+     * @param string $konfiguration Format wie bei parse()
+     * @return string[]
+     */
+    public function alle_codes(string $konfiguration): array {
+        return array_keys($this->parse($konfiguration));
+    }
+
+    /**
+     * Die vollstaendige Zuordnung Beruf-Code => Framework-idnumber, fuer
+     * die Verwaltungsseite (beruf_rahmen.php).
+     *
+     * @param string $konfiguration Format wie bei parse()
+     * @return array<string, string>
+     */
+    public function alle_paare(string $konfiguration): array {
+        return $this->parse($konfiguration);
+    }
+
+    /**
+     * Kehrfunktion zu parse()/alle_paare(): baut aus der Zuordnung wieder
+     * den Konfigurations-String, damit die Verwaltungsseite ohne eigenes
+     * Wissen um das Zeilenformat auskommt.
+     *
+     * @param array<string, string> $paare Beruf-Code => Framework-idnumber
+     * @return string
+     */
+    public function serialisiere(array $paare): string {
+        $zeilen = [];
+        foreach ($paare as $code => $idnumber) {
+            $zeilen[] = "{$code}={$idnumber}";
+        }
+
+        return implode("\n", $zeilen);
     }
 }

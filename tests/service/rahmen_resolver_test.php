@@ -91,4 +91,43 @@ final class rahmen_resolver_test extends advanced_testcase {
 
         $this->assertSame(['PM_EFZ'], $resolver->alle_codes($konfiguration));
     }
+
+    public function test_alle_paare_liefert_vollstaendige_zuordnung(): void {
+        $resolver = new rahmen_resolver();
+        $konfiguration = "AU_EFZ=au-2022\nPM_EFZ=pm-2022";
+
+        $this->assertSame(['AU_EFZ' => 'au-2022', 'PM_EFZ' => 'pm-2022'], $resolver->alle_paare($konfiguration));
+    }
+
+    public function test_alle_paare_bei_leerer_konfiguration_liefert_leeres_array(): void {
+        $resolver = new rahmen_resolver();
+
+        $this->assertSame([], $resolver->alle_paare(''));
+    }
+
+    public function test_serialisiere_baut_konfigurations_string(): void {
+        $resolver = new rahmen_resolver();
+
+        $this->assertSame(
+            "AU_EFZ=au-2022\nPM_EFZ=pm-2022",
+            $resolver->serialisiere(['AU_EFZ' => 'au-2022', 'PM_EFZ' => 'pm-2022'])
+        );
+    }
+
+    public function test_serialisiere_bei_leerem_array_liefert_leeren_string(): void {
+        $resolver = new rahmen_resolver();
+
+        $this->assertSame('', $resolver->serialisiere([]));
+    }
+
+    /**
+     * Randfall: serialisiere() und alle_paare() muessen sich umkehren
+     * lassen, sonst verliert die Verwaltungsseite beim Speichern Eintraege.
+     */
+    public function test_serialisiere_und_alle_paare_sind_umkehrbar(): void {
+        $resolver = new rahmen_resolver();
+        $paare = ['AU_EFZ' => 'au-2022', 'PM_EFZ' => 'pm-2022'];
+
+        $this->assertSame($paare, $resolver->alle_paare($resolver->serialisiere($paare)));
+    }
 }

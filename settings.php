@@ -103,14 +103,6 @@ if ($hassiteconfig) {
     ));
 
     $settings->add(new admin_setting_configtextarea(
-        'local_berufsbildung/beruf_rahmen_mapping',
-        new lang_string('settings:beruf_rahmen_mapping', 'local_berufsbildung'),
-        new lang_string('settings:beruf_rahmen_mapping_desc', 'local_berufsbildung'),
-        '',
-        PARAM_RAW
-    ));
-
-    $settings->add(new admin_setting_configtextarea(
         'local_berufsbildung/beruf_wahlpflicht_hk',
         new lang_string('settings:beruf_wahlpflicht_hk', 'local_berufsbildung'),
         new lang_string('settings:beruf_wahlpflicht_hk_desc', 'local_berufsbildung'),
@@ -161,6 +153,13 @@ if ($hassiteconfig) {
         'local_berufsbildung_bloecke',
         new lang_string('bloecke:uebersicht', 'local_berufsbildung'),
         new moodle_url('/local/berufsbildung/bloecke.php'),
+        'local/berufsbildung:manageblocks'
+    ));
+
+    $ADMIN->add('ausbildungsverwaltung_planung', new admin_externalpage(
+        'local_berufsbildung_berufrahmen',
+        new lang_string('berufrahmen:uebersicht', 'local_berufsbildung'),
+        new moodle_url('/local/berufsbildung/beruf_rahmen.php'),
         'local/berufsbildung:manageblocks'
     ));
 
