@@ -134,6 +134,40 @@ final class import_service_test extends advanced_testcase {
     }
 
     /**
+     * Abnahmekriterium: eine inhaltlich unveraenderte CSV wird trotzdem neu
+     * verarbeitet, wenn zwischen den Lieferungen eine Zuordnung dazugekommen
+     * ist - sonst wuerde eine neu zugeordnete Person erst mit der naechsten
+     * inhaltlich abweichenden Lieferung erfasst, nicht schon mit der
+     * naechsten (identischen) woechentlichen.
+     */
+    public function test_unveraenderte_csv_aber_neue_zuordnung_wird_erneut_verarbeitet(): void {
+        $this->resetAfterTest();
+
+        $admin = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user(['email' => 'anna.muster@firma.ch']);
+        (new block(0, (object) ['nummer' => '4', 'name' => '4', 'ist_betrieb' => true, 'aktiv' => true]))->create();
+
+        $csv = "email;block;kw_von;kw_bis\nanna.muster@firma.ch;4;2027-W15;2027-W16\n";
+        $service = new import_service();
+
+        // Erste Lieferung: noch keine Zuordnung, Zeile laeuft ins Leere.
+        $erstesergebnis = $service->verarbeiten($csv, 'upload', (int) $admin->id);
+        $this->assertFalse($erstesergebnis['unveraendert']);
+        $this->assertSame(0, $erstesergebnis['personen_verarbeitet']);
+        $this->assertCount(1, plan_import::get_records([]));
+
+        $this->lege_aktive_zuordnung_an($lernende);
+
+        // Zweite Lieferung: derselbe CSV-Text, aber jetzt existiert die Zuordnung.
+        $zweitesergebnis = $service->verarbeiten($csv, 'upload', (int) $admin->id);
+
+        $this->assertFalse($zweitesergebnis['unveraendert']);
+        $this->assertSame(1, $zweitesergebnis['personen_verarbeitet']);
+        $this->assertCount(2, plan_import::get_records([]));
+        $this->assertCount(1, einsatz::get_records(['userid' => (int) $lernende->id]));
+    }
+
+    /**
      * Abnahmekriterium: eine Lieferung mit deutlich weniger verarbeiteten
      * Personen wird abgewiesen und loescht nichts.
      */

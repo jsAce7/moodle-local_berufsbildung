@@ -31,10 +31,17 @@ use local_berufsbildung\api;
 use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\einsatz;
 use local_berufsbildung\persistent\plan_import;
+use local_berufsbildung\persistent\zuordnung;
 
 /**
  * Reihenfolge (siehe docs/schnittstelle_versetzungsplan.md):
- * 1. Hash gegen den letzten erfolgreichen Import - unveraendert -> nichts tun.
+ * 1. Hash aus CSV-Inhalt und aktuellem Zuordnungsstand gegen den letzten
+ *    erfolgreichen Import - unveraendert -> nichts tun. Der Zuordnungsstand
+ *    fliesst mit ein, damit eine inhaltlich identische Lieferung trotzdem
+ *    neu verarbeitet wird, wenn seither eine Zuordnung dazugekommen oder
+ *    beendet wurde - sonst wuerde eine neu zugeordnete Person erst mit der
+ *    naechsten inhaltlich abweichenden Lieferung erfasst, nicht schon mit
+ *    der naechsten (identischen) woechentlichen.
  * 2. CSV parsen - bei Kopfzeilenfehlern: fehlgeschlagen, nichts geschrieben.
  * 3. Jede Zeile aufloesen: E-Mail -> Nutzer/in, nur bei aktiver Zuordnung
  *    verarbeiten (lautlos gezaehlt, nicht protokolliert), unbekannte
@@ -68,7 +75,7 @@ class import_service {
         bool $testlauf = false,
         bool $rueckgangbestaetigt = false
     ): array {
-        $hash = hash('sha256', $csvinhalt);
+        $hash = hash('sha256', $csvinhalt . "\x00" . $this->zuordnungs_fingerabdruck());
         $letztererfolgreicher = $this->letzter_erfolgreicher_import();
 
         if ($letztererfolgreicher !== null && $letztererfolgreicher->get('daten_hash') === $hash) {
@@ -383,6 +390,27 @@ class import_service {
             'protokoll' => implode("\n", $protokoll),
         ]);
         $eintrag->create();
+    }
+
+    /**
+     * Anzahl und juengste Aenderung der zum jetzigen Zeitpunkt aktiven
+     * Zuordnungen - dieselbe Stichtag-Bedingung wie api::get_berufsbildner_for().
+     * Kein voller Abgleich, nur ein billiger Fingerabdruck, der sich aendert,
+     * sobald eine Zuordnung dazukommt, endet oder verschoben wird.
+     */
+    private function zuordnungs_fingerabdruck(): string {
+        global $DB;
+
+        $jetzt = time();
+        $zeile = $DB->get_record_sql(
+            'SELECT COUNT(*) AS anzahl, COALESCE(MAX(timemodified), 0) AS letzteaenderung
+               FROM {' . zuordnung::TABLE . '}
+              WHERE gueltig_von <= :stichtag1
+                AND (gueltig_bis IS NULL OR gueltig_bis >= :stichtag2)',
+            ['stichtag1' => $jetzt, 'stichtag2' => $jetzt]
+        );
+
+        return $zeile->anzahl . ':' . $zeile->letzteaenderung;
     }
 
     private function letzter_erfolgreicher_import(): ?plan_import {
