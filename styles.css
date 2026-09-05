@@ -61,3 +61,57 @@
 .local-berufsbildung-nachweis:last-child {
     border-bottom: 0 !important;
 }
+
+.local-berufsbildung-einsatz-aktuell .local-berufsbildung-einsatz-blockname {
+    font-size: 1.05rem;
+}
+
+.local-berufsbildung-timeline-liste {
+    position: relative;
+    margin-left: 0.3rem;
+    padding-left: 1rem;
+    border-left: 1px solid currentColor;
+    opacity: 0.95;
+}
+
+.local-berufsbildung-timeline-eintrag {
+    position: relative;
+    padding-bottom: 0.6rem;
+}
+
+.local-berufsbildung-timeline-eintrag:last-child {
+    padding-bottom: 0;
+}
+
+.local-berufsbildung-timeline-punkt {
+    position: absolute;
+    top: 0.35rem;
+    left: -1.3rem;
+    display: inline-block;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+}
+
+.local-berufsbildung-timeline-aktuell .local-berufsbildung-timeline-punkt {
+    top: 0.25rem;
+    left: -1.45rem;
+    width: 0.9rem;
+    height: 0.9rem;
+}
+
+.local-berufsbildung-timeline-aktuell .local-berufsbildung-timeline-blockname {
+    font-weight: bold;
+}
+
+.local-berufsbildung-timeline-vergangen {
+    opacity: 0.7;
+}
+
+.local-berufsbildung-luecken-bereiche > .local-berufsbildung-luecken-bereich {
+    padding-bottom: 0.15rem;
+}
+
+.local-berufsbildung-luecken-bereich > .local-berufsbildung-luecken-liste {
+    margin-left: 1.1rem;
+}

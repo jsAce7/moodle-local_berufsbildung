@@ -743,4 +743,145 @@ final class api_test extends advanced_testcase {
         ]))->create();
         $this->assertFalse(api::aufbewahrungsfrist_abgelaufen((int) $lernende->id, $ablauf));
     }
+
+    /**
+     * Jahrgang so waehlen, dass "jetzt" immer mitten in der Lehre liegt,
+     * unabhaengig davon, in welchem Kalendermonat der Test laeuft.
+     */
+    private function laufender_jahrgang(): int {
+        $jetzt = time();
+
+        return (int) date('n', $jetzt) >= 8 ? (int) date('Y', $jetzt) - 1 : (int) date('Y', $jetzt) - 2;
+    }
+
+    public function test_get_ausbildungsbeginn_berechnet_ersten_semesterbeginn(): void {
+        $this->resetAfterTest();
+        $lernende = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_lernende([
+            'beruf' => 'AU_EFZ',
+            'jahrgang' => '2026',
+        ]);
+
+        $erwartet = (new semester_calculator(8, 8))->semester_grenzen(2026, 1)[0];
+
+        $this->assertSame($erwartet, api::get_ausbildungsbeginn((int) $lernende->id));
+    }
+
+    public function test_get_ausbildungsbeginn_ohne_profildaten_ist_null(): void {
+        $this->resetAfterTest();
+        $lernende = $this->getDataGenerator()->create_user();
+
+        $this->assertNull(api::get_ausbildungsbeginn((int) $lernende->id));
+    }
+
+    public function test_get_ausbildungsphase_laufende_lehre(): void {
+        $this->resetAfterTest();
+        $lernende = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_lernende([
+            'beruf' => 'AU_EFZ',
+            'jahrgang' => (string) $this->laufender_jahrgang(),
+        ]);
+
+        $this->assertSame(api::PHASE_LAUFEND, api::get_ausbildungsphase((int) $lernende->id));
+    }
+
+    /**
+     * Ohne Beruf/Jahrgang im Profil ist die Phase unbekannt - nie
+     * stillschweigend "beendet". Die Unterscheidung ist der Grund, warum
+     * es diese Methode neben get_ausbildungsstand() ueberhaupt gibt.
+     */
+    public function test_get_ausbildungsphase_ohne_profildaten_ist_unbekannt(): void {
+        $this->resetAfterTest();
+        $lernende = $this->getDataGenerator()->create_user();
+
+        $this->assertSame(api::PHASE_UNBEKANNT, api::get_ausbildungsphase((int) $lernende->id));
+    }
+
+    /**
+     * Der Stichtag-Randfall: die Lehre gilt am ersten Tag und noch in der
+     * letzten Sekunde als laufend, eine Sekunde vor dem Beginn bzw. nach
+     * dem Ende dagegen nicht mehr.
+     */
+    public function test_get_ausbildungsphase_stichtag_grenzen(): void {
+        $this->resetAfterTest();
+        $lernende = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_lernende([
+            'beruf' => 'AU_EFZ',
+            'jahrgang' => '2026',
+        ]);
+        $lernendeid = (int) $lernende->id;
+
+        $calculator = new semester_calculator(8, 8);
+        [$beginn, ] = $calculator->semester_grenzen(2026, 1);
+        [, $ende] = $calculator->semester_grenzen(2026, 8);
+
+        $this->assertSame(api::PHASE_VOR_BEGINN, api::get_ausbildungsphase($lernendeid, $beginn - 1));
+        $this->assertSame(api::PHASE_LAUFEND, api::get_ausbildungsphase($lernendeid, $beginn));
+        $this->assertSame(api::PHASE_LAUFEND, api::get_ausbildungsphase($lernendeid, $ende));
+        $this->assertSame(api::PHASE_BEENDET, api::get_ausbildungsphase($lernendeid, $ende + 1));
+    }
+
+    /**
+     * Die Phase richtet sich nach der Lehrdauer des Berufs, nicht nach der
+     * globalen: nach sechs Semestern ist eine dreijaehrige Lehre beendet,
+     * waehrend die globale Einstellung noch acht Semester vorsieht.
+     */
+    public function test_get_ausbildungsphase_beruf_mit_abweichender_lehrdauer(): void {
+        $this->resetAfterTest();
+        set_config('beruf_dauer', 'PM_EFZ=6', 'local_berufsbildung');
+        $lernende = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_lernende([
+            'beruf' => 'PM_EFZ',
+            'jahrgang' => '2026',
+        ]);
+
+        [, $ende] = (new semester_calculator(8, 6))->semester_grenzen(2026, 6);
+
+        $this->assertSame(api::PHASE_LAUFEND, api::get_ausbildungsphase((int) $lernende->id, $ende));
+        $this->assertSame(api::PHASE_BEENDET, api::get_ausbildungsphase((int) $lernende->id, $ende + 1));
+    }
+
+    /**
+     * Die Grenzen decken die Lehrzeit lueckenlos ab und keine ueberschreitet
+     * die Grenze zum naechsten Semester (1. Februar / 1. August).
+     */
+    public function test_get_semester_grenzen_deckt_lehrzeit_lueckenlos_ab(): void {
+        $this->resetAfterTest();
+        $lernende = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_lernende([
+            'beruf' => 'AU_EFZ',
+            'jahrgang' => '2026',
+        ]);
+        $lernendeid = (int) $lernende->id;
+
+        $grenzen = api::get_semester_grenzen($lernendeid);
+
+        $this->assertCount(8, $grenzen);
+        $this->assertSame(api::get_ausbildungsbeginn($lernendeid), $grenzen[1][0]);
+        $this->assertSame(api::get_ausbildungsende($lernendeid), $grenzen[8][1]);
+
+        foreach ($grenzen as $semester => [$von, $bis]) {
+            $this->assertLessThan($bis, $von);
+            // Beide Grenzen gehoeren noch zu diesem Semester, nicht zum naechsten.
+            $this->assertSame($semester, api::get_ausbildungsstand($lernendeid, $von)->semester);
+            $this->assertSame($semester, api::get_ausbildungsstand($lernendeid, $bis)->semester);
+
+            if ($semester > 1) {
+                $this->assertSame($grenzen[$semester - 1][1] + 1, $von);
+            }
+        }
+    }
+
+    public function test_get_semester_grenzen_ohne_profildaten_ist_leer(): void {
+        $this->resetAfterTest();
+        $lernende = $this->getDataGenerator()->create_user();
+
+        $this->assertSame([], api::get_semester_grenzen((int) $lernende->id));
+    }
+
+    public function test_get_semester_grenzen_beruf_mit_abweichender_lehrdauer(): void {
+        $this->resetAfterTest();
+        set_config('beruf_dauer', 'PM_EFZ=6', 'local_berufsbildung');
+        $lernende = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_lernende([
+            'beruf' => 'PM_EFZ',
+            'jahrgang' => '2026',
+        ]);
+
+        $this->assertCount(6, api::get_semester_grenzen((int) $lernende->id));
+    }
 }

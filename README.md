@@ -12,7 +12,8 @@ Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentati
 - **Aufbewahrung**: eine konfigurierbare Frist (Standard 12 Monate) nach dem berechneten Lehrabschluss löscht Zuordnungen automatisch endgültig, ausser eine Aufbewahrungspflicht ist dokumentiert. Dieselbe Regel steuert über `\local_berufsbildung\api` auch die Lerndoku-Inhalte in `local_lerndokumentation`.
 - **Ausbildungsstand**: Beruf, Lehrjahr und Semester werden aus zwei Profilfeldern (Beruf, Jahrgang) berechnet, mit konfigurierbarer Lehrdauer je Beruf.
 - **Versetzungsplan**: wöchentlicher CSV-Import (Webservice oder manueller Upload) der betrieblichen Einsätze, mit Kompetenzabdeckung je Ausbildungsblock.
-- **Nachweis-Sammlung**: aufsetzende Plugins registrieren sich als Nachweis-Provider; "Meine Lernenden" (Berufsbildner/in) und "Meine Lehre" (Lernende) zeigen eingesammelte Nachweise über Plugin-Grenzen hinweg — sowie, falls ein Kompetenzrahmen konfiguriert ist, die noch nicht abgedeckten Handlungskompetenzbereiche (`api::get_luecken()`).
+- **Nachweis-Sammlung**: aufsetzende Plugins registrieren sich als Nachweis-Provider; "Meine Lernenden" (Berufsbildner/in) und "Meine Ausbildung" (Lernende) zeigen eingesammelte Nachweise über Plugin-Grenzen hinweg — sowie, falls ein Kompetenzrahmen konfiguriert ist, die noch nicht abgedeckten Handlungskompetenzbereiche, nach Bereich gruppiert und mit Bezugsgrösse (`api::get_luecken_nach_bereich()`).
+- **Eigene Übersicht für Lernende**: "Meine Ausbildung" zeigt Semesterstand, den laufenden Einsatz aus dem Versetzungsplan, den Zeitstrahl aller Einsätze und die eigenen Nachweise nach Semester gruppiert. Die Seite trägt die vier Phasen der Ausbildung (`api::get_ausbildungsphase()`): Profil unvollständig, Lehre beginnt erst, laufend, abgeschlossen — nach dem Lehrabschluss wird sie zum Rückblick, statt leer zu werden.
 
 ## Voraussetzungen
 

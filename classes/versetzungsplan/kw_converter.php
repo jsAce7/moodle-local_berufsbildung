@@ -70,6 +70,23 @@ class kw_converter {
     }
 
     /**
+     * Die reine Wochennummer fuer die Anzeige - das Jahr steht in
+     * Einsatz-Ansichten bereits im Datum daneben. Wirft bewusst nicht:
+     * eine unbekannt formatierte Kalenderwoche darf eine Ansicht nicht
+     * abbrechen, sie wird stattdessen weggelassen.
+     *
+     * @param string $kw z.B. '2027-W03'
+     * @return string|null z.B. '03', null bei unbekanntem Format
+     */
+    public function zu_wochennummer(string $kw): ?string {
+        if (!preg_match('/^(\d{4})-W(\d{2})$/', $kw, $treffer)) {
+            return null;
+        }
+
+        return $treffer[2];
+    }
+
+    /**
      * @param string $kw
      * @return array{0: int, 1: int} [Jahr, Woche]
      */

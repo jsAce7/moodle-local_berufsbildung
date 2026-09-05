@@ -2,6 +2,25 @@
 
 Alle nennenswerten Änderungen an diesem Plugin werden hier festgehalten. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [0.2.0] — 2026-09-05
+
+### Hinzugefügt
+
+- **„Meine Ausbildung" zeigt den Versetzungsplan**: der laufende Einsatz als Kopfzeile („wo bin ich gerade") und der vollständige Zeitstrahl aller Einsätze mit vergangen/aktuell/kommend (`classes/output/einsatz_karte.php`, `classes/output/einsatz_timeline.php`). Die dafür nötigen API-Methoden gab es bereits, sie hatten bisher nur keinen Anzeige-Ort.
+- **Ausbildungsphase** (`api::get_ausbildungsphase()` mit den Konstanten `PHASE_UNBEKANNT`, `PHASE_VOR_BEGINN`, `PHASE_LAUFEND`, `PHASE_BEENDET`) und **`api::get_ausbildungsbeginn()`** als Gegenstück zu `get_ausbildungsende()`. `get_ausbildungsstand()` liefert in drei fachlich verschiedenen Fällen `null`; aufsetzende Plugins mussten bisher raten, welcher davon vorlag.
+- **`api::get_semester_grenzen()`**: Grenzen aller Semester einer Ausbildung, damit fremde Datensätze (etwa Nachweise) nach Semester einsortiert werden können, ohne je Datum das Profil neu aufzulösen.
+- **`api::get_luecken_nach_bereich()`** und das Wertobjekt `bereich_abdeckung`: dieselbe Lückenanalyse wie `get_luecken()`, aber nach Handlungskompetenzbereich gruppiert und mit Bezugsgrösse („vier von sechs abgedeckt"). Bereiche, deren HK ausschliesslich Wahlpflicht sind, entfallen, statt als „0 von 0" zu erscheinen.
+- **Nachweise nach Semester gruppiert** auf „Meine Ausbildung" (`nachweis_liste::render()` nimmt optional Semestergrenzen entgegen) — eine lernende Person denkt ihre Ausbildung in Semestern, nicht in liefernden Plugins. Ohne Semestergrenzen bleibt es bei der Gruppierung nach Quelle, wie sie „Meine Lernenden" weiterhin nutzt.
+- `kw_converter::zu_wochennummer()` für die Anzeige einer Kalenderwoche, die bei unbekanntem Format bewusst nicht wirft.
+
+### Behoben
+
+- **„Meine Ausbildung" wurde am Tag des Lehrabschlusses schlagartig leer.** Da `get_ausbildungsstand()` nach Ausbildungsende `null` liefert, fiel die gesamte Seite auf die Meldung „Für Ihr Profil ist kein Beruf oder Jahrgang hinterlegt" zurück — inhaltlich falsch (der Beruf *ist* hinterlegt), und alle Nachweise verschwanden aus der Ansicht, obwohl sie während der Aufbewahrungsfrist weiterhin existieren. Die Seite unterscheidet die Fälle jetzt: fehlendes Profil, Lehre beginnt erst (mit Startdatum und, falls vorhanden, bereits dem Versetzungsplan), laufende Lehre und abgeschlossene Lehre (Rückblick mit Abschlussdatum, Zeitstrahl und Nachweisen). Der Stand des letzten Semesters wird dafür über den Stichtag-Parameter aufgelöst, wie ihn Architekturregel 3 vorsieht.
+
+### Geändert
+
+- `luecken_liste::render()` nimmt `bereich_abdeckung[]` statt `int[]` entgegen und kennt eine kompakte Variante für die Roster-Karten in „Meine Lernenden". Die Lückenanalyse wird auf „Meine Ausbildung" nur noch während der laufenden Lehre gezeigt: nach dem Abschluss wäre sie keine Planung mehr, sondern ein Urteil.
+
 ## [0.1.0] — 2026-08-29
 
 Erste funktionale Version. Nicht produktiv freigegeben — siehe README.md, Abschnitt "Was noch fehlt".

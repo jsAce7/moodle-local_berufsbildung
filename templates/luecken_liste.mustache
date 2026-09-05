@@ -21,12 +21,36 @@
     eine Festlegung (Architekturregel 6) - deshalb bewusst als dezenter
     Hinweis, nicht als Warnung/Fehler.
 
+    Nach Handlungskompetenzbereich gruppiert und mit Bezugsgroesse; die
+    kompakte Variante zeigt nur die Zusammenfassung.
+
     Context variables required for this template:
     * hasluecken - bool
-    * anzahl - int
-    * kompetenzen - array of {shortname}
+    * anzahl - int, Anzahl offener Handlungskompetenzen ueber alle Bereiche
+    * zusammenfassung - string, "x von y abgedeckt"
+    * bereiche - array of {name, abdeckung, istvollstaendig, hasluecken, kompetenzen: [{shortname}]}
+    * kompakt - bool, nur die Zusammenfassung ohne Bereichsaufschluesselung
     * titel - string, aria-label fuer die Kompetenzenliste
     * keinetext - string, wenn keine Luecken vorhanden sind
+
+    Example context (json):
+    {
+        "hasluecken": true,
+        "anzahl": 2,
+        "zusammenfassung": "22 von 24 abgedeckt",
+        "kompakt": false,
+        "titel": "Noch nicht ausgebildete Pflicht-Handlungskompetenzen",
+        "keinetext": "Alle Pflicht-Handlungskompetenzen des Rahmens sind bereits abgedeckt.",
+        "bereiche": [
+            {
+                "name": "a Aufträge bearbeiten",
+                "abdeckung": "4 von 6 abgedeckt",
+                "istvollstaendig": false,
+                "hasluecken": true,
+                "kompetenzen": [{"shortname": "a4 Material disponieren"}, {"shortname": "a5 Termine abstimmen"}]
+            }
+        ]
+    }
 }}
 <div class="local-berufsbildung-luecken">
     {{#hasluecken}}
@@ -35,12 +59,25 @@
                 <i class="icon fa fa-lightbulb fa-fw" aria-hidden="true"></i>
                 {{#str}} luecken:titel_anzahl, local_berufsbildung, {{anzahl}} {{/str}}
             </span>
+            <span class="small text-muted ml-1">{{zusammenfassung}}</span>
         </p>
-        <ul class="local-berufsbildung-luecken-liste small text-muted mb-2" aria-label="{{titel}}">
-            {{#kompetenzen}}
-                <li>{{shortname}}</li>
-            {{/kompetenzen}}
-        </ul>
+        {{^kompakt}}
+            <ul class="local-berufsbildung-luecken-bereiche list-unstyled small mb-2" aria-label="{{titel}}">
+                {{#bereiche}}
+                    <li class="local-berufsbildung-luecken-bereich mb-1">
+                        <span class="local-berufsbildung-luecken-bereichname">{{name}}</span>
+                        <span class="text-muted ml-1">{{abdeckung}}</span>
+                        {{#hasluecken}}
+                            <ul class="local-berufsbildung-luecken-liste text-muted mb-0">
+                                {{#kompetenzen}}
+                                    <li>{{shortname}}</li>
+                                {{/kompetenzen}}
+                            </ul>
+                        {{/hasluecken}}
+                    </li>
+                {{/bereiche}}
+            </ul>
+        {{/kompakt}}
     {{/hasluecken}}
     {{^hasluecken}}
         <p class="small text-muted mb-2">{{keinetext}}</p>

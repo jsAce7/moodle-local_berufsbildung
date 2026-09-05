@@ -44,6 +44,18 @@ use local_berufsbildung\versetzungsplan\plan_service;
  */
 class api {
 
+    /** Ausbildungsphase: Beruf oder Jahrgang im Profil nicht aufloesbar. */
+    public const PHASE_UNBEKANNT = 'unbekannt';
+
+    /** Ausbildungsphase: Lehre beginnt zum Stichtag erst noch. */
+    public const PHASE_VOR_BEGINN = 'vor_beginn';
+
+    /** Ausbildungsphase: Lehre laeuft zum Stichtag. */
+    public const PHASE_LAUFEND = 'laufend';
+
+    /** Ausbildungsphase: Lehre war zum Stichtag bereits abgeschlossen. */
+    public const PHASE_BEENDET = 'beendet';
+
     /**
      * Ist diese Person zum Stichtag fuer die/den Lernende/n zustaendig?
      *
@@ -248,6 +260,85 @@ class api {
         [, $ende] = $calculator->semester_grenzen($parameter['jahrgang'], $parameter['lehrdauer']);
 
         return $ende;
+    }
+
+    /**
+     * Timestamp des ersten Tages der Ausbildung - das Gegenstueck zu
+     * get_ausbildungsende(), ebenfalls unabhaengig davon, ob dieser
+     * Zeitpunkt in Vergangenheit oder Zukunft liegt. Null, wenn Beruf oder
+     * Jahrgang nicht aufloesbar sind.
+     *
+     * @param int $lernendeid
+     * @return int|null
+     */
+    public static function get_ausbildungsbeginn(int $lernendeid): ?int {
+        $parameter = self::resolve_ausbildungsparameter($lernendeid);
+        if ($parameter === null) {
+            return null;
+        }
+
+        $calculator = new semester_calculator($parameter['startmonat'], $parameter['lehrdauer']);
+        [$beginn, ] = $calculator->semester_grenzen($parameter['jahrgang'], 1);
+
+        return $beginn;
+    }
+
+    /**
+     * In welcher Phase steht die Ausbildung zum Stichtag?
+     *
+     * get_ausbildungsstand() liefert in drei fachlich sehr verschiedenen
+     * Faellen null - Profil unvollstaendig, Lehre noch nicht begonnen,
+     * Lehre bereits abgeschlossen. Wer daraus eine Meldung baut, muss die
+     * Faelle unterscheiden koennen, ohne die Profilaufloesung
+     * nachzubauen. Genau dafuer ist diese Methode da.
+     *
+     * @param int $lernendeid
+     * @param int|null $stichtag Timestamp, null bedeutet "jetzt"
+     * @return string Eine der PHASE_*-Konstanten
+     */
+    public static function get_ausbildungsphase(int $lernendeid, ?int $stichtag = null): string {
+        $parameter = self::resolve_ausbildungsparameter($lernendeid);
+        if ($parameter === null) {
+            return self::PHASE_UNBEKANNT;
+        }
+
+        $calculator = new semester_calculator($parameter['startmonat'], $parameter['lehrdauer']);
+        $stichtag ??= time();
+
+        if ($calculator->berechne_semester($parameter['jahrgang'], $stichtag) !== null) {
+            return self::PHASE_LAUFEND;
+        }
+
+        // Ausserhalb der Lehrzeit: die Seite des Lehrbeginns entscheidet.
+        [$beginn, ] = $calculator->semester_grenzen($parameter['jahrgang'], 1);
+
+        return $stichtag < $beginn ? self::PHASE_VOR_BEGINN : self::PHASE_BEENDET;
+    }
+
+    /**
+     * Grenzen aller Semester dieser Ausbildung, vom ersten bis zum
+     * letzten. Fuer Ansichten, die fremde Daten nach Semester einsortieren
+     * (etwa Nachweise) - ohne je Datum erneut das Profil aufloesen zu
+     * muessen.
+     *
+     * @param int $lernendeid
+     * @return array<int, array{0: int, 1: int}> Semesternummer => [von, bis],
+     *         leer wenn Beruf oder Jahrgang nicht aufloesbar sind
+     */
+    public static function get_semester_grenzen(int $lernendeid): array {
+        $parameter = self::resolve_ausbildungsparameter($lernendeid);
+        if ($parameter === null) {
+            return [];
+        }
+
+        $calculator = new semester_calculator($parameter['startmonat'], $parameter['lehrdauer']);
+
+        $grenzen = [];
+        for ($semester = 1; $semester <= $parameter['lehrdauer']; $semester++) {
+            $grenzen[$semester] = $calculator->semester_grenzen($parameter['jahrgang'], $semester);
+        }
+
+        return $grenzen;
     }
 
     /**
@@ -483,6 +574,20 @@ class api {
      */
     public static function get_luecken(int $lernendeid, ?int $stichtag = null): array {
         return (new luecken_analyse())->get_luecken($lernendeid, $stichtag);
+    }
+
+    /**
+     * Dieselbe Auswertung wie get_luecken(), nach
+     * Handlungskompetenzbereich gruppiert und um die Bezugsgroesse
+     * ergaenzt - bleibt genauso ein Vorschlag, keine Festlegung
+     * (Architekturregel 6).
+     *
+     * @param int $lernendeid
+     * @param int|null $stichtag Timestamp, null = jetzt
+     * @return bereich_abdeckung[] In der Reihenfolge des Kompetenzrahmens
+     */
+    public static function get_luecken_nach_bereich(int $lernendeid, ?int $stichtag = null): array {
+        return (new luecken_analyse())->get_abdeckung($lernendeid, $stichtag);
     }
 
     /**
