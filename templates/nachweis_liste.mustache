@@ -17,12 +17,37 @@
 {{!
     @template local_berufsbildung/nachweis_liste
 
-    Nachweise gruppiert nach Quelle (quelle_key), neueste zuerst je Gruppe.
+    Nachweise gruppiert, neueste zuerst je Gruppe. Die Gruppe ist je nach
+    Aufruf die Quelle oder das Semester - im zweiten Fall weist jede Zeile
+    zusaetzlich ihre Quelle aus (hasquelle).
 
     Context variables required for this template:
-    * gruppen - array of {name, nachweise: [{bezeichnung, datum, hasergebnis, ergebnis, hasurl, url}]}
+    * gruppen - array of {name, nachweise: [{bezeichnung, datum, hasergebnis, ergebnis, hasurl, url, hasquelle, quelle}]}
     * hasgruppen - bool
     * leertext - string, wenn keine Nachweise vorhanden sind
+
+    Example context (json):
+    {
+        "hasgruppen": true,
+        "leertext": "Keine Tätigkeiten vorhanden.",
+        "gruppen": [
+            {
+                "name": "3. Semester",
+                "nachweise": [
+                    {
+                        "bezeichnung": "üK 3: Steuerungstechnik",
+                        "datum": "14. März 2026",
+                        "hasergebnis": true,
+                        "ergebnis": "5.0",
+                        "hasurl": false,
+                        "url": "",
+                        "hasquelle": true,
+                        "quelle": "Überbetriebliche Kurse"
+                    }
+                ]
+            }
+        ]
+    }
 }}
 <div class="local-berufsbildung-nachweise">
     {{#hasgruppen}}
@@ -35,6 +60,7 @@
                             <span class="local-berufsbildung-nachweis-titel">
                                 {{#hasurl}}<a href="{{url}}">{{/hasurl}}{{bezeichnung}}{{#hasurl}}</a> <i class="icon fa fa-external-link-alt fa-fw" aria-hidden="true"></i>{{/hasurl}}
                                 {{#hasergebnis}}<span class="badge bg-secondary ml-2">{{ergebnis}}</span>{{/hasergebnis}}
+                                {{#hasquelle}}<span class="local-berufsbildung-nachweis-quelle badge bg-light text-dark border ml-2">{{quelle}}</span>{{/hasquelle}}
                             </span>
                             <span class="local-berufsbildung-nachweis-datum text-muted small text-nowrap ml-2">{{datum}}</span>
                         </li>

@@ -171,4 +171,154 @@ final class luecken_analyse_test extends advanced_testcase {
 
         $this->assertSame([], (new luecken_analyse())->get_luecken((int) $lernende->id));
     }
+
+    /**
+     * get_abdeckung() liefert dieselbe Auswertung wie get_luecken(), aber
+     * je Handlungskompetenzbereich und mit Bezugsgroesse - "eine von zwei
+     * offen" statt nur eines Namens ohne Nenner.
+     */
+    public function test_get_abdeckung_gruppiert_nach_bereich_mit_bezugsgroesse(): void {
+        $this->resetAfterTest();
+        $this->lege_profilfelder_an();
+        set_config('beruf_rahmen_mapping', 'AU_EFZ=au-2022', 'local_berufsbildung');
+
+        $lernende = $this->getDataGenerator()->create_user([
+            'profile_field_beruf' => 'AU_EFZ',
+            'profile_field_jahrgang' => (string) $this->laufender_jahrgang(),
+        ]);
+
+        // Zwei Bereiche: im ersten ist eine von zwei HK abgedeckt, der
+        // zweite ist unberuehrt.
+        $competencygenerator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $competencygenerator->create_framework(['idnumber' => 'au-2022']);
+        $hkb1 = $competencygenerator->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $hkb2 = $competencygenerator->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $hkabgedeckt = $competencygenerator->create_competency([
+            'competencyframeworkid' => $framework->get('id'), 'parentid' => $hkb1->get('id'),
+        ]);
+        $hkluecke = $competencygenerator->create_competency([
+            'competencyframeworkid' => $framework->get('id'), 'parentid' => $hkb1->get('id'),
+        ]);
+        $hkzweiterbereich = $competencygenerator->create_competency([
+            'competencyframeworkid' => $framework->get('id'), 'parentid' => $hkb2->get('id'),
+        ]);
+        $lk = $competencygenerator->create_competency([
+            'competencyframeworkid' => $framework->get('id'), 'parentid' => $hkabgedeckt->get('id'),
+        ]);
+
+        $block = new block(0, (object) ['nummer' => '4', 'name' => '4', 'ist_betrieb' => true, 'aktiv' => true]);
+        $block->create();
+        (new block_lk(0, (object) [
+            'blockid' => $block->get('id'), 'competencyid' => $lk->get('id'), 'intensitaet' => 'schwerpunkt',
+        ]))->create();
+        (new einsatz(0, (object) [
+            'userid' => $lernende->id, 'blockid' => $block->get('id'),
+            'von' => strtotime('-1 month'), 'bis' => strtotime('+1 month'),
+            'kw_von' => '2027-W01', 'kw_bis' => '2027-W04', 'importid' => 0,
+        ]))->create();
+
+        $abdeckungen = [];
+        foreach ((new luecken_analyse())->get_abdeckung((int) $lernende->id) as $abdeckung) {
+            $abdeckungen[$abdeckung->bereichid] = $abdeckung;
+        }
+
+        $this->assertCount(2, $abdeckungen);
+
+        $ersterbereich = $abdeckungen[(int) $hkb1->get('id')];
+        $this->assertSame(2, $ersterbereich->soll);
+        $this->assertSame(1, $ersterbereich->anzahl_abgedeckt());
+        $this->assertSame([(int) $hkluecke->get('id')], $ersterbereich->luecken);
+        $this->assertFalse($ersterbereich->ist_vollstaendig());
+
+        $zweiterbereich = $abdeckungen[(int) $hkb2->get('id')];
+        $this->assertSame(1, $zweiterbereich->soll);
+        $this->assertSame(0, $zweiterbereich->anzahl_abgedeckt());
+        $this->assertSame([(int) $hkzweiterbereich->get('id')], $zweiterbereich->luecken);
+    }
+
+    /**
+     * Wahlpflicht-HK zaehlen weder als Luecke noch in die Bezugsgroesse -
+     * sonst waere ein vollstaendig ausgebildeter Bereich nie "vollstaendig".
+     * Ein Bereich, dessen HK ausschliesslich Wahlpflicht sind, entfaellt
+     * ganz, statt als "0 von 0" zu erscheinen.
+     */
+    public function test_get_abdeckung_ohne_wahlpflicht_hk(): void {
+        $this->resetAfterTest();
+        $this->lege_profilfelder_an();
+        set_config('beruf_rahmen_mapping', 'AU_EFZ=au-2022', 'local_berufsbildung');
+        set_config('beruf_wahlpflicht_hk', 'AU_EFZ=hk-wahl,hk-nur-wahl', 'local_berufsbildung');
+
+        $lernende = $this->getDataGenerator()->create_user([
+            'profile_field_beruf' => 'AU_EFZ',
+            'profile_field_jahrgang' => (string) $this->laufender_jahrgang(),
+        ]);
+
+        $competencygenerator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $competencygenerator->create_framework(['idnumber' => 'au-2022']);
+        $hkb1 = $competencygenerator->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $hkb2 = $competencygenerator->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $pflicht = $competencygenerator->create_competency([
+            'competencyframeworkid' => $framework->get('id'),
+            'parentid' => $hkb1->get('id'),
+            'idnumber' => 'hk-pflicht',
+        ]);
+        $competencygenerator->create_competency([
+            'competencyframeworkid' => $framework->get('id'),
+            'parentid' => $hkb1->get('id'),
+            'idnumber' => 'hk-wahl',
+        ]);
+        $competencygenerator->create_competency([
+            'competencyframeworkid' => $framework->get('id'),
+            'parentid' => $hkb2->get('id'),
+            'idnumber' => 'hk-nur-wahl',
+        ]);
+
+        $abdeckungen = (new luecken_analyse())->get_abdeckung((int) $lernende->id);
+
+        // Nur der Bereich mit einer Pflicht-HK bleibt uebrig.
+        $this->assertCount(1, $abdeckungen);
+        $this->assertSame((int) $hkb1->get('id'), $abdeckungen[0]->bereichid);
+        $this->assertSame(1, $abdeckungen[0]->soll);
+        $this->assertSame([(int) $pflicht->get('id')], $abdeckungen[0]->luecken);
+    }
+
+    /**
+     * get_luecken() ist seit der Gruppierung nur noch die flache Sicht auf
+     * dieselbe Auswertung - beide duerfen nie auseinanderlaufen.
+     */
+    public function test_get_luecken_bleibt_konsistent_mit_get_abdeckung(): void {
+        $this->resetAfterTest();
+        $this->lege_profilfelder_an();
+        set_config('beruf_rahmen_mapping', 'AU_EFZ=au-2022', 'local_berufsbildung');
+
+        $lernende = $this->getDataGenerator()->create_user([
+            'profile_field_beruf' => 'AU_EFZ',
+            'profile_field_jahrgang' => (string) $this->laufender_jahrgang(),
+        ]);
+
+        $competencygenerator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $competencygenerator->create_framework(['idnumber' => 'au-2022']);
+        $hkb = $competencygenerator->create_competency(['competencyframeworkid' => $framework->get('id')]);
+        $erste = $competencygenerator->create_competency([
+            'competencyframeworkid' => $framework->get('id'), 'parentid' => $hkb->get('id'),
+        ]);
+        $zweite = $competencygenerator->create_competency([
+            'competencyframeworkid' => $framework->get('id'), 'parentid' => $hkb->get('id'),
+        ]);
+
+        $analyse = new luecken_analyse();
+
+        $ausabdeckung = [];
+        foreach ($analyse->get_abdeckung((int) $lernende->id) as $abdeckung) {
+            foreach ($abdeckung->luecken as $competencyid) {
+                $ausabdeckung[] = $competencyid;
+            }
+        }
+
+        $this->assertSame($ausabdeckung, $analyse->get_luecken((int) $lernende->id));
+        $this->assertEqualsCanonicalizing(
+            [(int) $erste->get('id'), (int) $zweite->get('id')],
+            $ausabdeckung
+        );
+    }
 }

@@ -75,7 +75,9 @@ foreach ($namen as $lernendeid => $name) {
         echo semester_stepper::render($stand->semester, $stand->gesamtsemester, kompakt: true);
 
         if (api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null) {
-            echo luecken_liste::render(api::get_luecken($lernendeid));
+            // Kompakt: auf der Roster-Karte zaehlt der Ueberblick, die
+            // Aufschluesselung je Bereich steht auf der Detailansicht.
+            echo luecken_liste::render(api::get_luecken_nach_bereich($lernendeid), kompakt: true);
         }
     }
 

@@ -30,6 +30,7 @@ namespace local_berufsbildung\versetzungsplan;
 use core_competency\competency;
 use core_competency\competency_framework;
 use local_berufsbildung\api;
+use local_berufsbildung\bereich_abdeckung;
 use local_berufsbildung\service\kompetenz_baum;
 
 /**
@@ -40,6 +41,8 @@ use local_berufsbildung\service\kompetenz_baum;
 class luecken_analyse {
 
     /**
+     * Handlungskompetenzen ohne Abdeckung, flach ueber alle Bereiche.
+     *
      * @param int $lernendeid
      * @param int|null $stichtag Timestamp, null = jetzt
      * @return int[] competencyids ohne Abdeckung. Leer, wenn Beruf/Jahrgang
@@ -47,6 +50,30 @@ class luecken_analyse {
      *               Kompetenzrahmen fuer den Beruf konfiguriert ist.
      */
     public function get_luecken(int $lernendeid, ?int $stichtag = null): array {
+        $luecken = [];
+        foreach ($this->get_abdeckung($lernendeid, $stichtag) as $abdeckung) {
+            foreach ($abdeckung->luecken as $competencyid) {
+                $luecken[] = $competencyid;
+            }
+        }
+
+        return $luecken;
+    }
+
+    /**
+     * Dieselbe Auswertung wie get_luecken(), aber nach
+     * Handlungskompetenzbereich gruppiert und um die Bezugsgroesse
+     * ergaenzt: "zwei von sechs offen" sagt fuer die Ausbildungsplanung
+     * mehr als zwei Namen ohne Nenner.
+     *
+     * Bereiche, deren HK ausschliesslich Wahlpflicht sind, erscheinen
+     * nicht - sie haetten sonst eine leere Bezugsgroesse.
+     *
+     * @param int $lernendeid
+     * @param int|null $stichtag Timestamp, null = jetzt
+     * @return bereich_abdeckung[] In der Reihenfolge des Kompetenzrahmens
+     */
+    public function get_abdeckung(int $lernendeid, ?int $stichtag = null): array {
         $ausbildungsstand = api::get_ausbildungsstand($lernendeid, $stichtag);
         if ($ausbildungsstand === null) {
             return [];
@@ -69,19 +96,49 @@ class luecken_analyse {
         // zugeordnet und über plan_service auf ihre HK hochgerechnet.
         $wahlpflicht = array_flip(api::get_wahlpflicht_hk_for_beruf($ausbildungsstand->beruf));
         $rahmenkompetenzen = competency::get_records(['competencyframeworkid' => (int) $framework->get('id')], 'sortorder');
-        $sollkompetenzen = array_map(
-            static fn (competency $kompetenz): int => (int) $kompetenz->get('id'),
-            array_filter(
-                (new kompetenz_baum())->nur_handlungskompetenzen($rahmenkompetenzen),
-                static fn (competency $kompetenz): bool => !isset($wahlpflicht[$kompetenz->get('idnumber')])
-            )
+
+        // Die Bereiche vorab in Rahmenreihenfolge anlegen, damit die
+        // Ausgabe der Gliederung des Rahmens folgt und nicht der
+        // Reihenfolge, in der die einzelnen HK auftauchen.
+        $bereiche = [];
+        foreach ($rahmenkompetenzen as $kompetenz) {
+            if ((int) $kompetenz->get('parentid') === 0) {
+                $bereiche[(int) $kompetenz->get('id')] = ['soll' => 0, 'luecken' => []];
+            }
+        }
+
+        $pflichtkompetenzen = array_filter(
+            (new kompetenz_baum())->nur_handlungskompetenzen($rahmenkompetenzen),
+            static fn (competency $kompetenz): bool => !isset($wahlpflicht[$kompetenz->get('idnumber')])
         );
 
         // Kein unterer Rand (0 = Unix-Epoche): der Versetzungsplan enthaelt
         // ohnehin nur Einsaetze aus der tatsaechlichen Lehrzeit dieser
         // Person, ein separat berechneter Lehrbeginn waere redundant.
-        $ausgebildet = api::get_ausgebildete_kompetenzen($lernendeid, 0, $stichtag ?? time());
+        $ausgebildet = array_flip(api::get_ausgebildete_kompetenzen($lernendeid, 0, $stichtag ?? time()));
 
-        return array_values(array_diff($sollkompetenzen, $ausgebildet));
+        foreach ($pflichtkompetenzen as $kompetenz) {
+            $bereichid = (int) $kompetenz->get('parentid');
+            $competencyid = (int) $kompetenz->get('id');
+
+            $bereiche[$bereichid]['soll']++;
+            if (!isset($ausgebildet[$competencyid])) {
+                $bereiche[$bereichid]['luecken'][] = $competencyid;
+            }
+        }
+
+        $abdeckungen = [];
+        foreach ($bereiche as $bereichid => $zahlen) {
+            if ($zahlen['soll'] === 0) {
+                continue;
+            }
+            $abdeckungen[] = new bereich_abdeckung(
+                bereichid: $bereichid,
+                soll: $zahlen['soll'],
+                luecken: $zahlen['luecken'],
+            );
+        }
+
+        return $abdeckungen;
     }
 }

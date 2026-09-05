@@ -1,0 +1,45 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_berufsbildung/einsatz_karte
+
+    Der laufende Einsatz aus dem Versetzungsplan - fuer eine lernende
+    Person die unmittelbarste Information der Seite. Der Plan ist ein
+    Spiegel, keine Wahrheit (Architekturregel 5), deshalb als Angabe
+    formuliert und nicht als Zusicherung.
+
+    Context variables required for this template:
+    * blockname - string, Bezeichnung des Ausbildungsblocks
+    * zeitraum - string, formatierter Zeitraum
+    * haskw - bool
+    * kw - string, Kalenderwoche oder Wochenspanne
+
+    Example context (json):
+    {
+        "blockname": "Montage",
+        "zeitraum": "02.02.26 bis 27.03.26",
+        "haskw": true,
+        "kw": "KW 06-13"
+    }
+}}
+<div class="local-berufsbildung-einsatz-aktuell d-flex align-items-baseline mt-3">
+    <i class="icon fa fa-map-marker-alt fa-fw text-muted mr-1" aria-hidden="true"></i>
+    <span>
+        <span class="local-berufsbildung-einsatz-blockname font-weight-bold">{{blockname}}</span>
+        <span class="text-muted small ml-1">{{zeitraum}}{{#haskw}} &middot; {{kw}}{{/haskw}}</span>
+    </span>
+</div>

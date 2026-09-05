@@ -101,4 +101,75 @@ final class nachweis_liste_test extends advanced_testcase {
 
         $this->assertStringContainsString('unbekannt', $html);
     }
+
+    /**
+     * Mit Semestergrenzen gruppiert die Liste nach Semester statt nach
+     * Quelle - eine lernende Person denkt ihre Ausbildung in Semestern,
+     * nicht in liefernden Plugins. Das neueste Semester steht oben.
+     */
+    public function test_gruppiert_nach_semester_neuestes_zuerst(): void {
+        $this->resetAfterTest();
+
+        $semestergrenzen = [
+            1 => [1000, 1999],
+            2 => [2000, 2999],
+        ];
+
+        $nachweise = [
+            new nachweis('uek', 'Eintrag im zweiten Semester', 2500, null, null, null),
+            new nachweis('lerndoku', 'Eintrag im ersten Semester', 1500, null, null, null),
+        ];
+
+        $html = nachweis_liste::render($nachweise, ['uek' => 'Überbetriebliche Kurse'], $semestergrenzen);
+
+        $poszweites = strpos($html, get_string('nachweis:semester', 'local_berufsbildung', 2));
+        $poserstes = strpos($html, get_string('nachweis:semester', 'local_berufsbildung', 1));
+        $this->assertNotFalse($poszweites);
+        $this->assertNotFalse($poserstes);
+        $this->assertLessThan($poserstes, $poszweites);
+
+        // Die Quelle steht nun je Zeile, weil die Gruppe das Semester ist.
+        $this->assertStringContainsString('Überbetriebliche Kurse', $html);
+    }
+
+    /**
+     * Randfall an der Semestergrenze: der letzte Zeitpunkt eines Semesters
+     * gehoert noch zu diesem, der erste Zeitpunkt danach zum naechsten.
+     */
+    public function test_semestergrenzen_sind_einschliesslich(): void {
+        $this->resetAfterTest();
+
+        $semestergrenzen = [1 => [1000, 1999], 2 => [2000, 2999]];
+
+        $html = nachweis_liste::render(
+            [new nachweis('uek', 'Letzte Sekunde Semester 1', 1999, null, null, null)],
+            [],
+            $semestergrenzen
+        );
+        $this->assertStringContainsString(get_string('nachweis:semester', 'local_berufsbildung', 1), $html);
+
+        $html = nachweis_liste::render(
+            [new nachweis('uek', 'Erste Sekunde Semester 2', 2000, null, null, null)],
+            [],
+            $semestergrenzen
+        );
+        $this->assertStringContainsString(get_string('nachweis:semester', 'local_berufsbildung', 2), $html);
+    }
+
+    /**
+     * Ein Nachweis ausserhalb jeder Semestergrenze - etwa aus der Zeit vor
+     * dem Lehrbeginn - darf nicht stillschweigend verschwinden.
+     */
+    public function test_nachweis_ausserhalb_der_lehrzeit_geht_nicht_verloren(): void {
+        $this->resetAfterTest();
+
+        $html = nachweis_liste::render(
+            [new nachweis('uek', 'Vor dem Lehrbeginn', 500, null, null, null)],
+            [],
+            [1 => [1000, 1999]]
+        );
+
+        $this->assertStringContainsString('Vor dem Lehrbeginn', $html);
+        $this->assertStringContainsString(get_string('nachweis:ohne_semester', 'local_berufsbildung'), $html);
+    }
 }
