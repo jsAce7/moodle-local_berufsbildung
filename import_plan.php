@@ -24,6 +24,7 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
+require_once($CFG->libdir . '/adminlib.php');
 
 use local_berufsbildung\form\plan_import_form;
 use local_berufsbildung\persistent\plan_import;

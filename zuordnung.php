@@ -23,6 +23,7 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
+require_once($CFG->libdir . '/adminlib.php');
 
 use core_reportbuilder\system_report_factory;
 use local_berufsbildung\reportbuilder\local\systemreports\zuordnungen;

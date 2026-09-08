@@ -25,6 +25,7 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
+require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->libdir . '/csvlib.class.php');
 
 use local_berufsbildung\import\zuordnung_csv_importer;

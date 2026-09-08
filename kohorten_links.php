@@ -23,6 +23,7 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
+require_once($CFG->libdir . '/adminlib.php');
 
 use local_berufsbildung\persistent\kohorten_link;
 use local_berufsbildung\service\kohorten_resolver;
