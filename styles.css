@@ -50,10 +50,6 @@
     margin-top: 0.75rem;
 }
 
-.local-berufsbildung-lernendenkarte .card-title {
-    margin-bottom: 0.15rem;
-}
-
 .local-berufsbildung-nachweisgruppe:last-child {
     margin-bottom: 0 !important;
 }
@@ -114,4 +110,89 @@
 
 .local-berufsbildung-luecken-bereich > .local-berufsbildung-luecken-liste {
     margin-left: 1.1rem;
+}
+
+.local-berufsbildung-roster-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    margin-bottom: 1rem;
+}
+
+.local-berufsbildung-roster-toolbar-filter {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.local-berufsbildung-roster-toolbar-summary {
+    white-space: nowrap;
+}
+
+.local-berufsbildung-roster-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.local-berufsbildung-kachel {
+    padding: 0;
+}
+
+.local-berufsbildung-kachel-summary {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    cursor: pointer;
+}
+
+.local-berufsbildung-kachel-summary::-webkit-details-marker {
+    display: none;
+}
+
+.local-berufsbildung-kachel-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    font-weight: 600;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.local-berufsbildung-kachel-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.local-berufsbildung-kachel-name {
+    display: block;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.local-berufsbildung-kachel-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 0.35rem;
+    flex-shrink: 0;
+}
+
+.local-berufsbildung-kachel-chevron {
+    flex-shrink: 0;
+    align-self: center;
+    transition: transform 0.15s ease;
+}
+
+.local-berufsbildung-kachel[open] .local-berufsbildung-kachel-chevron {
+    transform: rotate(180deg);
 }

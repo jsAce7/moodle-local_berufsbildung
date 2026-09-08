@@ -19,6 +19,12 @@
  * Ausbildungsstand und ihren Taetigkeiten aus allen registrierten
  * Nachweis-Quellen (siehe classes/nachweis/).
  *
+ * Sortiert nach laufendem Semester, dann nach Namen (siehe
+ * output\lernenden_roster::sortiere()), durchsuchbar nach Namen und
+ * filterbar nach Beruf. Jede Person ist eine kompakte Kachel - Details
+ * (Luecken-Aufschluesselung, volle Taetigkeitenliste, Profil-Link)
+ * stehen erst auf Wunsch (natives <details>-Element, kein JavaScript).
+ *
  * @package    local_berufsbildung
  * @copyright  2026 jsAce7
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -28,13 +34,16 @@ require_once(__DIR__ . '/../../config.php');
 
 use local_berufsbildung\api;
 use local_berufsbildung\nachweis\collector;
+use local_berufsbildung\output\lernenden_kachel;
+use local_berufsbildung\output\lernenden_roster;
 use local_berufsbildung\output\luecken_liste;
 use local_berufsbildung\output\nachweis_liste;
-use local_berufsbildung\output\semester_stepper;
 
 require_login();
 
 $berufsbildnerid = (int) $USER->id;
+$suchbegriff = optional_param('suche', '', PARAM_TEXT);
+$berufsfilter = optional_param('beruf', '', PARAM_ALPHANUMEXT);
 
 $PAGE->set_context(context_user::instance($berufsbildnerid));
 $PAGE->set_url(new moodle_url('/local/berufsbildung/meine_lernenden.php'));
@@ -48,51 +57,108 @@ foreach (api::get_lernende_for($berufsbildnerid) as $lernendeid) {
 }
 core_collator::asort($namen);
 
+$eintraege = [];
+foreach ($namen as $lernendeid => $name) {
+    $eintraege[] = [
+        'id' => $lernendeid,
+        'name' => $name,
+        'stand' => api::get_ausbildungsstand($lernendeid),
+    ];
+}
+$eintraege = lernenden_roster::sortiere($eintraege);
+
 echo $OUTPUT->header();
 
-if (empty($namen)) {
+if (empty($eintraege)) {
     echo $OUTPUT->notification(get_string('meine_lernenden:keine_lernenden', 'local_berufsbildung'), 'info');
-}
+} else {
+    $collector = new collector();
+    $quellennamen = $collector->get_quelle_namen();
 
-$collector = new collector();
-$quellennamen = $collector->get_quelle_namen();
+    // Anzahl offener Luecken je Person - vorab fuer den gesamten Bestand
+    // berechnet (nicht nur die aktuell gefilterte Auswahl), damit die
+    // Zusammenfassung in der Toolbar unabhaengig von Suche/Filter bleibt.
+    $anzahlluecken = [];
+    foreach ($eintraege as $eintrag) {
+        $stand = $eintrag['stand'];
+        $anzahlluecken[$eintrag['id']] = ($stand !== null && api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null)
+            ? count(api::get_luecken($eintrag['id']))
+            : 0;
+    }
+    $anzahlmitluecken = count(array_filter($anzahlluecken, static fn (int $anzahl): bool => $anzahl > 0));
 
-foreach ($namen as $lernendeid => $name) {
-    echo html_writer::start_tag('div', ['class' => 'card mb-3 local-berufsbildung-lernendenkarte']);
-    echo html_writer::start_tag('div', ['class' => 'card-body']);
+    $formurl = new moodle_url('/local/berufsbildung/meine_lernenden.php');
+    echo html_writer::start_tag('form', [
+        'method' => 'get',
+        'action' => $formurl->out_omit_querystring(),
+        'class' => 'local-berufsbildung-roster-toolbar',
+    ]);
+    echo html_writer::start_tag('div', ['class' => 'local-berufsbildung-roster-toolbar-filter']);
+    echo html_writer::empty_tag('input', [
+        'type' => 'text',
+        'name' => 'suche',
+        'value' => $suchbegriff,
+        'placeholder' => get_string('meine_lernenden:suche_placeholder', 'local_berufsbildung'),
+        'aria-label' => get_string('meine_lernenden:suche_placeholder', 'local_berufsbildung'),
+        'class' => 'form-control',
+    ]);
+    $berufoptions = ['' => get_string('meine_lernenden:beruf_alle', 'local_berufsbildung')];
+    foreach (lernenden_roster::berufe($eintraege) as $beruf) {
+        $berufoptions[$beruf] = $beruf;
+    }
+    echo html_writer::select($berufoptions, 'beruf', $berufsfilter, false, ['class' => 'custom-select form-select']);
+    echo html_writer::tag('button', get_string('meine_lernenden:filtern', 'local_berufsbildung'), [
+        'type' => 'submit',
+        'class' => 'btn btn-secondary',
+    ]);
+    echo html_writer::end_tag('div');
+    echo html_writer::div(
+        get_string('meine_lernenden:zusammenfassung', 'local_berufsbildung', (object) [
+            'anzahl' => count($eintraege),
+            'luecken' => $anzahlmitluecken,
+        ]),
+        'text-muted small local-berufsbildung-roster-toolbar-summary'
+    );
+    echo html_writer::end_tag('form');
 
-    $profilurl = new moodle_url('/user/profile.php', ['id' => $lernendeid]);
-    echo html_writer::tag('h3', s($name), ['class' => 'h5 card-title']);
+    $gefiltert = lernenden_roster::filtere($eintraege, $suchbegriff, $berufsfilter);
 
-    $stand = api::get_ausbildungsstand($lernendeid);
-    if ($stand !== null) {
-        echo html_writer::tag('p', get_string('form:ausbildungsstand', 'local_berufsbildung', (object) [
-            'beruf' => $stand->beruf,
-            'lehrjahr' => $stand->lehrjahr,
-            'semester' => $stand->semester,
-        ]), ['class' => 'text-muted mb-0']);
-
-        echo semester_stepper::render($stand->semester, $stand->gesamtsemester, kompakt: true);
-
-        if (api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null) {
-            // Kompakt: auf der Roster-Karte zaehlt der Ueberblick, die
-            // Aufschluesselung je Bereich steht auf der Detailansicht.
-            echo luecken_liste::render(api::get_luecken_nach_bereich($lernendeid), kompakt: true);
-        }
+    if (empty($gefiltert)) {
+        echo $OUTPUT->notification(get_string('meine_lernenden:keine_treffer', 'local_berufsbildung'), 'info');
     }
 
-    $nachweise = $collector->get_nachweise($berufsbildnerid, $lernendeid, 0, time());
-    $zusammenfassung = html_writer::tag(
-        'summary',
-        get_string('meine_lernenden:taetigkeiten_anzahl', 'local_berufsbildung', count($nachweise))
-    );
-    echo html_writer::tag('details', $zusammenfassung . nachweis_liste::render($nachweise, $quellennamen), ['class' => 'mt-2']);
-    echo html_writer::div(html_writer::link(
-        $profilurl,
-        get_string('meine_lernenden:profil_oeffnen', 'local_berufsbildung')
-    ), 'mt-3');
+    echo html_writer::start_tag('div', ['class' => 'local-berufsbildung-roster-grid']);
 
-    echo html_writer::end_tag('div');
+    foreach ($gefiltert as $eintrag) {
+        $lernendeid = $eintrag['id'];
+        $stand = $eintrag['stand'];
+
+        ob_start();
+
+        if ($stand !== null && api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null) {
+            echo luecken_liste::render(api::get_luecken_nach_bereich($lernendeid), kompakt: false);
+        }
+
+        $nachweise = $collector->get_nachweise($berufsbildnerid, $lernendeid, 0, time());
+        echo nachweis_liste::render($nachweise, $quellennamen);
+
+        $profilurl = new moodle_url('/user/profile.php', ['id' => $lernendeid]);
+        echo html_writer::div(html_writer::link(
+            $profilurl,
+            get_string('meine_lernenden:profil_oeffnen', 'local_berufsbildung')
+        ), 'mt-3');
+
+        $detailhtml = ob_get_clean();
+
+        echo lernenden_kachel::render(
+            $eintrag['name'],
+            $stand,
+            $anzahlluecken[$lernendeid],
+            count($nachweise),
+            $detailhtml
+        );
+    }
+
     echo html_writer::end_tag('div');
 }
 
