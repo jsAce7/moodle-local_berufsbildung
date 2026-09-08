@@ -112,7 +112,7 @@ class zuordnung extends base {
             ->set_type(column::TYPE_TEXT)
             ->add_fields("{$alias}.kohorten_link_id, {$kohortenalias}.name AS kohortenname")
             ->set_is_sortable(true)
-            ->add_callback(static function (?int $kohortenlinkid, \stdClass $row): string {
+            ->add_callback(static function (?string $kohortenlinkid, \stdClass $row): string {
                 if ($kohortenlinkid === null) {
                     return get_string('zuordnung:herkunft_manuell', 'local_berufsbildung');
                 }
