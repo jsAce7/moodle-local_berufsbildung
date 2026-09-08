@@ -29,10 +29,8 @@ use core_competency\competency_framework;
 use local_berufsbildung\form\beruf_rahmen_form;
 use local_berufsbildung\service\rahmen_resolver;
 
-require_login();
-require_capability('local/berufsbildung:manageblocks', context_system::instance());
+admin_externalpage_setup('local_berufsbildung_berufrahmen');
 
-$PAGE->set_context(context_system::instance());
 $PAGE->set_url(new moodle_url('/local/berufsbildung/beruf_rahmen.php'));
 $titel = get_string('berufrahmen:uebersicht', 'local_berufsbildung');
 $PAGE->set_title($titel);

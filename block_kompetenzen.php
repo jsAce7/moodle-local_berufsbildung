@@ -32,13 +32,11 @@ use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\block_lk;
 use local_berufsbildung\service\kompetenz_baum;
 
-require_login();
-require_capability('local/berufsbildung:manageblocks', context_system::instance());
+admin_externalpage_setup('local_berufsbildung_bloecke');
 
 $id = required_param('id', PARAM_INT);
 $block = new block($id);
 
-$PAGE->set_context(context_system::instance());
 $PAGE->set_url(new moodle_url('/local/berufsbildung/block_kompetenzen.php', ['id' => $id]));
 $titel = get_string('blocklk:uebersicht', 'local_berufsbildung', $block->get('nummer'));
 $PAGE->set_title($titel);

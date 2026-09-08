@@ -27,12 +27,10 @@ require_once(__DIR__ . '/../../config.php');
 use local_berufsbildung\form\aufbewahrung_form;
 use local_berufsbildung\persistent\aufbewahrung;
 
-require_login();
-require_capability('local/berufsbildung:manageaufbewahrung', context_system::instance());
+admin_externalpage_setup('local_berufsbildung_aufbewahrung');
 
 $id = optional_param('id', 0, PARAM_INT);
 
-$PAGE->set_context(context_system::instance());
 $PAGE->set_url(new moodle_url('/local/berufsbildung/aufbewahrung_bearbeiten.php', ['id' => $id]));
 $titel = $id
     ? get_string('aufbewahrung:bearbeiten', 'local_berufsbildung')

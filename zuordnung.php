@@ -27,13 +27,10 @@ require_once(__DIR__ . '/../../config.php');
 use core_reportbuilder\system_report_factory;
 use local_berufsbildung\reportbuilder\local\systemreports\zuordnungen;
 
-require_login();
+admin_externalpage_setup('local_berufsbildung_zuordnung');
 
 $context = context_system::instance();
-$PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/berufsbildung/zuordnung.php'));
 $titel = get_string('zuordnung:uebersicht', 'local_berufsbildung');
-$PAGE->set_title($titel);
 $PAGE->set_heading($titel);
 
 echo $OUTPUT->header();

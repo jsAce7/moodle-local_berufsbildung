@@ -27,10 +27,8 @@ require_once(__DIR__ . '/../../config.php');
 use local_berufsbildung\persistent\kohorten_link;
 use local_berufsbildung\service\kohorten_resolver;
 
-require_login();
-require_capability('local/berufsbildung:managezuordnung', context_system::instance());
+admin_externalpage_setup('local_berufsbildung_kohortenlinks');
 
-$PAGE->set_context(context_system::instance());
 $PAGE->set_url(new moodle_url('/local/berufsbildung/kohorten_links.php'));
 $titel = get_string('kohortenlink:uebersicht', 'local_berufsbildung');
 $PAGE->set_title($titel);

@@ -29,13 +29,11 @@ require_once($CFG->libdir . '/csvlib.class.php');
 
 use local_berufsbildung\import\zuordnung_csv_importer;
 
-require_login();
-require_capability('local/berufsbildung:managezuordnung', context_system::instance());
+admin_externalpage_setup('local_berufsbildung_zuordnung');
 
 $iid = required_param('iid', PARAM_INT);
 $bestaetigt = optional_param('bestaetigt', 0, PARAM_BOOL);
 
-$PAGE->set_context(context_system::instance());
 $PAGE->set_url(new moodle_url('/local/berufsbildung/zuordnung_import_vorschau.php', ['iid' => $iid]));
 $titel = get_string('import:vorschau', 'local_berufsbildung');
 $PAGE->set_title($titel);

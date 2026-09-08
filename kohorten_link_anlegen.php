@@ -30,10 +30,8 @@ use local_berufsbildung\form\kohorten_link_form;
 use local_berufsbildung\persistent\kohorten_link;
 use local_berufsbildung\service\kohorten_sync_service;
 
-require_login();
-require_capability('local/berufsbildung:managezuordnung', context_system::instance());
+admin_externalpage_setup('local_berufsbildung_kohortenlinks');
 
-$PAGE->set_context(context_system::instance());
 $PAGE->set_url(new moodle_url('/local/berufsbildung/kohorten_link_anlegen.php'));
 $titel = get_string('kohortenlink:anlegen', 'local_berufsbildung');
 $PAGE->set_title($titel);

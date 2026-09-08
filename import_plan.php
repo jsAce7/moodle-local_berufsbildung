@@ -29,10 +29,8 @@ use local_berufsbildung\form\plan_import_form;
 use local_berufsbildung\persistent\plan_import;
 use local_berufsbildung\versetzungsplan\import_service;
 
-require_login();
-require_capability('local/berufsbildung:importplan', context_system::instance());
+admin_externalpage_setup('local_berufsbildung_importplan');
 
-$PAGE->set_context(context_system::instance());
 $PAGE->set_url(new moodle_url('/local/berufsbildung/import_plan.php'));
 $titel = get_string('planimport:titel', 'local_berufsbildung');
 $PAGE->set_title($titel);

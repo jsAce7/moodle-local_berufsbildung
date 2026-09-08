@@ -28,12 +28,10 @@ use local_berufsbildung\form\block_form;
 use local_berufsbildung\persistent\block;
 use local_berufsbildung\service\rahmen_resolver;
 
-require_login();
-require_capability('local/berufsbildung:manageblocks', context_system::instance());
+admin_externalpage_setup('local_berufsbildung_bloecke');
 
 $id = optional_param('id', 0, PARAM_INT);
 
-$PAGE->set_context(context_system::instance());
 $PAGE->set_url(new moodle_url('/local/berufsbildung/block_bearbeiten.php', ['id' => $id]));
 $titel = $id
     ? get_string('block:bearbeiten', 'local_berufsbildung')

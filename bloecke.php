@@ -27,10 +27,8 @@ require_once(__DIR__ . '/../../config.php');
 use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\block_lk;
 
-require_login();
-require_capability('local/berufsbildung:manageblocks', context_system::instance());
+admin_externalpage_setup('local_berufsbildung_bloecke');
 
-$PAGE->set_context(context_system::instance());
 $PAGE->set_url(new moodle_url('/local/berufsbildung/bloecke.php'));
 $titel = get_string('bloecke:uebersicht', 'local_berufsbildung');
 $PAGE->set_title($titel);

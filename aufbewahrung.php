@@ -26,10 +26,8 @@ require_once(__DIR__ . '/../../config.php');
 
 use local_berufsbildung\persistent\aufbewahrung;
 
-require_login();
-require_capability('local/berufsbildung:manageaufbewahrung', context_system::instance());
+admin_externalpage_setup('local_berufsbildung_aufbewahrung');
 
-$PAGE->set_context(context_system::instance());
 $PAGE->set_url(new moodle_url('/local/berufsbildung/aufbewahrung.php'));
 $titel = get_string('aufbewahrung:uebersicht', 'local_berufsbildung');
 $PAGE->set_title($titel);
