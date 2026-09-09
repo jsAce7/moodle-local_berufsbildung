@@ -387,6 +387,12 @@ Das ist die dritte eigenständige Verwendung des Basis-Plugins und ein guter Bel
 
 Wer Nachweise weiterverarbeitet (etwa der Bildungsbericht beim Übernehmen in eine Beurteilungszeile), muss die Werte **kopieren, nicht referenzieren**. Andernfalls ändert sich ein bereits unterschriebener Bericht rückwirkend, wenn in der Quelle eine Korrektur erfolgt.
 
+### Direktlink zum Erfassen
+
+Eine Quelle kann zusätzlich zu `provider` das Interface `erfassbare_quelle` implementieren (`get_erfassen_url()`, `get_erfassen_label()`). Der Collector sammelt daraus über `get_erfassen_aktionen()` Direktlinks ein, „Meine Lehre" zeigt sie pro Quelle als Schaltfläche. Bewusst nur für die eigene Person: der Collector prüft `abrufendeid === lernendeid`, nicht `is_zustaendig()` — hier erfasst niemand für eine andere Person.
+
+**Offen für den Bildungsbericht**: Sobald `local_bildungsbericht` entsteht, dürfte auf der Berufsbildner-Übersicht (`meine_lernenden.php`) derselbe Direktlink-Gedanke gebraucht werden — aber gespiegelt: die/der Berufsbildner erfasst *für* eine Lernende Person, geprüft über `is_zustaendig()` statt Identität. Das ist kein Fall für `erfassbare_quelle`, deren Vertrag fest auf „nur eigene Person" ausgelegt ist (siehe Collector-Tests), sondern bräuchte ein eigenes Interface mit explizitem `$abrufendeid`. Nicht vorgezogen bauen, solange nur diese eine Verwendung absehbar ist — erst entscheiden, wenn der Bildungsbericht real ansteht und die konkrete Form des Formulars zeigt, ob "neuen Bericht erfassen" oder "offenen Bericht des Semesters öffnen" die richtige Aktion ist.
+
 ---
 
 ## 7. Rollen-Sync
