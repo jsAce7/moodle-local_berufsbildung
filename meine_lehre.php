@@ -87,12 +87,16 @@ if ($stand !== null) {
     if (!$istbeendet) {
         // Direktlinks zum Erfassen, pro registrierter Quelle, die eine
         // eigene Erfassung anbietet - siehe classes/nachweis/erfassbare_quelle.php.
+        // Kein 'class' im vierten Parameter von single_button(): das ist die
+        // Klasse des umschliessenden <div> (Default 'singlebutton'), nicht die
+        // des Buttons. Ein 'btn-*' landet dort auf einem Block-Element und
+        // wird zum vollflaechigen farbigen Balken. Die Button-Variante selbst
+        // haengt an $type, siehe \core\output\single_button.
         foreach ($collector->get_erfassen_aktionen($lernendeid, $lernendeid) as $aktion) {
             echo html_writer::div($OUTPUT->single_button(
                 new moodle_url($aktion->url),
                 $aktion->label,
-                'get',
-                ['class' => 'btn-primary']
+                'get'
             ), 'mb-3');
         }
 

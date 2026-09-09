@@ -49,6 +49,11 @@ interface erfassbare_quelle {
      */
     public function get_erfassen_url(int $lernendeid): ?moodle_url;
 
-    /** Beschriftung der Erfassen-Schaltflaeche, z.B. "Neuer Eintrag". */
+    /**
+     * Beschriftung der Erfassen-Schaltflaeche. Muss die eigene Quelle
+     * benennen, z.B. "Neuen Lerndoku-Eintrag erfassen": In "Meine Lehre"
+     * stehen die Schaltflaechen mehrerer Quellen nebeneinander, ein blosses
+     * "Neuer Eintrag" laesst dort offen, welcher Eintrag gemeint ist.
+     */
     public function get_erfassen_label(): string;
 }
