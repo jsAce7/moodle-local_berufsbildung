@@ -90,6 +90,15 @@ class zuordnung_service {
         }
         $zuordnung->set('gueltig_bis', $gueltigbis);
         $zuordnung->update();
+
+        // Auch beim Beenden abgleichen, nicht nur beim Anlegen und Loeschen:
+        // sonst behaelt eine Person die systemweite Planungsrolle bis zum
+        // naechsten stuendlichen Task-Lauf. Das Wiederoeffnen (gueltig_bis =
+        // null) setzt sie ueber denselben Aufruf zurueck.
+        (new role_sync_service())->synchronisiere_paar(
+            (int) $zuordnung->get('berufsbildnerid'),
+            (int) $zuordnung->get('lernendeid')
+        );
     }
 
     /** Loescht eine nachweislich falsch erfasste Zuordnung endgueltig. */

@@ -39,9 +39,12 @@ class sync_role_assignments extends scheduled_task {
         $ergebnis = (new role_sync_service())->synchronisiere();
 
         mtrace(sprintf(
-            'local_berufsbildung: Rolle bei %d Zuordnung(en) zugewiesen, bei %d entzogen.',
+            'local_berufsbildung: Rolle bei %d Zuordnung(en) zugewiesen, bei %d entzogen. '
+                . 'Planungsrolle bei %d Person(en) zugewiesen, bei %d entzogen.',
             $ergebnis['zugewiesen'],
-            $ergebnis['entzogen']
+            $ergebnis['entzogen'],
+            $ergebnis['planung_zugewiesen'],
+            $ergebnis['planung_entzogen']
         ));
     }
 }

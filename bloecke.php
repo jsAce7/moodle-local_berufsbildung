@@ -37,9 +37,12 @@ $PAGE->set_heading($titel);
 
 echo $OUTPUT->header();
 
+echo html_writer::tag('p', get_string('bloecke:einleitung', 'local_berufsbildung'));
+
 echo html_writer::div($OUTPUT->single_button(
     new moodle_url('/local/berufsbildung/block_bearbeiten.php'),
-    get_string('bloecke:neu', 'local_berufsbildung')
+    get_string('bloecke:neu', 'local_berufsbildung'),
+    'get'
 ), 'mb-3');
 
 $bloecke = block::get_records([], 'nummer', 'ASC');
@@ -55,7 +58,7 @@ if (empty($bloecke)) {
         get_string('block:ist_betrieb', 'local_berufsbildung'),
         get_string('block:aktiv', 'local_berufsbildung'),
         get_string('block:kompetenzen', 'local_berufsbildung'),
-        '',
+        get_string('block:aktionen', 'local_berufsbildung'),
     ];
 
     foreach ($bloecke as $block) {
@@ -67,14 +70,35 @@ if (empty($bloecke)) {
 
         $beruf = (string) $block->get('beruf');
 
+        // Der Zugang zur Kompetenzzuordnung ist ein beschrifteter Button in
+        // der Aktionsspalte, nicht die Zahl in der LK-Spalte: auf eine "0"
+        // klickt niemand, und ein neu angelegter Block hat immer eine.
+        $aktionen = html_writer::div(
+            html_writer::link(
+                $kompetenzenurl,
+                get_string('blocklk:zuordnen', 'local_berufsbildung'),
+                ['class' => 'btn btn-sm btn-secondary']
+            ) . html_writer::link(
+                $bearbeitenurl,
+                get_string('block:bearbeiten', 'local_berufsbildung'),
+                ['class' => 'btn btn-sm btn-secondary']
+            ),
+            'local-berufsbildung-tabelle-aktionen'
+        );
+
         $table->data[] = [
             s($block->get('nummer')),
             s($block->get('name')),
-            $beruf !== '' ? s($beruf) : get_string('block:beruf_leer', 'local_berufsbildung'),
+            $beruf !== ''
+                ? s($beruf)
+                : html_writer::span(get_string('block:beruf_leer', 'local_berufsbildung'), 'text-muted'),
             $block->get('ist_betrieb') ? get_string('yes') : get_string('no'),
             $block->get('aktiv') ? get_string('yes') : get_string('no'),
-            html_writer::link($kompetenzenurl, (string) $anzahlkompetenzen),
-            html_writer::link($bearbeitenurl, get_string('block:bearbeiten', 'local_berufsbildung')),
+            html_writer::span(
+                (string) $anzahlkompetenzen,
+                'badge ' . ($anzahlkompetenzen > 0 ? 'bg-primary text-white' : 'bg-light text-dark border')
+            ),
+            $aktionen,
         ];
     }
 

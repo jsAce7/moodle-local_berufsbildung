@@ -79,13 +79,26 @@ class zuordnung_retention_service {
      */
     public function loesche_fuer_lernende(int $lernendeid): int {
         $anzahl = 0;
+        $berufsbildnerids = [];
         foreach (zuordnung::get_records(['lernendeid' => $lernendeid]) as $zuordnung) {
+            $berufsbildnerids[(int) $zuordnung->get('berufsbildnerid')] = true;
             $zuordnung->delete();
             $anzahl++;
         }
 
         foreach (aufbewahrung::get_records(['lernendeid' => $lernendeid]) as $vermerk) {
             $vermerk->delete();
+        }
+
+        // War das die letzte laufende Zuordnung einer betreuenden Person,
+        // faellt damit auch ihr systemweiter Zugang zur Blockverwaltung weg -
+        // sonst bliebe er bis zum naechsten Lauf von task\sync_role_assignments
+        // bestehen. Bewusst nur die Planungsrolle: der personenbezogene
+        // Abgleich braucht den User-Kontext der lernenden Person, und genau
+        // der verschwindet hier gerade (Account-Loeschung).
+        $rollensync = new role_sync_service();
+        foreach (array_keys($berufsbildnerids) as $berufsbildnerid) {
+            $rollensync->synchronisiere_planungsrolle($berufsbildnerid);
         }
 
         return $anzahl;

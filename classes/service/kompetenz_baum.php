@@ -64,6 +64,53 @@ class kompetenz_baum {
     }
 
     /**
+     * Beschriftungen fuer die Blattknoten (LK) eines Rahmens, jeweils mit
+     * der uebergeordneten Handlungskompetenz als Praefix und der idnumber
+     * dahinter.
+     *
+     * Der shortname eines LK allein ist in der Praxis nicht sprechend
+     * genug - dieselbe Formulierung kommt in mehreren Handlungskompetenzen
+     * vor. Mit HK davor bleibt jeder Eintrag in der Auswahlliste von
+     * block_kompetenzen.php eindeutig und ueber beide Ebenen durchsuchbar.
+     *
+     * Die Werte sind unformatiert: die aufrufende Seite schickt sie durch
+     * format_string().
+     *
+     * @param competency[] $kompetenzen Alle Kompetenzen eines Rahmens
+     * @return array<int, string> LK-id => Beschriftung, natuerlich sortiert
+     */
+    public function blatt_beschriftungen(array $kompetenzen): array {
+        $namen = [];
+        foreach ($kompetenzen as $kompetenz) {
+            $namen[(int) $kompetenz->get('id')] = (string) $kompetenz->get('shortname');
+        }
+
+        $beschriftungen = [];
+        foreach ($this->nur_blaetter($kompetenzen) as $blatt) {
+            $beschriftung = (string) $blatt->get('shortname');
+
+            $idnumber = (string) $blatt->get('idnumber');
+            if ($idnumber !== '') {
+                $beschriftung .= ' (' . $idnumber . ')';
+            }
+
+            $elternid = (int) $blatt->get('parentid');
+            if (isset($namen[$elternid])) {
+                $beschriftung = $namen[$elternid] . ': ' . $beschriftung;
+            }
+
+            $beschriftungen[(int) $blatt->get('id')] = $beschriftung;
+        }
+
+        // Sortierung ueber die fertige Beschriftung, damit die LK einer
+        // Handlungskompetenz in der Auswahlliste beieinander stehen - die
+        // Reihenfolge der uebergebenen Liste tut das nicht.
+        asort($beschriftungen, SORT_NATURAL | SORT_FLAG_CASE);
+
+        return $beschriftungen;
+    }
+
+    /**
      * Nur die Handlungskompetenzen - die zweite Ebene, direkte Kinder der
      * obersten Handlungskompetenzbereiche (parentid = 0). Fuer die
      * Luecken-Analyse: die oberste Ebene selbst waere zu grob (mehrere HK

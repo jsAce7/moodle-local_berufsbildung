@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace local_berufsbildung\service;
 
 use context;
+use context_system;
 use context_user;
 use local_berufsbildung\persistent\zuordnung;
 
@@ -67,10 +68,138 @@ class role_sync_service {
         } else if (!$besteht && $zuweisung) {
             role_unassign($roleid, $berufsbildnerid, $context->id, 'local_berufsbildung');
         }
+
+        // Zugang zur Blockverwaltung sofort mitziehen. Die Frage ist eine
+        // andere als oben: nicht "zustaendig fuer diese Person", sondern
+        // "betreut ueberhaupt noch jemanden".
+        $this->synchronisiere_planungsrolle($berufsbildnerid);
     }
 
     /**
+     * Gleicht die Planungsrolle einer einzelnen Person ab, ohne den
+     * User-Kontext einer lernenden Person anzufassen.
+     *
+     * Getrennt von synchronisiere_paar() fuer Aufrufer, bei denen genau
+     * dieser Kontext gerade verschwindet - siehe
+     * zuordnung_retention_service::loesche_fuer_lernende(), das bei einer
+     * Account-Loeschung aufgerufen wird.
+     */
+    public function synchronisiere_planungsrolle(int $berufsbildnerid): void {
+        $jetzt = time();
+
+        // Laufende, nicht bloss begonnene Zuordnung - siehe
+        // synchronisiere_planungsrollen(). Bedingung wie api::is_zustaendig().
+        $this->setze_planungsrolle($berufsbildnerid, zuordnung::record_exists_select(
+            'berufsbildnerid = :berufsbildnerid
+                AND gueltig_von <= :stichtag1
+                AND (gueltig_bis IS NULL OR gueltig_bis >= :stichtag2)',
+            ['berufsbildnerid' => $berufsbildnerid, 'stichtag1' => $jetzt, 'stichtag2' => $jetzt]
+        ));
+    }
+
+    /**
+     * Die Planungsrolle im Systemkontext oeffnet die Blockverwaltung
+     * (local/berufsbildung:manageblocks) fuer jede Person, die aktuell
+     * mindestens eine laufende Zuordnung hat - und entzieht sie wieder,
+     * sobald die letzte davon beendet ist.
+     *
+     * Bewusst eine eigene Rolle und nicht die personenbezogene Rolle
+     * 'berufsbildner': deren Zuweisungen haengen am User-Kontext der
+     * jeweiligen lernenden Person. Global zugewiesen wuerden alle ihre
+     * Capabilities - auch die, die aufsetzende Plugins ihr spaeter geben -
+     * fuer *alle* Personen gelten und damit die Stichtagspruefung in
+     * api::is_zustaendig() unterlaufen.
+     *
+     * @return int|null null, solange das Upgrade die Rolle nicht angelegt hat
+     */
+    private function planungsrolle_id(): ?int {
+        global $DB;
+
+        $roleid = $DB->get_field('role', 'id', ['shortname' => 'berufsbildung_planung'], IGNORE_MISSING);
+
+        return $roleid ? (int) $roleid : null;
+    }
+
+    /**
+     * Einzelfall - nur aus synchronisiere_paar(). Nie fuer einen
+     * vollstaendigen Abgleich verwenden: diese Methode kennt die Soll-Menge
+     * der anderen Personen nicht.
+     */
+    private function setze_planungsrolle(int $berufsbildnerid, bool $soll): void {
+        global $DB;
+
+        $roleid = $this->planungsrolle_id();
+        if ($roleid === null) {
+            return;
+        }
+
+        $context = context_system::instance();
+        $zuweisung = $DB->record_exists('role_assignments', [
+            'roleid' => $roleid,
+            'userid' => $berufsbildnerid,
+            'contextid' => $context->id,
+            'component' => 'local_berufsbildung',
+        ]);
+
+        if ($soll && !$zuweisung) {
+            role_assign($roleid, $berufsbildnerid, $context->id, 'local_berufsbildung');
+        } else if (!$soll && $zuweisung) {
+            role_unassign($roleid, $berufsbildnerid, $context->id, 'local_berufsbildung');
+        }
+    }
+
+    /**
+     * Vollstaendiger Abgleich der Planungsrolle.
+     *
+     * @param int[] $berufsbildnerids Alle Personen mit laufender Zuordnung
      * @return array{zugewiesen: int, entzogen: int}
+     */
+    private function synchronisiere_planungsrollen(array $berufsbildnerids): array {
+        global $DB;
+
+        $roleid = $this->planungsrolle_id();
+        if ($roleid === null) {
+            return ['zugewiesen' => 0, 'entzogen' => 0];
+        }
+
+        $context = context_system::instance();
+        $soll = array_fill_keys(array_map('intval', $berufsbildnerids), true);
+
+        // Wie beim personenbezogenen Abgleich: nur die selbst vergebenen
+        // Zuweisungen: eine von Hand vergebene Rolle (component = '') wird
+        // nie angefasst.
+        $ist = [];
+        foreach ($DB->get_records('role_assignments', [
+            'roleid' => $roleid,
+            'contextid' => $context->id,
+            'component' => 'local_berufsbildung',
+        ]) as $zuweisung) {
+            $ist[(int) $zuweisung->userid] = true;
+        }
+
+        $zugewiesen = 0;
+        foreach (array_keys($soll) as $userid) {
+            if (isset($ist[$userid])) {
+                continue;
+            }
+            role_assign($roleid, $userid, $context->id, 'local_berufsbildung');
+            $zugewiesen++;
+        }
+
+        $entzogen = 0;
+        foreach (array_keys($ist) as $userid) {
+            if (isset($soll[$userid])) {
+                continue;
+            }
+            role_unassign($roleid, $userid, $context->id, 'local_berufsbildung');
+            $entzogen++;
+        }
+
+        return ['zugewiesen' => $zugewiesen, 'entzogen' => $entzogen];
+    }
+
+    /**
+     * @return array{zugewiesen: int, entzogen: int, planung_zugewiesen: int, planung_entzogen: int}
      */
     public function synchronisiere(): array {
         global $DB;
@@ -86,6 +215,7 @@ class role_sync_service {
         );
 
         $soll = [];
+        $planungssoll = [];
         foreach ($aktive as $einzelne) {
             $lernendeid = (int) $einzelne->get('lernendeid');
             $berufsbildnerid = (int) $einzelne->get('berufsbildnerid');
@@ -93,6 +223,17 @@ class role_sync_service {
                 'lernendeid' => $lernendeid,
                 'berufsbildnerid' => $berufsbildnerid,
             ];
+
+            // Die Planungsrolle haengt an der laufenden Zuordnung, waehrend
+            // die Rolle oben schon bei der bloss begonnenen bestehen bleibt:
+            // sie ist systemweites Schreibrecht auf Stammdaten, kein
+            // stichtagsgepruefter Lesezugriff, fuer den eine beendete
+            // Zuordnung noch zaehlen muss. Bedingung wie in
+            // api::is_zustaendig().
+            $bis = $einzelne->get('gueltig_bis');
+            if ($bis === null || (int) $bis >= $jetzt) {
+                $planungssoll[$berufsbildnerid] = true;
+            }
         }
 
         // Ist-Zustand: nur die von diesem Task selbst vergebenen Zuweisungen.
@@ -126,6 +267,16 @@ class role_sync_service {
             $entzogen++;
         }
 
-        return ['zugewiesen' => $zugewiesen, 'entzogen' => $entzogen];
+        // Wer aktuell jemanden betreut, verwaltet auch die
+        // Ausbildungsbloecke. Eigene Zaehler, damit die beiden Rollen im
+        // Task-Log auseinander zu halten sind.
+        $planung = $this->synchronisiere_planungsrollen(array_keys($planungssoll));
+
+        return [
+            'zugewiesen' => $zugewiesen,
+            'entzogen' => $entzogen,
+            'planung_zugewiesen' => $planung['zugewiesen'],
+            'planung_entzogen' => $planung['entzogen'],
+        ];
     }
 }

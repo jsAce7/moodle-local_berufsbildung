@@ -12,8 +12,8 @@ Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentati
 - **Aufbewahrung**: eine konfigurierbare Frist (Standard 12 Monate) nach dem berechneten Lehrabschluss löscht Zuordnungen automatisch endgültig, ausser eine Aufbewahrungspflicht ist dokumentiert. Dieselbe Regel steuert über `\local_berufsbildung\api` auch die Lerndoku-Inhalte in `local_lerndokumentation`.
 - **Ausbildungsstand**: Beruf, Lehrjahr und Semester werden aus zwei Profilfeldern (Beruf, Jahrgang) berechnet, mit konfigurierbarer Lehrdauer je Beruf.
 - **Versetzungsplan**: wöchentlicher CSV-Import (Webservice oder manueller Upload) der betrieblichen Einsätze, mit Kompetenzabdeckung je Ausbildungsblock.
-- **Nachweis-Sammlung**: aufsetzende Plugins registrieren sich als Nachweis-Provider; "Meine Lernenden" (Berufsbildner/in) und "Meine Ausbildung" (Lernende) zeigen eingesammelte Nachweise über Plugin-Grenzen hinweg — sowie, falls ein Kompetenzrahmen konfiguriert ist, die noch nicht abgedeckten Handlungskompetenzbereiche, nach Bereich gruppiert und mit Bezugsgrösse (`api::get_luecken_nach_bereich()`).
-- **Eigene Übersicht für Lernende**: "Meine Ausbildung" zeigt Semesterstand, den laufenden Einsatz aus dem Versetzungsplan, den Zeitstrahl aller Einsätze und die eigenen Nachweise nach Semester gruppiert. Die Seite trägt die vier Phasen der Ausbildung (`api::get_ausbildungsphase()`): Profil unvollständig, Lehre beginnt erst, laufend, abgeschlossen — nach dem Lehrabschluss wird sie zum Rückblick, statt leer zu werden.
+- **Nachweis-Sammlung**: aufsetzende Plugins registrieren sich als Nachweis-Provider; "Meine Lernenden" (Berufsbildner/in) und "Meine Lehre" (Lernende) zeigen eingesammelte Nachweise über Plugin-Grenzen hinweg — sowie, falls ein Kompetenzrahmen konfiguriert ist, die noch nicht abgedeckten Handlungskompetenzbereiche, nach Bereich gruppiert und mit Bezugsgrösse (`api::get_luecken_nach_bereich()`).
+- **Eigene Übersicht für Lernende**: "Meine Lehre" zeigt Semesterstand, den laufenden Einsatz aus dem Versetzungsplan, den Zeitstrahl aller Einsätze und die eigenen Nachweise nach Semester gruppiert. Die Seite trägt die vier Phasen der Ausbildung (`api::get_ausbildungsphase()`): Profil unvollständig, Lehre beginnt erst, laufend, abgeschlossen — nach dem Lehrabschluss wird sie zum Rückblick, statt leer zu werden.
 
 ## Voraussetzungen
 
@@ -45,6 +45,23 @@ Alle Einstellungen unter *Site administration ▸ Plugins ▸ Local plugins ▸ 
 Der Rahmen muss der lernenden Person dafür **nicht zusätzlich zugewiesen** werden (kein Lernplan, keine Kurs-Verknüpfung nötig) — `\core_competency\api::add_evidence()` legt den `user_competency`-Datensatz beim ersten Kompetenznachweis automatisch an.
 
 Dokumentierte Aufbewahrungspflichten (Ausnahmen von der automatischen Löschung) werden auf einer eigenen Seite verwaltet: *Site administration ▸ Plugins ▸ Local plugins ▸ Vocational training ▸ Retention obligations*, Capability `local/berufsbildung:manageaufbewahrung`.
+
+### Rollen und Zugang
+
+Das Plugin legt zwei Rollen an:
+
+| Rolle | Kontext | Zweck |
+|---|---|---|
+| `berufsbildner` (Berufsbildner/in) | Nutzerkontext der lernenden Person | Trägt selbst keine Capabilities — die vergeben die aufsetzenden Plugins. Wird je bestehender Zuordnung zugewiesen und bleibt nach deren Ende bestehen, damit eine frühere Zuständigkeit zum damaligen Stichtag noch auflösbar ist. Entzogen erst mit der Datenbereinigung (Aufbewahrungsfrist, Löschung der Zuordnung, Account-Löschung). |
+| `berufsbildung_planung` (Ausbildungsplanung) | Systemkontext | Trägt `local/berufsbildung:manageblocks` und öffnet damit die Ausbildungsblöcke samt Kompetenzabdeckung. Wird jeder Person zugewiesen, die mindestens eine **laufende** Zuordnung hat, und wieder entzogen, sobald die letzte davon beendet ist. |
+
+Der Unterschied im Entzug ist beabsichtigt: die personenbezogene Rolle ist stichtagsgeprüfter Lesezugriff und muss für einen Bericht aus einem früheren Semester noch greifen; die Planungsrolle ist systemweites Schreibrecht auf Stammdaten und endet deshalb mit der Betreuung.
+
+Beide werden vom stündlichen Task `sync_role_assignments` gepflegt, zusätzlich sofort beim Anlegen, Beenden und Löschen einer Zuordnung. Die selbst vergebenen Zuweisungen sind mit `component = 'local_berufsbildung'` markiert; von Hand vergebene bleiben unangetastet und werden nie entzogen. Eine Ausbildungsleitung, die selbst keine Lernenden betreut, wird deshalb einfach von Hand global der Rolle *Ausbildungsplanung* zugewiesen.
+
+Die Trennung der beiden Rollen ist ebenso beabsichtigt: `berufsbildner` hängt am Nutzerkontext einer einzelnen lernenden Person. Global zugewiesen würden alle ihre Capabilities — auch die künftig von aufsetzenden Plugins vergebenen — für *alle* Personen gelten und damit die Stichtagsprüfung in `api::is_zustaendig()` unterlaufen.
+
+Berufsbildner/innen erreichen die Blockverwaltung über den Navigationseintrag **Ausbildungsblöcke**. Änderungen wirken systemweit für alle Berufe, und `local_berufsbildung_block_lk` führt keine Änderungshistorie — nachvollziehbar ist über `usermodified`/`timemodified` nur die jeweils letzte Änderung eines noch bestehenden Eintrags, Entfernungen sind spurlos. Wer die Pflege einem kleineren Kreis vorbehalten will, entzieht der Rolle *Ausbildungsplanung* die Capability `local/berufsbildung:manageblocks` und weist sie gezielt einer eigenen Rolle zu; der Zugang über die Navigation und den Admin-Baum richtet sich allein nach dieser Capability.
 
 Für den Versetzungsplan-Webservice zusätzlich: Dienst *Berufsbildung: Versetzungsplan-Import* unter *Site administration ▸ Server ▸ Web services* aktivieren, Dienstkonto mit der Capability `local/berufsbildung:importplan` anlegen, Token ausstellen. Der Dienst ist standardmässig deaktiviert.
 

@@ -112,6 +112,17 @@
     margin-left: 1.1rem;
 }
 
+/*
+ * Abstand zwischen den Buttons einer Tabellen-Aktionsspalte. Eigene Klasse
+ * statt einer Bootstrap-Utility: mr-* (BS4, Moodle 4.5) und me-* (BS5,
+ * Moodle 5.x) haben unterschiedliche Namen, gap funktioniert in beiden.
+ */
+.local-berufsbildung-tabelle-aktionen {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
 .local-berufsbildung-roster-toolbar {
     display: flex;
     align-items: center;

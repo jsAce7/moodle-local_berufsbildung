@@ -88,6 +88,110 @@ final class kompetenz_baum_test extends advanced_testcase {
     }
 
     /**
+     * Die Auswahlliste in block_kompetenzen.php braucht die
+     * Handlungskompetenz als Praefix und die idnumber dahinter, sonst sind
+     * gleich benannte LK aus verschiedenen HK nicht unterscheidbar. Die
+     * Reihenfolge kommt aus der Beschriftung, nicht aus der Eingabeliste.
+     */
+    public function test_blatt_beschriftungen_haben_hk_praefix_und_idnumber(): void {
+        $this->resetAfterTest();
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework(['idnumber' => 'au-2022']);
+
+        $hkb = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'shortname' => 'a Beraten',
+            'idnumber' => 'a',
+        ]);
+        $hk1 = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'parentid' => $hkb->get('id'),
+            'shortname' => 'a1 Kundengespraech',
+            'idnumber' => 'a1',
+        ]);
+        $hk2 = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'parentid' => $hkb->get('id'),
+            'shortname' => 'a2 Offerten',
+            'idnumber' => 'a2',
+        ]);
+        $lk2 = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'parentid' => $hk2->get('id'),
+            'shortname' => 'Angebot erstellen',
+            'idnumber' => 'a2.1',
+        ]);
+        $lk1 = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'parentid' => $hk1->get('id'),
+            'shortname' => 'Bedarf klaeren',
+            'idnumber' => 'a1.1',
+        ]);
+
+        // Absichtlich in der "falschen" Reihenfolge uebergeben.
+        $beschriftungen = (new kompetenz_baum())->blatt_beschriftungen([$hkb, $hk1, $hk2, $lk2, $lk1]);
+
+        $this->assertSame([
+            (int) $lk1->get('id') => 'a1 Kundengespraech: Bedarf klaeren (a1.1)',
+            (int) $lk2->get('id') => 'a2 Offerten: Angebot erstellen (a2.1)',
+        ], $beschriftungen);
+    }
+
+    /**
+     * Randfall: Blatt auf oberster Ebene - es gibt keine Handlungskompetenz
+     * davor, die Beschriftung darf deswegen nicht mit einem Trenner
+     * beginnen.
+     */
+    public function test_blatt_beschriftungen_ohne_eltern_ohne_praefix(): void {
+        $this->resetAfterTest();
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework(['idnumber' => 'flach-2022']);
+        $eins = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'shortname' => 'Werkzeuge instand halten',
+            'idnumber' => 'w1',
+        ]);
+
+        $this->assertSame(
+            [(int) $eins->get('id') => 'Werkzeuge instand halten (w1)'],
+            (new kompetenz_baum())->blatt_beschriftungen([$eins])
+        );
+    }
+
+    /**
+     * Randfall: der Elternknoten ist nicht Teil der uebergebenen Liste.
+     * Dann fehlt der Praefix, statt dass die Beschriftung ausfaellt.
+     */
+    public function test_blatt_beschriftungen_bei_unbekanntem_eltern_ohne_praefix(): void {
+        $this->resetAfterTest();
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework(['idnumber' => 'au-2022']);
+        $hk = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'shortname' => 'a1 Kundengespraech',
+            'idnumber' => 'a1',
+        ]);
+        $lk = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'parentid' => $hk->get('id'),
+            'shortname' => 'Bedarf klaeren',
+            'idnumber' => 'a1.1',
+        ]);
+
+        $this->assertSame(
+            [(int) $lk->get('id') => 'Bedarf klaeren (a1.1)'],
+            (new kompetenz_baum())->blatt_beschriftungen([$lk])
+        );
+    }
+
+    public function test_blatt_beschriftungen_bei_leerer_liste_ist_leer(): void {
+        $this->assertSame([], (new kompetenz_baum())->blatt_beschriftungen([]));
+    }
+
+    /**
      * Dreistufiger Rahmen: nur die zweite Ebene (HK) darf zurueckkommen -
      * weder die obersten Handlungskompetenzbereiche noch die LK darunter.
      */

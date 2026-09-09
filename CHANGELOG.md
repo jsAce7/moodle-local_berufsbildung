@@ -2,6 +2,25 @@
 
 Alle nennenswerten Änderungen an diesem Plugin werden hier festgehalten. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [0.3.0] — 2026-09-09
+
+### Hinzugefügt
+
+- **Zugang zur Blockverwaltung für Berufsbildner/innen**: neue systemweite Rolle `berufsbildung_planung` („Ausbildungsplanung"), die `local/berufsbildung:manageblocks` trägt. `role_sync_service` weist sie jeder Person mit mindestens einer **laufenden** Zuordnung zu und entzieht sie, sobald die letzte davon beendet, gelöscht oder über die Aufbewahrungsfrist bereinigt ist. Bewusst getrennt von der personenbezogenen Rolle `berufsbildner`: die hängt am Nutzerkontext einer einzelnen lernenden Person und würde global zugewiesen die Stichtagsprüfung in `api::is_zustaendig()` unterlaufen. Details in der README, Abschnitt „Rollen und Zugang".
+- **Navigationseintrag „Ausbildungsblöcke"** für alle mit `manageblocks` — die Capability allein machte die Seite nicht auffindbar.
+
+### Behoben
+
+- **Die eigenen Capabilities des Plugins waren wirkungslos.** `settings.php` registrierte alle `admin_externalpage`-Einträge innerhalb von `if ($hassiteconfig)`. Für Nutzer ohne `moodle/site:config` existierten die Seiten im Admin-Baum damit gar nicht, und `admin_externalpage_setup()` brach mit „accessdenied" ab, obwohl die Capability vorlag. Nur die Systemeinstellungen bleiben jetzt `$hassiteconfig`; über den Zugriff auf die Verwaltungsseiten entscheidet `check_access()` je Seite.
+- **Kompetenzen liessen sich einem Ausbildungsblock praktisch nicht zuordnen.** Der einzige Zugang von der Blockliste zur Kompetenzseite war ein Link auf die *Anzahl* der Leistungskriterien — bei einem neuen Block also die Ziffer „0". Die Blockliste hat jetzt eine Aktionsspalte mit beschrifteten Buttons.
+- **`zuordnung_service::beenden()` glich die Rollen nicht ab.** Anlegen und Löschen taten es, Beenden nicht — der Zugang wäre bis zum nächsten Task-Lauf bestehen geblieben.
+
+### Geändert
+
+- **Kompetenzzuordnung als Mehrfachauswahl mit Suchfeld** (`block_kompetenzen.php`): vorher ein Leistungskriterium pro Seitenreload, aus einem flachen Dropdown von bis zu 1000 Einträgen, die nur ihren `shortname` zeigten. Die Einträge lesen sich jetzt als „Handlungskompetenz: Leistungskriterium (Nummer)" (`kompetenz_baum::blatt_beschriftungen()`), bereits zugeordnete werden nicht mehr angeboten, und die drei Sackgassen (kein Beruf, kein Rahmen, Kompetenzverwaltung aus) verlinken die Seite, auf der das Fehlende nachgetragen wird. Ein Leistungskriterium in mehreren Blöcken war und bleibt möglich — der Unique-Index gilt je Block.
+- Die primären Navigationseinträge stehen **vor** der Website-Administration (`add_node()` mit `$beforekey` statt `add()`); fehlt der Admin-Knoten, hängen sie wie bisher hinten an.
+- „Meine Ausbildung" heisst wieder **„Meine Lehre"** — Rücknahme der Umbenennung aus 0.1.0.
+
 ## [0.2.0] — 2026-09-05
 
 ### Hinzugefügt

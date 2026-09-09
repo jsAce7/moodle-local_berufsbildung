@@ -331,5 +331,30 @@ function xmldb_local_berufsbildung_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026083116, 'local', 'berufsbildung');
     }
 
+    if ($oldversion < 2026090902) {
+        // Systemweite Planungsrolle nachziehen - siehe
+        // xmldb_local_berufsbildung_install(). Sie oeffnet die
+        // Blockverwaltung fuer Berufsbildner/innen; zugewiesen wird sie vom
+        // role_sync_service an jede Person mit laufender Zuordnung.
+        if (!$DB->record_exists('role', ['shortname' => 'berufsbildung_planung'])) {
+            $roleid = create_role(
+                get_string('role:planung', 'local_berufsbildung'),
+                'berufsbildung_planung',
+                get_string('role:planung_desc', 'local_berufsbildung')
+            );
+            set_role_contextlevels($roleid, [CONTEXT_SYSTEM]);
+            assign_capability(
+                'local/berufsbildung:manageblocks',
+                CAP_ALLOW,
+                $roleid,
+                context_system::instance()->id,
+                true
+            );
+        }
+
+        // Berufsbildung savepoint reached.
+        upgrade_plugin_savepoint(true, 2026090902, 'local', 'berufsbildung');
+    }
+
     return true;
 }

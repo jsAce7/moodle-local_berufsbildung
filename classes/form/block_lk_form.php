@@ -41,15 +41,28 @@ class block_lk_form extends \moodleform {
         $blockid = (int) $this->_customdata['blockid'];
         $kompetenzen = $this->_customdata['kompetenzen'] ?? [];
 
-        $mform->addElement('select', 'competencyid', get_string('blocklk:kompetenz', 'local_berufsbildung'), $kompetenzen);
-        $mform->setType('competencyid', PARAM_INT);
-        $mform->addRule('competencyid', null, 'required');
+        // Mehrfachauswahl mit Suchfeld statt einfachem Dropdown: ein
+        // Kompetenzrahmen hat leicht ueber hundert Leistungskriterien, und
+        // ein Block deckt selten nur eines davon ab.
+        $mform->addElement(
+            'autocomplete',
+            'competencyids',
+            get_string('blocklk:kompetenz', 'local_berufsbildung'),
+            $kompetenzen,
+            [
+                'multiple' => true,
+                'noselectionstring' => get_string('blocklk:keine_auswahl', 'local_berufsbildung'),
+            ]
+        );
+        $mform->setType('competencyids', PARAM_INT);
+        $mform->addHelpButton('competencyids', 'blocklk_kompetenz', 'local_berufsbildung');
 
         $mform->addElement('select', 'intensitaet', get_string('blocklk:intensitaet', 'local_berufsbildung'), [
             'schwerpunkt' => get_string('blocklk:intensitaet_schwerpunkt', 'local_berufsbildung'),
             'teilweise' => get_string('blocklk:intensitaet_teilweise', 'local_berufsbildung'),
         ]);
         $mform->setType('intensitaet', PARAM_ALPHA);
+        $mform->addHelpButton('intensitaet', 'blocklk_intensitaet', 'local_berufsbildung');
 
         // Der Feldname 'id' (nicht 'blockid') ist Absicht: die aufrufende
         // Seite liest required_param('id', ...), das bei einem POST ohne
@@ -70,15 +83,26 @@ class block_lk_form extends \moodleform {
     public function validation($data, $files): array {
         $errors = parent::validation($data, $files);
 
-        if (!empty($data['competencyid'])) {
-            $existiert = block_lk::record_exists_select(
-                'blockid = :blockid AND competencyid = :competencyid',
-                ['blockid' => (int) $data['id'], 'competencyid' => (int) $data['competencyid']]
-            );
+        $auswahl = array_filter(array_map('intval', (array) ($data['competencyids'] ?? [])));
 
-            if ($existiert) {
-                $errors['competencyid'] = get_string('blocklk:fehler_existiert', 'local_berufsbildung');
-            }
+        if (empty($auswahl)) {
+            // Keine addRule('required'): bei einer leeren Mehrfachauswahl
+            // kommt gar kein Feldwert im POST an, die Regel greift also nicht.
+            $errors['competencyids'] = get_string('blocklk:fehler_keine_auswahl', 'local_berufsbildung');
+
+            return $errors;
+        }
+
+        // Sicherheitsnetz gegen den Unique-Index: die aufrufende Seite bietet
+        // bereits zugeordnete LK nicht mehr an, zwei parallel offene
+        // Formulare koennen sich aber ueberholen.
+        $bestehende = [];
+        foreach (block_lk::get_records(['blockid' => (int) $data['id']]) as $abdeckung) {
+            $bestehende[(int) $abdeckung->get('competencyid')] = true;
+        }
+
+        if (!empty(array_intersect_key($bestehende, array_flip($auswahl)))) {
+            $errors['competencyids'] = get_string('blocklk:fehler_existiert', 'local_berufsbildung');
         }
 
         return $errors;

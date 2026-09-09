@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace local_berufsbildung\service;
 
 use advanced_testcase;
+use context_system;
 use local_berufsbildung\api;
 use local_berufsbildung\persistent\aufbewahrung;
 use local_berufsbildung\persistent\zuordnung;
@@ -48,6 +49,44 @@ final class zuordnung_retention_service_test extends advanced_testcase {
         $zuordnung->create();
 
         return $zuordnung;
+    }
+
+    /**
+     * Mit der letzten Zuordnung faellt auch der systemweite Zugang zur
+     * Blockverwaltung weg. Ohne den Abgleich hier bliebe er bis zum
+     * naechsten Lauf von task\sync_role_assignments bestehen - dieser Pfad
+     * wird auch bei einer Account-Loeschung ueber den Privacy-Provider
+     * genommen.
+     */
+    public function test_loesche_fuer_lernende_entzieht_die_planungsrolle(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        $roleid = $DB->get_field('role', 'id', ['shortname' => 'berufsbildung_planung']);
+        if (!$roleid) {
+            $roleid = create_role('Ausbildungsplanung', 'berufsbildung_planung', '');
+            set_role_contextlevels($roleid, [CONTEXT_SYSTEM]);
+        }
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $lernende->id, null);
+
+        $service = new role_sync_service();
+        $service->synchronisiere_planungsrolle((int) $berufsbildner->id);
+        $this->assertTrue($DB->record_exists('role_assignments', [
+            'roleid' => (int) $roleid,
+            'userid' => (int) $berufsbildner->id,
+            'contextid' => context_system::instance()->id,
+        ]));
+
+        (new zuordnung_retention_service())->loesche_fuer_lernende((int) $lernende->id);
+
+        $this->assertFalse($DB->record_exists('role_assignments', [
+            'roleid' => (int) $roleid,
+            'userid' => (int) $berufsbildner->id,
+            'contextid' => context_system::instance()->id,
+        ]));
     }
 
     public function test_bereinige_abgelaufene_loescht_ohne_aufbewahrungspflicht(): void {

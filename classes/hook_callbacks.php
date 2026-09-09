@@ -26,17 +26,21 @@ declare(strict_types=1);
 
 namespace local_berufsbildung;
 
+use context_system;
 use core\hook\navigation\primary_extend;
 use moodle_url;
 use navigation_node;
 
 /**
- * Haengt "Meine Lehre" / "Meine Lernenden" direkt in die primaere
- * Navigationsleiste (Home / Dashboard / ...) statt in den einklapp- oder
- * ausblendbaren Seiten-Drawer - der ist je nach Theme nicht zuverlaessig
- * erreichbar, die primaere Leiste ist es immer.
+ * Haengt "Meine Lehre" / "Meine Lernenden" / "Ausbildungsbloecke"
+ * direkt in die primaere Navigationsleiste (Dashboard / Meine Kurse / ...)
+ * statt in den einklapp- oder ausblendbaren Seiten-Drawer - der ist je nach
+ * Theme nicht zuverlaessig erreichbar, die primaere Leiste ist es immer.
  */
 class hook_callbacks {
+
+    /** Key des Core-Knotens "Website-Administration" in der primaeren Navigation. */
+    private const SITEADMIN_KEY = 'siteadminnode';
 
     /**
      * @param primary_extend $hook
@@ -51,24 +55,43 @@ class hook_callbacks {
         $primaryview = $hook->get_primaryview();
         $userid = (int) $USER->id;
 
+        // Key => [Sprachstring, Seite]. Die Reihenfolge hier ist die
+        // Reihenfolge in der Leiste.
+        $eintraege = [];
+
         if (api::get_ausbildungsstand($userid) !== null) {
-            $primaryview->add(
-                get_string('nav:meine_lehre', 'local_berufsbildung'),
-                new moodle_url('/local/berufsbildung/meine_lehre.php'),
-                navigation_node::TYPE_CUSTOM,
-                null,
-                'local_berufsbildung_meine_lehre'
-            );
+            $eintraege['local_berufsbildung_meine_lehre'] = ['nav:meine_lehre', 'meine_lehre.php'];
         }
 
         if (!empty(api::get_lernende_for($userid))) {
-            $primaryview->add(
-                get_string('nav:meine_lernenden', 'local_berufsbildung'),
-                new moodle_url('/local/berufsbildung/meine_lernenden.php'),
+            $eintraege['local_berufsbildung_meine_lernenden'] = ['nav:meine_lernenden', 'meine_lernenden.php'];
+        }
+
+        // Die Blockverwaltung liegt im Admin-Baum unter "Ausbildungsverwaltung
+        // -> Planung". Ohne diesen Eintrag findet sie niemand, der nicht
+        // ohnehin in der Website-Administration unterwegs ist - die
+        // Capability allein macht eine Seite nicht auffindbar.
+        if (has_capability('local/berufsbildung:manageblocks', context_system::instance())) {
+            $eintraege['local_berufsbildung_bloecke'] = ['nav:bloecke', 'bloecke.php'];
+        }
+
+        // Vor die Website-Administration einsortieren: die fachlichen
+        // Einstiege sind Alltag, der Admin-Knoten die Ausnahme. add() haengt
+        // immer hinten an, eine Position kennt nur add_node(). Fehlt der
+        // Admin-Knoten (Nutzer ohne Admin-Zugang) oder heisst er in einer
+        // kuenftigen Version anders, bleibt $vor null und die Eintraege
+        // stehen wie bisher am Ende - das vermeidet zugleich die
+        // debugging()-Meldung, die ein unbekannter $beforekey ausloest.
+        $vor = $primaryview->find(self::SITEADMIN_KEY, null) ? self::SITEADMIN_KEY : null;
+
+        foreach ($eintraege as $schluessel => [$stringkey, $seite]) {
+            $primaryview->add_node(navigation_node::create(
+                get_string($stringkey, 'local_berufsbildung'),
+                new moodle_url('/local/berufsbildung/' . $seite),
                 navigation_node::TYPE_CUSTOM,
                 null,
-                'local_berufsbildung_meine_lernenden'
-            );
+                $schluessel
+            ), $vor);
         }
     }
 }

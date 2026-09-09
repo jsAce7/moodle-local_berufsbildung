@@ -25,9 +25,11 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Legt die Rolle 'berufsbildner' im User-Kontext an, sofern sie nicht
- * existiert. Sie traegt keine eigenen Capabilities - die vergeben die
- * aufsetzenden Plugins.
+ * Legt die beiden Rollen des Plugins an, sofern sie nicht existieren:
+ *
+ * - 'berufsbildner' im User-Kontext einer lernenden Person, ohne eigene
+ *   Capabilities - die vergeben die aufsetzenden Plugins.
+ * - 'berufsbildung_planung' im Systemkontext, traegt die Blockverwaltung.
  */
 function xmldb_local_berufsbildung_install() {
     global $DB;
@@ -39,5 +41,25 @@ function xmldb_local_berufsbildung_install() {
             get_string('role:berufsbildner_desc', 'local_berufsbildung')
         );
         set_role_contextlevels($roleid, [CONTEXT_USER]);
+    }
+
+    // Getrennt von 'berufsbildner', weil deren Zuweisungen personenbezogen
+    // im User-Kontext haengen: global zugewiesen wuerden alle ihre
+    // Capabilities fuer alle Personen gelten und die Stichtagspruefung in
+    // api::is_zustaendig() unterlaufen. Siehe role_sync_service.
+    if (!$DB->record_exists('role', ['shortname' => 'berufsbildung_planung'])) {
+        $roleid = create_role(
+            get_string('role:planung', 'local_berufsbildung'),
+            'berufsbildung_planung',
+            get_string('role:planung_desc', 'local_berufsbildung')
+        );
+        set_role_contextlevels($roleid, [CONTEXT_SYSTEM]);
+        assign_capability(
+            'local/berufsbildung:manageblocks',
+            CAP_ALLOW,
+            $roleid,
+            context_system::instance()->id,
+            true
+        );
     }
 }

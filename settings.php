@@ -24,9 +24,30 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-if ($hassiteconfig) {
-    global $DB;
+// Die Verwaltungsseiten haengen an eigenen Capabilities, nicht an
+// moodle/site:config. Sie muessen deshalb auch fuer Nicht-Admins im
+// Admin-Baum registriert werden: sonst findet admin_externalpage_setup()
+// die Seite gar nicht und bricht mit "accessdenied" ab, obwohl die
+// Capability vorliegt - die Capability waere wirkungslos. Ueber den
+// tatsaechlichen Zugriff entscheidet dann check_access() je Seite anhand
+// der dort angegebenen Capability.
+$verwaltungscaps = [
+    'local/berufsbildung:viewzuordnung',
+    'local/berufsbildung:managezuordnung',
+    'local/berufsbildung:manageblocks',
+    'local/berufsbildung:importplan',
+    'local/berufsbildung:manageaufbewahrung',
+];
 
+$hatverwaltung = $hassiteconfig;
+foreach ($verwaltungscaps as $verwaltungscap) {
+    if ($hatverwaltung) {
+        break;
+    }
+    $hatverwaltung = has_capability($verwaltungscap, context_system::instance());
+}
+
+if ($hatverwaltung) {
     if (!$ADMIN->locate('ausbildungsverwaltung')) {
         $ADMIN->add('root', new admin_category(
             'ausbildungsverwaltung',
@@ -48,6 +69,12 @@ if ($hassiteconfig) {
             ));
         }
     }
+}
+
+// Die Systemeinstellungen bleiben Admin-Sache: Profilfeldzuordnung,
+// Lehrdauer und Aufbewahrungsfrist gelten fuer die ganze Installation.
+if ($hassiteconfig) {
+    global $DB;
 
     $settings = new admin_settingpage(
         'local_berufsbildung_settings',
@@ -135,6 +162,10 @@ if ($hassiteconfig) {
         PARAM_INT
     ));
 
+}
+
+// Die Verwaltungsseiten selbst: jede prueft ihre eigene Capability.
+if ($hatverwaltung) {
     $ADMIN->add('ausbildungsverwaltung_organisation', new admin_externalpage(
         'local_berufsbildung_zuordnung',
         new lang_string('zuordnung:uebersicht', 'local_berufsbildung'),
