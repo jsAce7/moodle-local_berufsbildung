@@ -36,7 +36,7 @@ $string['berufsbildung:viewzuordnung'] = 'View the assignment overview without c
 $string['settings:profilefield_beruf'] = 'Profile field: occupation';
 $string['settings:profilefield_beruf_desc'] = 'Custom profile field holding the occupation (e.g. \'AU_EFZ\').';
 $string['settings:profilefield_jahrgang'] = 'Profile field: cohort year';
-$string['settings:profilefield_jahrgang_desc'] = 'Custom profile field holding the year training started. A plain year ("2026") is enough; a combined field that also holds the occupation (e.g. "AU 2026", used for automatic course grouping) is recognised too — the year is extracted from it, while the occupation still comes from the field configured above.';
+$string['settings:profilefield_jahrgang_desc'] = 'Custom profile field holding the year training started. "2026" is enough; a combined field such as "AU 2026" is recognised too — only the year is read from it.';
 $string['settings:profilefield_none'] = '— no custom profile fields exist yet —';
 $string['settings:startmonat'] = 'Training start month';
 $string['settings:startmonat_desc'] = 'Month in which all training programmes start (1 = January, 12 = December). Default: 8 (August).';
@@ -45,13 +45,13 @@ $string['settings:lehrdauer_semester_desc'] = 'Number of semesters until complet
 $string['settings:beruf_dauer'] = 'Training length per occupation';
 $string['settings:beruf_dauer_desc'] = 'Overrides the training length for individual occupations, one line per occupation in the format CODE=semesters, e.g. "PM_EFZ=6" for a three-year programme. Occupations not listed here use the default length above.';
 $string['settings:beruf_wahlpflicht_hk'] = 'Elective competency areas per occupation';
-$string['settings:beruf_wahlpflicht_hk_desc'] = 'Elective competency areas are not shown as missing in the gap analysis. One line per occupation in the format CODE=COMPETENCY-ID,COMPETENCY-ID, for example "AU_EFZ=7777 a.04,7777 a.05". The competency ID is the idnumber of a competency (second level of the framework, below the top-level competency areas).';
+$string['settings:beruf_wahlpflicht_hk_desc'] = 'These competencies are not shown as missing in the gap analysis. One line per occupation in the format CODE=COMPETENCY-ID,COMPETENCY-ID, e.g. "AU_EFZ=7777 a.04,7777 a.05". Use the idnumber of a competency, not of a top-level area.';
 $string['settings:versetzungsplan_schwelle_prozent'] = 'Threshold for incomplete deliveries (%)';
-$string['settings:versetzungsplan_schwelle_prozent_desc'] = 'If a rotation-plan delivery contains significantly fewer processed people than the previous one, it is rejected instead of processed. Default: 20 (a drop of more than 20% counts as incomplete).';
+$string['settings:versetzungsplan_schwelle_prozent_desc'] = 'If a delivery contains significantly fewer people than the previous one, it is rejected instead of processed. Default: 20 (a drop of more than 20% counts as incomplete).';
 $string['settings:versetzungsplan_alterung_tage'] = 'Aging warning after (days)';
 $string['settings:versetzungsplan_alterung_tage_desc'] = 'If the last successful rotation-plan import is older than this, a warning is shown. Not a block, just a reminder that pre-filled data may be based on a stale plan.';
 $string['settings:retention_monate'] = 'Retention period after training completion (months)';
-$string['settings:retention_monate_desc'] = 'How many months after the computed training completion date assignments (and, via local_lerndokumentation, learning journal content) are automatically deleted for good, unless a retention obligation is documented. Default: 12.';
+$string['settings:retention_monate_desc'] = 'How many months after the computed completion date a person\'s assignments are deleted for good — and with them their learning journal. Exception: a documented retention obligation. Default: 12.';
 $string['role:berufsbildner'] = 'Trainer';
 $string['role:berufsbildner_desc'] = 'Assigned in a trainee\'s user context once an assignment exists. Carries no capabilities of its own - those come from the plugins built on top.';
 
@@ -93,24 +93,23 @@ $string['zuordnung:beenden'] = 'End assignment';
 $string['zuordnung:berufsbildner'] = 'Trainer';
 $string['zuordnung:lernende'] = 'Trainees';
 $string['zuordnung_lernende'] = 'Trainees';
-$string['zuordnung_lernende_help'] = 'Multiple selection possible. If a selected person already has a running assignment to another trainer, it will be ended automatically on save, on the day before the "valid from" date - never overwritten silently.';
+$string['zuordnung_lernende_help'] = 'Multiple selection possible. An assignment already running with another trainer is ended automatically on save, on the day before the "valid from" date - not overwritten.';
 $string['zuordnung:kohorten'] = 'Cohorts';
 $string['zuordnung_kohorten'] = 'Cohorts';
-$string['zuordnung_kohorten_help'] = 'All members of the selected cohort(s) are assigned in addition to the trainees selected individually above. The assignment is a one-time snapshot of current membership - later changes to the cohort do not retroactively affect assignments already created.';
+$string['zuordnung_kohorten_help'] = 'All members of the selected cohorts are assigned as well - as a one-time snapshot. Later changes to the cohort have no effect; use a cohort link for that.';
 $string['zuordnung:beruf'] = 'Occupation';
 $string['zuordnung_beruf'] = 'Occupation';
-$string['zuordnung_beruf_help'] = 'Leave empty to take the occupation from the trainee\'s profile. When selecting several people, this is resolved separately for each one. Only needed if the profile does not (yet) hold an occupation, or a different value should apply to this assignment.';
+$string['zuordnung_beruf_help'] = 'Leave empty: the occupation comes from the profile, resolved separately for each person. Only needed if the profile holds no occupation, or a different one should apply here.';
 $string['zuordnung:rolle'] = 'Role';
 $string['zuordnung:herkunft'] = 'Origin';
 $string['zuordnung:herkunft_manuell'] = 'Manual';
 $string['zuordnung:herkunft_kohorte'] = 'Cohort: {$a}';
 $string['zuordnung_rolle'] = 'Role';
-$string['zuordnung_rolle_help'] = 'Within a role, a trainee only ever has one running assignment - a new one with the same role automatically ends the previous one. Different roles may run at the same time, e.g. "Hauptverantwortlich" plus a separate "Stellvertretung" for the same person. Default: hauptverantwortlich.
+$string['zuordnung_rolle_help'] = 'Within a role, a trainee only ever has one running assignment - a new one with the same role ends the previous one automatically. Different roles may run at the same time.
 
-"Hauptverantwortlich" (primary): the trainer who is mainly responsible for this person\'s training - the normal case.
-"Stellvertretung" (deputy): an additional, concurrently running assignment for the same person, e.g. covering for the primary trainer\'s holiday absence.
+"Hauptverantwortlich" (primary) is the normal case. "Stellvertretung" (deputy) is an additional responsibility for the same person, e.g. during a holiday absence.
 
-For the responsibility check (is_zustaendig(), visibility in plugins built on top), both roles are currently equivalent - there is no difference in permissions between them today, the distinction is purely organisational.';
+Both roles are equivalent for visibility today; the distinction is purely organisational.';
 $string['zuordnung:rolle_hauptverantwortlich'] = 'Hauptverantwortlich (primary)';
 $string['zuordnung:rolle_stellvertretung'] = 'Stellvertretung (deputy)';
 $string['zuordnung:gueltig_von'] = 'Valid from';
@@ -142,7 +141,7 @@ $string['kohortenlink:uebersicht'] = 'Cohort links';
 $string['kohortenlink:neu'] = 'New link';
 $string['kohortenlink:anlegen'] = 'Create link';
 $string['kohortenlink:kohorte'] = 'Cohort';
-$string['kohortenlink:beschreibung'] = 'All current and future members of the selected cohort are continuously assigned to this trainer - the sync runs hourly in the background and picks up both new and departed members. Unlike the one-time selection on the assignments page.';
+$string['kohortenlink:beschreibung'] = 'All current and future members of the selected cohort are continuously assigned to this trainer. The hourly sync picks up new and departed members - unlike the one-time selection on the assignments page.';
 $string['kohortenlink:angelegt'] = 'Link created. {$a->erzeugt} assignment(s) created immediately.';
 $string['kohortenlink:aktiv'] = 'Active';
 $string['kohortenlink:status_aktiv'] = 'active';
@@ -152,14 +151,14 @@ $string['kohortenlink:aktivieren'] = 'Activate';
 $string['kohortenlink:loeschen'] = 'Delete';
 $string['kohortenlink:loeschen_bestaetigung'] = 'The cohort link with ID {$a} will be permanently deleted. Continue?';
 $string['kohortenlink:geloescht'] = 'Cohort link deleted.';
-$string['kohortenlink:loeschen_mit_zuordnungen'] = 'This cohort link cannot be deleted because it has already created assignments. Deactivate it instead to preserve the origin of existing assignments.';
+$string['kohortenlink:loeschen_mit_zuordnungen'] = 'This link has already created assignments and therefore cannot be deleted. Deactivate it instead, so the origin of those assignments is preserved.';
 $string['kohortenlink:deaktiviert_hinweis'] = 'Deactivated: existing assignments are left untouched, new or departed members are simply no longer tracked.';
 $string['kohortenlink:keine_kohorten'] = 'No cohorts exist yet. Create one under Users ▸ Cohorts first.';
 $string['kohortenlink:keine_links'] = 'No cohort links exist yet.';
 $string['kohortenlink:fehler_existiert'] = 'A link for this combination of cohort, trainer and role already exists.';
 
 $string['import:titel'] = 'CSV import';
-$string['import:beschreibung'] = 'For the school-year changeover, when a whole cohort year is reassigned. Columns (first row as header): berufsbildner, lernende (each the Moodle username), beruf (empty = take from profile), gueltig_von (format YYYY-MM-DD). After the preview, only error-free rows are imported - rows with errors are reported individually without aborting the import.';
+$string['import:beschreibung'] = 'For the school-year changeover, when a whole cohort year is reassigned. First row as header, columns: berufsbildner, lernende (each the Moodle username), beruf (empty = from profile), gueltig_von (YYYY-MM-DD). After the preview, only error-free rows are imported; rows with errors are reported individually.';
 $string['import:datei'] = 'CSV file';
 $string['import:trennzeichen'] = 'Delimiter';
 $string['import:kodierung'] = 'Encoding';
@@ -197,7 +196,7 @@ $string['block_beruf'] = 'Occupation';
 $string['block_beruf_help'] = 'Determines which competency framework can be picked from when assigning competencies to this block. Leave empty for cross-occupation blocks such as school, inter-company courses, holidays or military service.';
 $string['block:ist_betrieb'] = 'Company placement';
 $string['block_ist_betrieb'] = 'Company placement';
-$string['block_ist_betrieb_help'] = 'Only company placements count towards competency coverage in get_ausgebildete_kompetenzen(). Deselect this for school or inter-company blocks (e.g. üK).';
+$string['block_ist_betrieb_help'] = 'Only company placements count towards competency coverage. Deselect this for school and inter-company blocks (e.g. üK).';
 $string['block:aktiv'] = 'Active';
 $string['block:bearbeiten'] = 'Edit';
 $string['block:anlegen'] = 'Create block';
@@ -223,25 +222,22 @@ $string['blocklk:entfernt'] = 'Competency removed.';
 $string['blocklk:zurueck'] = 'Back to training blocks';
 
 $string['berufrahmen:uebersicht'] = 'Competency framework per occupation';
-$string['berufrahmen:einleitung'] = 'Maps each occupation to its core_competency framework. Used for the gap analysis and to filter the performance criteria offered when assigning them to a block. Occupations not listed here have no framework assigned.
-
-A framework containing only the competencies taught at the workplace is entirely sufficient, and is actually the better fit than a full framework that also includes competencies taught at school or in inter-company courses: both the learning journal (workplace activities only, per Art. 12 BiVo) and the rotation plan\'s competency coverage (get_ausgebildete_kompetenzen(), only blocks with ist_betrieb = true) only ever show or evaluate workplace-relevant competencies anyway.
-
-The framework does not need to be separately assigned to the trainee (no learning plan or course link required) - recording evidence (core_competency\\api::add_evidence()) creates the user_competency record automatically on the first entry.';
+$string['berufrahmen:einleitung'] = 'Maps each occupation to its competency framework. It decides which performance criteria a training block offers and which gaps appear; an occupation without an entry has no framework. A framework holding only the workplace competency areas is sufficient. It does not need to be assigned to trainees - that happens automatically with the first piece of evidence.';
 $string['berufrahmen:beruf'] = 'Occupation';
 $string['berufrahmen_beruf'] = 'Occupation';
-$string['berufrahmen_beruf_help'] = 'Must match exactly the value trainees in this occupation have in the configured "Occupation" profile field, and exactly the value selected as the occupation on the relevant training block.';
+$string['berufrahmen_beruf_help'] = 'The list comes from the "Occupation" profile field: its options if it is a menu field, otherwise the values that actually occur in profiles. Occupations already mapped are left out - change their framework via "Remove".';
 $string['berufrahmen:rahmen'] = 'Competency framework';
 $string['berufrahmen:hinzufuegen'] = 'Add mapping';
 $string['berufrahmen:entfernen'] = 'Remove';
 $string['berufrahmen:keine'] = 'No occupation is mapped to a competency framework yet.';
 $string['berufrahmen:keine_rahmen'] = 'No competency frameworks exist - set up core_competency first.';
+$string['berufrahmen:keine_berufe'] = 'There is no occupation to choose from: none is stored in the "Occupation" profile field yet, or every occupation that occurs already has a framework.';
 $string['berufrahmen:fehler_existiert'] = 'This occupation is already mapped to a framework - remove it first to change the mapping.';
 $string['berufrahmen:hinzugefuegt'] = 'Mapping saved.';
 $string['berufrahmen:entfernt'] = 'Mapping removed.';
 
 $string['planimport:titel'] = 'Rotation-plan import';
-$string['planimport:beschreibung'] = 'Fallback for when the weekly webservice import is not (yet) running, or when something needs to be applied outside the schedule. Accepts the same CSV as the webservice - see docs/schnittstelle_versetzungsplan.md.';
+$string['planimport:beschreibung'] = 'Fallback if the weekly webservice import is not running, or if something needs to be applied outside the schedule. Expects the same CSV as the webservice (see docs/schnittstelle_versetzungsplan.md).';
 $string['planimport:datei'] = 'CSV file';
 $string['planimport:testlauf'] = 'Dry run (only check, write nothing)';
 $string['planimport:rueckgang_bestaetigt'] = 'Confirm drop (override the incomplete-delivery guard)';

@@ -36,7 +36,7 @@ $string['berufsbildung:viewzuordnung'] = 'Zuordnungsübersicht einsehen, ohne zu
 $string['settings:profilefield_beruf'] = 'Profilfeld: Beruf';
 $string['settings:profilefield_beruf_desc'] = 'Benutzerdefiniertes Profilfeld, das den Beruf (z. B. \'AU_EFZ\') enthält.';
 $string['settings:profilefield_jahrgang'] = 'Profilfeld: Jahrgang';
-$string['settings:profilefield_jahrgang_desc'] = 'Benutzerdefiniertes Profilfeld, das das Jahr des Lehrbeginns enthält. Es genügt ein reines Jahr ("2026"); ein kombiniertes Feld, das zusätzlich den Beruf enthält (z. B. "AU 2026", etwa für die automatische Kursgruppierung), wird ebenfalls erkannt — die Jahreszahl wird daraus extrahiert, der Beruf kommt trotzdem aus dem oben konfigurierten Profilfeld.';
+$string['settings:profilefield_jahrgang_desc'] = 'Benutzerdefiniertes Profilfeld mit dem Jahr des Lehrbeginns. "2026" genügt; ein kombiniertes Feld wie "AU 2026" wird ebenfalls erkannt — daraus wird nur die Jahreszahl gelesen.';
 $string['settings:profilefield_none'] = '— keine benutzerdefinierten Profilfelder vorhanden —';
 $string['settings:startmonat'] = 'Startmonat der Lehre';
 $string['settings:startmonat_desc'] = 'Monat, in dem alle Lehren beginnen (1 = Januar, 12 = Dezember). Standard: 8 (August).';
@@ -45,13 +45,13 @@ $string['settings:lehrdauer_semester_desc'] = 'Anzahl Semester bis zum Lehrabsch
 $string['settings:beruf_dauer'] = 'Lehrdauer je Beruf';
 $string['settings:beruf_dauer_desc'] = 'Abweichende Lehrdauer für einzelne Berufe, eine Zeile pro Beruf im Format CODE=Semester, z. B. "PM_EFZ=6" für eine dreijährige Lehre. Berufe, die hier nicht aufgeführt sind, verwenden die Lehrdauer oben.';
 $string['settings:beruf_wahlpflicht_hk'] = 'Wahlpflicht-Handlungskompetenzen je Beruf';
-$string['settings:beruf_wahlpflicht_hk_desc'] = 'Wahlpflicht-HK werden in der Lückenanalyse nicht als fehlend ausgewiesen. Eine Zeile je Beruf im Format CODE=HK-ID,HK-ID, zum Beispiel "AU_EFZ=7777 a.04,7777 a.05". Die HK-ID ist die ID-Nummer einer Handlungskompetenz (zweite Ebene des Kompetenzrahmens, unterhalb der Handlungskompetenzbereiche). Für die AU-Datei sind dies die als W markierten HK.';
+$string['settings:beruf_wahlpflicht_hk_desc'] = 'Diese Handlungskompetenzen gelten in der Lückenanalyse nicht als fehlend. Eine Zeile je Beruf im Format CODE=HK-ID,HK-ID, z. B. "AU_EFZ=7777 a.04,7777 a.05". Gemeint ist die ID-Nummer einer Handlungskompetenz, nicht eines Bereichs. In der AU-Datei sind das die mit "W" markierten HK.';
 $string['settings:versetzungsplan_schwelle_prozent'] = 'Schwelle für unvollständige Lieferungen (%)';
-$string['settings:versetzungsplan_schwelle_prozent_desc'] = 'Enthält eine Versetzungsplan-Lieferung deutlich weniger verarbeitete Personen als die vorherige, wird sie abgewiesen statt verarbeitet. Standard: 20 (ein Rückgang um mehr als 20 % gilt als unvollständig).';
+$string['settings:versetzungsplan_schwelle_prozent_desc'] = 'Enthält eine Lieferung deutlich weniger Personen als die vorherige, wird sie abgewiesen statt verarbeitet. Standard: 20 (Rückgang über 20 % gilt als unvollständig).';
 $string['settings:versetzungsplan_alterung_tage'] = 'Alterungshinweis nach (Tagen)';
 $string['settings:versetzungsplan_alterung_tage_desc'] = 'Liegt der letzte erfolgreiche Versetzungsplan-Import länger zurück, erscheint ein Hinweis. Keine Sperre, nur eine Erinnerung, dass die Vorbelegung auf einem veralteten Plan beruhen könnte.';
 $string['settings:retention_monate'] = 'Aufbewahrungsfrist nach Ausbildungsabschluss (Monate)';
-$string['settings:retention_monate_desc'] = 'Nach wie vielen Monaten seit dem berechneten Ausbildungsabschluss Zuordnungen (und über local_lerndokumentation die Lerndoku-Inhalte) automatisch endgültig gelöscht werden, sofern keine Aufbewahrungspflicht dokumentiert ist. Standard: 12.';
+$string['settings:retention_monate_desc'] = 'Wie viele Monate nach dem berechneten Lehrabschluss die Zuordnungen einer Person endgültig gelöscht werden — und damit auch ihre Lerndokumentation. Ausnahme: eine dokumentierte Aufbewahrungspflicht. Standard: 12.';
 $string['role:berufsbildner'] = 'Berufsbildner/in';
 $string['role:berufsbildner_desc'] = 'Zugewiesen im Nutzerkontext einer lernenden Person, sobald eine Zuordnung besteht. Traegt selbst keine Capabilities - die vergeben die aufsetzenden Plugins.';
 
@@ -93,24 +93,23 @@ $string['zuordnung:beenden'] = 'Zuordnung beenden';
 $string['zuordnung:berufsbildner'] = 'Berufsbildner/in';
 $string['zuordnung:lernende'] = 'Lernende';
 $string['zuordnung_lernende'] = 'Lernende';
-$string['zuordnung_lernende_help'] = 'Mehrfachauswahl möglich. Hat eine ausgewählte Person bereits eine laufende Zuordnung zu einer/einem anderen Berufsbildner/in, wird diese beim Speichern automatisch zum Vortag des Gültig-ab-Datums beendet - nicht stillschweigend überschrieben.';
+$string['zuordnung_lernende_help'] = 'Mehrfachauswahl möglich. Eine schon laufende Zuordnung zu einer anderen Person wird beim Speichern automatisch am Vortag des Gültig-ab-Datums beendet, nicht überschrieben.';
 $string['zuordnung:kohorten'] = 'Globale Gruppen';
 $string['zuordnung_kohorten'] = 'Globale Gruppen';
-$string['zuordnung_kohorten_help'] = 'Alle Mitglieder der ausgewählten globalen Gruppe(n) werden zusätzlich zu den oben einzeln ausgewählten Lernenden zugeordnet. Die Zuordnung ist eine einmalige Momentaufnahme der aktuellen Mitgliedschaft - spätere Änderungen an der Gruppe wirken sich nicht automatisch auf bereits angelegte Zuordnungen aus.';
+$string['zuordnung_kohorten_help'] = 'Alle Mitglieder der gewählten Gruppen werden zusätzlich zugeordnet — als einmalige Momentaufnahme. Spätere Änderungen an der Gruppe wirken nicht nach; dafür gibt es die Verknüpfungen mit globalen Gruppen.';
 $string['zuordnung:beruf'] = 'Beruf';
 $string['zuordnung_beruf'] = 'Beruf';
-$string['zuordnung_beruf_help'] = 'Leer lassen, um den Beruf aus dem Profil der/des Lernenden zu übernehmen. Bei einer Auswahl mehrerer Personen wird das für jede Person einzeln aufgelöst. Nur nötig, wenn das Profil (noch) keinen Beruf enthält oder ein davon abweichender Wert für diese Zuordnung gelten soll.';
+$string['zuordnung_beruf_help'] = 'Leer lassen: der Beruf kommt aus dem Profil, bei mehreren Personen je einzeln. Nur nötig, wenn im Profil kein Beruf steht oder hier ein anderer gelten soll.';
 $string['zuordnung:rolle'] = 'Rolle';
 $string['zuordnung:herkunft'] = 'Herkunft';
 $string['zuordnung:herkunft_manuell'] = 'Manuell';
 $string['zuordnung:herkunft_kohorte'] = 'Globale Gruppe: {$a}';
 $string['zuordnung_rolle'] = 'Rolle';
-$string['zuordnung_rolle_help'] = 'Pro Rolle ist je Lernende/r immer nur eine Zuordnung laufend - eine neue mit derselben Rolle beendet automatisch die bisherige. Verschiedene Rollen dürfen gleichzeitig laufen, z. B. "Hauptverantwortlich" und zusätzlich "Stellvertretung" für dieselbe Person. Standard: hauptverantwortlich.
+$string['zuordnung_rolle_help'] = 'Je Rolle läuft pro Lernende/r nur eine Zuordnung - eine neue mit derselben Rolle beendet die bisherige automatisch. Verschiedene Rollen dürfen gleichzeitig laufen.
 
-"Hauptverantwortlich": die/der Berufsbildner/in, die/der die Ausbildung dieser Person hauptsächlich verantwortet - der Normalfall.
-"Stellvertretung": eine zusätzliche, gleichzeitig laufende Zuständigkeit für dieselbe Person, z. B. während einer Ferienabwesenheit der/des Hauptverantwortlichen.
+"Hauptverantwortlich" ist der Normalfall. "Stellvertretung" ist eine zusätzliche Zuständigkeit für dieselbe Person, z. B. während einer Ferienabwesenheit.
 
-Für die Zuständigkeitsprüfung (is_zustaendig(), Sichtbarkeit in aufsetzenden Plugins) sind beide Rollen aktuell gleichwertig - es gibt heute keine unterschiedlichen Berechtigungen zwischen ihnen, der Unterschied ist rein organisatorisch.';
+Für die Sichtbarkeit sind beide Rollen heute gleichwertig; der Unterschied ist rein organisatorisch.';
 $string['zuordnung:rolle_hauptverantwortlich'] = 'Hauptverantwortlich';
 $string['zuordnung:rolle_stellvertretung'] = 'Stellvertretung';
 $string['zuordnung:gueltig_von'] = 'Gültig ab';
@@ -142,7 +141,7 @@ $string['kohortenlink:uebersicht'] = 'Verknüpfungen mit globalen Gruppen';
 $string['kohortenlink:neu'] = 'Neue Verknüpfung mit globaler Gruppe';
 $string['kohortenlink:anlegen'] = 'Verknüpfung mit globaler Gruppe anlegen';
 $string['kohortenlink:kohorte'] = 'Globale Gruppe';
-$string['kohortenlink:beschreibung'] = 'Alle aktuellen und künftigen Mitglieder der ausgewählten globalen Gruppe werden dieser/diesem Berufsbildner/in laufend zugeordnet - der Abgleich läuft stündlich im Hintergrund und zieht sowohl neue als auch ausgeschiedene Mitglieder nach. Anders als die einmalige Auswahl auf der Zuordnungsseite.';
+$string['kohortenlink:beschreibung'] = 'Alle heutigen und künftigen Mitglieder der gewählten Gruppe werden dieser/diesem Berufsbildner/in laufend zugeordnet. Der stündliche Abgleich zieht neue und ausgeschiedene Mitglieder nach - anders als die einmalige Auswahl auf der Zuordnungsseite.';
 $string['kohortenlink:angelegt'] = 'Verknüpfung angelegt. {$a->erzeugt} Zuordnung(en) sofort erzeugt.';
 $string['kohortenlink:aktiv'] = 'Aktiv';
 $string['kohortenlink:status_aktiv'] = 'aktiv';
@@ -152,14 +151,14 @@ $string['kohortenlink:aktivieren'] = 'Aktivieren';
 $string['kohortenlink:loeschen'] = 'Löschen';
 $string['kohortenlink:loeschen_bestaetigung'] = 'Die Verknüpfung mit der globalen Gruppe (ID {$a}) wird endgültig gelöscht. Fortfahren?';
 $string['kohortenlink:geloescht'] = 'Verknüpfung mit globaler Gruppe gelöscht.';
-$string['kohortenlink:loeschen_mit_zuordnungen'] = 'Diese Verknüpfung mit einer globalen Gruppe kann nicht gelöscht werden, weil sie bereits Zuordnungen erzeugt hat. Bitte deaktivieren Sie sie stattdessen, damit die Herkunft der bestehenden Zuordnungen erhalten bleibt.';
+$string['kohortenlink:loeschen_mit_zuordnungen'] = 'Diese Verknüpfung hat schon Zuordnungen erzeugt und kann darum nicht gelöscht werden. Bitte stattdessen deaktivieren, damit die Herkunft dieser Zuordnungen erhalten bleibt.';
 $string['kohortenlink:deaktiviert_hinweis'] = 'Deaktiviert: bestehende Zuordnungen bleiben unangetastet, es werden nur keine neuen oder beendeten Mitglieder mehr nachgezogen.';
 $string['kohortenlink:keine_kohorten'] = 'Es sind keine globalen Gruppen vorhanden. Unter Nutzer/innen ▸ Globale Gruppen zuerst eine anlegen.';
 $string['kohortenlink:keine_links'] = 'Es sind noch keine Verknüpfungen mit globalen Gruppen vorhanden.';
 $string['kohortenlink:fehler_existiert'] = 'Für diese Kombination aus Gruppe, Berufsbildner/in und Rolle besteht bereits eine Verknüpfung.';
 
 $string['import:titel'] = 'CSV-Import';
-$string['import:beschreibung'] = 'Für den Jahreswechsel, wenn ein ganzer Jahrgang neu zugeordnet wird. Spalten (erste Zeile als Titel): berufsbildner, lernende (je der Moodle-Benutzername), beruf (leer = aus dem Profil übernehmen), gueltig_von (Format JJJJ-MM-TT). Nach der Vorschau werden nur fehlerfreie Zeilen übernommen - fehlerhafte werden einzeln gemeldet, ohne den Import abzubrechen.';
+$string['import:beschreibung'] = 'Für den Jahreswechsel, wenn ein ganzer Jahrgang neu zugeordnet wird. Erste Zeile als Titel, Spalten: berufsbildner, lernende (je der Moodle-Benutzername), beruf (leer = aus dem Profil), gueltig_von (JJJJ-MM-TT). Übernommen werden nach der Vorschau nur fehlerfreie Zeilen; fehlerhafte werden einzeln gemeldet.';
 $string['import:datei'] = 'CSV-Datei';
 $string['import:trennzeichen'] = 'Trennzeichen';
 $string['import:kodierung'] = 'Kodierung';
@@ -197,7 +196,7 @@ $string['block_beruf'] = 'Beruf';
 $string['block_beruf_help'] = 'Bestimmt, aus welchem Kompetenzrahmen bei der Kompetenzabdeckung dieses Blocks ausgewählt werden kann. Leer lassen für berufsübergreifende Blöcke wie Schule, üK, Ferien oder Militär.';
 $string['block:ist_betrieb'] = 'Betrieblicher Einsatz';
 $string['block_ist_betrieb'] = 'Betrieblicher Einsatz';
-$string['block_ist_betrieb_help'] = 'Nur betriebliche Einsätze zählen bei get_ausgebildete_kompetenzen() zur Kompetenzabdeckung. Schulische oder überbetriebliche Blöcke (z.B. üK) hier abwählen.';
+$string['block_ist_betrieb_help'] = 'Nur betriebliche Einsätze zählen zur Kompetenzabdeckung. Schulische und überbetriebliche Blöcke (z. B. üK) hier abwählen.';
 $string['block:aktiv'] = 'Aktiv';
 $string['block:bearbeiten'] = 'Bearbeiten';
 $string['block:anlegen'] = 'Block anlegen';
@@ -223,25 +222,22 @@ $string['blocklk:entfernt'] = 'Kompetenz entfernt.';
 $string['blocklk:zurueck'] = 'Zurück zu den Ausbildungsblöcken';
 
 $string['berufrahmen:uebersicht'] = 'Kompetenzrahmen je Beruf';
-$string['berufrahmen:einleitung'] = 'Ordnet jedem Beruf seinen core_competency-Kompetenzrahmen zu. Wird für die Lückenanalyse und die Filterung der Leistungskriterien bei der Blockzuordnung verwendet. Berufe, die hier nicht aufgeführt sind, haben keinen Rahmen zugeordnet.
-
-Ein Rahmen mit ausschliesslich den betrieblich vermittelten Handlungskompetenzbereichen genügt vollständig und ist die passendere Wahl als ein vollständiger Rahmen mit schulisch/überbetrieblich vermittelten Bereichen: Sowohl die Lerndokumentation (nur betriebliche Tätigkeiten, Art. 12 BiVo) als auch die Kompetenzabdeckung des Versetzungsplans (get_ausgebildete_kompetenzen(), nur Blöcke mit ist_betrieb = true) zeigen ohnehin nur betriebsrelevante Kompetenzen an bzw. werten sie aus.
-
-Der Rahmen muss der lernenden Person nicht zusätzlich zugewiesen werden (kein Lernplan, keine Kurs-Verknüpfung nötig) - der Kompetenznachweis (core_competency\\api::add_evidence()) legt den user_competency-Datensatz beim ersten Eintrag automatisch an.';
+$string['berufrahmen:einleitung'] = 'Ordnet jedem Beruf seinen Kompetenzrahmen zu. Er bestimmt, welche Leistungskriterien ein Ausbildungsblock anbietet und welche Lücken erscheinen; ein Beruf ohne Eintrag hat keinen Rahmen. Ein Rahmen nur mit den betrieblichen Kompetenzbereichen genügt. Den Lernenden muss er nicht zugewiesen werden - das geschieht beim ersten Kompetenznachweis automatisch.';
 $string['berufrahmen:beruf'] = 'Beruf';
 $string['berufrahmen_beruf'] = 'Beruf';
-$string['berufrahmen_beruf_help'] = 'Muss exakt dem Wert entsprechen, den lernende Personen dieses Berufs im konfigurierten Profilfeld "Beruf" stehen haben, und exakt dem Wert, der beim jeweiligen Ausbildungsblock als Beruf ausgewählt wird.';
+$string['berufrahmen_beruf_help'] = 'Die Liste kommt aus dem Profilfeld "Beruf": bei einem Auswahlfeld dessen Optionen, sonst die Werte, die im Profil tatsächlich vorkommen. Bereits zugeordnete Berufe fehlen - deren Rahmen wechselt man über "Entfernen".';
 $string['berufrahmen:rahmen'] = 'Kompetenzrahmen';
 $string['berufrahmen:hinzufuegen'] = 'Zuordnung hinzufügen';
 $string['berufrahmen:entfernen'] = 'Entfernen';
 $string['berufrahmen:keine'] = 'Es ist noch kein Beruf einem Kompetenzrahmen zugeordnet.';
 $string['berufrahmen:keine_rahmen'] = 'Es sind keine Kompetenzrahmen vorhanden - core_competency zuerst einrichten.';
+$string['berufrahmen:keine_berufe'] = 'Es steht kein Beruf zur Auswahl: im Profilfeld "Beruf" ist noch keiner hinterlegt, oder alle vorkommenden Berufe haben schon einen Rahmen.';
 $string['berufrahmen:fehler_existiert'] = 'Dieser Beruf ist bereits einem Rahmen zugeordnet - zuerst entfernen, um die Zuordnung zu ändern.';
 $string['berufrahmen:hinzugefuegt'] = 'Zuordnung gespeichert.';
 $string['berufrahmen:entfernt'] = 'Zuordnung entfernt.';
 
 $string['planimport:titel'] = 'Versetzungsplan-Import';
-$string['planimport:beschreibung'] = 'Rückfallweg für den Fall, dass der wöchentliche Webservice-Import (noch) nicht läuft, oder wenn ausserplanmässig etwas nachgezogen werden muss. Nimmt dieselbe CSV entgegen wie der Webservice - siehe docs/schnittstelle_versetzungsplan.md.';
+$string['planimport:beschreibung'] = 'Rückfallweg, falls der wöchentliche Webservice-Import nicht läuft oder ausserplanmässig etwas nachgezogen werden muss. Erwartet dieselbe CSV wie der Webservice (siehe docs/schnittstelle_versetzungsplan.md).';
 $string['planimport:datei'] = 'CSV-Datei';
 $string['planimport:testlauf'] = 'Testlauf (nur prüfen, nichts schreiben)';
 $string['planimport:rueckgang_bestaetigt'] = 'Rückgang bestätigt (Vollständigkeitsschutz überschreiben)';

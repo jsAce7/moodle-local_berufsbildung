@@ -37,7 +37,12 @@ class beruf_rahmen_form extends \moodleform {
 
         $rahmenoptionen = $this->_customdata['rahmenoptionen'] ?? [];
 
-        $mform->addElement('text', 'beruf', get_string('berufrahmen:beruf', 'local_berufsbildung'));
+        // Auswahlliste statt Freitext: der Code muss zeichengenau dem
+        // Profilwert entsprechen, sonst greift die Zuordnung nie.
+        $berufe = $this->_customdata['berufe'] ?? [];
+        $berufauswahl = ['' => get_string('choosedots')] + array_combine($berufe, $berufe);
+
+        $mform->addElement('select', 'beruf', get_string('berufrahmen:beruf', 'local_berufsbildung'), $berufauswahl);
         $mform->setType('beruf', PARAM_TEXT);
         $mform->addRule('beruf', null, 'required');
         $mform->addHelpButton('beruf', 'berufrahmen_beruf', 'local_berufsbildung');

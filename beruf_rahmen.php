@@ -28,6 +28,7 @@ require_once($CFG->libdir . '/adminlib.php');
 
 use core_competency\competency_framework;
 use local_berufsbildung\form\beruf_rahmen_form;
+use local_berufsbildung\service\beruf_katalog;
 use local_berufsbildung\service\rahmen_resolver;
 
 admin_externalpage_setup('local_berufsbildung_berufrahmen');
@@ -52,12 +53,20 @@ if (get_config('core_competency', 'enabled')) {
     }
 }
 
+// Auswahlliste der Berufe aus dem konfigurierten Profilfeld, ohne die
+// bereits zugeordneten - die koennen ohnehin nur ueber "Entfernen" geaendert
+// werden.
+$profilfeld = get_config('local_berufsbildung', 'profilefield_beruf');
+$berufe = (new beruf_katalog())->alle_codes($profilfeld !== false ? (string) $profilfeld : 'beruf');
+$offeneberufe = array_values(array_diff($berufe, array_keys($paare)));
+
 $form = new beruf_rahmen_form(null, [
     'rahmenoptionen' => $rahmenoptionen,
+    'berufe' => $offeneberufe,
     'bestehende_berufe' => array_keys($paare),
 ]);
 
-if (!empty($rahmenoptionen) && $data = $form->get_data()) {
+if (!empty($rahmenoptionen) && !empty($offeneberufe) && $data = $form->get_data()) {
     $paare[$data->beruf] = $data->rahmenidnumber;
     set_config('beruf_rahmen_mapping', $resolver->serialisiere($paare), 'local_berufsbildung');
 
@@ -101,6 +110,8 @@ if (empty($paare)) {
 
 if (empty($rahmenoptionen)) {
     echo $OUTPUT->notification(get_string('berufrahmen:keine_rahmen', 'local_berufsbildung'), 'info');
+} else if (empty($offeneberufe)) {
+    echo $OUTPUT->notification(get_string('berufrahmen:keine_berufe', 'local_berufsbildung'), 'info');
 } else {
     $form->display();
 }
