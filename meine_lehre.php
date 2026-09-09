@@ -67,6 +67,8 @@ if ($stand !== null) {
     echo html_writer::start_tag('div', ['class' => 'card local-berufsbildung-herokarte']);
     echo html_writer::start_tag('div', ['class' => 'card-body']);
 
+    $collector = new collector();
+
     if ($istbeendet) {
         echo html_writer::tag('p', get_string('meine_lehre:abgeschlossen', 'local_berufsbildung', (object) [
             'beruf' => $stand->beruf,
@@ -83,6 +85,17 @@ if ($stand !== null) {
     echo semester_stepper::render($stand->semester, $stand->gesamtsemester);
 
     if (!$istbeendet) {
+        // Direktlinks zum Erfassen, pro registrierter Quelle, die eine
+        // eigene Erfassung anbietet - siehe classes/nachweis/erfassbare_quelle.php.
+        foreach ($collector->get_erfassen_aktionen($lernendeid, $lernendeid) as $aktion) {
+            echo html_writer::div($OUTPUT->single_button(
+                new moodle_url($aktion->url),
+                $aktion->label,
+                'get',
+                ['class' => 'btn-primary']
+            ), 'mb-3');
+        }
+
         // "Wo bin ich gerade" - die unmittelbarste Information des Plans,
         // und nur solange die Lehre laeuft ueberhaupt eine Frage.
         $einsatz = api::get_aktueller_einsatz($lernendeid);
@@ -103,7 +116,6 @@ if ($stand !== null) {
 
     echo einsatz_timeline::render_fuer_lernende($lernendeid);
 
-    $collector = new collector();
     $nachweise = $collector->get_nachweise($lernendeid, $lernendeid, 0, time());
     echo nachweis_liste::render(
         $nachweise,

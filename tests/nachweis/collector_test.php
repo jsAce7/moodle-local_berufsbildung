@@ -29,6 +29,7 @@ namespace local_berufsbildung\nachweis;
 use advanced_testcase;
 use local_berufsbildung\persistent\zuordnung;
 use moodle_exception;
+use moodle_url;
 
 /**
  * Test-Provider, der jeden Aufruf protokolliert - damit sichtbar wird, ob
@@ -53,6 +54,40 @@ final class collector_test_provider implements provider {
 
     public function get_quelle_key(): string {
         return 'test';
+    }
+}
+
+/**
+ * Test-Provider mit eigener Erfassung, wahlweise ohne Erfassungs-URL - fuer
+ * den Fall, dass eine Quelle zwar `erfassbare_quelle` implementiert, aber
+ * aktuell nichts anzubieten hat (z.B. fehlende Berechtigung).
+ */
+final class collector_test_erfassbarer_provider implements provider, erfassbare_quelle {
+    public bool $erfassen_wurde_aufgerufen = false;
+
+    public function __construct(private readonly ?string $url = '/local/test/edit.php') {
+    }
+
+    public function get_nachweise(int $lernendeid, int $von, int $bis): array {
+        return [];
+    }
+
+    public function get_quelle_name(): string {
+        return 'Erfassbare Test-Quelle';
+    }
+
+    public function get_quelle_key(): string {
+        return 'testerfassbar';
+    }
+
+    public function get_erfassen_url(int $lernendeid): ?moodle_url {
+        $this->erfassen_wurde_aufgerufen = true;
+
+        return $this->url === null ? null : new moodle_url($this->url);
+    }
+
+    public function get_erfassen_label(): string {
+        return 'Neuer Test-Eintrag';
     }
 }
 
@@ -167,5 +202,69 @@ final class collector_test extends advanced_testcase {
 
         $this->assertCount(1, $nachweise);
         $this->assertTrue($provider->wurde_aufgerufen);
+    }
+
+    public function test_get_erfassen_aktionen_liefert_aktion_von_erfassbarer_quelle(): void {
+        $this->resetAfterTest();
+
+        $lernende = $this->getDataGenerator()->create_user();
+
+        $provider = new collector_test_erfassbarer_provider('/local/test/edit.php');
+        $aktionen = (new collector([$provider]))->get_erfassen_aktionen((int) $lernende->id, (int) $lernende->id);
+
+        $this->assertCount(1, $aktionen);
+        $this->assertSame('testerfassbar', $aktionen[0]->quelle_key);
+        $this->assertSame('Neuer Test-Eintrag', $aktionen[0]->label);
+        $this->assertStringContainsString('/local/test/edit.php', $aktionen[0]->url);
+    }
+
+    /**
+     * Ein normaler `provider` ohne `erfassbare_quelle` liefert keine Aktion
+     * und wird dafuer auch gar nicht erst gefragt.
+     */
+    public function test_get_erfassen_aktionen_ignoriert_provider_ohne_erfassbare_quelle(): void {
+        $this->resetAfterTest();
+
+        $lernende = $this->getDataGenerator()->create_user();
+
+        $provider = new collector_test_provider();
+        $aktionen = (new collector([$provider]))->get_erfassen_aktionen((int) $lernende->id, (int) $lernende->id);
+
+        $this->assertSame([], $aktionen);
+    }
+
+    /**
+     * Liefert die Quelle keine URL (z.B. weil die Berechtigung fehlt), gibt
+     * es dafuer auch keine Aktion.
+     */
+    public function test_get_erfassen_aktionen_ohne_url_ergibt_keine_aktion(): void {
+        $this->resetAfterTest();
+
+        $lernende = $this->getDataGenerator()->create_user();
+
+        $provider = new collector_test_erfassbarer_provider(null);
+        $aktionen = (new collector([$provider]))->get_erfassen_aktionen((int) $lernende->id, (int) $lernende->id);
+
+        $this->assertSame([], $aktionen);
+        $this->assertTrue($provider->erfassen_wurde_aufgerufen);
+    }
+
+    /**
+     * Randfall: eine fremde Person bekommt nie eine Erfassen-Aktion fuer
+     * jemand anderen - unabhaengig von einer allfaelligen Zustaendigkeit.
+     * Anders als bei get_nachweise() wird der Provider dafuer gar nicht erst
+     * gefragt (Architekturregel 7).
+     */
+    public function test_get_erfassen_aktionen_fuer_fremde_person_bleibt_leer(): void {
+        $this->resetAfterTest();
+
+        $lernende = $this->getDataGenerator()->create_user();
+        $fremder = $this->getDataGenerator()->create_user();
+
+        $provider = new collector_test_erfassbarer_provider();
+        $aktionen = (new collector([$provider]))->get_erfassen_aktionen((int) $fremder->id, (int) $lernende->id);
+
+        $this->assertSame([], $aktionen);
+        $this->assertFalse($provider->erfassen_wurde_aufgerufen);
     }
 }

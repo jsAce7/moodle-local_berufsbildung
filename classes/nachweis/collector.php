@@ -116,4 +116,49 @@ class collector {
 
         return $namen;
     }
+
+    /**
+     * Erfassen-Aktionen aller Quellen, die `erfassbare_quelle` zusaetzlich
+     * implementieren - fuer "Meine Lehre", damit die lernende Person direkt
+     * dorthin verlinkt einen neuen Eintrag anlegen kann.
+     *
+     * Nur fuer die eigene Person: anders als bei get_nachweise() gibt es
+     * hier keine Zustaendigkeit einer/eines Berufsbildner/in zu pruefen,
+     * weil niemand fuer eine andere Person erfasst. Die Identitaetspruefung
+     * passiert dennoch hier und nicht im Provider - dieselbe Regel wie bei
+     * der Zustaendigkeitspruefung in get_nachweise() (Architekturregel 7).
+     *
+     * $abrufendeid wird wie bei get_nachweise() explizit vom Aufrufer
+     * uebergeben statt hier global $USER zu lesen - gleiches Muster, einfacher
+     * zu testen.
+     *
+     * @param int $abrufendeid Wer fragt ab
+     * @param int $lernendeid Fuer wen
+     * @return erfassen_aktion[]
+     */
+    public function get_erfassen_aktionen(int $abrufendeid, int $lernendeid): array {
+        if ($abrufendeid !== $lernendeid) {
+            return [];
+        }
+
+        $aktionen = [];
+        foreach ($this->providers as $einzelprovider) {
+            if (!$einzelprovider instanceof erfassbare_quelle) {
+                continue;
+            }
+
+            $url = $einzelprovider->get_erfassen_url($lernendeid);
+            if ($url === null) {
+                continue;
+            }
+
+            $aktionen[] = new erfassen_aktion(
+                $einzelprovider->get_quelle_key(),
+                $einzelprovider->get_erfassen_label(),
+                $url->out(false)
+            );
+        }
+
+        return $aktionen;
+    }
 }
