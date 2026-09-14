@@ -69,6 +69,23 @@ $eintraege = lernenden_roster::sortiere($eintraege);
 
 echo $OUTPUT->header();
 
+// Nebeneingang zur Blockverwaltung statt eines eigenen
+// Navigationseintrags: wer Lernende betreut, pflegt die Ausbildungsbloecke
+// im selben Arbeitsgang, und die Leiste bleibt bei den zwei fachlichen
+// Einstiegen (siehe hook_callbacks). Wer die Capability ohne eigene
+// Lernende hat - eine von Hand zugewiesene Ausbildungsplanung -, erreicht
+// die Seite weiterhin ueber den Admin-Baum unter Ausbildungsverwaltung.
+if (has_capability('local/berufsbildung:manageblocks', context_system::instance())) {
+    echo html_writer::div(
+        html_writer::link(
+            new moodle_url('/local/berufsbildung/bloecke.php'),
+            get_string('meine_lernenden:bloecke', 'local_berufsbildung'),
+            ['class' => 'btn btn-outline-secondary btn-sm']
+        ),
+        'local-berufsbildung-roster-aktionen'
+    );
+}
+
 if (empty($eintraege)) {
     echo $OUTPUT->notification(get_string('meine_lernenden:keine_lernenden', 'local_berufsbildung'), 'info');
 } else {

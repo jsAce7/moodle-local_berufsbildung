@@ -7,13 +7,14 @@ Alle nennenswerten Änderungen an diesem Plugin werden hier festgehalten. Format
 ### Hinzugefügt
 
 - **Zugang zur Blockverwaltung für Berufsbildner/innen**: neue systemweite Rolle `berufsbildung_planung` („Ausbildungsplanung"), die `local/berufsbildung:manageblocks` trägt. `role_sync_service` weist sie jeder Person mit mindestens einer **laufenden** Zuordnung zu und entzieht sie, sobald die letzte davon beendet, gelöscht oder über die Aufbewahrungsfrist bereinigt ist. Bewusst getrennt von der personenbezogenen Rolle `berufsbildner`: die hängt am Nutzerkontext einer einzelnen lernenden Person und würde global zugewiesen die Stichtagsprüfung in `api::is_zustaendig()` unterlaufen. Details in der README, Abschnitt „Rollen und Zugang".
-- **Navigationseintrag „Ausbildungsblöcke"** für alle mit `manageblocks` — die Capability allein machte die Seite nicht auffindbar.
+- **Zugang zur Blockverwaltung über „Meine Lernenden"**: der Button *Ausbildungsblöcke verwalten* erscheint dort für alle mit `manageblocks` — die Capability allein machte die Seite nicht auffindbar. Bewusst kein eigener Eintrag in der primären Navigationsleiste: die trägt nur die beiden täglichen Einstiege *Meine Lehre* und *Meine Lernenden*, die Blockpflege ist Stammdatenarbeit. Ohne eigene Lernende bleibt der Weg über den Admin-Baum.
 
 ### Behoben
 
 - **Die eigenen Capabilities des Plugins waren wirkungslos.** `settings.php` registrierte alle `admin_externalpage`-Einträge innerhalb von `if ($hassiteconfig)`. Für Nutzer ohne `moodle/site:config` existierten die Seiten im Admin-Baum damit gar nicht, und `admin_externalpage_setup()` brach mit „accessdenied" ab, obwohl die Capability vorlag. Nur die Systemeinstellungen bleiben jetzt `$hassiteconfig`; über den Zugriff auf die Verwaltungsseiten entscheidet `check_access()` je Seite.
 - **Kompetenzen liessen sich einem Ausbildungsblock praktisch nicht zuordnen.** Der einzige Zugang von der Blockliste zur Kompetenzseite war ein Link auf die *Anzahl* der Leistungskriterien — bei einem neuen Block also die Ziffer „0". Die Blockliste hat jetzt eine Aktionsspalte mit beschrifteten Buttons.
 - **`zuordnung_service::beenden()` glich die Rollen nicht ab.** Anlegen und Löschen taten es, Beenden nicht — der Zugang wäre bis zum nächsten Task-Lauf bestehen geblieben.
+- **Die Rolle *Ausbildungsplanung* liess sich praktisch nicht von Hand vergeben.** `create_role()` trägt in `role_allow_assign` und `role_allow_view` keine Zeile ein, und genau daran filtert `get_assignable_roles()` für alle, die nicht Administrator/in sind. Eine Ausbildungsleitung mit Manager-Rolle bekam die Rolle also nie zur Auswahl, obwohl die README das so beschrieb. Der neue `role_matrix_service` trägt bei Installation und Upgrade nach, dass *Manager* die Rolle *Ausbildungsplanung* vergeben und beide Rollennamen sehen darf; er ist idempotent, weil die beiden Tabellen keinen Unique-Index haben. `berufsbildner` bleibt bewusst nur sichtbar und nicht zuweisbar — die Rolle allein öffnet nichts, weil die aufsetzenden Plugins zusätzlich `api::is_zustaendig()` prüfen.
 
 ### Geändert
 

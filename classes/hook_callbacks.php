@@ -26,16 +26,20 @@ declare(strict_types=1);
 
 namespace local_berufsbildung;
 
-use context_system;
 use core\hook\navigation\primary_extend;
 use moodle_url;
 use navigation_node;
 
 /**
- * Haengt "Meine Lehre" / "Meine Lernenden" / "Ausbildungsbloecke"
- * direkt in die primaere Navigationsleiste (Dashboard / Meine Kurse / ...)
- * statt in den einklapp- oder ausblendbaren Seiten-Drawer - der ist je nach
- * Theme nicht zuverlaessig erreichbar, die primaere Leiste ist es immer.
+ * Haengt "Meine Lehre" und "Meine Lernenden" direkt in die primaere
+ * Navigationsleiste (Dashboard / Meine Kurse / ...) statt in den einklapp-
+ * oder ausblendbaren Seiten-Drawer - der ist je nach Theme nicht
+ * zuverlaessig erreichbar, die primaere Leiste ist es immer.
+ *
+ * Bewusst nur diese zwei: es sind die beiden Rollen, in denen eine Person
+ * das Plugin taeglich benutzt. Die Blockverwaltung ist Pflege von
+ * Stammdaten und haengt deshalb als Nebeneingang an "Meine Lernenden"
+ * (siehe meine_lernenden.php), nicht als dritter Eintrag in der Leiste.
  */
 class hook_callbacks {
 
@@ -65,14 +69,6 @@ class hook_callbacks {
 
         if (!empty(api::get_lernende_for($userid))) {
             $eintraege['local_berufsbildung_meine_lernenden'] = ['nav:meine_lernenden', 'meine_lernenden.php'];
-        }
-
-        // Die Blockverwaltung liegt im Admin-Baum unter "Ausbildungsverwaltung
-        // -> Planung". Ohne diesen Eintrag findet sie niemand, der nicht
-        // ohnehin in der Website-Administration unterwegs ist - die
-        // Capability allein macht eine Seite nicht auffindbar.
-        if (has_capability('local/berufsbildung:manageblocks', context_system::instance())) {
-            $eintraege['local_berufsbildung_bloecke'] = ['nav:bloecke', 'bloecke.php'];
         }
 
         // Vor die Website-Administration einsortieren: die fachlichen

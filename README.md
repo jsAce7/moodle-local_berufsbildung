@@ -59,9 +59,24 @@ Der Unterschied im Entzug ist beabsichtigt: die personenbezogene Rolle ist stich
 
 Beide werden vom stündlichen Task `sync_role_assignments` gepflegt, zusätzlich sofort beim Anlegen, Beenden und Löschen einer Zuordnung. Die selbst vergebenen Zuweisungen sind mit `component = 'local_berufsbildung'` markiert; von Hand vergebene bleiben unangetastet und werden nie entzogen. Eine Ausbildungsleitung, die selbst keine Lernenden betreut, wird deshalb einfach von Hand global der Rolle *Ausbildungsplanung* zugewiesen.
 
+#### Wo sich die Rollen von Hand vergeben lassen
+
+`set_role_contextlevels()` registriert jede Rolle für **genau ein** Kontextlevel, und `get_assignable_roles()` bietet eine Rolle nur auf der Seite an, die zu diesem Level gehört:
+
+| Rolle | Einzige Stelle, an der sie angeboten wird |
+|---|---|
+| `berufsbildung_planung` | *Website-Administration ▸ Nutzer/innen ▸ Rechte ändern ▸ **Globale Rollen zuweisen*** |
+| `berufsbildner` | Profil der **lernenden** Person ▸ *Einstellungen* ▸ „Rollen relativ zu diesem Nutzer zuweisen" |
+
+In einem Kurs ist keine der beiden zuweisbar — dort erscheinen nur Rollen mit `CONTEXT_COURSE`. Das ist Absicht (Architekturregel 1: kein Kurskontext).
+
+`create_role()` trägt in `role_allow_assign` und `role_allow_view` nichts ein, und genau daran filtert `get_assignable_roles()` für alle, die nicht Administrator/in sind. `role_matrix_service` trägt deshalb bei Installation und Upgrade nach, dass die Rolle *Manager* die Rolle *Ausbildungsplanung* vergeben darf und beide Rollennamen sehen kann. Wer das einer anderen Rolle erlauben will, setzt das Häkchen unter *Rollen verwalten ▸ Rollenzuweisungen erlauben*.
+
+`berufsbildner` bleibt bewusst **nicht** von Hand vergebbar, nur sichtbar: die Rolle allein öffnet nichts, weil die aufsetzenden Plugins neben ihrer Capability immer auch `api::is_zustaendig()` prüfen. Zuständigkeit entsteht über eine Zuordnung, nicht über eine Rollenzuweisung (Architekturregel 2).
+
 Die Trennung der beiden Rollen ist ebenso beabsichtigt: `berufsbildner` hängt am Nutzerkontext einer einzelnen lernenden Person. Global zugewiesen würden alle ihre Capabilities — auch die künftig von aufsetzenden Plugins vergebenen — für *alle* Personen gelten und damit die Stichtagsprüfung in `api::is_zustaendig()` unterlaufen.
 
-Berufsbildner/innen erreichen die Blockverwaltung über den Navigationseintrag **Ausbildungsblöcke**. Änderungen wirken systemweit für alle Berufe, und `local_berufsbildung_block_lk` führt keine Änderungshistorie — nachvollziehbar ist über `usermodified`/`timemodified` nur die jeweils letzte Änderung eines noch bestehenden Eintrags, Entfernungen sind spurlos. Wer die Pflege einem kleineren Kreis vorbehalten will, entzieht der Rolle *Ausbildungsplanung* die Capability `local/berufsbildung:manageblocks` und weist sie gezielt einer eigenen Rolle zu; der Zugang über die Navigation und den Admin-Baum richtet sich allein nach dieser Capability.
+Berufsbildner/innen erreichen die Blockverwaltung über den Button **Ausbildungsblöcke verwalten** auf *Meine Lernenden*. Die primäre Navigationsleiste trägt bewusst nur die beiden täglichen Einstiege *Meine Lehre* und *Meine Lernenden*; die Blockpflege ist Stammdatenarbeit und hängt deshalb als Nebeneingang daran. Wer `manageblocks` ohne eigene Lernende hat — eine von Hand zugewiesene *Ausbildungsplanung* —, nimmt den Weg über *Website-Administration ▸ Ausbildungsverwaltung ▸ Planung*. Änderungen wirken systemweit für alle Berufe, und `local_berufsbildung_block_lk` führt keine Änderungshistorie — nachvollziehbar ist über `usermodified`/`timemodified` nur die jeweils letzte Änderung eines noch bestehenden Eintrags, Entfernungen sind spurlos. Wer die Pflege einem kleineren Kreis vorbehalten will, entzieht der Rolle *Ausbildungsplanung* die Capability `local/berufsbildung:manageblocks` und weist sie gezielt einer eigenen Rolle zu; der Zugang über die Navigation und den Admin-Baum richtet sich allein nach dieser Capability.
 
 Für den Versetzungsplan-Webservice zusätzlich: Dienst *Berufsbildung: Versetzungsplan-Import* unter *Site administration ▸ Server ▸ Web services* aktivieren, Dienstkonto mit der Capability `local/berufsbildung:importplan` anlegen, Token ausstellen. Der Dienst ist standardmässig deaktiviert.
 

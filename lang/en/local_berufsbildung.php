@@ -59,7 +59,6 @@ $string['role:planung_desc'] = 'Site-wide role for maintaining the training bloc
 
 $string['nav:meine_lehre'] = 'My apprenticeship';
 $string['nav:meine_lernenden'] = 'My trainees';
-$string['nav:bloecke'] = 'Training blocks';
 $string['form:ausbildungsstand'] = '{$a->beruf}, year {$a->lehrjahr} (semester {$a->semester})';
 $string['form:keine_taetigkeiten'] = 'No activities recorded.';
 $string['luecken:titel'] = 'Required competency areas not yet trained';
@@ -73,6 +72,7 @@ $string['meine_lernenden:suche_placeholder'] = 'Search by name…';
 $string['meine_lernenden:beruf_alle'] = 'All professions';
 $string['meine_lernenden:filtern'] = 'Filter';
 $string['meine_lernenden:zusammenfassung'] = '{$a->anzahl} trainees · {$a->luecken} with open gaps';
+$string['meine_lernenden:bloecke'] = 'Manage training blocks';
 $string['meine_lehre:kein_ausbildungsstand'] = 'No occupation or cohort year is set on your profile.';
 $string['meine_lehre:vor_beginn'] = 'Your apprenticeship starts on {$a}.';
 $string['meine_lehre:abgeschlossen'] = '{$a->beruf} — training completed on {$a->datum}.';

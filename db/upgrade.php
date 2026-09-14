@@ -356,5 +356,17 @@ function xmldb_local_berufsbildung_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026090902, 'local', 'berufsbildung');
     }
 
+    if ($oldversion < 2026091400) {
+        // Beide Rollen in die Allow-Matrizen nachtragen - siehe
+        // xmldb_local_berufsbildung_install(). create_role() legt dort
+        // nichts an, deshalb konnte bisher nur eine Administratorin die
+        // Planungsrolle von Hand vergeben, obwohl die README das der
+        // Ausbildungsleitung zuschreibt.
+        (new \local_berufsbildung\service\role_matrix_service())->synchronisiere();
+
+        // Berufsbildung savepoint reached.
+        upgrade_plugin_savepoint(true, 2026091400, 'local', 'berufsbildung');
+    }
+
     return true;
 }

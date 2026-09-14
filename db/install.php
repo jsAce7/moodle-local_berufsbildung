@@ -30,6 +30,9 @@ defined('MOODLE_INTERNAL') || die();
  * - 'berufsbildner' im User-Kontext einer lernenden Person, ohne eigene
  *   Capabilities - die vergeben die aufsetzenden Plugins.
  * - 'berufsbildung_planung' im Systemkontext, traegt die Blockverwaltung.
+ *
+ * und macht sie anschliessend fuer die Rollenverwaltung sichtbar bzw.
+ * vergebbar - siehe role_matrix_service.
  */
 function xmldb_local_berufsbildung_install() {
     global $DB;
@@ -62,4 +65,10 @@ function xmldb_local_berufsbildung_install() {
             true
         );
     }
+
+    // create_role() traegt in role_allow_assign und role_allow_view nichts
+    // ein. Ohne diesen Schritt bekommt nur eine Administratorin die Rollen
+    // ueberhaupt zur Auswahl, weil get_assignable_roles() fuer alle
+    // anderen genau an dieser Matrix filtert.
+    (new \local_berufsbildung\service\role_matrix_service())->synchronisiere();
 }

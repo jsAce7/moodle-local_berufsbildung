@@ -59,7 +59,6 @@ $string['role:planung_desc'] = 'Systemweite Rolle für die Pflege der Ausbildung
 
 $string['nav:meine_lehre'] = 'Meine Lehre';
 $string['nav:meine_lernenden'] = 'Meine Lernenden';
-$string['nav:bloecke'] = 'Ausbildungsblöcke';
 $string['form:ausbildungsstand'] = '{$a->beruf}, {$a->lehrjahr}. Lehrjahr (Semester {$a->semester})';
 $string['form:keine_taetigkeiten'] = 'Keine Tätigkeiten vorhanden.';
 $string['luecken:titel'] = 'Noch nicht ausgebildete Pflicht-Handlungskompetenzen';
@@ -73,6 +72,7 @@ $string['meine_lernenden:suche_placeholder'] = 'Name suchen…';
 $string['meine_lernenden:beruf_alle'] = 'Alle Berufe';
 $string['meine_lernenden:filtern'] = 'Filtern';
 $string['meine_lernenden:zusammenfassung'] = '{$a->anzahl} Lernende · {$a->luecken} mit offenen Lücken';
+$string['meine_lernenden:bloecke'] = 'Ausbildungsblöcke verwalten';
 $string['meine_lehre:kein_ausbildungsstand'] = 'Für Ihr Profil ist kein Beruf oder Jahrgang hinterlegt.';
 $string['meine_lehre:vor_beginn'] = 'Ihre Lehre beginnt am {$a}.';
 $string['meine_lehre:abgeschlossen'] = '{$a->beruf} — Ausbildung abgeschlossen am {$a->datum}.';
