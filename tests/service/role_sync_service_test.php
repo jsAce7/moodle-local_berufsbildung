@@ -248,9 +248,16 @@ final class role_sync_service_test extends advanced_testcase {
         ]);
         \local_berufsbildung\api::beende_zuordnung((int) $zuordnung->get('id'), strtotime('-1 day'));
 
+        // Die API entzieht die Planungsrolle sofort, noch vor dem naechsten Task-Lauf.
+        $this->assertFalse($DB->record_exists('role_assignments', [
+            'roleid' => $planungsroleid,
+            'userid' => (int) $berufsbildner->id,
+            'contextid' => context_system::instance()->id,
+        ]));
+
         $ergebnis = $service->synchronisiere();
 
-        $this->assertSame(1, $ergebnis['planung_entzogen']);
+        $this->assertSame(0, $ergebnis['planung_entzogen']);
         $this->assertFalse($DB->record_exists('role_assignments', [
             'roleid' => $planungsroleid,
             'userid' => (int) $berufsbildner->id,

@@ -23,13 +23,22 @@
     Context variables required for this template:
     * gruppen - array of {punkte: [{istvergangen, istaktuell}]}, ein Eintrag je Lehrjahr
     * kompakt - bool
+
+    Example context (json):
+    {
+        "kompakt": true,
+        "gruppen": [
+            {"punkte": [{"istvergangen": true, "istaktuell": false}, {"istvergangen": false, "istaktuell": true}]},
+            {"punkte": [{"istvergangen": false, "istaktuell": false}, {"istvergangen": false, "istaktuell": false}]}
+        ]
+    }
 }}
-<div class="local-berufsbildung-stepper{{#kompakt}} local-berufsbildung-stepper-kompakt{{/kompakt}}" aria-hidden="true">
+<span class="local-berufsbildung-stepper{{#kompakt}} local-berufsbildung-stepper-kompakt{{/kompakt}}" aria-hidden="true">
     {{#gruppen}}
-        <div class="local-berufsbildung-stepper-lehrjahr">
+        <span class="local-berufsbildung-stepper-lehrjahr">
             {{#punkte}}
                 <span class="local-berufsbildung-stepper-punkt{{#istaktuell}} local-berufsbildung-stepper-punkt-aktuell bg-primary{{/istaktuell}}{{#istvergangen}} bg-primary{{/istvergangen}}{{^istvergangen}}{{^istaktuell}} border bg-light{{/istaktuell}}{{/istvergangen}}"></span>
             {{/punkte}}
-        </div>
+        </span>
     {{/gruppen}}
-</div>
+</span>

@@ -89,7 +89,7 @@ final class semester_calculator_test extends advanced_testcase {
      * EBA-Berufe mit vier statt acht Semestern.
      */
     public function test_konfigurierbare_lehrdauer(): void {
-        $calculator = new semester_calculator(startmonat: 8, lehrdauer_semester: 4);
+        $calculator = new semester_calculator(startmonat: 8, lehrdauersemester: 4);
 
         $this->assertSame(4, $calculator->berechne_semester(2026, mktime(12, 0, 0, 4, 1, 2028)));
         $this->assertNull($calculator->berechne_semester(2026, mktime(12, 0, 0, 8, 1, 2028)));
