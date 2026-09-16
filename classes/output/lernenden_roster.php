@@ -36,7 +36,6 @@ use local_berufsbildung\ausbildungsstand;
  * Eintraege haben die Form array{id: int, name: string, stand: ?ausbildungsstand}.
  */
 class lernenden_roster {
-
     /**
      * Sortiert nach laufendem Semester (aufsteigend), dann nach Namen.
      *

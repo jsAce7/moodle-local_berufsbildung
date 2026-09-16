@@ -34,8 +34,14 @@ require_once($CFG->libdir . '/csvlib.class.php');
 use core_text;
 use csv_import_reader;
 
+/**
+ * Formular fuer den CSV-Import von Zuordnungen.
+ */
 class zuordnung_import_form extends \moodleform {
-
+    /**
+     * Baut das Formular auf.
+     *
+     */
     protected function definition(): void {
         $mform = $this->_form;
 

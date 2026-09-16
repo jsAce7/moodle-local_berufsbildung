@@ -34,11 +34,12 @@ use core\persistent;
  * naechsten Import fuer dieselbe Person ersetzt, nie einzeln editiert.
  */
 class einsatz extends persistent {
-
     /** Tabellenname. */
     const TABLE = 'local_berufsbildung_einsatz';
 
     /**
+     * Feldliste dieses Persistent inklusive Validierung.
+     *
      * @return array
      */
     protected static function define_properties(): array {

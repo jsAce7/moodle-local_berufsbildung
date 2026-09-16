@@ -32,8 +32,14 @@ require_once($CFG->libdir . '/formslib.php');
 
 use local_berufsbildung\persistent\kohorten_link;
 
+/**
+ * Formular fuer eine Kohorten-Verknuepfung.
+ */
 class kohorten_link_form extends \moodleform {
-
+    /**
+     * Baut das Formular auf.
+     *
+     */
     protected function definition(): void {
         $mform = $this->_form;
 
@@ -71,6 +77,8 @@ class kohorten_link_form extends \moodleform {
     }
 
     /**
+     * Prueft die Eingaben und meldet Fehler je Feld.
+     *
      * @param array $data
      * @param array $files
      * @return array

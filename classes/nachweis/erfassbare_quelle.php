@@ -37,7 +37,6 @@ use moodle_url;
  * lernende Person selbst).
  */
 interface erfassbare_quelle {
-
     /**
      * URL zum Erfassen eines neuen Eintrags fuer die lernende Person, oder
      * null, wenn aktuell nichts zu erfassen ist. Wird nur fuer die eigene

@@ -39,15 +39,19 @@ namespace local_berufsbildung;
  * Klasse auch unter PHP 8.1 (Moodle 4.5) funktioniert.
  */
 class bereich_abdeckung {
-
     /**
+     * Konstruktor.
+     *
      * @param int $bereichid competencyid des Handlungskompetenzbereichs (oberste Ebene)
      * @param int $soll Anzahl Pflicht-HK des Bereichs, ohne Wahlpflicht-HK
      * @param int[] $luecken competencyids der HK ohne Abdeckung, Teilmenge von $soll
      */
     public function __construct(
+        /** @var int competencyid des Handlungskompetenzbereichs (oberste Ebene). */
         public readonly int $bereichid,
+        /** @var int Anzahl Pflicht-HK des Bereichs, ohne Wahlpflicht-HK. */
         public readonly int $soll,
+        /** @var array competencyids der HK ohne Abdeckung, Teilmenge von $soll. */
         public readonly array $luecken,
     ) {
     }

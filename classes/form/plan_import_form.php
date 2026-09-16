@@ -31,8 +31,14 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
 
+/**
+ * Formular fuer den Versetzungsplan-Import.
+ */
 class plan_import_form extends \moodleform {
-
+    /**
+     * Baut das Formular auf.
+     *
+     */
     protected function definition(): void {
         $mform = $this->_form;
 

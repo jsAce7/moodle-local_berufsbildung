@@ -36,8 +36,9 @@ use local_berufsbildung\persistent\einsatz;
  * wurde, ohne Anspruch darauf, dass es taggenau stimmt.
  */
 class einsatz_karte {
-
     /**
+     * Baut die Daten fuer das Template zusammen.
+     *
      * @param einsatz $einsatz Der laufende Einsatz, siehe api::get_aktueller_einsatz()
      * @param string $blockname Bezeichnung des Ausbildungsblocks, siehe api::get_block_name()
      */

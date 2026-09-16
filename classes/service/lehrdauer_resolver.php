@@ -33,7 +33,6 @@ namespace local_berufsbildung\service;
  * Einstellungen testbar ist.
  */
 class lehrdauer_resolver {
-
     /**
      * Lehrdauer in Semestern fuer einen Beruf.
      *
@@ -54,8 +53,10 @@ class lehrdauer_resolver {
             }
 
             [$code, $semester] = array_map('trim', explode('=', $zeile, 2));
-            if ($code === $beruf && $semester !== '' && ctype_digit($semester)
-                    && (int) $semester >= 1 && (int) $semester <= 8) {
+            if (
+                $code === $beruf && $semester !== '' && ctype_digit($semester)
+                && (int) $semester >= 1 && (int) $semester <= 8
+            ) {
                 return (int) $semester;
             }
         }

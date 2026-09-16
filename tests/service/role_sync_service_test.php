@@ -31,10 +31,11 @@ use context_system;
 use context_user;
 
 /**
+ * Tests fuer role_sync_service.
+ *
  * @covers \local_berufsbildung\service\role_sync_service
  */
 final class role_sync_service_test extends advanced_testcase {
-
     /**
      * Legt die Rolle 'berufsbildner' an, falls sie (wie im normalen
      * Installationsablauf ueber db/install.php) noch nicht existiert.

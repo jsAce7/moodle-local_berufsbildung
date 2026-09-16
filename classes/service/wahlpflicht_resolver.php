@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Loest die Wahlpflicht-HK eines Berufs aus der Administrationseinstellung auf.
@@ -24,8 +32,9 @@ namespace local_berufsbildung\service;
  * die Kompetenz selbst, die Pflicht hängt dagegen vom Beruf ab.
  */
 class wahlpflicht_resolver {
-
     /**
+     * Loest die konfigurierte Angabe auf.
+     *
      * @param string $beruf Beruf-Code, z. B. AU_EFZ
      * @param string $konfiguration Zeilen im Format
      *     CODE=hk-idnumber,hk-idnumber, z. B. AU_EFZ=7777 a.04,7777 a.05

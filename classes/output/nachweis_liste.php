@@ -29,9 +29,13 @@ namespace local_berufsbildung\output;
 
 use local_berufsbildung\nachweis\nachweis;
 
+/**
+ * Liste der eingesammelten Nachweise.
+ */
 class nachweis_liste {
-
     /**
+     * Baut die Daten fuer das Template zusammen.
+     *
      * @param nachweis[] $nachweise Bereits nach Datum sortiert (siehe
      *                               collector::get_nachweise()) - die
      *                               Reihenfolge je Gruppe bleibt erhalten,
@@ -59,6 +63,8 @@ class nachweis_liste {
     }
 
     /**
+     * Gruppiert die Nachweise nach liefernder Quelle.
+     *
      * @param nachweis[] $nachweise
      * @param array<string, string> $quellennamen
      * @return array<int, array{name: string, nachweise: array}>
@@ -66,7 +72,7 @@ class nachweis_liste {
     private static function gruppiere_nach_quelle(array $nachweise, array $quellennamen): array {
         $nachweisenachquelle = [];
         foreach ($nachweise as $einzelnachweis) {
-            $nachweisenachquelle[$einzelnachweis->quelle_key][] = $einzelnachweis;
+            $nachweisenachquelle[$einzelnachweis->quellekey][] = $einzelnachweis;
         }
 
         $gruppen = [];
@@ -130,6 +136,8 @@ class nachweis_liste {
     }
 
     /**
+     * Findet das Semester, in das ein Datum faellt.
+     *
      * @param int $datum Timestamp
      * @param array<int, array{0: int, 1: int}> $semestergrenzen
      * @return int|null Semesternummer, null ausserhalb der Lehrzeit
@@ -145,6 +153,8 @@ class nachweis_liste {
     }
 
     /**
+     * Formt die Nachweise in Tabellenzeilen um.
+     *
      * @param nachweis[] $nachweise
      * @param array<string, string> $quellennamen
      * @param bool $mitquelle Quelle je Zeile ausweisen - noetig, sobald die
@@ -164,7 +174,7 @@ class nachweis_liste {
                 'url' => $einzelnachweis->url ?? '',
                 'hasquelle' => $mitquelle,
                 'quelle' => $mitquelle
-                    ? format_string($quellennamen[$einzelnachweis->quelle_key] ?? $einzelnachweis->quelle_key)
+                    ? format_string($quellennamen[$einzelnachweis->quellekey] ?? $einzelnachweis->quellekey)
                     : '',
             ];
         }, $nachweise);

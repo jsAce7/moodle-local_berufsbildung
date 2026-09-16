@@ -33,14 +33,17 @@ namespace local_berufsbildung\service;
  * Stichtag entgegen, damit sie ohne Moodle-Nutzer testbar ist.
  */
 class semester_calculator {
-
     /**
+     * Konstruktor.
+     *
      * @param int $startmonat Monat des Lehrbeginns, 1..12 (Standard 8 = August)
-     * @param int $lehrdauer_semester Lehrdauer in Semestern (Standard 8)
+     * @param int $lehrdauersemester Lehrdauer in Semestern (Standard 8)
      */
     public function __construct(
+        /** @var int Monat des Lehrbeginns, 1..12 (Standard 8 = August). */
         private readonly int $startmonat = 8,
-        private readonly int $lehrdauer_semester = 8,
+        /** @var int Lehrdauer in Semestern (Standard 8). */
+        private readonly int $lehrdauersemester = 8,
     ) {
     }
 
@@ -50,16 +53,16 @@ class semester_calculator {
      *
      * @param int $jahrgang Jahr des Lehrbeginns
      * @param int $stichtag Timestamp
-     * @return int|null 1..lehrdauer_semester, oder null
+     * @return int|null 1..lehrdauersemester, oder null
      */
     public function berechne_semester(int $jahrgang, int $stichtag): ?int {
-        $jahr_stichtag = (int) date('Y', $stichtag);
-        $monat_stichtag = (int) date('n', $stichtag);
+        $jahrstichtag = (int) date('Y', $stichtag);
+        $monatstichtag = (int) date('n', $stichtag);
 
-        $monate = ($jahr_stichtag - $jahrgang) * 12 + ($monat_stichtag - $this->startmonat);
+        $monate = ($jahrstichtag - $jahrgang) * 12 + ($monatstichtag - $this->startmonat);
         $semester = (int) floor($monate / 6) + 1;
 
-        if ($semester < 1 || $semester > $this->lehrdauer_semester) {
+        if ($semester < 1 || $semester > $this->lehrdauersemester) {
             return null;
         }
 
@@ -70,15 +73,15 @@ class semester_calculator {
      * Anfang und Ende eines Semesters als Timestamps.
      *
      * @param int $jahrgang Jahr des Lehrbeginns
-     * @param int $semester 1..lehrdauer_semester
+     * @param int $semester 1..lehrdauersemester
      * @return array{0: int, 1: int} [von, bis]
      */
     public function semester_grenzen(int $jahrgang, int $semester): array {
-        $monate_von = ($this->startmonat - 1) + ($semester - 1) * 6;
-        $monate_bis = $monate_von + 6;
+        $monatevon = ($this->startmonat - 1) + ($semester - 1) * 6;
+        $monatebis = $monatevon + 6;
 
-        $von = mktime(0, 0, 0, ($monate_von % 12) + 1, 1, $jahrgang + intdiv($monate_von, 12));
-        $bis = mktime(0, 0, 0, ($monate_bis % 12) + 1, 1, $jahrgang + intdiv($monate_bis, 12)) - 1;
+        $von = mktime(0, 0, 0, ($monatevon % 12) + 1, 1, $jahrgang + intdiv($monatevon, 12));
+        $bis = mktime(0, 0, 0, ($monatebis % 12) + 1, 1, $jahrgang + intdiv($monatebis, 12)) - 1;
 
         return [$von, $bis];
     }

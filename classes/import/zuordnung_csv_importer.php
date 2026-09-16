@@ -40,7 +40,6 @@ use local_berufsbildung\api;
  * statt den ganzen Import abzubrechen").
  */
 class zuordnung_csv_importer {
-
     /** @var string[] Erwartete Spaltennamen, kleingeschrieben. */
     public const ERWARTETE_SPALTEN = ['berufsbildner', 'lernende', 'beruf', 'gueltig_von'];
 
@@ -104,8 +103,10 @@ class zuordnung_csv_importer {
             return $ergebnis;
         }
 
-        if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $zeile['gueltig_von'], $treffer)
-                || !checkdate((int) $treffer[2], (int) $treffer[3], (int) $treffer[1])) {
+        if (
+            !preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $zeile['gueltig_von'], $treffer)
+            || !checkdate((int) $treffer[2], (int) $treffer[3], (int) $treffer[1])
+        ) {
             $ergebnis['fehler'] = get_string('import:fehler_datum', 'local_berufsbildung', $zeile['gueltig_von']);
             return $ergebnis;
         }

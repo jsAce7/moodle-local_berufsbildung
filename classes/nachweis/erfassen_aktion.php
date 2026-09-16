@@ -32,15 +32,19 @@ namespace local_berufsbildung\nachweis;
  * wie bei `nachweis`.
  */
 class erfassen_aktion {
-
     /**
-     * @param string $quelle_key Schluessel der liefernden Quelle, z.B. 'lerndokumentation'
+     * Konstruktor.
+     *
+     * @param string $quellekey Schluessel der liefernden Quelle, z.B. 'lerndokumentation'
      * @param string $label Beschriftung der Schaltflaeche, z.B. "Neuer Eintrag"
      * @param string $url Ziel-URL der Erfassen-Schaltflaeche
      */
     public function __construct(
-        public readonly string $quelle_key,
+        /** @var string Schluessel der liefernden Quelle, z.B. 'lerndokumentation'. */
+        public readonly string $quellekey,
+        /** @var string Beschriftung der Schaltflaeche, z.B. "Neuer Eintrag". */
         public readonly string $label,
+        /** @var string Ziel-URL der Erfassen-Schaltflaeche. */
         public readonly string $url,
     ) {
     }

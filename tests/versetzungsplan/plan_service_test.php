@@ -32,10 +32,11 @@ use local_berufsbildung\persistent\block_lk;
 use local_berufsbildung\persistent\einsatz;
 
 /**
+ * Tests fuer plan_service.
+ *
  * @covers \local_berufsbildung\versetzungsplan\plan_service
  */
 final class plan_service_test extends advanced_testcase {
-
     private function lege_block_an(string $nummer, bool $istbetrieb = true): block {
         $block = new block(0, (object) ['nummer' => $nummer, 'name' => $nummer, 'ist_betrieb' => $istbetrieb, 'aktiv' => true]);
         $block->create();

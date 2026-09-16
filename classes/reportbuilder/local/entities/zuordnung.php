@@ -38,8 +38,9 @@ use core_reportbuilder\local\report\{column, filter};
  * das erledigt die Datasource ueber zwei separate user-Entities.
  */
 class zuordnung extends base {
-
     /**
+     * Tabellen, auf denen diese Entity aufbaut.
+     *
      * @return string[]
      */
     protected function get_default_tables(): array {
@@ -47,6 +48,8 @@ class zuordnung extends base {
     }
 
     /**
+     * Titel dieser Entity.
+     *
      * @return lang_string
      */
     protected function get_default_entity_title(): lang_string {
@@ -54,6 +57,8 @@ class zuordnung extends base {
     }
 
     /**
+     * Initialisiert die Entity.
+     *
      * @return base
      */
     public function initialise(): base {
@@ -73,6 +78,8 @@ class zuordnung extends base {
     }
 
     /**
+     * Alle Spalten, die diese Entity anbietet.
+     *
      * @return column[]
      */
     protected function get_all_columns(): array {
@@ -117,8 +124,11 @@ class zuordnung extends base {
                     return get_string('zuordnung:herkunft_manuell', 'local_berufsbildung');
                 }
 
-                return get_string('zuordnung:herkunft_kohorte', 'local_berufsbildung',
-                    format_string($row->kohortenname ?? '-'));
+                return get_string(
+                    'zuordnung:herkunft_kohorte',
+                    'local_berufsbildung',
+                    format_string($row->kohortenname ?? '-')
+                );
             });
 
         $columns[] = (new column(
@@ -168,6 +178,8 @@ class zuordnung extends base {
     }
 
     /**
+     * Alle Filter, die diese Entity anbietet.
+     *
      * @return filter[]
      */
     protected function get_all_filters(): array {

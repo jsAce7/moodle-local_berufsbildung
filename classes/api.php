@@ -43,7 +43,6 @@ use local_berufsbildung\versetzungsplan\plan_service;
  * diese Person" - die einzige Wahrheit ist die Zuordnungstabelle.
  */
 class api {
-
     /** Ausbildungsphase: Beruf oder Jahrgang im Profil nicht aufloesbar. */
     public const PHASE_UNBEKANNT = 'unbekannt';
 
@@ -167,8 +166,8 @@ class api {
             jahrgang: $parameter['jahrgang'],
             semester: $semester,
             lehrjahr: (int) ceil($semester / 2),
-            semester_von: $semestervon,
-            semester_bis: $semesterbis,
+            semestervon: $semestervon,
+            semesterbis: $semesterbis,
             gesamtsemester: $parameter['lehrdauer'],
         );
     }
@@ -206,13 +205,13 @@ class api {
         }
 
         $startmonat = get_config('local_berufsbildung', 'startmonat');
-        $lehrdauer_standard = get_config('local_berufsbildung', 'lehrdauer_semester');
+        $lehrdauerstandard = get_config('local_berufsbildung', 'lehrdauer_semester');
         $startmonat = min(12, max(1, $startmonat !== false ? (int) $startmonat : 8));
-        $lehrdauer_standard = min(8, max(1, $lehrdauer_standard !== false ? (int) $lehrdauer_standard : 8));
+        $lehrdauerstandard = min(8, max(1, $lehrdauerstandard !== false ? (int) $lehrdauerstandard : 8));
 
-        $beruf_dauer_konfiguration = get_config('local_berufsbildung', 'beruf_dauer');
-        $beruf_dauer_konfiguration = $beruf_dauer_konfiguration !== false ? (string) $beruf_dauer_konfiguration : '';
-        $lehrdauer = (new lehrdauer_resolver())->loese_auf((string) $beruf, $beruf_dauer_konfiguration, $lehrdauer_standard);
+        $berufdauerkonfiguration = get_config('local_berufsbildung', 'beruf_dauer');
+        $berufdauerkonfiguration = $berufdauerkonfiguration !== false ? (string) $berufdauerkonfiguration : '';
+        $lehrdauer = (new lehrdauer_resolver())->loese_auf((string) $beruf, $berufdauerkonfiguration, $lehrdauerstandard);
 
         return [
             'beruf' => (string) $beruf,
@@ -420,7 +419,7 @@ class api {
     /**
      * Zuordnung anlegen. Eine bestehende laufende Zuordnung dieser
      * lernenden Person **mit derselben Rolle** - unabhaengig vom bisherigen
-     * Berufsbildner/in - wird automatisch zum Vortag von $gueltig_von
+     * Berufsbildner/in - wird automatisch zum Vortag von $gueltigvon
      * beendet, nie stillschweigend ueberschrieben. Eine Zuordnung mit einer
      * anderen Rolle bleibt unangetastet: pro (Lernende/r, Rolle) ist immer
      * nur eine laufend, aber verschiedene Rollen duerfen gleichzeitig
@@ -438,46 +437,46 @@ class api {
      * @param int $berufsbildnerid
      * @param int $lernendeid
      * @param string $beruf Leer = aus dem Profil der/des Lernenden uebernehmen
-     * @param int $gueltig_von Timestamp
+     * @param int $gueltigvon Timestamp
      * @param string $rolle
-     * @param int|null $kohorten_link_id Herkunft, falls durch den Kohorten-Sync erzeugt
+     * @param int|null $kohortenlinkid Herkunft, falls durch den Kohorten-Sync erzeugt
      * @return zuordnung
      */
     public static function set_zuordnung(
         int $berufsbildnerid,
         int $lernendeid,
         string $beruf,
-        int $gueltig_von,
+        int $gueltigvon,
         string $rolle = 'hauptverantwortlich',
-        ?int $kohorten_link_id = null
+        ?int $kohortenlinkid = null
     ): zuordnung {
         if ($beruf === '') {
             // Bei vorgezogenen Zuordnungen den Beruf am Starttag statt
             // ausschliesslich zum heutigen Zeitpunkt aufloesen.
-            $beruf = self::get_ausbildungsstand($lernendeid, $gueltig_von)?->beruf ?? '';
+            $beruf = self::get_ausbildungsstand($lernendeid, $gueltigvon)?->beruf ?? '';
         }
 
         return (new zuordnung_service())->anlegen(
             $berufsbildnerid,
             $lernendeid,
             $beruf,
-            $gueltig_von,
+            $gueltigvon,
             $rolle,
-            $kohorten_link_id
+            $kohortenlinkid
         );
     }
 
     /**
      * Zuordnung beenden (setzt gueltig_bis, loescht nicht - siehe
-     * CLAUDE.md, Architekturregel 2). $gueltig_bis = null macht eine
+     * CLAUDE.md, Architekturregel 2). $gueltigbis = null macht eine
      * beendete Zuordnung wieder laufend - zum Korrigieren eines falsch
      * gesetzten Enddatums, ohne die Zuordnung neu anlegen zu muessen.
      *
      * @param int $zuordnungid
-     * @param int|null $gueltig_bis Timestamp, null = wieder laufend
+     * @param int|null $gueltigbis Timestamp, null = wieder laufend
      */
-    public static function beende_zuordnung(int $zuordnungid, ?int $gueltig_bis): void {
-        (new zuordnung_service())->beenden($zuordnungid, $gueltig_bis);
+    public static function beende_zuordnung(int $zuordnungid, ?int $gueltigbis): void {
+        (new zuordnung_service())->beenden($zuordnungid, $gueltigbis);
     }
 
     /** Loescht eine nachweislich falsch erfasste Zuordnung endgueltig. */

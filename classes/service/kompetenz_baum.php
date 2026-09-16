@@ -37,7 +37,6 @@ use core_competency\competency;
  * Luecken-Analyse (luecken_analyse.php).
  */
 class kompetenz_baum {
-
     /**
      * Nur die Blattknoten (Leistungskriterien) aus einer Liste von
      * Kompetenzen desselben Rahmens - Kompetenzen, die selbst kein

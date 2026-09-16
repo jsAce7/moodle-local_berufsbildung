@@ -37,7 +37,6 @@ use local_berufsbildung\persistent\einsatz;
  * gar nichts, statt eine leere Ueberschrift stehen zu lassen.
  */
 class einsatz_timeline {
-
     /**
      * Der Zeitstrahl einer lernenden Person, mit den Bezeichnungen ihrer
      * Ausbildungsbloecke - die uebliche Variante fuer Seiten, die den Plan
@@ -66,6 +65,8 @@ class einsatz_timeline {
     }
 
     /**
+     * Baut die Daten fuer das Template zusammen.
+     *
      * @param einsatz[] $einsaetze Nach 'von' aufsteigend, siehe api::get_einsaetze()
      * @param array<int, string> $blocknamen blockid => Bezeichnung, siehe api::get_block_name()
      * @param int|null $jetzt Timestamp fuer die Einordnung vergangen/aktuell/kommend,

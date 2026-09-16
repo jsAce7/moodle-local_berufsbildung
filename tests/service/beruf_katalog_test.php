@@ -29,10 +29,11 @@ namespace local_berufsbildung\service;
 use advanced_testcase;
 
 /**
+ * Tests fuer beruf_katalog.
+ *
  * @covers \local_berufsbildung\service\beruf_katalog
  */
 final class beruf_katalog_test extends advanced_testcase {
-
     /**
      * Legt das Beruf-Profilfeld an.
      *

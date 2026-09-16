@@ -37,7 +37,6 @@ use local_berufsbildung\persistent\zuordnung;
  * CLAUDE.md, Architekturregel 2 (Ausnahme).
  */
 class zuordnung_retention_service {
-
     /**
      * Prueft alle je zugeordneten lernenden Personen - nicht nur solche mit
      * bereits beendeter Zeile, da eine Zuordnung bei Abschluss durchaus

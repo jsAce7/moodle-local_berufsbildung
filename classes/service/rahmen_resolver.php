@@ -34,8 +34,9 @@ namespace local_berufsbildung\service;
  * Einstellungen testbar ist (gleiches Muster wie lehrdauer_resolver).
  */
 class rahmen_resolver {
-
     /**
+     * Zerlegt die Konfiguration in ihre Eintraege.
+     *
      * @param string $konfiguration Eine Zeile je Beruf im Format
      *                               'CODE=framework_idnumber', z. B.
      *                               "AU_EFZ=au-2022\nPM_EFZ=pm-2022". Zeilen

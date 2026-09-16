@@ -32,10 +32,11 @@ use local_berufsbildung\persistent\block_lk;
 use local_berufsbildung\persistent\einsatz;
 
 /**
+ * Tests fuer luecken_analyse.
+ *
  * @covers \local_berufsbildung\versetzungsplan\luecken_analyse
  */
 final class luecken_analyse_test extends advanced_testcase {
-
     private function lege_profilfelder_an(): void {
         $this->getDataGenerator()->create_custom_profile_field([
             'datatype' => 'text', 'shortname' => 'beruf', 'name' => 'Beruf',

@@ -36,7 +36,6 @@ use lang_string;
  * vergessen auf ewig zu blockieren.
  */
 class aufbewahrung extends persistent {
-
     /** Tabellenname. */
     const TABLE = 'local_berufsbildung_aufbewahrung';
 

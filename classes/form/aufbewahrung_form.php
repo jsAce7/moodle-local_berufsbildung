@@ -30,8 +30,14 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
 
+/**
+ * Formular fuer eine dokumentierte Aufbewahrungspflicht.
+ */
 class aufbewahrung_form extends \moodleform {
-
+    /**
+     * Baut das Formular auf.
+     *
+     */
     protected function definition(): void {
         $mform = $this->_form;
 
@@ -66,6 +72,13 @@ class aufbewahrung_form extends \moodleform {
         $this->add_action_buttons(true, get_string('aufbewahrung:speichern', 'local_berufsbildung'));
     }
 
+    /**
+     * Prueft die Eingaben und meldet Fehler je Feld.
+     *
+     * @param mixed $data
+     * @param mixed $files
+     * @return array
+     */
     public function validation($data, $files): array {
         $errors = parent::validation($data, $files);
         if (!empty($data['gueltig_bis']) && (int) $data['gueltig_bis'] < (int) $data['gueltig_von']) {

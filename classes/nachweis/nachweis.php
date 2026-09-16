@@ -35,9 +35,10 @@ namespace local_berufsbildung\nachweis;
  * Klasse auch unter PHP 8.1 (Moodle 4.5) funktioniert.
  */
 class nachweis {
-
     /**
-     * @param string $quelle_key Schluessel der liefernden Quelle, z.B. 'lerndokumentation'
+     * Konstruktor.
+     *
+     * @param string $quellekey Schluessel der liefernden Quelle, z.B. 'lerndokumentation'
      * @param string $bezeichnung z.B. "üK 3: Steuerungstechnik"
      * @param int $datum Timestamp
      * @param string|null $ergebnis z.B. '5.0' | 'bestanden' | null, falls die Quelle keine Bewertung fuehrt
@@ -45,11 +46,17 @@ class nachweis {
      * @param string|null $url Link zur Detailansicht in der liefernden Quelle
      */
     public function __construct(
-        public readonly string $quelle_key,
+        /** @var string Schluessel der liefernden Quelle, z.B. 'lerndokumentation'. */
+        public readonly string $quellekey,
+        /** @var string z.B. "üK 3: Steuerungstechnik". */
         public readonly string $bezeichnung,
+        /** @var int Timestamp. */
         public readonly int $datum,
+        /** @var string|null z.B. '5.0' | 'bestanden' | null, falls die Quelle keine Bewertung fuehrt. */
         public readonly ?string $ergebnis,
+        /** @var int|null Kompetenz aus core_competency, falls die Quelle Kompetenzen kennt. */
         public readonly ?int $competencyid,
+        /** @var string|null Link zur Detailansicht in der liefernden Quelle. */
         public readonly ?string $url,
     ) {
     }

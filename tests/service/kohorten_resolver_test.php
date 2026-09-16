@@ -28,14 +28,17 @@ namespace local_berufsbildung\service;
 
 use advanced_testcase;
 
+defined('MOODLE_INTERNAL') || die();
+
 global $CFG;
 require_once($CFG->dirroot . '/cohort/lib.php');
 
 /**
+ * Tests fuer kohorten_resolver.
+ *
  * @covers \local_berufsbildung\service\kohorten_resolver
  */
 final class kohorten_resolver_test extends advanced_testcase {
-
     public function test_liefert_eindeutige_mitglieder_ueber_mehrere_kohorten(): void {
         $this->resetAfterTest();
 

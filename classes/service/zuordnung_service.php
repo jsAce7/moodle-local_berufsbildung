@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Schreiboperationen fuer Zuordnungen.
@@ -22,7 +30,6 @@ use local_berufsbildung\persistent\zuordnung;
 
 /** Stellt widerspruchsfreie Zeitraeume je lernender Person und Rolle sicher. */
 class zuordnung_service {
-
     /** Legt eine Zuordnung an und beendet dabei nur einen vorherigen Zeitraum derselben Rolle. */
     public function anlegen(
         int $berufsbildnerid,
@@ -76,17 +83,22 @@ class zuordnung_service {
         if ($gueltigbis !== null && $gueltigbis < (int) $zuordnung->get('gueltig_von')) {
             throw new \moodle_exception('zuordnung:fehler_enddatum', 'local_berufsbildung');
         }
-        if ($gueltigbis === null && zuordnung::record_exists_select(
-            'id <> :id AND lernendeid = :lernendeid AND rolle = :rolle
-             AND (gueltig_bis IS NULL OR gueltig_bis >= :gueltigvon)',
-            [
-                'id' => $zuordnungid,
-                'lernendeid' => $zuordnung->get('lernendeid'),
-                'rolle' => $zuordnung->get('rolle'),
-                'gueltigvon' => $zuordnung->get('gueltig_von'),
-            ]
-        )) {
-            throw new \moodle_exception('zuordnung:fehler_ueberschneidung', 'local_berufsbildung');
+        // Nur beim Wiederoeffnen pruefen - die Abfrage bleibt bewusst hinter
+        // der Null-Pruefung, damit ein normales Beenden ohne sie auskommt.
+        if ($gueltigbis === null) {
+            $ueberschneidung = zuordnung::record_exists_select(
+                'id <> :id AND lernendeid = :lernendeid AND rolle = :rolle
+                 AND (gueltig_bis IS NULL OR gueltig_bis >= :gueltigvon)',
+                [
+                    'id' => $zuordnungid,
+                    'lernendeid' => $zuordnung->get('lernendeid'),
+                    'rolle' => $zuordnung->get('rolle'),
+                    'gueltigvon' => $zuordnung->get('gueltig_von'),
+                ]
+            );
+            if ($ueberschneidung) {
+                throw new \moodle_exception('zuordnung:fehler_ueberschneidung', 'local_berufsbildung');
+            }
         }
         $zuordnung->set('gueltig_bis', $gueltigbis);
         $zuordnung->update();

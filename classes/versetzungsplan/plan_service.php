@@ -32,8 +32,10 @@ use local_berufsbildung\persistent\block_lk;
 use local_berufsbildung\persistent\einsatz;
 use core_competency\competency;
 
+/**
+ * Liest den importierten Versetzungsplan aus.
+ */
 class plan_service {
-
     /**
      * Einsaetze einer lernenden Person, optional auf einen Zeitraum
      * eingeschraenkt. Einsaetze, die sich nur teilweise mit dem Zeitraum
@@ -104,6 +106,8 @@ class plan_service {
     }
 
     /**
+     * Ergaenzt die uebergeordneten Kompetenzen.
+     *
      * @param int $kompetenzid
      * @return int[] Kompetenz selbst, gefolgt von ihren Vorfahren
      */

@@ -34,11 +34,12 @@ use core\persistent;
  * (Handlungskompetenzbereich -> Handlungskompetenz -> Leistungskriterium).
  */
 class block_lk extends persistent {
-
     /** Tabellenname. */
     const TABLE = 'local_berufsbildung_block_lk';
 
     /**
+     * Feldliste dieses Persistent inklusive Validierung.
+     *
      * @return array
      */
     protected static function define_properties(): array {

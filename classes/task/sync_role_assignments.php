@@ -29,12 +29,23 @@ namespace local_berufsbildung\task;
 use core\task\scheduled_task;
 use local_berufsbildung\service\role_sync_service;
 
+/**
+ * Geplante Aufgabe: Rollenzuweisungen abgleichen.
+ */
 class sync_role_assignments extends scheduled_task {
-
+    /**
+     * Anzeigename der geplanten Aufgabe.
+     *
+     * @return string
+     */
     public function get_name(): string {
         return get_string('task:sync_role_assignments', 'local_berufsbildung');
     }
 
+    /**
+     * Fuehrt die geplante Aufgabe aus.
+     *
+     */
     public function execute(): void {
         $ergebnis = (new role_sync_service())->synchronisiere();
 

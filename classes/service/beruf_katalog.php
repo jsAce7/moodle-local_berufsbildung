@@ -39,7 +39,6 @@ namespace local_berufsbildung\service;
  * rahmen_resolver und lehrdauer_resolver.
  */
 class beruf_katalog {
-
     /**
      * Alle Beruf-Codes, die im Profilfeld zur Auswahl stehen oder dort
      * tatsaechlich hinterlegt sind.

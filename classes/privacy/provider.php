@@ -45,11 +45,12 @@ use local_berufsbildung\service\zuordnung_retention_service;
  * core_competency\competency_framework selbst.
  */
 class provider implements
-        \core_privacy\local\metadata\provider,
-        \core_privacy\local\request\core_userlist_provider,
-        \core_privacy\local\request\plugin\provider {
-
+    \core_privacy\local\metadata\provider,
+    \core_privacy\local\request\core_userlist_provider,
+    \core_privacy\local\request\plugin\provider {
     /**
+     * Beschreibt die personenbezogenen Daten dieses Plugins.
+     *
      * @param collection $collection
      * @return collection
      */
@@ -92,6 +93,8 @@ class provider implements
     }
 
     /**
+     * Kontexte, in denen Daten dieser Person liegen.
+     *
      * @param int $userid
      * @return contextlist
      */
@@ -122,6 +125,8 @@ class provider implements
     }
 
     /**
+     * Personen mit Daten in diesem Kontext.
+     *
      * @param userlist $userlist
      */
     public static function get_users_in_context(userlist $userlist): void {
@@ -150,6 +155,8 @@ class provider implements
     }
 
     /**
+     * Exportiert die Daten der angefragten Person.
+     *
      * @param approved_contextlist $contextlist
      */
     public static function export_user_data(approved_contextlist $contextlist): void {
@@ -251,6 +258,8 @@ class provider implements
     }
 
     /**
+     * Loescht alle Daten in diesem Kontext.
+     *
      * @param context $context
      */
     public static function delete_data_for_all_users_in_context(context $context): void {
@@ -264,6 +273,8 @@ class provider implements
     }
 
     /**
+     * Loescht die Daten einer einzelnen Person.
+     *
      * @param approved_contextlist $contextlist
      */
     public static function delete_data_for_user(approved_contextlist $contextlist): void {
@@ -279,6 +290,8 @@ class provider implements
     }
 
     /**
+     * Loescht die Daten mehrerer Personen.
+     *
      * @param approved_userlist $userlist
      */
     public static function delete_data_for_users(approved_userlist $userlist): void {

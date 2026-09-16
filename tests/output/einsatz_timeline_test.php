@@ -30,10 +30,11 @@ use advanced_testcase;
 use local_berufsbildung\persistent\einsatz;
 
 /**
+ * Tests fuer einsatz_timeline.
+ *
  * @covers \local_berufsbildung\output\einsatz_timeline
  */
 final class einsatz_timeline_test extends advanced_testcase {
-
     /**
      * @param int $blockid
      * @param int $von Timestamp

@@ -35,25 +35,33 @@ namespace local_berufsbildung;
  * Klasse auch unter PHP 8.1 (Moodle 4.5) funktioniert.
  */
 class ausbildungsstand {
-
     /**
+     * Konstruktor.
+     *
      * @param string $beruf 'AU_EFZ' | 'KR_EFZ' | 'PM_EFZ'
      * @param int $jahrgang Jahr des Lehrbeginns
      * @param int $semester 1..gesamtsemester
      * @param int $lehrjahr 1..(gesamtsemester / 2)
-     * @param int $semester_von Timestamp, Beginn des Semesters
-     * @param int $semester_bis Timestamp, Ende des Semesters
+     * @param int $semestervon Timestamp, Beginn des Semesters
+     * @param int $semesterbis Timestamp, Ende des Semesters
      * @param int $gesamtsemester Lehrdauer in Semestern, je nach Beruf unterschiedlich
      *                             (siehe lehrdauer_resolver) - fuer Fortschrittsanzeigen,
      *                             nicht zur Semesterberechnung selbst noetig.
      */
     public function __construct(
+        /** @var string 'AU_EFZ' | 'KR_EFZ' | 'PM_EFZ'. */
         public readonly string $beruf,
+        /** @var int Jahr des Lehrbeginns. */
         public readonly int $jahrgang,
+        /** @var int 1..gesamtsemester. */
         public readonly int $semester,
+        /** @var int 1..(gesamtsemester / 2). */
         public readonly int $lehrjahr,
-        public readonly int $semester_von,
-        public readonly int $semester_bis,
+        /** @var int Timestamp, Beginn des Semesters. */
+        public readonly int $semestervon,
+        /** @var int Timestamp, Ende des Semesters. */
+        public readonly int $semesterbis,
+        /** @var int Lehrdauer in Semestern, je nach Beruf unterschiedlich. */
         public readonly int $gesamtsemester,
     ) {
     }

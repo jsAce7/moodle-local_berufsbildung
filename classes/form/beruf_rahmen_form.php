@@ -30,8 +30,14 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
 
+/**
+ * Formular fuer die Zuordnung Beruf zu Kompetenzrahmen.
+ */
 class beruf_rahmen_form extends \moodleform {
-
+    /**
+     * Baut das Formular auf.
+     *
+     */
     protected function definition(): void {
         $mform = $this->_form;
 
@@ -55,6 +61,8 @@ class beruf_rahmen_form extends \moodleform {
     }
 
     /**
+     * Prueft die Eingaben und meldet Fehler je Feld.
+     *
      * @param array $data
      * @param array $files
      * @return array

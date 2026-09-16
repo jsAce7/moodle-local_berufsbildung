@@ -53,13 +53,20 @@ use local_berufsbildung\persistent\zuordnung;
  *    Transaktion.
  */
 class import_service {
-
+    /**
+     * Konstruktor.
+     *
+     * @param csv_parser $parser
+     */
     public function __construct(
+        /** @var csv_parser */
         private readonly csv_parser $parser = new csv_parser()
     ) {
     }
 
     /**
+     * Verarbeitet eine Versetzungsplan-Lieferung.
+     *
      * @param string $csvinhalt Roher CSV-Text
      * @param string $quelle 'webservice' | 'upload' | Freitext
      * @param int $ausgefuehrtvon userid
@@ -239,6 +246,8 @@ class import_service {
     }
 
     /**
+     * Zaehlt die Eintraege einer Lieferung.
+     *
      * @param array<int,array> $nachuserid
      * @return int
      */
@@ -413,6 +422,11 @@ class import_service {
         return $zeile->anzahl . ':' . $zeile->letzteaenderung;
     }
 
+    /**
+     * Letzter Import, der durchgelaufen ist.
+     *
+     * @return plan_import|null
+     */
     private function letzter_erfolgreicher_import(): ?plan_import {
         $treffer = plan_import::get_records_select(
             "status IN ('ok', 'mit_warnungen')",
@@ -426,12 +440,19 @@ class import_service {
         return !empty($treffer) ? reset($treffer) : null;
     }
 
+    /**
+     * Schwelle, ab der eine Lieferung als zu klein gilt.
+     *
+     * @return int
+     */
     private function schwelle_prozent(): int {
         $wert = get_config('local_berufsbildung', 'versetzungsplan_schwelle_prozent');
         return min(100, max(0, $wert !== false ? (int) $wert : 20));
     }
 
     /**
+     * Baut das Ergebnis eines Importlaufs.
+     *
      * @param string $status
      * @param bool $unveraendert
      * @param int $zeilengelesen

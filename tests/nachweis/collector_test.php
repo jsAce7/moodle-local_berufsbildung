@@ -29,73 +29,20 @@ namespace local_berufsbildung\nachweis;
 use advanced_testcase;
 use local_berufsbildung\persistent\zuordnung;
 use moodle_exception;
-use moodle_url;
+
+defined('MOODLE_INTERNAL') || die();
+
+// Die beiden Test-Provider liegen als Fixtures daneben: eine Klasse je
+// Datei, und tests/fixtures/ wird nicht autogeladen.
+require_once(__DIR__ . '/../fixtures/collector_test_provider.php');
+require_once(__DIR__ . '/../fixtures/collector_test_erfassbarer_provider.php');
 
 /**
- * Test-Provider, der jeden Aufruf protokolliert - damit sichtbar wird, ob
- * er ueberhaupt gefragt wurde (Architekturregel 7: nie ungeprueft
- * aufrufen).
- */
-final class collector_test_provider implements provider {
-    public bool $wurde_aufgerufen = false;
-
-    public function __construct(private readonly array $nachweise = []) {
-    }
-
-    public function get_nachweise(int $lernendeid, int $von, int $bis): array {
-        $this->wurde_aufgerufen = true;
-
-        return $this->nachweise;
-    }
-
-    public function get_quelle_name(): string {
-        return 'Test-Quelle';
-    }
-
-    public function get_quelle_key(): string {
-        return 'test';
-    }
-}
-
-/**
- * Test-Provider mit eigener Erfassung, wahlweise ohne Erfassungs-URL - fuer
- * den Fall, dass eine Quelle zwar `erfassbare_quelle` implementiert, aber
- * aktuell nichts anzubieten hat (z.B. fehlende Berechtigung).
- */
-final class collector_test_erfassbarer_provider implements provider, erfassbare_quelle {
-    public bool $erfassen_wurde_aufgerufen = false;
-
-    public function __construct(private readonly ?string $url = '/local/test/edit.php') {
-    }
-
-    public function get_nachweise(int $lernendeid, int $von, int $bis): array {
-        return [];
-    }
-
-    public function get_quelle_name(): string {
-        return 'Erfassbare Test-Quelle';
-    }
-
-    public function get_quelle_key(): string {
-        return 'testerfassbar';
-    }
-
-    public function get_erfassen_url(int $lernendeid): ?moodle_url {
-        $this->erfassen_wurde_aufgerufen = true;
-
-        return $this->url === null ? null : new moodle_url($this->url);
-    }
-
-    public function get_erfassen_label(): string {
-        return 'Neuer Test-Eintrag';
-    }
-}
-
-/**
+ * Tests fuer collector.
+ *
  * @covers \local_berufsbildung\nachweis\collector
  */
 final class collector_test extends advanced_testcase {
-
     private function lege_zuordnung_an(int $berufsbildnerid, int $lernendeid): void {
         $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_zuordnung([
             'berufsbildnerid' => $berufsbildnerid,
@@ -122,8 +69,8 @@ final class collector_test extends advanced_testcase {
         $nachweise = $collector->get_nachweise((int) $berufsbildner->id, (int) $lernende->id, 0, time() + 1);
 
         $this->assertCount(2, $nachweise);
-        $this->assertTrue($providera->wurde_aufgerufen);
-        $this->assertTrue($providerb->wurde_aufgerufen);
+        $this->assertTrue($providera->wurdeaufgerufen);
+        $this->assertTrue($providerb->wurdeaufgerufen);
     }
 
     public function test_sortiert_neueste_zuerst(): void {
@@ -162,7 +109,7 @@ final class collector_test extends advanced_testcase {
         try {
             $collector->get_nachweise((int) $fremder->id, (int) $lernende->id, 0, time());
         } finally {
-            $this->assertFalse($provider->wurde_aufgerufen);
+            $this->assertFalse($provider->wurdeaufgerufen);
         }
     }
 
@@ -201,7 +148,7 @@ final class collector_test extends advanced_testcase {
         );
 
         $this->assertCount(1, $nachweise);
-        $this->assertTrue($provider->wurde_aufgerufen);
+        $this->assertTrue($provider->wurdeaufgerufen);
     }
 
     public function test_get_erfassen_aktionen_liefert_aktion_von_erfassbarer_quelle(): void {
@@ -213,7 +160,7 @@ final class collector_test extends advanced_testcase {
         $aktionen = (new collector([$provider]))->get_erfassen_aktionen((int) $lernende->id, (int) $lernende->id);
 
         $this->assertCount(1, $aktionen);
-        $this->assertSame('testerfassbar', $aktionen[0]->quelle_key);
+        $this->assertSame('testerfassbar', $aktionen[0]->quellekey);
         $this->assertSame('Neuer Test-Eintrag', $aktionen[0]->label);
         $this->assertStringContainsString('/local/test/edit.php', $aktionen[0]->url);
     }
@@ -246,7 +193,7 @@ final class collector_test extends advanced_testcase {
         $aktionen = (new collector([$provider]))->get_erfassen_aktionen((int) $lernende->id, (int) $lernende->id);
 
         $this->assertSame([], $aktionen);
-        $this->assertTrue($provider->erfassen_wurde_aufgerufen);
+        $this->assertTrue($provider->erfassenwurdeaufgerufen);
     }
 
     /**
@@ -265,6 +212,6 @@ final class collector_test extends advanced_testcase {
         $aktionen = (new collector([$provider]))->get_erfassen_aktionen((int) $fremder->id, (int) $lernende->id);
 
         $this->assertSame([], $aktionen);
-        $this->assertFalse($provider->erfassen_wurde_aufgerufen);
+        $this->assertFalse($provider->erfassenwurdeaufgerufen);
     }
 }

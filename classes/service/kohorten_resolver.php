@@ -28,8 +28,10 @@ declare(strict_types=1);
 
 namespace local_berufsbildung\service;
 
+/**
+ * Loest Kohorten in ihre Mitglieder auf.
+ */
 class kohorten_resolver {
-
     /**
      * Eindeutige Liste der Mitglieder-userids ueber alle uebergebenen
      * Kohorten hinweg.

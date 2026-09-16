@@ -37,7 +37,6 @@ use core\persistent;
  * nachvollziehbar bleiben (siehe zuordnung.kohorten_link_id).
  */
 class kohorten_link extends persistent {
-
     /** Tabellenname. */
     const TABLE = 'local_berufsbildung_kohorten_link';
 

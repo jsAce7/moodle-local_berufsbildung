@@ -33,10 +33,11 @@ use local_berufsbildung\persistent\zuordnung;
 use local_berufsbildung\service\semester_calculator;
 
 /**
+ * Tests fuer api.
+ *
  * @covers \local_berufsbildung\api
  */
 final class api_test extends advanced_testcase {
-
     /**
      * Legt eine Zuordnung an, ohne Umwege ueber die noch nicht existierende
      * set_zuordnung()-Methode.
@@ -76,8 +77,8 @@ final class api_test extends advanced_testcase {
         $bis = strtotime('-1 year');
         $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $lernende->id, $von, $bis);
 
-        $waehrend_zuordnung = strtotime('-18 months');
-        $this->assertTrue(api::is_zustaendig((int) $berufsbildner->id, (int) $lernende->id, $waehrend_zuordnung));
+        $waehrendzuordnung = strtotime('-18 months');
+        $this->assertTrue(api::is_zustaendig((int) $berufsbildner->id, (int) $lernende->id, $waehrendzuordnung));
         $this->assertFalse(api::is_zustaendig((int) $berufsbildner->id, (int) $lernende->id));
     }
 
@@ -153,10 +154,10 @@ final class api_test extends advanced_testcase {
         $bis = strtotime('-1 year');
         $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $lernende->id, $von, $bis);
 
-        $waehrend_zuordnung = strtotime('-18 months');
+        $waehrendzuordnung = strtotime('-18 months');
         $this->assertSame(
             [(int) $lernende->id],
-            api::get_lernende_for((int) $berufsbildner->id, $waehrend_zuordnung)
+            api::get_lernende_for((int) $berufsbildner->id, $waehrendzuordnung)
         );
         $this->assertSame([], api::get_lernende_for((int) $berufsbildner->id));
     }
@@ -195,10 +196,10 @@ final class api_test extends advanced_testcase {
         $bis = strtotime('-1 year');
         $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $lernende->id, $von, $bis);
 
-        $waehrend_zuordnung = strtotime('-18 months');
+        $waehrendzuordnung = strtotime('-18 months');
         $this->assertSame(
             [(int) $berufsbildner->id],
-            api::get_berufsbildner_for((int) $lernende->id, $waehrend_zuordnung)
+            api::get_berufsbildner_for((int) $lernende->id, $waehrendzuordnung)
         );
         $this->assertSame([], api::get_berufsbildner_for((int) $lernende->id));
     }
@@ -319,11 +320,11 @@ final class api_test extends advanced_testcase {
             'profile_field_jahrgang' => '2026',
         ]);
 
-        $waehrend_semester1 = mktime(0, 0, 0, 9, 15, 2026);
-        $waehrend_semester2 = mktime(0, 0, 0, 2, 15, 2027);
+        $waehrendsemester1 = mktime(0, 0, 0, 9, 15, 2026);
+        $waehrendsemester2 = mktime(0, 0, 0, 2, 15, 2027);
 
-        $stand1 = api::get_ausbildungsstand((int) $lernende->id, $waehrend_semester1);
-        $stand2 = api::get_ausbildungsstand((int) $lernende->id, $waehrend_semester2);
+        $stand1 = api::get_ausbildungsstand((int) $lernende->id, $waehrendsemester1);
+        $stand2 = api::get_ausbildungsstand((int) $lernende->id, $waehrendsemester2);
 
         $this->assertSame(1, $stand1->semester);
         $this->assertSame(2, $stand2->semester);
@@ -344,13 +345,13 @@ final class api_test extends advanced_testcase {
             'profile_field_jahrgang' => '2026',
         ]);
 
-        $waehrend_semester6 = mktime(0, 0, 0, 3, 1, 2029);
-        $nach_lehrabschluss = mktime(0, 0, 0, 9, 1, 2029);
+        $waehrendsemester6 = mktime(0, 0, 0, 3, 1, 2029);
+        $nachlehrabschluss = mktime(0, 0, 0, 9, 1, 2029);
 
-        $stand = api::get_ausbildungsstand((int) $lernende->id, $waehrend_semester6);
+        $stand = api::get_ausbildungsstand((int) $lernende->id, $waehrendsemester6);
         $this->assertSame(6, $stand->semester);
         $this->assertSame(6, $stand->gesamtsemester);
-        $this->assertNull(api::get_ausbildungsstand((int) $lernende->id, $nach_lehrabschluss));
+        $this->assertNull(api::get_ausbildungsstand((int) $lernende->id, $nachlehrabschluss));
     }
 
     /**
@@ -368,9 +369,9 @@ final class api_test extends advanced_testcase {
             'profile_field_jahrgang' => '2026',
         ]);
 
-        $waehrend_semester7 = mktime(0, 0, 0, 9, 1, 2029);
+        $waehrendsemester7 = mktime(0, 0, 0, 9, 1, 2029);
 
-        $this->assertSame(7, api::get_ausbildungsstand((int) $lernende->id, $waehrend_semester7)->semester);
+        $this->assertSame(7, api::get_ausbildungsstand((int) $lernende->id, $waehrendsemester7)->semester);
     }
 
     public function test_get_kompetenzrahmen_for_beruf_konfigurierter_beruf(): void {

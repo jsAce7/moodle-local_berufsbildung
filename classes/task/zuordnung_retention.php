@@ -29,12 +29,23 @@ namespace local_berufsbildung\task;
 use core\task\scheduled_task;
 use local_berufsbildung\service\zuordnung_retention_service;
 
+/**
+ * Geplante Aufgabe: abgelaufene Zuordnungen loeschen.
+ */
 class zuordnung_retention extends scheduled_task {
-
+    /**
+     * Anzeigename der geplanten Aufgabe.
+     *
+     * @return string
+     */
     public function get_name(): string {
         return get_string('task:zuordnung_retention', 'local_berufsbildung');
     }
 
+    /**
+     * Fuehrt die geplante Aufgabe aus.
+     *
+     */
     public function execute(): void {
         $ergebnis = (new zuordnung_retention_service())->bereinige_abgelaufene();
 

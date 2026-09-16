@@ -30,10 +30,11 @@ use advanced_testcase;
 use coding_exception;
 
 /**
+ * Tests fuer kw_converter.
+ *
  * @covers \local_berufsbildung\versetzungsplan\kw_converter
  */
 final class kw_converter_test extends advanced_testcase {
-
     /**
      * Abnahmekriterium aus docs/plan.md: 2027-W03 -> 18. bis 24. Januar 2027.
      */

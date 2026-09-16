@@ -33,7 +33,6 @@ namespace local_berufsbildung\nachweis;
  * eingesammelt, das Basis-Plugin kennt keine einzelne Quelle namentlich.
  */
 interface provider {
-
     /**
      * Nachweise fuer eine lernende Person in einem Zeitraum.
      *

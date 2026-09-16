@@ -29,9 +29,13 @@ declare(strict_types=1);
 
 namespace local_berufsbildung\output;
 
+/**
+ * Semesterleiste fuer die Ausbildungsuebersicht.
+ */
 class semester_stepper {
-
     /**
+     * Baut die Daten fuer das Template zusammen.
+     *
      * @param int $semester Aktuelles Semester (1..$gesamtsemester)
      * @param int $gesamtsemester Lehrdauer in Semestern (siehe ausbildungsstand::$gesamtsemester)
      * @param bool $kompakt Kleine Variante fuer die Roster-Karten in meine_lernenden.php

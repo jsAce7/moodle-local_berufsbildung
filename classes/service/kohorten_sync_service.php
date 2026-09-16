@@ -46,8 +46,9 @@ use local_berufsbildung\persistent\zuordnung;
  * weiteren Lauf einfach wieder auferstehen.
  */
 class kohorten_sync_service {
-
     /**
+     * Gleicht alle aktiven Kohorten-Verknuepfungen ab.
+     *
      * @return array{erzeugt: int, beendet: int}
      */
     public function synchronisiere_alle(): array {
@@ -63,6 +64,8 @@ class kohorten_sync_service {
     }
 
     /**
+     * Gleicht eine einzelne Kohorten-Verknuepfung ab.
+     *
      * @param kohorten_link $link
      * @return array{erzeugt: int, beendet: int}
      */

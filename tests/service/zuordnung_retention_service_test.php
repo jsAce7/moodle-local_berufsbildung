@@ -33,10 +33,11 @@ use local_berufsbildung\persistent\aufbewahrung;
 use local_berufsbildung\persistent\zuordnung;
 
 /**
+ * Tests fuer zuordnung_retention_service.
+ *
  * @covers \local_berufsbildung\service\zuordnung_retention_service
  */
 final class zuordnung_retention_service_test extends advanced_testcase {
-
     private function lege_zuordnung_an(int $berufsbildnerid, int $lernendeid, ?int $gueltigbis = null): zuordnung {
         $zuordnung = new zuordnung(0, (object) [
             'berufsbildnerid' => $berufsbildnerid,

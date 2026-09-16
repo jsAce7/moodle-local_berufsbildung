@@ -34,7 +34,6 @@ use core\persistent;
  * Zuordnungen werden nie geloescht, nur ueber gueltig_bis beendet.
  */
 class zuordnung extends persistent {
-
     /** Tabellenname. */
     const TABLE = 'local_berufsbildung_zuordnung';
 

@@ -38,8 +38,14 @@ use core_reportbuilder\system_report;
 use local_berufsbildung\api;
 use local_berufsbildung\reportbuilder\local\entities\zuordnung;
 
+/**
+ * Systemreport ueber alle Zuordnungen.
+ */
 class zuordnungen extends system_report {
-
+    /**
+     * Initialisiert den Report.
+     *
+     */
     protected function initialise(): void {
         $zuordnungentity = new zuordnung();
         $mainalias = $zuordnungentity->get_table_alias('local_berufsbildung_zuordnung');
@@ -80,6 +86,8 @@ class zuordnungen extends system_report {
     }
 
     /**
+     * Wer diesen Report sehen darf.
+     *
      * @return bool
      */
     protected function can_view(): bool {
@@ -89,6 +97,10 @@ class zuordnungen extends system_report {
         );
     }
 
+    /**
+     * Fuegt die Spalten des Reports hinzu.
+     *
+     */
     protected function add_columns(): void {
         $this->add_column_from_entity('lernende:fullname')
             ->set_title(new lang_string('zuordnung:lernende', 'local_berufsbildung'));
@@ -120,12 +132,20 @@ class zuordnungen extends system_report {
         $this->add_column_from_entity('zuordnung:gueltig_bis');
     }
 
+    /**
+     * Fuegt die Filter des Reports hinzu.
+     *
+     */
     protected function add_filters(): void {
         $this->add_filters_from_entity('zuordnung', ['rolle', 'beruf', 'status', 'gueltig_von']);
         $this->add_filters_from_entity('lernende', ['fullname']);
         $this->add_filters_from_entity('berufsbildner', ['fullname']);
     }
 
+    /**
+     * Fuegt die Zeilenaktionen des Reports hinzu.
+     *
+     */
     protected function add_actions(): void {
         // Laufende Zuordnung: beenden.
         $this->add_action((new action(

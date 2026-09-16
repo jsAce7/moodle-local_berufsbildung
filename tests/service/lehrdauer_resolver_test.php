@@ -29,10 +29,11 @@ namespace local_berufsbildung\service;
 use advanced_testcase;
 
 /**
+ * Tests fuer lehrdauer_resolver.
+ *
  * @covers \local_berufsbildung\service\lehrdauer_resolver
  */
 final class lehrdauer_resolver_test extends advanced_testcase {
-
     public function test_beruf_in_konfiguration_ueberschreibt_standard(): void {
         $resolver = new lehrdauer_resolver();
         $konfiguration = "AU_EFZ=8\nPM_EFZ=6";

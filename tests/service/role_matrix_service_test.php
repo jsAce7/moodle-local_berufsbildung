@@ -30,10 +30,11 @@ use advanced_testcase;
 use context_system;
 
 /**
+ * Tests fuer role_matrix_service.
+ *
  * @covers \local_berufsbildung\service\role_matrix_service
  */
 final class role_matrix_service_test extends advanced_testcase {
-
     /**
      * Legt die Rollen an, falls sie (wie im normalen Installationsablauf
      * ueber db/install.php) noch nicht existieren, und raeumt ihre

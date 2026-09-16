@@ -33,11 +33,12 @@ use core\persistent;
  * (nur pruefen, nichts schreiben) erzeugt bewusst keinen Datensatz.
  */
 class plan_import extends persistent {
-
     /** Tabellenname. */
     const TABLE = 'local_berufsbildung_plan_import';
 
     /**
+     * Feldliste dieses Persistent inklusive Validierung.
+     *
      * @return array
      */
     protected static function define_properties(): array {

@@ -40,11 +40,12 @@ use core\persistent;
  * wie Schule, ueK, Ferien oder Militaer.
  */
 class block extends persistent {
-
     /** Tabellenname. */
     const TABLE = 'local_berufsbildung_block';
 
     /**
+     * Feldliste dieses Persistent inklusive Validierung.
+     *
      * @return array
      */
     protected static function define_properties(): array {

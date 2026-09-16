@@ -30,10 +30,11 @@ use advanced_testcase;
 use local_berufsbildung\ausbildungsstand;
 
 /**
+ * Tests fuer lernenden_roster.
+ *
  * @covers \local_berufsbildung\output\lernenden_roster
  */
 final class lernenden_roster_test extends advanced_testcase {
-
     /**
      * @param int $semester
      * @param string $beruf
@@ -44,8 +45,8 @@ final class lernenden_roster_test extends advanced_testcase {
             jahrgang: 2024,
             semester: $semester,
             lehrjahr: (int) ceil($semester / 2),
-            semester_von: 1000,
-            semester_bis: 2000,
+            semestervon: 1000,
+            semesterbis: 2000,
             gesamtsemester: 8,
         );
     }

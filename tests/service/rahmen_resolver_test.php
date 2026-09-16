@@ -29,10 +29,11 @@ namespace local_berufsbildung\service;
 use advanced_testcase;
 
 /**
+ * Tests fuer rahmen_resolver.
+ *
  * @covers \local_berufsbildung\service\rahmen_resolver
  */
 final class rahmen_resolver_test extends advanced_testcase {
-
     public function test_beruf_in_konfiguration_liefert_framework_idnumber(): void {
         $resolver = new rahmen_resolver();
         $konfiguration = "AU_EFZ=au-2022\nPM_EFZ=pm-2022";

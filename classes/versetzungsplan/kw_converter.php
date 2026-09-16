@@ -36,8 +36,9 @@ use DateTime;
  * korrekt implementiert - keine eigene Kalenderarithmetik noetig.
  */
 class kw_converter {
-
     /**
+     * Rechnet eine Kalenderwoche in einen Zeitraum um.
+     *
      * @param string $kw z.B. '2027-W03'
      * @return array{0: int, 1: int} [von, bis] - Montag 00:00:00 bis Sonntag 23:59:59
      */
@@ -87,6 +88,8 @@ class kw_converter {
     }
 
     /**
+     * Zerlegt eine Kalenderwochenangabe.
+     *
      * @param string $kw
      * @return array{0: int, 1: int} [Jahr, Woche]
      */

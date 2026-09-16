@@ -29,10 +29,11 @@ namespace local_berufsbildung\service;
 use advanced_testcase;
 
 /**
+ * Tests fuer kompetenz_baum.
+ *
  * @covers \local_berufsbildung\service\kompetenz_baum
  */
 final class kompetenz_baum_test extends advanced_testcase {
-
     /**
      * Dreistufiger Rahmen wie in der Praxis: Handlungskompetenzbereich ->
      * Handlungskompetenz -> Leistungskriterium. Nur die LK duerfen bei der

@@ -42,13 +42,20 @@ use coding_exception;
  * werden abgewiesen und protokolliert, nicht stillschweigend zusammengefuehrt.
  */
 class csv_parser {
-
+    /**
+     * Konstruktor.
+     *
+     * @param kw_converter $kwconverter
+     */
     public function __construct(
+        /** @var kw_converter */
         private readonly kw_converter $kwconverter = new kw_converter()
     ) {
     }
 
     /**
+     * Zerlegt die CSV-Lieferung in gepruefte Zeilen.
+     *
      * @param string $inhalt Roher CSV-Text, Semikolon-getrennt, mit Kopfzeile
      * @return array{eintraege: array, fehler: string[], zeilen_gelesen: int}
      */
@@ -133,6 +140,8 @@ class csv_parser {
     }
 
     /**
+     * Prueft die Kopfzeile der Lieferung.
+     *
      * @param array<string,int> $spaltenindex
      * @return string|null Fehlermeldung, oder null wenn die Kopfzeile gueltig ist
      */

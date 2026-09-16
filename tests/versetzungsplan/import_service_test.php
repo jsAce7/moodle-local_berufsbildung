@@ -33,10 +33,11 @@ use local_berufsbildung\persistent\plan_import;
 use stdClass;
 
 /**
+ * Tests fuer import_service.
+ *
  * @covers \local_berufsbildung\versetzungsplan\import_service
  */
 final class import_service_test extends advanced_testcase {
-
     private function lege_aktive_zuordnung_an(stdClass $lernende): void {
         $berufsbildner = $this->getDataGenerator()->create_user();
         $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_zuordnung([

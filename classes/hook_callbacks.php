@@ -42,11 +42,12 @@ use navigation_node;
  * (siehe meine_lernenden.php), nicht als dritter Eintrag in der Leiste.
  */
 class hook_callbacks {
-
     /** Key des Core-Knotens "Website-Administration" in der primaeren Navigation. */
     private const SITEADMIN_KEY = 'siteadminnode';
 
     /**
+     * Haengt den Einstieg in die primaere Navigation.
+     *
      * @param primary_extend $hook
      */
     public static function primary_extend(primary_extend $hook): void {

@@ -35,8 +35,9 @@ use local_berufsbildung\ausbildungsstand;
  * ausgeklappt - natives <details>-Element, kein JavaScript noetig.
  */
 class lernenden_kachel {
-
     /**
+     * Baut die Daten fuer das Template zusammen.
+     *
      * @param string $name Vollstaendiger Name, bereits durch fullname() formatiert
      * @param ?ausbildungsstand $stand null, wenn Lehre nicht begonnen oder beendet
      * @param int $anzahlluecken 0 unterdrueckt das Luecken-Badge

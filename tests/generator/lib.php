@@ -29,7 +29,6 @@ defined('MOODLE_INTERNAL') || die();
  * $this->getDataGenerator()->get_plugin_generator('local_berufsbildung').
  */
 class local_berufsbildung_generator extends component_generator_base {
-
     /**
      * Legt eine Zuordnung an.
      *

@@ -35,8 +35,9 @@ use local_berufsbildung\versetzungsplan\kw_converter;
  * die Aufbereitung hier und nicht doppelt in beiden Klassen.
  */
 class einsatz_darstellung {
-
     /**
+     * Wandelt einen Einsatz in den Template-Kontext um.
+     *
      * @param einsatz $einsatz
      * @param string $blockname Bezeichnung des Ausbildungsblocks, siehe api::get_block_name()
      * @return array{blockname: string, zeitraum: string, haskw: bool, kw: string}

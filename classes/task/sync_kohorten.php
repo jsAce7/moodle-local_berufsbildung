@@ -29,12 +29,23 @@ namespace local_berufsbildung\task;
 use core\task\scheduled_task;
 use local_berufsbildung\service\kohorten_sync_service;
 
+/**
+ * Geplante Aufgabe: Kohorten-Verknuepfungen abgleichen.
+ */
 class sync_kohorten extends scheduled_task {
-
+    /**
+     * Anzeigename der geplanten Aufgabe.
+     *
+     * @return string
+     */
     public function get_name(): string {
         return get_string('task:sync_kohorten', 'local_berufsbildung');
     }
 
+    /**
+     * Fuehrt die geplante Aufgabe aus.
+     *
+     */
     public function execute(): void {
         $ergebnis = (new kohorten_sync_service())->synchronisiere_alle();
 

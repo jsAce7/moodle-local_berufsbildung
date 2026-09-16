@@ -29,10 +29,11 @@ namespace local_berufsbildung\versetzungsplan;
 use advanced_testcase;
 
 /**
+ * Tests fuer csv_parser.
+ *
  * @covers \local_berufsbildung\versetzungsplan\csv_parser
  */
 final class csv_parser_test extends advanced_testcase {
-
     public function test_blockformat_normalfall(): void {
         $csv = "email;block;kw_von;kw_bis;bemerkung\n"
             . "anna.muster@firma.ch;4;2027-W15;2027-W26;\n"

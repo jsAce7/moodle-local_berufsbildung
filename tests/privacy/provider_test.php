@@ -39,10 +39,11 @@ use local_berufsbildung\persistent\plan_import;
 use local_berufsbildung\persistent\zuordnung;
 
 /**
+ * Tests fuer provider.
+ *
  * @covers \local_berufsbildung\privacy\provider
  */
 final class provider_test extends \core_privacy\tests\provider_testcase {
-
     public function test_get_metadata(): void {
         $collection = provider::get_metadata(new \core_privacy\local\metadata\collection('local_berufsbildung'));
 
@@ -199,6 +200,8 @@ final class provider_test extends \core_privacy\tests\provider_testcase {
     }
 
     /**
+     * Baut eine genehmigte Loeschanfrage fuer eine lernende Person.
+     *
      * @param stdClass $lernende
      * @return approved_contextlist
      */

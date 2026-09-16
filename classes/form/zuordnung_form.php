@@ -41,7 +41,10 @@ require_once($CFG->libdir . '/formslib.php');
  * fasst dafuer weder core-Kohorten-Funktionen noch $DB an.
  */
 class zuordnung_form extends \moodleform {
-
+    /**
+     * Baut das Formular auf.
+     *
+     */
     protected function definition(): void {
         $mform = $this->_form;
 
@@ -104,6 +107,8 @@ class zuordnung_form extends \moodleform {
     }
 
     /**
+     * Prueft die Eingaben und meldet Fehler je Feld.
+     *
      * @param array $data
      * @param array $files
      * @return array

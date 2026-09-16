@@ -42,7 +42,6 @@ use local_berufsbildung\persistent\zuordnung;
  * keine Zuordnung (mehr) dahintersteht (siehe docs/plan.md Abschnitt 7).
  */
 class role_sync_service {
-
     /**
      * Gleicht ein einzelnes Paar sofort ab, damit eine gerade angelegte
      * aktuelle Zuordnung nicht bis zum stündlichen Task warten muss.
@@ -199,6 +198,8 @@ class role_sync_service {
     }
 
     /**
+     * Gleicht die Rollenzuweisungen ab.
+     *
      * @return array{zugewiesen: int, entzogen: int, planung_zugewiesen: int, planung_entzogen: int}
      */
     public function synchronisiere(): array {

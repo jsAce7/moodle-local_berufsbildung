@@ -57,6 +57,14 @@ function xmldb_local_berufsbildung_install() {
             get_string('role:planung_desc', 'local_berufsbildung')
         );
         set_role_contextlevels($roleid, [CONTEXT_SYSTEM]);
+
+        // upgrade_plugins() ruft update_capabilities() erst nach dieser
+        // Funktion auf. Bei einer Neuinstallation kennt die Datenbank
+        // 'manageblocks' deshalb noch nicht und assign_capability() bricht
+        // mit einer coding_exception ab. Der vorgezogene Aufruf ist
+        // idempotent - der spaetere von upgrade_plugins() bleibt gueltig.
+        update_capabilities('local_berufsbildung');
+
         assign_capability(
             'local/berufsbildung:manageblocks',
             CAP_ALLOW,

@@ -40,8 +40,9 @@ use local_berufsbildung\bereich_abdeckung;
  * Nenner.
  */
 class luecken_liste {
-
     /**
+     * Baut die Daten fuer das Template zusammen.
+     *
      * @param bereich_abdeckung[] $abdeckungen Ergebnis von api::get_luecken_nach_bereich()
      * @param bool $kompakt Nur die Zusammenfassung ohne Bereichsaufschluesselung,
      *                       fuer die Roster-Karten in meine_lernenden.php

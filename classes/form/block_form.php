@@ -32,8 +32,14 @@ require_once($CFG->libdir . '/formslib.php');
 
 use local_berufsbildung\persistent\block;
 
+/**
+ * Formular fuer einen Ausbildungsblock.
+ */
 class block_form extends \moodleform {
-
+    /**
+     * Baut das Formular auf.
+     *
+     */
     protected function definition(): void {
         $mform = $this->_form;
 
@@ -64,6 +70,8 @@ class block_form extends \moodleform {
     }
 
     /**
+     * Prueft die Eingaben und meldet Fehler je Feld.
+     *
      * @param array $data
      * @param array $files
      * @return array

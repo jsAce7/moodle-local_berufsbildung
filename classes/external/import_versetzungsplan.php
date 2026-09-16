@@ -36,8 +36,15 @@ use core_external\external_single_structure;
 use core_external\external_value;
 use local_berufsbildung\versetzungsplan\import_service;
 
+/**
+ * Webservice zum Import des Versetzungsplans.
+ */
 class import_versetzungsplan extends external_api {
-
+    /**
+     * Beschreibt die erwarteten Parameter.
+     *
+     * @return external_function_parameters
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'csvdaten' => new external_value(PARAM_RAW, 'CSV-Inhalt, Base64-kodiert'),
@@ -53,6 +60,8 @@ class import_versetzungsplan extends external_api {
     }
 
     /**
+     * Nimmt eine Versetzungsplan-Lieferung entgegen.
+     *
      * @param string $csvdaten
      * @param string $quelle
      * @param bool $testlauf
@@ -91,6 +100,11 @@ class import_versetzungsplan extends external_api {
         return (new import_service())->verarbeiten($inhalt, $quelle, (int) $USER->id, $testlauf, $rueckgangbestaetigt);
     }
 
+    /**
+     * Beschreibt den Rueckgabewert.
+     *
+     * @return external_single_structure
+     */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'status' => new external_value(PARAM_ALPHAEXT, "'ok' | 'mit_warnungen' | 'abgewiesen' | 'fehlgeschlagen'"),

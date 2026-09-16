@@ -39,7 +39,6 @@ use local_berufsbildung\service\kompetenz_baum;
  * anderweitig vermittelt worden sein, ausserhalb des importierten Plans.
  */
 class luecken_analyse {
-
     /**
      * Handlungskompetenzen ohne Abdeckung, flach ueber alle Bereiche.
      *

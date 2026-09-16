@@ -36,11 +36,12 @@ use moodle_exception;
  * alle oeffnen koennen.
  */
 class collector {
-
     /** @var provider[] */
     private readonly array $providers;
 
     /**
+     * Konstruktor.
+     *
      * @param provider[]|null $providers Zum Testen von aussen vorgebbar;
      *                                    im Produktivbetrieb werden die
      *                                    registrierten Provider ueber
@@ -51,6 +52,8 @@ class collector {
     }
 
     /**
+     * Laedt die registrierten Nachweis-Provider.
+     *
      * @return provider[]
      */
     private static function lade_registrierte_provider(): array {
@@ -85,8 +88,10 @@ class collector {
         int $bis,
         ?int $berechtigungsstichtag = null
     ): array {
-        if ($abrufendeid !== $lernendeid
-                && !api::is_zustaendig($abrufendeid, $lernendeid, $berechtigungsstichtag)) {
+        if (
+            $abrufendeid !== $lernendeid
+            && !api::is_zustaendig($abrufendeid, $lernendeid, $berechtigungsstichtag)
+        ) {
             throw new moodle_exception('error:keinezustaendigkeit', 'local_berufsbildung');
         }
 

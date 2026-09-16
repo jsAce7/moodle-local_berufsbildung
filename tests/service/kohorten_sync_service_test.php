@@ -31,14 +31,17 @@ use local_berufsbildung\api;
 use local_berufsbildung\persistent\kohorten_link;
 use local_berufsbildung\persistent\zuordnung;
 
+defined('MOODLE_INTERNAL') || die();
+
 global $CFG;
 require_once($CFG->dirroot . '/cohort/lib.php');
 
 /**
+ * Tests fuer kohorten_sync_service.
+ *
  * @covers \local_berufsbildung\service\kohorten_sync_service
  */
 final class kohorten_sync_service_test extends advanced_testcase {
-
     private function lege_link_an(int $cohortid, int $berufsbildnerid, string $rolle = 'hauptverantwortlich'): kohorten_link {
         $link = new kohorten_link(0, (object) [
             'cohortid' => $cohortid,

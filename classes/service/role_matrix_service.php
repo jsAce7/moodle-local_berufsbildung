@@ -43,7 +43,6 @@ namespace local_berufsbildung\service;
  * Rollenuebersichten nicht leer bleiben.
  */
 class role_matrix_service {
-
     /**
      * Rolle, die die Planungsrolle vergeben darf. Die Capabilities des
      * Plugins tragen in db/access.php denselben Archetyp - 'manager' ist
@@ -92,6 +91,8 @@ class role_matrix_service {
     }
 
     /**
+     * Liefert die ID einer Rolle anhand ihres Kurznamens.
+     *
      * @return int|null null, solange die Rolle nicht existiert - die
      *  Planungsrolle etwa, bis das Upgrade sie angelegt hat
      */
@@ -104,6 +105,8 @@ class role_matrix_service {
     }
 
     /**
+     * Prueft, ob eine Erlaubnis in der Allow-Matrix noch fehlt.
+     *
      * @param string $tabelle 'role_allow_assign' oder 'role_allow_view'
      * @param string $spalte Zielspalte der Tabelle: 'allowassign' bzw. 'allowview'
      * @return bool true, wenn die Erlaubnis noch nicht eingetragen ist

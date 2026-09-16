@@ -31,10 +31,11 @@ use local_berufsbildung\api;
 use local_berufsbildung\persistent\zuordnung;
 
 /**
+ * Tests fuer zuordnung_csv_importer.
+ *
  * @covers \local_berufsbildung\import\zuordnung_csv_importer
  */
 final class zuordnung_csv_importer_test extends advanced_testcase {
-
     public function test_zeile_zuordnen_liest_spalten_unabhaengig_von_reihenfolge(): void {
         $importer = new zuordnung_csv_importer();
 

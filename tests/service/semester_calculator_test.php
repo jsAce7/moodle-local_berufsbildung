@@ -29,10 +29,11 @@ namespace local_berufsbildung\service;
 use advanced_testcase;
 
 /**
+ * Tests fuer semester_calculator.
+ *
  * @covers \local_berufsbildung\service\semester_calculator
  */
 final class semester_calculator_test extends advanced_testcase {
-
     /**
      * Pruefbeispiele fuer Jahrgang 2026 aus docs/schnitt1.md.
      *
@@ -53,6 +54,8 @@ final class semester_calculator_test extends advanced_testcase {
     }
 
     /**
+     * Prueft die Semesterberechnung an allen Pruefbeispielen.
+     *
      * @dataProvider berechne_semester_provider
      */
     public function test_berechne_semester(int $stichtagjahr, int $stichtagmonat, int $stichtagtag, ?int $erwartet): void {
