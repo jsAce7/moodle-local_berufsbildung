@@ -142,7 +142,7 @@ class csv_parser {
     /**
      * Prueft die Kopfzeile der Lieferung.
      *
-     * @param array<string,int> $spaltenindex
+     * @param array $spaltenindex Struktur: array<string,int>
      * @return string|null Fehlermeldung, oder null wenn die Kopfzeile gueltig ist
      */
     private function kopfzeile_pruefen(array $spaltenindex): ?string {

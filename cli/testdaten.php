@@ -44,6 +44,10 @@ use local_berufsbildung\persistent\zuordnung;
 
 /**
  * Legt ein Textfeld im Nutzerprofil an, sofern es nicht bereits existiert.
+ *
+ * @param string $shortname
+ * @param string $name
+ * @param string $kategorie
  */
 function local_berufsbildung_testdaten_profilfeld(string $shortname, string $name, string $kategorie): void {
     global $DB;
@@ -92,6 +96,10 @@ function local_berufsbildung_testdaten_profilfeld(string $shortname, string $nam
 
 /**
  * Legt einen Testnutzer an, sofern er nicht bereits existiert.
+ *
+ * @param string $username
+ * @param string $vorname
+ * @param string $nachname
  */
 function local_berufsbildung_testdaten_nutzer(string $username, string $vorname, string $nachname): stdClass {
     global $CFG, $DB;

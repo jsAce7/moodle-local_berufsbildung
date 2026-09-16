@@ -47,7 +47,7 @@ class zuordnung_csv_importer {
      * Ordnet eine rohe, indizierte CSV-Zeile den erwarteten Spalten zu.
      *
      * @param array $rohzeile Indiziertes Array, wie von csv_import_reader::next() geliefert
-     * @param array<string,int> $spaltenindex Kleingeschriebener Spaltenname => Index
+     * @param array $spaltenindex Kleingeschriebener Spaltenname => Index Struktur: array<string,int>
      * @return array{berufsbildner: string, lernende: string, beruf: string, gueltig_von: string}
      */
     public function zeile_zuordnen(array $rohzeile, array $spaltenindex): array {
@@ -69,7 +69,7 @@ class zuordnung_csv_importer {
      * Prueft eine zugeordnete Zeile und legt bei $anlegen = true die
      * Zuordnung tatsaechlich an.
      *
-     * @param array{berufsbildner: string, lernende: string, beruf: string, gueltig_von: string} $zeile
+     * @param array $zeile Struktur: array{berufsbildner: string, lernende: string, beruf: string, gueltig_von: string}
      * @param bool $anlegen true = tatsaechlich anlegen, false = nur pruefen (Vorschau)
      * @return array{berufsbildner: string, lernende: string, beruf: string, gueltig_von: string, fehler: ?string}
      */

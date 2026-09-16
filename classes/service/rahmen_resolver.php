@@ -104,7 +104,7 @@ class rahmen_resolver {
      * den Konfigurations-String, damit die Verwaltungsseite ohne eigenes
      * Wissen um das Zeilenformat auskommt.
      *
-     * @param array<string, string> $paare Beruf-Code => Framework-idnumber
+     * @param array $paare Beruf-Code => Framework-idnumber Struktur: array<string, string>
      * @return string
      */
     public function serialisiere(array $paare): string {

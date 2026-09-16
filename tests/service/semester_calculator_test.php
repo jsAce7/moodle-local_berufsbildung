@@ -57,6 +57,11 @@ final class semester_calculator_test extends advanced_testcase {
      * Prueft die Semesterberechnung an allen Pruefbeispielen.
      *
      * @dataProvider berechne_semester_provider
+     *
+     * @param int $stichtagjahr
+     * @param int $stichtagmonat
+     * @param int $stichtagtag
+     * @param int|null $erwartet
      */
     public function test_berechne_semester(int $stichtagjahr, int $stichtagmonat, int $stichtagtag, ?int $erwartet): void {
         $calculator = new semester_calculator();

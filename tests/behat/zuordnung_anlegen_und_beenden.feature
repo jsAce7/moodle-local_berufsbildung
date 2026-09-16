@@ -1,4 +1,4 @@
-@local_berufsbildung
+@local @local_berufsbildung
 Feature: Zuordnung anlegen und beenden
   Als Administrator/in
   will ich eine Zuordnung zwischen Berufsbildner/in und Lernender anlegen und wieder beenden koennen

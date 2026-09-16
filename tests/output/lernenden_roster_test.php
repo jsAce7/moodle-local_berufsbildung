@@ -56,8 +56,9 @@ final class lernenden_roster_test extends advanced_testcase {
     /**
      * Baut einen Roster-Eintrag.
      *
+     * @param int $id
      * @param string $name
-     * @param ?ausbildungsstand $stand
+     * @param ausbildungsstand|null $stand
      * @return array{id: int, name: string, stand: ?ausbildungsstand}
      */
     private function eintrag(int $id, string $name, ?ausbildungsstand $stand): array {

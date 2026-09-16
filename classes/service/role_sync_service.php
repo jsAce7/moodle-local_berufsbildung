@@ -45,6 +45,9 @@ class role_sync_service {
     /**
      * Gleicht ein einzelnes Paar sofort ab, damit eine gerade angelegte
      * aktuelle Zuordnung nicht bis zum stündlichen Task warten muss.
+     *
+     * @param int $berufsbildnerid
+     * @param int $lernendeid
      */
     public function synchronisiere_paar(int $berufsbildnerid, int $lernendeid): void {
         global $DB;
@@ -82,6 +85,8 @@ class role_sync_service {
      * dieser Kontext gerade verschwindet - siehe
      * zuordnung_retention_service::loesche_fuer_lernende(), das bei einer
      * Account-Loeschung aufgerufen wird.
+     *
+     * @param int $berufsbildnerid
      */
     public function synchronisiere_planungsrolle(int $berufsbildnerid): void {
         $jetzt = time();
@@ -123,6 +128,9 @@ class role_sync_service {
      * Einzelfall - nur aus synchronisiere_paar(). Nie fuer einen
      * vollstaendigen Abgleich verwenden: diese Methode kennt die Soll-Menge
      * der anderen Personen nicht.
+     *
+     * @param int $berufsbildnerid
+     * @param bool $soll
      */
     private function setze_planungsrolle(int $berufsbildnerid, bool $soll): void {
         global $DB;

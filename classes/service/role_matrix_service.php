@@ -93,6 +93,7 @@ class role_matrix_service {
     /**
      * Liefert die ID einer Rolle anhand ihres Kurznamens.
      *
+     * @param string $shortname
      * @return int|null null, solange die Rolle nicht existiert - die
      *  Planungsrolle etwa, bis das Upgrade sie angelegt hat
      */
@@ -109,6 +110,8 @@ class role_matrix_service {
      *
      * @param string $tabelle 'role_allow_assign' oder 'role_allow_view'
      * @param string $spalte Zielspalte der Tabelle: 'allowassign' bzw. 'allowview'
+     * @param int $vonrolle
+     * @param int $zielrolle
      * @return bool true, wenn die Erlaubnis noch nicht eingetragen ist
      */
     private function fehlt(string $tabelle, string $spalte, int $vonrolle, int $zielrolle): bool {

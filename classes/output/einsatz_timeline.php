@@ -68,7 +68,7 @@ class einsatz_timeline {
      * Baut die Daten fuer das Template zusammen.
      *
      * @param einsatz[] $einsaetze Nach 'von' aufsteigend, siehe api::get_einsaetze()
-     * @param array<int, string> $blocknamen blockid => Bezeichnung, siehe api::get_block_name()
+     * @param array $blocknamen blockid => Bezeichnung, siehe api::get_block_name() Struktur: array<int, string>
      * @param int|null $jetzt Timestamp fuer die Einordnung vergangen/aktuell/kommend,
      *                        null bedeutet "jetzt"
      * @return string Leerer String, wenn keine Einsaetze vorliegen

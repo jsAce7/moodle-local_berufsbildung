@@ -50,7 +50,7 @@ class lernenden_roster {
      * null, siehe docs/schnitt1.md) stehen zuletzt, untereinander
      * weiterhin alphabetisch.
      *
-     * @param array<int, array{id: int, name: string, stand: ?ausbildungsstand}> $eintraege
+     * @param array $eintraege Struktur: array<int, array{id: int, name: string, stand: ?ausbildungsstand}>
      * @return array<int, array{id: int, name: string, stand: ?ausbildungsstand}>
      */
     public static function sortiere(array $eintraege): array {
@@ -68,7 +68,7 @@ class lernenden_roster {
      * Filtert nach Namens-Teilstring (Gross-/Kleinschreibung egal) und
      * optional exakt nach Beruf-Code. Leere Filter aendern nichts.
      *
-     * @param array<int, array{id: int, name: string, stand: ?ausbildungsstand}> $eintraege
+     * @param array $eintraege Struktur: array<int, array{id: int, name: string, stand: ?ausbildungsstand}>
      * @param string $suchbegriff
      * @param string $beruf Exakter Beruf-Code, z.B. 'AU_EFZ' - leer = alle Berufe
      * @return array<int, array{id: int, name: string, stand: ?ausbildungsstand}>
@@ -103,7 +103,7 @@ class lernenden_roster {
      * fuer die Beruf-Auswahl der Toolbar. Personen ohne Ausbildungsstand
      * liefern keinen Beruf und tauchen hier nicht auf.
      *
-     * @param array<int, array{id: int, name: string, stand: ?ausbildungsstand}> $eintraege
+     * @param array $eintraege Struktur: array<int, array{id: int, name: string, stand: ?ausbildungsstand}>
      * @return string[]
      */
     public static function berufe(array $eintraege): array {

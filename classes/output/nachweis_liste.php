@@ -40,9 +40,9 @@ class nachweis_liste {
      *                               collector::get_nachweise()) - die
      *                               Reihenfolge je Gruppe bleibt erhalten,
      *                               es wird nicht neu sortiert.
-     * @param array<string, string> $quellennamen Quelle-Key => Anzeigename,
+     * @param array $quellennamen Quelle-Key => Anzeigename, Struktur: array<string, string>
      *                                              siehe collector::get_quelle_namen()
-     * @param array<int, array{0: int, 1: int}> $semestergrenzen Semesternummer => [von, bis],
+     * @param array $semestergrenzen Semesternummer => [von, bis], Struktur: array<int, array{0: int, 1: int}>
      *        siehe api::get_semester_grenzen(). Leer (Standard) gruppiert nach
      *        Quelle; gefuellt gruppiert nach Semester, weil eine lernende
      *        Person ihre Ausbildung in Semestern denkt und nicht in
@@ -66,7 +66,7 @@ class nachweis_liste {
      * Gruppiert die Nachweise nach liefernder Quelle.
      *
      * @param nachweis[] $nachweise
-     * @param array<string, string> $quellennamen
+     * @param array $quellennamen Struktur: array<string, string>
      * @return array<int, array{name: string, nachweise: array}>
      */
     private static function gruppiere_nach_quelle(array $nachweise, array $quellennamen): array {
@@ -94,8 +94,8 @@ class nachweis_liste {
      * in einer eigenen Gruppe am Ende.
      *
      * @param nachweis[] $nachweise
-     * @param array<string, string> $quellennamen
-     * @param array<int, array{0: int, 1: int}> $semestergrenzen
+     * @param array $quellennamen Struktur: array<string, string>
+     * @param array $semestergrenzen Struktur: array<int, array{0: int, 1: int}>
      * @return array<int, array{name: string, nachweise: array}>
      */
     private static function gruppiere_nach_semester(
@@ -139,7 +139,7 @@ class nachweis_liste {
      * Findet das Semester, in das ein Datum faellt.
      *
      * @param int $datum Timestamp
-     * @param array<int, array{0: int, 1: int}> $semestergrenzen
+     * @param array $semestergrenzen Struktur: array<int, array{0: int, 1: int}>
      * @return int|null Semesternummer, null ausserhalb der Lehrzeit
      */
     private static function finde_semester(int $datum, array $semestergrenzen): ?int {
@@ -156,7 +156,7 @@ class nachweis_liste {
      * Formt die Nachweise in Tabellenzeilen um.
      *
      * @param nachweis[] $nachweise
-     * @param array<string, string> $quellennamen
+     * @param array $quellennamen Struktur: array<string, string>
      * @param bool $mitquelle Quelle je Zeile ausweisen - noetig, sobald die
      *                         Gruppe nicht selbst die Quelle ist
      * @return array<int, array>

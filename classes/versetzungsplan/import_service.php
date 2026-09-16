@@ -248,7 +248,7 @@ class import_service {
     /**
      * Zaehlt die Eintraege einer Lieferung.
      *
-     * @param array<int,array> $nachuserid
+     * @param array $nachuserid Struktur: array<int,array>
      * @return int
      */
     private function zaehle_eintraege(array $nachuserid): int {
@@ -266,7 +266,7 @@ class import_service {
      * alles in einer Transaktion, damit ein Fehler mittendrin den
      * bestehenden Datenbestand nicht antastet (Architekturregel 5).
      *
-     * @param array<int,array> $nachuserid
+     * @param array $nachuserid Struktur: array<int,array>
      * @param string $quelle
      * @param string $hash
      * @param int $ausgefuehrtvon

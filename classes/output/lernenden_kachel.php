@@ -74,6 +74,8 @@ class lernenden_kachel {
     /**
      * Erste Buchstaben von Vor- und Nachnamen, z.B. "Elena Furrer" -> "EF".
      * Ein einzelnes Wort liefert dessen ersten Buchstaben.
+     *
+     * @param string $name
      */
     private static function initialen(string $name): string {
         $woerter = preg_split('/\s+/', trim($name), -1, PREG_SPLIT_NO_EMPTY);

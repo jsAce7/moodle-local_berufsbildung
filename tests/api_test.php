@@ -41,6 +41,12 @@ final class api_test extends advanced_testcase {
     /**
      * Legt eine Zuordnung an, ohne Umwege ueber die noch nicht existierende
      * set_zuordnung()-Methode.
+     *
+     * @param int $berufsbildnerid
+     * @param int $lernendeid
+     * @param int $von
+     * @param int|null $bis
+     * @param string $rolle
      */
     private function lege_zuordnung_an(
         int $berufsbildnerid,
