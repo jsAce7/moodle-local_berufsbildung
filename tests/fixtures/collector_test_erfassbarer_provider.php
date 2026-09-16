@@ -33,7 +33,7 @@ defined('MOODLE_INTERNAL') || die();
  * den Fall, dass eine Quelle zwar `erfassbare_quelle` implementiert, aber
  * aktuell nichts anzubieten hat (z.B. fehlende Berechtigung).
  */
-final class collector_test_erfassbarer_provider implements provider, erfassbare_quelle {
+final class collector_test_erfassbarer_provider implements erfassbare_quelle, provider {
     /** @var bool Ob get_erfassen_url() aufgerufen wurde. */
     public bool $erfassenwurdeaufgerufen = false;
 
@@ -42,7 +42,10 @@ final class collector_test_erfassbarer_provider implements provider, erfassbare_
      *
      * @param string|null $url Erfassungs-URL, null wenn nichts anzubieten ist
      */
-    public function __construct(private readonly ?string $url = '/local/test/edit.php') {
+    public function __construct(
+        /** @var string|null Erfassungs-URL, null wenn nichts anzubieten ist. */
+        private readonly ?string $url = '/local/test/edit.php'
+    ) {
     }
 
     /**

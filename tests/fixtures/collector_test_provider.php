@@ -42,7 +42,10 @@ final class collector_test_provider implements provider {
      *
      * @param array $nachweise Nachweise, die dieser Provider liefern soll
      */
-    public function __construct(private readonly array $nachweise = []) {
+    public function __construct(
+        /** @var array Nachweise, die dieser Provider liefern soll. */
+        private readonly array $nachweise = []
+    ) {
     }
 
     /**

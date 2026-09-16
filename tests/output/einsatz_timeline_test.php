@@ -36,6 +36,8 @@ use local_berufsbildung\persistent\einsatz;
  */
 final class einsatz_timeline_test extends advanced_testcase {
     /**
+     * Baut einen Einsatz fuer die Timeline.
+     *
      * @param int $blockid
      * @param int $von Timestamp
      * @param int $bis Timestamp

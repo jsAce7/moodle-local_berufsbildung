@@ -161,7 +161,6 @@ if ($hassiteconfig) {
         '12',
         PARAM_INT
     ));
-
 }
 
 // Die Verwaltungsseiten selbst: jede prueft ihre eigene Capability.

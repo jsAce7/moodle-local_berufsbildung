@@ -168,11 +168,12 @@ class role_sync_service {
         // Zuweisungen: eine von Hand vergebene Rolle (component = '') wird
         // nie angefasst.
         $ist = [];
-        foreach ($DB->get_records('role_assignments', [
+        $zuweisungen = $DB->get_records('role_assignments', [
             'roleid' => $roleid,
             'contextid' => $context->id,
             'component' => 'local_berufsbildung',
-        ]) as $zuweisung) {
+        ]);
+        foreach ($zuweisungen as $zuweisung) {
             $ist[(int) $zuweisung->userid] = true;
         }
 

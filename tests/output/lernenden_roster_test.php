@@ -36,6 +36,8 @@ use local_berufsbildung\ausbildungsstand;
  */
 final class lernenden_roster_test extends advanced_testcase {
     /**
+     * Baut einen Ausbildungsstand fuer den Roster.
+     *
      * @param int $semester
      * @param string $beruf
      */
@@ -52,6 +54,8 @@ final class lernenden_roster_test extends advanced_testcase {
     }
 
     /**
+     * Baut einen Roster-Eintrag.
+     *
      * @param string $name
      * @param ?ausbildungsstand $stand
      * @return array{id: int, name: string, stand: ?ausbildungsstand}
