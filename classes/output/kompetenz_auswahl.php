@@ -75,24 +75,43 @@ class kompetenz_auswahl {
                     $leistungskriterien[] = self::eintrag($lk, $zugeordnet, false);
                 }
 
+                // Nach Bezeichnung sortiert statt in Rahmenreihenfolge: die
+                // sortorder der LK folgt der Reihenfolge, in der sie beim
+                // Rahmenimport angelegt wurden, und wirft "MEM 02 04" vor
+                // "AU a1 01". Natuerliche Sortierung haelt die Nummern
+                // einer Serie beieinander.
+                usort(
+                    $leistungskriterien,
+                    static fn (array $links, array $rechts): int => strnatcasecmp($links['name'], $rechts['name'])
+                );
+
                 $handlungskompetenzen[] = self::eintrag($eintrag['kompetenz'], $zugeordnet, true) + [
                     'leistungskriterien' => $leistungskriterien,
                     'hatlk' => !empty($leistungskriterien),
-                    // Aufgeklappt starten, wo noch etwas zu tun ist: ein
-                    // Rahmen mit zwei Dutzend HK waere sonst eine Wand aus
-                    // zugeklappten Zeilen.
-                    'offen' => self::hat_offene(array_merge([$eintrag['kompetenz']], $eintrag['leistungskriterien']), $zugeordnet),
+                    'lktext' => get_string(
+                        'blocklk:lk_aufklappen',
+                        'local_berufsbildung',
+                        count($leistungskriterien)
+                    ),
                 ];
+            }
+
+            // Aufgeklappt starten, wo noch etwas zu tun ist. Der Bereich
+            // zeigt dann seine Handlungskompetenzen als kurze Liste; die
+            // Leistungskriterien darunter bleiben zugeklappt, sonst waeren
+            // es ueber alle Bereiche mehrere hundert Zeilen und die
+            // HK-Namen gingen darin unter.
+            $alle = [];
+            foreach ($zweig['handlungskompetenzen'] as $eintrag) {
+                $alle[] = $eintrag['kompetenz'];
+                $alle = array_merge($alle, $eintrag['leistungskriterien']);
             }
 
             $bereiche[] = [
                 'code' => format_string(kompetenz_baum::kuerzel($zweig['bereich'])),
                 'name' => format_string($zweig['bereich']->get('shortname')),
                 'handlungskompetenzen' => $handlungskompetenzen,
-                'offen' => (bool) array_filter(
-                    $handlungskompetenzen,
-                    static fn (array $hk): bool => $hk['offen']
-                ),
+                'offen' => self::hat_offene($alle, $zugeordnet),
             ];
         }
 
@@ -133,11 +152,21 @@ class kompetenz_auswahl {
         $id = (int) $kompetenz->get('id');
         $code = $mitcode ? format_string(kompetenz_baum::kuerzel($kompetenz)) : '';
 
+        // Die eigentliche Beschreibung der Kompetenz steht im Rahmen im
+        // description-Feld, nicht im shortname - bei einem LK ist der
+        // shortname nur ein Code ("AU a1 01 1-2"). Als Titel, damit die
+        // Liste kurz bleibt und der Text trotzdem erreichbar ist.
+        $beschreibung = shorten_text(
+            content_to_text((string) $kompetenz->get('description'), (int) $kompetenz->get('descriptionformat')),
+            300
+        );
+
         return [
             'id' => $id,
             'code' => $code,
             'hatcode' => $code !== '',
             'name' => format_string($kompetenz->get('shortname')),
+            'beschreibung' => $beschreibung,
             'istzugeordnet' => isset($zugeordnet[$id]),
         ];
     }

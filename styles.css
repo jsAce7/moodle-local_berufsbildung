@@ -119,7 +119,7 @@
  * Roster-Karten mit eigenem Chevron.
  */
 .local-berufsbildung-auswahl-bereichkopf,
-.local-berufsbildung-auswahl-hkkopf {
+.local-berufsbildung-auswahl-lkkopf {
     cursor: pointer;
 }
 
@@ -129,7 +129,16 @@
 }
 
 .local-berufsbildung-auswahl-hk {
-    margin-bottom: 0.4rem;
+    padding: 0.3rem 0;
+}
+
+/*
+ * Der Aufklapper der Leistungskriterien steht unter dem Namen seiner
+ * Handlungskompetenz, nicht unter deren Checkbox - eingerueckt um Breite
+ * und Abstand der Checkbox.
+ */
+.local-berufsbildung-auswahl-lk {
+    margin-left: 1.65rem;
 }
 
 .local-berufsbildung-auswahl-eintraege {
@@ -146,10 +155,6 @@
 .local-berufsbildung-auswahl-eintrag .form-check-input {
     position: static;
     margin: 0.3rem 0 0;
-}
-
-.local-berufsbildung-auswahl-ganze-hk {
-    font-style: italic;
 }
 
 .local-berufsbildung-auswahl-fuss {

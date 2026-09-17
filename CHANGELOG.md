@@ -2,6 +2,14 @@
 
 Alle nennenswerten Änderungen an diesem Plugin werden hier festgehalten. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [0.4.2] — 2026-09-17
+
+### Geändert
+
+- **Die Kompetenzauswahl war unübersichtlich.** Jede Handlungskompetenz war aufgeklappt, und unter jeder hängen rund zehn Leistungskriterien — über alle Bereiche mehrere hundert Zeilen, in denen die HK-Namen untergingen. Die Handlungskompetenz ist jetzt selbst die Zeile mit der Checkbox; die Leistungskriterien liegen in einem eigenen, zugeklappten Aufklapper darunter („10 Leistungskriterien einzeln wählen"). Ein Bereich zeigt damit das, was der Bildungsplan auf einer Seite zeigt: seine Handlungskompetenzen mit Namen. Die Checkbox steht bewusst ausserhalb des `<details>` — in einem `<summary>` würde jeder Klick darauf zugleich auf- und zuklappen, und das liesse sich nur mit JavaScript trennen.
+- Leistungskriterien stehen natürlich sortiert statt in Rahmenreihenfolge. Deren `sortorder` folgt der Reihenfolge beim Rahmenimport und warf „MEM 02 04" vor „AU a1 01".
+- Kompetenzen tragen ihre Beschreibung aus dem Rahmen als Titel. Bei einem Leistungskriterium ist der Kurzname nur ein Code; der erklärende Text steht im `description`-Feld und war bisher nirgends erreichbar.
+
 ## [0.4.1] — 2026-09-17
 
 ### Behoben
