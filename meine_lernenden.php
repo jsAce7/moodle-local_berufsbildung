@@ -21,9 +21,11 @@
  *
  * Sortiert nach laufendem Semester, dann nach Namen (siehe
  * output\lernenden_roster::sortiere()), durchsuchbar nach Namen und
- * filterbar nach Beruf. Jede Person ist eine kompakte Kachel - Details
- * (Luecken-Aufschluesselung, volle Taetigkeitenliste, Profil-Link)
- * stehen erst auf Wunsch (natives <details>-Element, kein JavaScript).
+ * filterbar nach Beruf. Jede Person ist eine Zeile ueber die volle Breite -
+ * Details (Luecken-Aufschluesselung, Kompetenzraster, Taetigkeitenliste,
+ * Profil-Link) stehen erst auf Wunsch (natives <details>-Element, kein
+ * JavaScript). Volle Breite, weil das Kompetenzraster ein breiter Inhalt
+ * ist: in einer Kachelspalte bricht es zeichenweise um.
  *
  * @package    local_berufsbildung
  * @copyright  2026 jsAce7
@@ -165,20 +167,24 @@ if (empty($eintraege)) {
         ob_start();
 
         if (!empty($raster[$lernendeid])) {
-            // Das Raster kompakt: in einer Roster-Karte ist nur Platz fuer
-            // Kuerzel und Symbol, die Bezeichnung steht im Titel. Die
-            // Lueckenliste bleibt hier - anders als in meine_lehre.php, wo
-            // das volle Raster die Namen selbst zeigt, sind die Kuerzel
-            // allein fuer die Planung zu wenig.
+            // Beides, anders als auf meine_lehre.php: die Lueckenliste
+            // beantwortet die Planungsfrage "was muss ich noch einplanen"
+            // als kurze Aufzaehlung, das Raster zeigt daneben die ganze
+            // Karte. Fuer die lernende Person waere das doppelt - sie
+            // plant nicht, sie schaut nach, wo sie steht.
             echo luecken_liste::render(api::abdeckung_aus_raster($raster[$lernendeid]), kompakt: false);
             echo html_writer::div(
-                kompetenzraster::render($raster[$lernendeid], api::get_planungshorizont($lernendeid), kompakt: true),
+                kompetenzraster::render($raster[$lernendeid], api::get_planungshorizont($lernendeid)),
                 'mb-3'
             );
         }
 
         $nachweise = $collector->get_nachweise($berufsbildnerid, $lernendeid, 0, time());
-        echo nachweis_liste::render($nachweise, $quellennamen);
+        echo nachweis_liste::render(
+            $nachweise,
+            $quellennamen,
+            titel: get_string('nachweis:titel', 'local_berufsbildung')
+        );
 
         $profilurl = new moodle_url('/user/profile.php', ['id' => $lernendeid]);
         echo html_writer::div(html_writer::link(

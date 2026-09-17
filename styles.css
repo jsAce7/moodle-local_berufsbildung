@@ -534,23 +534,47 @@
     gap: 0.5rem;
 }
 
+/*
+ * Ein .form-control ist in Bootstrap 100 % breit. In der Filterleiste
+ * draengt das Suchfeld damit Beruf-Auswahl und Schaltflaeche in eine
+ * zweite Zeile, obwohl daneben die halbe Seite frei ist.
+ */
+.local-berufsbildung-roster-toolbar-filter .form-control,
+.local-berufsbildung-roster-toolbar-filter select {
+    flex: 0 1 16rem;
+    width: auto;
+}
+
 .local-berufsbildung-roster-toolbar-summary {
     white-space: nowrap;
 }
 
+/*
+ * Eine Person je Zeile ueber die volle Breite, nicht ein Raster schmaler
+ * Kacheln. Die Details einer Person - Lueckenliste und Kompetenzraster -
+ * sind breite Inhalte; in einer 300-px-Spalte bricht die Rasterzeile
+ * zeichenweise um und die Kuerzel laufen ineinander. Ausgeklappt steht
+ * jetzt dieselbe Darstellung wie auf "Meine Lehre" zur Verfuegung.
+ */
 .local-berufsbildung-roster-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
+    display: flex;
+    flex-direction: column;
 }
 
 .local-berufsbildung-kachel {
     padding: 0;
 }
 
+/*
+ * Kopfzeile einer Person: Initialen, Name mit Ausbildungsstand, dann
+ * rechtsbuendig Semesterleiste, Kennzahlen und Chevron. Alles auf einer
+ * Zeile - bei voller Breite muss "Automatiker/in EFZ, 1. Lehrjahr
+ * (Semester 1)" nicht mehr ueber fuenf Zeilen umbrechen.
+ */
 .local-berufsbildung-kachel-summary {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
+    flex-wrap: wrap;
     gap: 0.75rem;
     cursor: pointer;
 }
@@ -571,8 +595,13 @@
     flex-shrink: 0;
 }
 
+/*
+ * Nimmt den freien Platz und schiebt Semesterleiste, Kennzahlen und
+ * Chevron nach rechts. Die Grundbreite verhindert, dass der Name auf
+ * schmalen Fenstern zusammenfaellt, statt dass die Zeile umbricht.
+ */
 .local-berufsbildung-kachel-info {
-    flex: 1;
+    flex: 1 1 14rem;
     min-width: 0;
 }
 
@@ -592,10 +621,31 @@
     flex-shrink: 0;
 }
 
+/*
+ * Die Semesterleiste steht zwischen Name und Kennzahlen, nicht unter dem
+ * Namen: dort ist sie der Fortschrittsbalken der Zeile.
+ */
+.local-berufsbildung-kachel-summary .local-berufsbildung-stepper {
+    margin: 0;
+    flex-shrink: 0;
+}
+
 .local-berufsbildung-kachel-chevron {
     flex-shrink: 0;
     align-self: center;
     transition: transform 0.15s ease;
+}
+
+/*
+ * Die offenen Kompetenzen stehen nach Bereich gruppiert. Bei voller
+ * Breite nebeneinander statt in einer Spalte untereinander - vier kurze
+ * Bloecke liest man auf einen Blick, zwanzig Zeilen nicht.
+ */
+.local-berufsbildung-luecken-bereiche {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 0.25rem 1.5rem;
+    align-items: start;
 }
 
 .local-berufsbildung-kachel[open] .local-berufsbildung-kachel-chevron {

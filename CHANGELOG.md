@@ -2,6 +2,15 @@
 
 Alle nennenswerten Änderungen an diesem Plugin werden hier festgehalten. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [0.4.6] — 2026-09-17
+
+### Geändert
+
+- **„Meine Lernenden" zeigte jede Person in einer 300-px-Kachelspalte.** Darin ist kein Kompetenzraster darstellbar: die Bereichsnamen brachen zeichenweise um („Instandhalt / en von / automatisie / rten Anlagen"), die Kürzel liefen ohne Abstand ineinander (`a.01a.02a.03`), und die aufgeklappte Kachel wurde über tausend Pixel hoch, während daneben die halbe Seite leer blieb. Jede Person ist jetzt eine Zeile über die volle Breite. Ausgeklappt steht damit dasselbe Kompetenzraster zur Verfügung wie auf „Meine Lehre" — mit Bezeichnungen statt nur Kürzeln.
+- Die Lückenliste bleibt hier neben dem Raster, anders als auf „Meine Lehre". Die Fragen sind verschieden: eine berechtigte Person plant („was muss ich noch einplanen" — dafür ist die kurze Aufzählung richtig), die lernende Person schaut nach, wo sie steht. Die Bereiche der Liste stehen bei voller Breite nebeneinander statt in einer Spalte untereinander.
+- **Die Filterleiste brach um.** Ein `.form-control` ist in Bootstrap 100 % breit, deshalb drängte das Suchfeld Beruf-Auswahl und Schaltfläche in eine zweite Zeile, obwohl daneben Platz war. Such- und Auswahlfeld haben jetzt eine begrenzte Breite.
+- **Die Kennzahlen neben dem Namen sind beschriftet.** „14" neben einer Glühbirne sagt nicht, wovon 14 — es steht jetzt „14 noch offen" und „0 Tätigkeiten". Die Semesterleiste ist aus dem Namensblock in die Zeile gerückt, wo sie der Fortschrittsbalken der Person ist. Die Tätigkeitenliste im Detail hat eine Überschrift.
+
 ## [0.4.5] — 2026-09-17
 
 ### Geändert

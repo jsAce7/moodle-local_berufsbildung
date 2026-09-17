@@ -52,17 +52,24 @@
             <span class="local-berufsbildung-kachel-name">{{name}}</span>
             {{#hatstand}}
                 <span class="d-block text-muted small">{{ausbildungsstand}}</span>
-                {{{stepper}}}
             {{/hatstand}}
         </span>
+        {{! Die Semesterleiste steht zwischen Name und Kennzahlen, nicht unter
+            dem Namen: in einer Zeile ueber die volle Breite ist sie dort der
+            Fortschrittsbalken der Person. }}
+        {{#hatstand}}{{{stepper}}}{{/hatstand}}
         <span class="local-berufsbildung-kachel-badges">
+            {{! Mit Beschriftung statt nur einer Zahl - "14" neben einer
+                Gluehbirne sagt nicht, wovon 14. }}
             {{#hasluecken}}
                 <span class="badge bg-light text-dark border">
-                    <i class="icon fa fa-lightbulb fa-fw" aria-hidden="true"></i> {{anzahlluecken}}
+                    <i class="icon fa fa-lightbulb fa-fw" aria-hidden="true"></i>
+                    {{#str}} luecken:titel_anzahl, local_berufsbildung, {{anzahlluecken}} {{/str}}
                 </span>
             {{/hasluecken}}
             <span class="badge bg-light text-dark border">
-                <i class="icon fa fa-tasks fa-fw" aria-hidden="true"></i> {{anzahltaetigkeiten}}
+                <i class="icon fa fa-tasks fa-fw" aria-hidden="true"></i>
+                {{#str}} meine_lernenden:taetigkeiten_anzahl, local_berufsbildung, {{anzahltaetigkeiten}} {{/str}}
             </span>
         </span>
         <span class="local-berufsbildung-kachel-chevron" aria-hidden="true">
