@@ -47,8 +47,17 @@ class nachweis_liste {
      *        Quelle; gefuellt gruppiert nach Semester, weil eine lernende
      *        Person ihre Ausbildung in Semestern denkt und nicht in
      *        liefernden Plugins.
+     * @param string|null $titel Ueberschrift ueber der ganzen Liste. Null, wo
+     *        die Liste bereits in einem beschrifteten Bereich steht - etwa im
+     *        aufgeklappten Teil einer Roster-Kachel. Ohne Ueberschrift haengt
+     *        der Leertext sonst ohne Bezug auf der Seite.
      */
-    public static function render(array $nachweise, array $quellennamen, array $semestergrenzen = []): string {
+    public static function render(
+        array $nachweise,
+        array $quellennamen,
+        array $semestergrenzen = [],
+        ?string $titel = null
+    ): string {
         global $OUTPUT;
 
         $gruppen = empty($semestergrenzen)
@@ -58,6 +67,8 @@ class nachweis_liste {
         return $OUTPUT->render_from_template('local_berufsbildung/nachweis_liste', [
             'gruppen' => $gruppen,
             'hasgruppen' => !empty($gruppen),
+            'hastitel' => $titel !== null,
+            'titel' => $titel ?? '',
             'leertext' => get_string('form:keine_taetigkeiten', 'local_berufsbildung'),
         ]);
     }

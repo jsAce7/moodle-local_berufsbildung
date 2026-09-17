@@ -20,25 +20,47 @@
     Dekorativer Fortschritts-Stepper - die gleiche Information steht als
     Text daneben (form:ausbildungsstand), deshalb aria-hidden.
 
+    Die Punkte allein sagen nicht, wovon sie zaehlen. Ausserhalb der
+    kompakten Variante steht deshalb "Lehrjahr" davor und die Nummer des
+    Lehrjahres unter seiner Gruppe.
+
     Context variables required for this template:
-    * gruppen - array of {punkte: [{istvergangen, istaktuell}]}, ein Eintrag je Lehrjahr
+    * gruppen - array of {punkte: [{istvergangen, istaktuell}], marke, titel}, ein Eintrag je Lehrjahr
     * kompakt - bool
+    * legendetext - string, Bezeichnung der Zaehlung ("Lehrjahr")
 
     Example context (json):
     {
-        "kompakt": true,
+        "kompakt": false,
+        "legendetext": "Lehrjahr",
         "gruppen": [
-            {"punkte": [{"istvergangen": true, "istaktuell": false}, {"istvergangen": false, "istaktuell": true}]},
-            {"punkte": [{"istvergangen": false, "istaktuell": false}, {"istvergangen": false, "istaktuell": false}]}
+            {
+                "marke": 1,
+                "titel": "1. Lehrjahr",
+                "punkte": [{"istvergangen": true, "istaktuell": false}, {"istvergangen": false, "istaktuell": true}]
+            },
+            {
+                "marke": 2,
+                "titel": "2. Lehrjahr",
+                "punkte": [{"istvergangen": false, "istaktuell": false}, {"istvergangen": false, "istaktuell": false}]
+            }
         ]
     }
 }}
 <span class="local-berufsbildung-stepper{{#kompakt}} local-berufsbildung-stepper-kompakt{{/kompakt}}" aria-hidden="true">
+    {{^kompakt}}
+        <span class="local-berufsbildung-stepper-legende text-muted">{{legendetext}}</span>
+    {{/kompakt}}
     {{#gruppen}}
-        <span class="local-berufsbildung-stepper-lehrjahr">
-            {{#punkte}}
-                <span class="local-berufsbildung-stepper-punkt{{#istaktuell}} local-berufsbildung-stepper-punkt-aktuell bg-primary{{/istaktuell}}{{#istvergangen}} bg-primary{{/istvergangen}}{{^istvergangen}}{{^istaktuell}} border bg-light{{/istaktuell}}{{/istvergangen}}"></span>
-            {{/punkte}}
+        <span class="local-berufsbildung-stepper-lehrjahr" title="{{titel}}">
+            <span class="local-berufsbildung-stepper-punkte">
+                {{#punkte}}
+                    <span class="local-berufsbildung-stepper-punkt{{#istaktuell}} local-berufsbildung-stepper-punkt-aktuell bg-primary{{/istaktuell}}{{#istvergangen}} bg-primary{{/istvergangen}}{{^istvergangen}}{{^istaktuell}} border bg-light{{/istaktuell}}{{/istvergangen}}"></span>
+                {{/punkte}}
+            </span>
+            {{^kompakt}}
+                <span class="local-berufsbildung-stepper-marke text-muted">{{marke}}</span>
+            {{/kompakt}}
         </span>
     {{/gruppen}}
 </span>

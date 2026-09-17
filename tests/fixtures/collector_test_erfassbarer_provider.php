@@ -32,8 +32,12 @@ defined('MOODLE_INTERNAL') || die();
  * Test-Provider mit eigener Erfassung, wahlweise ohne Erfassungs-URL - fuer
  * den Fall, dass eine Quelle zwar `erfassbare_quelle` implementiert, aber
  * aktuell nichts anzubieten hat (z.B. fehlende Berechtigung).
+ *
+ * Implementiert bewusst kein `quelle_mit_hinweis` - eine Erfassung ohne
+ * Hinweis ist der Normalfall. Die Variante mit Hinweis steht daneben in
+ * collector_test_hinweis_provider und erbt von dieser Klasse.
  */
-final class collector_test_erfassbarer_provider implements erfassbare_quelle, provider {
+class collector_test_erfassbarer_provider implements erfassbare_quelle, provider {
     /** @var bool Ob get_erfassen_url() aufgerufen wurde. */
     public bool $erfassenwurdeaufgerufen = false;
 

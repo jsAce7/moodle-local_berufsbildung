@@ -36,10 +36,17 @@
         "kw": "KW 06-13"
     }
 }}
-<div class="local-berufsbildung-einsatz-aktuell d-flex align-items-baseline mt-3">
-    <i class="icon fa fa-map-marker-alt fa-fw text-muted mr-1" aria-hidden="true"></i>
-    <span>
-        <span class="local-berufsbildung-einsatz-blockname font-weight-bold">{{blockname}}</span>
-        <span class="text-muted small ml-1">{{zeitraum}}{{#haskw}} &middot; {{kw}}{{/haskw}}</span>
+<div class="local-berufsbildung-einsatz-aktuell mt-3">
+    {{! Ohne Bezeichnung steht hier ein fetter Blockname ohne Auskunft, was
+        er ist - im Zeitstrahl weiter unten steht derselbe Name noch einmal. }}
+    <span class="local-berufsbildung-einsatz-marke d-block small text-uppercase text-muted">
+        {{#str}} einsatz:aktuell_titel, local_berufsbildung {{/str}}
+    </span>
+    <span class="d-flex align-items-baseline">
+        <i class="icon fa fa-map-marker-alt fa-fw text-muted mr-1" aria-hidden="true"></i>
+        <span>
+            <span class="local-berufsbildung-einsatz-blockname font-weight-bold">{{blockname}}</span>
+            <span class="text-muted small ml-1">{{zeitraum}}{{#haskw}} &middot; {{kw}}{{/haskw}}</span>
+        </span>
     </span>
 </div>

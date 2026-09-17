@@ -1,0 +1,154 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_berufsbildung/kompetenzraster
+
+    Kompetenzraster in der Gliederung des offiziellen Bildungsplans:
+    Handlungskompetenzbereiche als Zeilen, Handlungskompetenzen als
+    Spalten.
+
+    Die Farbe der Zelle bedeutet dasselbe wie im Bildungsplan - Pflicht
+    oder Wahlpflicht. Der Ausbildungsstand haengt an Symbol und Klartext,
+    nicht an der Farbe: dieselbe Farbe darf hier nichts anderes heissen
+    als im Dokument daneben, und Farbe allein traegt nie eine Information.
+
+    Nur ein Vorschlag fuer die Ausbildungsplanung, keine Festlegung
+    (Architekturregel 6), und kein Beurteilungsstatus.
+
+    Context variables required for this template:
+    * titel - string, Ueberschrift
+    * bereiche - array of {name, abdeckung, hatsoll, zellen}
+    * zellen - array of {istleer} oder
+               {istleer, name, hascode, code, farbklasse, statusklasse, hatzeichen, icon, statustext, titel}
+    * kompakt - bool, nur Kuerzel und Symbol statt der vollen Bezeichnung
+    * haszusammenfassung - bool
+    * zusammenfassung - string, "x von y abgedeckt" ueber alle Bereiche
+    * hathorizont - bool
+    * horizont - string, bis wann der vorliegende Plan reicht
+    * legende - array of {istfarbe, hatzeichen, farbklasse, icon, text}
+
+    Example context (json):
+    {
+        "titel": "Handlungskompetenzen",
+        "kompakt": false,
+        "haszusammenfassung": true,
+        "zusammenfassung": "1 von 2 Pflicht-Handlungskompetenzen sind im Plan abgedeckt",
+        "hathorizont": true,
+        "horizont": "Vorliegender Versetzungsplan reicht bis 20. August 2027.",
+        "bereiche": [
+            {
+                "name": "a Entwickeln von automatisierten Anlagen",
+                "abdeckung": "1 von 2",
+                "hatsoll": true,
+                "zellen": [
+                    {
+                        "istleer": false,
+                        "name": "Fertigungsunterlagen erstellen",
+                        "hascode": true,
+                        "code": "a1",
+                        "farbklasse": "bg-warning",
+                        "statusklasse": "local-berufsbildung-raster-abgedeckt",
+                        "hatzeichen": true,
+                        "icon": "fa-check",
+                        "statustext": "abgedeckt",
+                        "titel": "Fertigungsunterlagen erstellen · Pflicht · abgedeckt"
+                    },
+                    {
+                        "istleer": false,
+                        "name": "Skizzen von Komponenten erstellen",
+                        "hascode": true,
+                        "code": "a2",
+                        "farbklasse": "bg-success",
+                        "statusklasse": "local-berufsbildung-raster-offen",
+                        "hatzeichen": false,
+                        "icon": "fa-minus",
+                        "statustext": "nicht im Plan",
+                        "titel": "Skizzen von Komponenten erstellen · Wahlpflicht · nicht im Plan"
+                    },
+                    {"istleer": true}
+                ]
+            }
+        ],
+        "legende": [
+            {"istfarbe": true, "hatzeichen": false, "farbklasse": "bg-warning", "text": "Pflicht"},
+            {"istfarbe": false, "hatzeichen": true, "icon": "fa-check", "text": "abgedeckt"}
+        ]
+    }
+}}
+<div class="local-berufsbildung-raster{{#kompakt}} local-berufsbildung-raster-kompakt{{/kompakt}}">
+    <h3 class="{{#kompakt}}h6{{/kompakt}}{{^kompakt}}h5{{/kompakt}} mb-1">{{titel}}</h3>
+    {{#haszusammenfassung}}
+        <p class="local-berufsbildung-raster-zusammenfassung mb-1">{{zusammenfassung}}</p>
+    {{/haszusammenfassung}}
+    {{#hathorizont}}
+        <p class="small text-muted mb-2">{{horizont}}</p>
+    {{/hathorizont}}
+    <ul class="local-berufsbildung-raster-legende list-unstyled small text-muted mb-2">
+        {{#legende}}
+            <li class="local-berufsbildung-raster-legendeneintrag">
+                {{#istfarbe}}
+                    <span class="local-berufsbildung-raster-legendenfarbe {{farbklasse}}" aria-hidden="true"></span>
+                {{/istfarbe}}
+                {{^istfarbe}}
+                    {{#hatzeichen}}<i class="icon fa {{icon}} fa-fw m-0" aria-hidden="true"></i>{{/hatzeichen}}
+                    {{^hatzeichen}}<span class="local-berufsbildung-raster-legendenleer" aria-hidden="true"></span>{{/hatzeichen}}
+                {{/istfarbe}}
+                {{text}}
+            </li>
+        {{/legende}}
+    </ul>
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered local-berufsbildung-raster-tabelle mb-0">
+            <tbody>
+                {{#bereiche}}
+                    <tr>
+                        <th scope="row" class="local-berufsbildung-raster-bereich">
+                            <span class="local-berufsbildung-raster-bereichname">{{name}}</span>
+                            {{#hatsoll}}
+                                <span class="d-block small text-muted">{{abdeckung}}</span>
+                            {{/hatsoll}}
+                        </th>
+                        {{#zellen}}
+                            {{#istleer}}
+                                <td class="local-berufsbildung-raster-leer"></td>
+                            {{/istleer}}
+                            {{^istleer}}
+                                <td class="local-berufsbildung-raster-zelle {{statusklasse}}" title="{{titel}}">
+                                    <span class="local-berufsbildung-raster-fuellung {{farbklasse}}" aria-hidden="true"></span>
+                                    <span class="local-berufsbildung-raster-inhalt">
+                                        <span class="local-berufsbildung-raster-kopf">
+                                            {{#hatzeichen}}<i class="icon fa {{icon}} fa-fw m-0" aria-hidden="true"></i>{{/hatzeichen}}
+                                            {{#hascode}}<span class="local-berufsbildung-raster-code">{{code}}</span>{{/hascode}}
+                                        </span>
+                                        <span class="local-berufsbildung-raster-name">{{name}}</span>
+                                        {{! Der haeufigste Stand - "nicht im Plan" - bleibt im Dokument, wird
+                                            aber nicht angezeigt: sonst steht in fast jeder Zelle dieselbe
+                                            Zeile, die nichts unterscheidet. Ebenso im kompakten Raster Name
+                                            und Status. Eigene Regel in styles.css statt sr-only/visually-hidden,
+                                            weil die Klasse zwischen Bootstrap 4 (Moodle 4.5) und 5 (Moodle 5.x)
+                                            den Namen wechselt. }}
+                                        <span class="local-berufsbildung-raster-status small{{^hatzeichen}} local-berufsbildung-nurtext{{/hatzeichen}}">{{statustext}}</span>
+                                    </span>
+                                </td>
+                            {{/istleer}}
+                        {{/zellen}}
+                    </tr>
+                {{/bereiche}}
+            </tbody>
+        </table>
+    </div>
+</div>

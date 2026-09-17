@@ -32,10 +32,11 @@ use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
-// Die beiden Test-Provider liegen als Fixtures daneben: eine Klasse je
-// Datei, und tests/fixtures/ wird nicht autogeladen.
+// Die Test-Provider liegen als Fixtures daneben: eine Klasse je Datei, und
+// tests/fixtures/ wird nicht autogeladen.
 require_once(__DIR__ . '/../fixtures/collector_test_provider.php');
 require_once(__DIR__ . '/../fixtures/collector_test_erfassbarer_provider.php');
+require_once(__DIR__ . '/../fixtures/collector_test_hinweis_provider.php');
 
 /**
  * Tests fuer collector.
@@ -213,5 +214,67 @@ final class collector_test extends advanced_testcase {
 
         $this->assertSame([], $aktionen);
         $this->assertFalse($provider->erfassenwurdeaufgerufen);
+    }
+
+    /**
+     * Eine Quelle ohne `quelle_mit_hinweis` liefert eine Aktion ohne
+     * Hinweis - der Hinweis ist optional, nicht Pflicht.
+     */
+    public function test_get_erfassen_aktionen_ohne_quelle_mit_hinweis_hat_keinen_hinweis(): void {
+        $this->resetAfterTest();
+
+        $lernende = $this->getDataGenerator()->create_user();
+
+        $provider = new collector_test_erfassbarer_provider();
+        $aktionen = (new collector([$provider]))->get_erfassen_aktionen((int) $lernende->id, (int) $lernende->id);
+
+        $this->assertCount(1, $aktionen);
+        $this->assertNull($aktionen[0]->hinweis);
+    }
+
+    public function test_get_erfassen_aktionen_uebernimmt_den_hinweis_der_quelle(): void {
+        $this->resetAfterTest();
+
+        $lernende = $this->getDataGenerator()->create_user();
+
+        $provider = new collector_test_hinweis_provider('/local/test/edit.php', 'Naechster Eintrag faellig bis morgen');
+        $aktionen = (new collector([$provider]))->get_erfassen_aktionen((int) $lernende->id, (int) $lernende->id);
+
+        $this->assertCount(1, $aktionen);
+        $this->assertSame('Naechster Eintrag faellig bis morgen', $aktionen[0]->hinweis);
+        $this->assertTrue($provider->hinweiswurdeaufgerufen);
+    }
+
+    /**
+     * Eine Quelle darf `quelle_mit_hinweis` implementieren und trotzdem
+     * nichts zu sagen haben - dann steht unter der Schaltflaeche nichts.
+     */
+    public function test_get_erfassen_aktionen_mit_leerem_hinweis_bleibt_ohne_hinweis(): void {
+        $this->resetAfterTest();
+
+        $lernende = $this->getDataGenerator()->create_user();
+
+        $provider = new collector_test_hinweis_provider('/local/test/edit.php', null);
+        $aktionen = (new collector([$provider]))->get_erfassen_aktionen((int) $lernende->id, (int) $lernende->id);
+
+        $this->assertCount(1, $aktionen);
+        $this->assertNull($aktionen[0]->hinweis);
+        $this->assertTrue($provider->hinweiswurdeaufgerufen);
+    }
+
+    /**
+     * Ohne Erfassungs-URL gibt es keine Aktion - und damit auch keinen
+     * Grund, die Quelle nach einem Hinweis zu fragen.
+     */
+    public function test_get_erfassen_aktionen_ohne_url_fragt_nicht_nach_dem_hinweis(): void {
+        $this->resetAfterTest();
+
+        $lernende = $this->getDataGenerator()->create_user();
+
+        $provider = new collector_test_hinweis_provider(null);
+        $aktionen = (new collector([$provider]))->get_erfassen_aktionen((int) $lernende->id, (int) $lernende->id);
+
+        $this->assertSame([], $aktionen);
+        $this->assertFalse($provider->hinweiswurdeaufgerufen);
     }
 }

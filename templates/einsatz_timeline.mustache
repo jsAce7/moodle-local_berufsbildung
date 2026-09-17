@@ -20,38 +20,63 @@
     Alle Einsaetze des Versetzungsplans chronologisch: wo die lernende
     Person war, wo sie ist, wo sie hinkommt.
 
+    Jedes Semester ist ein eigener Aufklapper, offen ist das laufende: ueber
+    die ganze Lehrzeit hat ein Plan rund sechzig Einsaetze, und die Fragen
+    an die Liste betreffen immer nur ein Semester. Zugeklappt heisst nicht
+    versteckt - der ganze Plan bleibt mit einem Klick je Semester
+    erreichbar. Natives <details>, kein JavaScript, wie in
+    lernenden_kachel und kompetenz_auswahl.
+
+    Ohne Semestergrenzen (hasname = false) gibt es nichts zu falten; dann
+    steht die Liste wie bisher durchgehend da. Die Eintraege selbst stehen
+    in einsatz_timeline_eintraege, weil beide Faelle sie brauchen.
+
     Context variables required for this template:
+    * gruppen - array of {hasname, name, anzahl, istoffen, eintraege}
     * eintraege - array of {blockname, zeitraum, haskw, kw, istvergangen, istaktuell, istkommend}
     * titel - string, Ueberschrift der Liste
 
     Example context (json):
     {
         "titel": "Versetzungsplan",
-        "eintraege": [
+        "gruppen": [
             {
-                "blockname": "Montage",
-                "zeitraum": "02.02.26 bis 27.03.26",
-                "haskw": true,
-                "kw": "KW 06-13",
-                "istvergangen": false,
-                "istaktuell": true,
-                "istkommend": false
+                "hasname": true,
+                "name": "1. Semester",
+                "anzahl": "8 Einsätze",
+                "istoffen": true,
+                "eintraege": [
+                    {
+                        "blockname": "Montage",
+                        "zeitraum": "02.02.26 bis 27.03.26",
+                        "haskw": true,
+                        "kw": "KW 06-13",
+                        "istvergangen": false,
+                        "istaktuell": true,
+                        "istkommend": false
+                    }
+                ]
             }
         ]
     }
 }}
-<div class="local-berufsbildung-timeline mt-3">
-    <h4 class="h6 text-uppercase text-muted mb-2">{{titel}}</h4>
-    <ol class="local-berufsbildung-timeline-liste list-unstyled mb-0">
-        {{#eintraege}}
-            <li class="local-berufsbildung-timeline-eintrag{{#istvergangen}} local-berufsbildung-timeline-vergangen{{/istvergangen}}{{#istaktuell}} local-berufsbildung-timeline-aktuell{{/istaktuell}}">
-                <span class="local-berufsbildung-timeline-punkt{{#istaktuell}} bg-primary{{/istaktuell}}{{#istvergangen}} bg-secondary{{/istvergangen}}{{#istkommend}} border bg-light{{/istkommend}}" aria-hidden="true"></span>
-                <span class="local-berufsbildung-timeline-text">
-                    <span class="local-berufsbildung-timeline-blockname">{{blockname}}</span>
-                    {{#istaktuell}}<span class="badge bg-primary text-white ml-1">{{#str}} einsatz:aktuell, local_berufsbildung {{/str}}</span>{{/istaktuell}}
-                    <span class="d-block text-muted small">{{zeitraum}}{{#haskw}} &middot; {{kw}}{{/haskw}}</span>
-                </span>
-            </li>
-        {{/eintraege}}
-    </ol>
+<div class="local-berufsbildung-timeline">
+    <h3 class="h5 mb-2">{{titel}}</h3>
+    {{#gruppen}}
+        {{#hasname}}
+            <details class="local-berufsbildung-timeline-gruppe"{{#istoffen}} open{{/istoffen}}>
+                <summary class="local-berufsbildung-timeline-gruppenkopf">
+                    <span class="local-berufsbildung-timeline-chevron" aria-hidden="true">
+                        <i class="icon fa fa-chevron-right fa-fw m-0"></i>
+                    </span>
+                    <span class="local-berufsbildung-timeline-gruppenname h6 text-uppercase text-muted mb-0">{{name}}</span>
+                    <span class="local-berufsbildung-timeline-gruppenanzahl text-muted small">{{anzahl}}</span>
+                </summary>
+                {{> local_berufsbildung/einsatz_timeline_eintraege }}
+            </details>
+        {{/hasname}}
+        {{^hasname}}
+            {{> local_berufsbildung/einsatz_timeline_eintraege }}
+        {{/hasname}}
+    {{/gruppen}}
 </div>

@@ -4,17 +4,30 @@
  * nur Form, Groesse und Abstand, nie Farbwerte.
  */
 
+/*
+ * Semesterleiste: die Punkte gruppieren sich je Lehrjahr in einer Spalte -
+ * Punkte oben, Nummer des Lehrjahres darunter. Ohne diese Nummer und die
+ * vorangestellte Bezeichnung sind es nur Punkte mit Trennstrichen.
+ */
 .local-berufsbildung-stepper {
     display: flex;
-    align-items: center;
-    gap: 0.35rem;
+    align-items: flex-start;
+    gap: 0.5rem;
     margin: 0.5rem 0 1rem;
+}
+
+.local-berufsbildung-stepper-legende {
+    padding-top: 0.1rem;
+    font-size: 0.75rem;
+    line-height: 1;
 }
 
 .local-berufsbildung-stepper-lehrjahr {
     display: flex;
-    gap: 0.35rem;
-    padding-right: 0.35rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    padding-right: 0.5rem;
     border-right: 1px solid currentColor;
     opacity: 0.9;
 }
@@ -22,6 +35,19 @@
 .local-berufsbildung-stepper-lehrjahr:last-child {
     border-right: 0;
     padding-right: 0;
+}
+
+.local-berufsbildung-stepper-punkte {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    /* Haelt die Zeile gleich hoch, ob der grosse aktuelle Punkt drin ist oder nicht. */
+    min-height: 0.9rem;
+}
+
+.local-berufsbildung-stepper-marke {
+    font-size: 0.7rem;
+    line-height: 1;
 }
 
 .local-berufsbildung-stepper-punkt {
@@ -46,8 +72,69 @@
     height: 0.65rem;
 }
 
+.local-berufsbildung-stepper-kompakt .local-berufsbildung-stepper-punkte {
+    min-height: 0.65rem;
+}
+
+/*
+ * Kopfkarte: Einordnung links, Handlung rechts. Bei schmalem Fenster
+ * rutscht die Schaltflaeche unter die Einordnung, statt sie zu quetschen.
+ */
+.local-berufsbildung-herokarte-body {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.local-berufsbildung-herokarte-info {
+    flex: 1 1 20rem;
+    min-width: 0;
+}
+
+.local-berufsbildung-herokarte-aktionen {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+/*
+ * Schaltflaeche und zugehoeriger Hinweis stehen untereinander, buendig mit
+ * der Schaltflaeche. align-items begrenzt die Breite auf den Inhalt - ohne
+ * das wuerde der Button in einer Spalte auf die volle Breite gezogen.
+ */
+.local-berufsbildung-herokarte-aktion {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+}
+
 .local-berufsbildung-herokarte .local-berufsbildung-stepper {
     margin-top: 0.75rem;
+}
+
+.local-berufsbildung-einsatz-marke {
+    line-height: 1.2;
+}
+
+/*
+ * Visuell ausgeblendet, im Dokument vorhanden - fuer Screenreader bleibt
+ * der Text lesbar. Eigene Regel statt sr-only/visually-hidden, weil diese
+ * Klasse zwischen Bootstrap 4 (Moodle 4.5) und Bootstrap 5 (Moodle 5.x)
+ * den Namen wechselt.
+ */
+.local-berufsbildung-nurtext {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 .local-berufsbildung-nachweisgruppe:last-child {
@@ -62,6 +149,48 @@
     font-size: 1.05rem;
 }
 
+/*
+ * Versetzungsplan als Zeitstrahl, je Semester ein Aufklapper. Jede Gruppe
+ * traegt ihren eigenen Strang - der Schnitt zwischen zwei Semestern ist
+ * genau die Zaesur, die die Gliederung sichtbar machen soll. Der native
+ * Marker weicht einem eigenen Chevron, wie bei den Roster-Kacheln.
+ */
+.local-berufsbildung-timeline-gruppe + .local-berufsbildung-timeline-gruppe {
+    margin-top: 0.75rem;
+}
+
+.local-berufsbildung-timeline-gruppenkopf {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.2rem 0;
+    cursor: pointer;
+}
+
+.local-berufsbildung-timeline-gruppenkopf::-webkit-details-marker {
+    display: none;
+}
+
+.local-berufsbildung-timeline-chevron {
+    /* Auf der Breite des Strangs, damit die Koepfe untereinander stehen. */
+    width: 1rem;
+    flex-shrink: 0;
+    transition: transform 0.15s ease;
+}
+
+.local-berufsbildung-timeline-gruppe[open] .local-berufsbildung-timeline-chevron {
+    transform: rotate(90deg);
+}
+
+.local-berufsbildung-timeline-gruppenanzahl {
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+.local-berufsbildung-timeline-gruppe[open] .local-berufsbildung-timeline-liste {
+    margin-top: 0.35rem;
+}
+
 .local-berufsbildung-timeline-liste {
     position: relative;
     margin-left: 0.3rem;
@@ -70,13 +199,40 @@
     opacity: 0.95;
 }
 
+/*
+ * Kalenderwoche links, Bezeichnung rechts: eine Spalte, an der das Auge
+ * die Liste hinunterlaufen kann, statt jede Zeile von vorn zu lesen. Die
+ * Wochen stehen in Tabellenziffern, damit sie trotz unterschiedlicher
+ * Breite untereinander stehen.
+ */
 .local-berufsbildung-timeline-eintrag {
     position: relative;
-    padding-bottom: 0.6rem;
+    display: grid;
+    grid-template-columns: 5.25rem 1fr;
+    column-gap: 0.75rem;
+    align-items: start;
+    padding-bottom: 0.65rem;
 }
 
 .local-berufsbildung-timeline-eintrag:last-child {
     padding-bottom: 0;
+}
+
+.local-berufsbildung-timeline-kw {
+    padding-top: 0.1rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/*
+ * Auf schmalen Fenstern reicht die Breite nicht fuer zwei Spalten - dann
+ * steht die Woche ueber der Bezeichnung statt daneben.
+ */
+@media (max-width: 36rem) {
+    .local-berufsbildung-timeline-eintrag {
+        grid-template-columns: 1fr;
+        row-gap: 0.1rem;
+    }
 }
 
 .local-berufsbildung-timeline-punkt {
@@ -100,8 +256,13 @@
     font-weight: bold;
 }
 
+/*
+ * Vergangene Einsaetze treten zurueck, bleiben aber lesbar: die Historie
+ * ist der halbe Zweck der Liste. Das Zurueckgetretene traegt schon der
+ * Punkt in der Sekundaerfarbe.
+ */
 .local-berufsbildung-timeline-vergangen {
-    opacity: 0.7;
+    opacity: 0.85;
 }
 
 .local-berufsbildung-luecken-bereiche > .local-berufsbildung-luecken-bereich {
@@ -110,6 +271,244 @@
 
 .local-berufsbildung-luecken-bereich > .local-berufsbildung-luecken-liste {
     margin-left: 1.1rem;
+}
+
+/*
+ * Kompetenzauswahl eines Ausbildungsblocks: die Gliederung des
+ * Bildungsplans als verschachtelte <details>. Die nativen Marker bleiben
+ * stehen - sie sind hier die einzige Aufklapp-Anzeige, anders als bei den
+ * Roster-Karten mit eigenem Chevron.
+ */
+.local-berufsbildung-auswahl-bereichkopf,
+.local-berufsbildung-auswahl-lkkopf {
+    cursor: pointer;
+}
+
+.local-berufsbildung-auswahl-bereichname,
+.local-berufsbildung-auswahl-hkname {
+    font-weight: 600;
+}
+
+.local-berufsbildung-auswahl-hk {
+    padding: 0.3rem 0;
+}
+
+/*
+ * Der Aufklapper der Leistungskriterien steht unter dem Namen seiner
+ * Handlungskompetenz, nicht unter deren Checkbox - eingerueckt um Breite
+ * und Abstand der Checkbox.
+ */
+.local-berufsbildung-auswahl-lk {
+    margin-left: 1.65rem;
+}
+
+.local-berufsbildung-auswahl-eintraege {
+    margin: 0.2rem 0 0.6rem 1.5rem;
+}
+
+/*
+ * Code und Beschreibung eines Leistungskriteriums in einer Zeile: der
+ * Code bricht nie um, der Text dahinter schon.
+ */
+.local-berufsbildung-auswahl-lkcode {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.local-berufsbildung-auswahl-lktext {
+    margin-left: 0.35rem;
+}
+
+.local-berufsbildung-auswahl-eintrag {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    padding: 0.1rem 0;
+}
+
+.local-berufsbildung-auswahl-eintrag .form-check-input {
+    position: static;
+    margin: 0.3rem 0 0;
+}
+
+.local-berufsbildung-auswahl-fuss {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.local-berufsbildung-auswahl-fuss select {
+    width: auto;
+}
+
+/*
+ * Kompetenzraster: Handlungskompetenzbereiche als Zeilen,
+ * Handlungskompetenzen als Spalten - dieselbe Anordnung wie im gedruckten
+ * Bildungsplan. table-layout: fixed haelt die Spalten untereinander
+ * buendig, auch wenn die Bereiche unterschiedlich viele Kompetenzen haben.
+ */
+.local-berufsbildung-raster-tabelle {
+    table-layout: fixed;
+    min-width: 52rem;
+}
+
+.local-berufsbildung-raster-kompakt .local-berufsbildung-raster-tabelle {
+    min-width: 0;
+}
+
+.local-berufsbildung-raster-tabelle th,
+.local-berufsbildung-raster-tabelle td {
+    vertical-align: top;
+}
+
+/*
+ * Nicht jeder Bereich hat gleich viele Handlungskompetenzen. Die Felder,
+ * mit denen die kuerzeren Zeilen enden, tragen keinen Rahmen: mit Rahmen
+ * lesen sie sich wie fehlende Daten statt wie das Ende der Zeile.
+ */
+.local-berufsbildung-raster-tabelle td.local-berufsbildung-raster-leer {
+    border: 0;
+}
+
+.local-berufsbildung-raster-bereich {
+    width: 11rem;
+    padding: 0.4rem 0.5rem !important;
+    font-weight: 600;
+}
+
+.local-berufsbildung-raster-kompakt .local-berufsbildung-raster-bereich {
+    width: 5.5rem;
+    font-size: 0.8rem;
+}
+
+/*
+ * Die Flaeche liegt als eigene Ebene unter dem Text, damit ihre Deckung
+ * den Ausbildungsstand zeigen kann, ohne die Lesbarkeit der Beschriftung
+ * anzutasten. Die Farbe selbst kommt ueber eine Bootstrap-Klasse im
+ * Markup - siehe Kopfkommentar dieser Datei.
+ */
+.local-berufsbildung-raster-zelle {
+    position: relative;
+    padding: 0.4rem 0.5rem !important;
+}
+
+.local-berufsbildung-raster-fuellung {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+/*
+ * Die Deckung traegt den Ausbildungsstand: je weiter eine Kompetenz ist,
+ * desto kraeftiger ihre Flaeche. Die Stufen liegen so weit auseinander,
+ * dass man sie ueber eine Zeile hinweg unterscheidet, und so tief, dass
+ * die dunkle Beschriftung darauf lesbar bleibt - bg-warning und bg-success
+ * sind bei diesen Werten hell genug fuer Text in Vordergrundfarbe.
+ */
+.local-berufsbildung-raster-abgedeckt > .local-berufsbildung-raster-fuellung {
+    opacity: 0.55;
+}
+
+.local-berufsbildung-raster-eingeplant > .local-berufsbildung-raster-fuellung {
+    opacity: 0.3;
+}
+
+.local-berufsbildung-raster-offen > .local-berufsbildung-raster-fuellung {
+    opacity: 0.1;
+}
+
+.local-berufsbildung-raster-inhalt {
+    position: relative;
+    display: block;
+    line-height: 1.25;
+}
+
+.local-berufsbildung-raster-kopf {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.local-berufsbildung-raster-name {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.8rem;
+}
+
+.local-berufsbildung-raster-status {
+    display: block;
+    margin-top: 0.15rem;
+    opacity: 0.75;
+}
+
+/*
+ * Eine Kompetenz, die im Plan nicht vorkommt, tritt zurueck: kein Symbol,
+ * kein Statustext (siehe kompetenzraster.mustache), und der Name blasser
+ * als bei den Zellen, die etwas aussagen.
+ */
+.local-berufsbildung-raster-offen .local-berufsbildung-raster-name {
+    opacity: 0.7;
+}
+
+/*
+ * Kompakte Variante fuer die Roster-Karten: nur Kuerzel und Symbol. Name
+ * und Stand bleiben im Dokument und damit fuer Screenreader lesbar, sind
+ * aber visuell ausgeblendet - dieselbe Technik wie
+ * .local-berufsbildung-nurtext weiter oben.
+ */
+.local-berufsbildung-raster-kompakt .local-berufsbildung-raster-name,
+.local-berufsbildung-raster-kompakt .local-berufsbildung-raster-status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.local-berufsbildung-raster-legende {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.15rem 0.9rem;
+}
+
+.local-berufsbildung-raster-legendeneintrag {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+/* Dieselbe Deckung wie eine abgedeckte Zelle - die Legende soll aussehen
+   wie das, was sie erklaert. */
+.local-berufsbildung-raster-legendenfarbe {
+    display: inline-block;
+    width: 0.8rem;
+    height: 0.8rem;
+    border-radius: 0.15rem;
+    opacity: 0.55;
+}
+
+/*
+ * Platzhalter fuer den Stand, der in der Zelle gerade kein Zeichen traegt
+ * ("nicht im Plan"). Haelt die Texte der Legende untereinander buendig,
+ * ohne ein Symbol zu zeigen, das im Raster nirgends steht.
+ */
+.local-berufsbildung-raster-legendenleer {
+    display: inline-block;
+    width: 0.8rem;
+    height: 0.8rem;
+    border: 1px dashed currentColor;
+    border-radius: 0.15rem;
+    opacity: 0.5;
 }
 
 /*
@@ -147,23 +546,47 @@
     gap: 0.5rem;
 }
 
+/*
+ * Ein .form-control ist in Bootstrap 100 % breit. In der Filterleiste
+ * draengt das Suchfeld damit Beruf-Auswahl und Schaltflaeche in eine
+ * zweite Zeile, obwohl daneben die halbe Seite frei ist.
+ */
+.local-berufsbildung-roster-toolbar-filter .form-control,
+.local-berufsbildung-roster-toolbar-filter select {
+    flex: 0 1 16rem;
+    width: auto;
+}
+
 .local-berufsbildung-roster-toolbar-summary {
     white-space: nowrap;
 }
 
+/*
+ * Eine Person je Zeile ueber die volle Breite, nicht ein Raster schmaler
+ * Kacheln. Die Details einer Person - Lueckenliste und Kompetenzraster -
+ * sind breite Inhalte; in einer 300-px-Spalte bricht die Rasterzeile
+ * zeichenweise um und die Kuerzel laufen ineinander. Ausgeklappt steht
+ * jetzt dieselbe Darstellung wie auf "Meine Lehre" zur Verfuegung.
+ */
 .local-berufsbildung-roster-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
+    display: flex;
+    flex-direction: column;
 }
 
 .local-berufsbildung-kachel {
     padding: 0;
 }
 
+/*
+ * Kopfzeile einer Person: Initialen, Name mit Ausbildungsstand, dann
+ * rechtsbuendig Semesterleiste, Kennzahlen und Chevron. Alles auf einer
+ * Zeile - bei voller Breite muss "Automatiker/in EFZ, 1. Lehrjahr
+ * (Semester 1)" nicht mehr ueber fuenf Zeilen umbrechen.
+ */
 .local-berufsbildung-kachel-summary {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
+    flex-wrap: wrap;
     gap: 0.75rem;
     cursor: pointer;
 }
@@ -172,20 +595,40 @@
     display: none;
 }
 
+/*
+ * Profilbild und Initialen-Ersatz stehen an derselben Stelle und muessen
+ * deshalb dieselbe Flaeche einnehmen - sonst springt die Namensspalte je
+ * nachdem, ob eine Person ein Bild hinterlegt hat.
+ */
+.local-berufsbildung-kachel-avatar,
+.local-berufsbildung-kachel-bild {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
 .local-berufsbildung-kachel-avatar {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 50%;
     font-weight: 600;
     font-size: 0.85rem;
-    flex-shrink: 0;
 }
 
+/* Moodle liefert quadratische Bilder aus; cover faengt Abweichungen ab,
+   ohne das Gesicht zu verzerren. */
+.local-berufsbildung-kachel-bild {
+    object-fit: cover;
+}
+
+/*
+ * Nimmt den freien Platz und schiebt Semesterleiste, Kennzahlen und
+ * Chevron nach rechts. Die Grundbreite verhindert, dass der Name auf
+ * schmalen Fenstern zusammenfaellt, statt dass die Zeile umbricht.
+ */
 .local-berufsbildung-kachel-info {
-    flex: 1;
+    flex: 1 1 14rem;
     min-width: 0;
 }
 
@@ -205,10 +648,46 @@
     flex-shrink: 0;
 }
 
+/*
+ * Der laufende Ausbildungsblock als eigene Spalte fester Breite: so steht
+ * er ueber alle Zeilen hinweg untereinander und laesst sich vergleichen.
+ * Blockbezeichnungen sind lang ("ueK 3 - Niederspannungssteuerungen und
+ * Leiterplattentechnik") und werden deshalb abgeschnitten - vollstaendig
+ * stehen sie im Titel.
+ */
+.local-berufsbildung-kachel-einsatz {
+    flex: 0 1 14rem;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/*
+ * Die Semesterleiste steht zwischen Name und Kennzahlen, nicht unter dem
+ * Namen: dort ist sie der Fortschrittsbalken der Zeile.
+ */
+.local-berufsbildung-kachel-summary .local-berufsbildung-stepper {
+    margin: 0;
+    flex-shrink: 0;
+}
+
 .local-berufsbildung-kachel-chevron {
     flex-shrink: 0;
     align-self: center;
     transition: transform 0.15s ease;
+}
+
+/*
+ * Die offenen Kompetenzen stehen nach Bereich gruppiert. Bei voller
+ * Breite nebeneinander statt in einer Spalte untereinander - vier kurze
+ * Bloecke liest man auf einen Blick, zwanzig Zeilen nicht.
+ */
+.local-berufsbildung-luecken-bereiche {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 0.25rem 1.5rem;
+    align-items: start;
 }
 
 .local-berufsbildung-kachel[open] .local-berufsbildung-kachel-chevron {

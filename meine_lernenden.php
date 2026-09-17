@@ -21,9 +21,11 @@
  *
  * Sortiert nach laufendem Semester, dann nach Namen (siehe
  * output\lernenden_roster::sortiere()), durchsuchbar nach Namen und
- * filterbar nach Beruf. Jede Person ist eine kompakte Kachel - Details
- * (Luecken-Aufschluesselung, volle Taetigkeitenliste, Profil-Link)
- * stehen erst auf Wunsch (natives <details>-Element, kein JavaScript).
+ * filterbar nach Beruf. Jede Person ist eine Zeile ueber die volle Breite -
+ * Details (Luecken-Aufschluesselung, Kompetenzraster, Taetigkeitenliste,
+ * Profil-Link) stehen erst auf Wunsch (natives <details>-Element, kein
+ * JavaScript). Volle Breite, weil das Kompetenzraster ein breiter Inhalt
+ * ist: in einer Kachelspalte bricht es zeichenweise um.
  *
  * @package    local_berufsbildung
  * @copyright  2026 jsAce7
@@ -34,6 +36,7 @@ require_once(__DIR__ . '/../../config.php');
 
 use local_berufsbildung\api;
 use local_berufsbildung\nachweis\collector;
+use local_berufsbildung\output\kompetenzraster;
 use local_berufsbildung\output\lernenden_kachel;
 use local_berufsbildung\output\lernenden_roster;
 use local_berufsbildung\output\luecken_liste;
@@ -51,9 +54,13 @@ $titel = get_string('nav:meine_lernenden', 'local_berufsbildung');
 $PAGE->set_title($titel);
 $PAGE->set_heading($titel);
 
+// Der volle Datensatz bleibt stehen, nicht nur der Name: das Profilbild
+// haengt daran und kostet so keine zweite Abfrage je Person.
+$nutzer = [];
 $namen = [];
 foreach (api::get_lernende_for($berufsbildnerid) as $lernendeid) {
-    $namen[$lernendeid] = fullname(core_user::get_user($lernendeid, '*', MUST_EXIST));
+    $nutzer[$lernendeid] = core_user::get_user($lernendeid, '*', MUST_EXIST);
+    $namen[$lernendeid] = fullname($nutzer[$lernendeid]);
 }
 core_collator::asort($namen);
 
@@ -92,15 +99,26 @@ if (empty($eintraege)) {
     $collector = new collector();
     $quellennamen = $collector->get_quelle_namen();
 
-    // Anzahl offener Luecken je Person - vorab fuer den gesamten Bestand
-    // berechnet (nicht nur die aktuell gefilterte Auswahl), damit die
-    // Zusammenfassung in der Toolbar unabhaengig von Suche/Filter bleibt.
+    // Kompetenzstand je Person - vorab fuer den gesamten Bestand berechnet
+    // (nicht nur die aktuell gefilterte Auswahl), damit die Zusammenfassung
+    // in der Toolbar unabhaengig von Suche/Filter bleibt.
+    //
+    // Einmal das Raster, daraus beides: die Zahl fuer die Kachel und
+    // weiter unten Lueckenliste wie Raster. Sonst liefe dieselbe
+    // Auswertung je Person mehrfach.
+    $raster = [];
     $anzahlluecken = [];
     foreach ($eintraege as $eintrag) {
         $stand = $eintrag['stand'];
-        $anzahlluecken[$eintrag['id']] = ($stand !== null && api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null)
-            ? count(api::get_luecken($eintrag['id']))
-            : 0;
+        $raster[$eintrag['id']] = ($stand !== null && api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null)
+            ? api::get_kompetenzraster($eintrag['id'])
+            : [];
+
+        $offen = 0;
+        foreach (api::abdeckung_aus_raster($raster[$eintrag['id']]) as $abdeckung) {
+            $offen += count($abdeckung->luecken);
+        }
+        $anzahlluecken[$eintrag['id']] = $offen;
     }
     $anzahlmitluecken = count(array_filter($anzahlluecken, static fn (int $anzahl): bool => $anzahl > 0));
 
@@ -138,6 +156,11 @@ if (empty($eintraege)) {
     );
     echo html_writer::end_tag('form');
 
+    // Blockbezeichnungen einmal je Block, nicht einmal je Person: in einem
+    // Roster stehen typischerweise mehrere Lernende im selben ueK oder in
+    // derselben Abteilung.
+    $blocknamen = [];
+
     $gefiltert = lernenden_roster::filtere($eintraege, $suchbegriff, $berufsfilter);
 
     if (empty($gefiltert)) {
@@ -152,12 +175,25 @@ if (empty($eintraege)) {
 
         ob_start();
 
-        if ($stand !== null && api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null) {
-            echo luecken_liste::render(api::get_luecken_nach_bereich($lernendeid), kompakt: false);
+        if (!empty($raster[$lernendeid])) {
+            // Beides, anders als auf meine_lehre.php: die Lueckenliste
+            // beantwortet die Planungsfrage "was muss ich noch einplanen"
+            // als kurze Aufzaehlung, das Raster zeigt daneben die ganze
+            // Karte. Fuer die lernende Person waere das doppelt - sie
+            // plant nicht, sie schaut nach, wo sie steht.
+            echo luecken_liste::render(api::abdeckung_aus_raster($raster[$lernendeid]), kompakt: false);
+            echo html_writer::div(
+                kompetenzraster::render($raster[$lernendeid], api::get_planungshorizont($lernendeid)),
+                'mb-3'
+            );
         }
 
         $nachweise = $collector->get_nachweise($berufsbildnerid, $lernendeid, 0, time());
-        echo nachweis_liste::render($nachweise, $quellennamen);
+        echo nachweis_liste::render(
+            $nachweise,
+            $quellennamen,
+            titel: get_string('nachweis:titel', 'local_berufsbildung')
+        );
 
         $profilurl = new moodle_url('/user/profile.php', ['id' => $lernendeid]);
         echo html_writer::div(html_writer::link(
@@ -167,12 +203,44 @@ if (empty($eintraege)) {
 
         $detailhtml = ob_get_clean();
 
+        // Das Profilbild nur, wenn wirklich eines hinterlegt ist. Ohne
+        // Bild liefert Moodle fuer alle dieselbe graue Silhouette - vier
+        // identische Silhouetten untereinander unterscheiden sich
+        // schlechter als "GH / NW / NN / RS". Ohne Verlinkung, weil ein
+        // Link im <summary> bei jedem Klick zugleich auf- und zuklappen
+        // wuerde; der Weg ins Profil steht im Detailbereich. Nicht fuer
+        // Screenreader, weil der Name unmittelbar daneben steht.
+        $bildhtml = !empty($nutzer[$lernendeid]->picture)
+            ? $OUTPUT->user_picture($nutzer[$lernendeid], [
+                'size' => 40,
+                'link' => false,
+                'visibletoscreenreaders' => false,
+                'class' => 'userpicture local-berufsbildung-kachel-bild',
+            ])
+            : null;
+
+        // "Wo steht die Person gerade" - beim Blick auf den Roster die
+        // erste Frage. Der Plan ist ein Spiegel (Architekturregel 5):
+        // gezeigt wird, was zuletzt importiert wurde. Laeuft zum Stichtag
+        // kein Einsatz, bleibt die Spalte leer.
+        $einsatz = api::get_aktueller_einsatz($lernendeid);
+        $einsatzname = null;
+        if ($einsatz !== null) {
+            $blockid = (int) $einsatz->get('blockid');
+            if (!array_key_exists($blockid, $blocknamen)) {
+                $blocknamen[$blockid] = api::get_block_name($blockid);
+            }
+            $einsatzname = $blocknamen[$blockid];
+        }
+
         echo lernenden_kachel::render(
             $eintrag['name'],
             $stand,
             $anzahlluecken[$lernendeid],
             count($nachweise),
-            $detailhtml
+            $detailhtml,
+            bildhtml: $bildhtml,
+            einsatzname: $einsatzname
         );
     }
 

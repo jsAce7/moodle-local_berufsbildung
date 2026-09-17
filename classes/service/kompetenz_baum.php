@@ -32,9 +32,10 @@ use core_competency\competency;
  * Unsere Kompetenzrahmen sind dreistufig aufgebaut:
  * Handlungskompetenzbereich -> Handlungskompetenz -> Leistungskriterium
  * (LK). Diese Klasse trennt die Ebenen eines Rahmens auseinander: die
- * Blattknoten (LK) fuer die Blockzuordnung (block_kompetenzen.php, siehe
- * classes/persistent/block_lk.php) und die mittlere Ebene (HK) fuer die
- * Luecken-Analyse (luecken_analyse.php).
+ * Blattknoten (LK) und die mittlere Ebene (HK) fuer die Luecken-Analyse
+ * (raster_analyse.php), sowie den vollstaendigen Baum fuer die
+ * Blockzuordnung (block_kompetenzen.php, siehe
+ * classes/persistent/block_lk.php).
  */
 class kompetenz_baum {
     /**
@@ -63,50 +64,102 @@ class kompetenz_baum {
     }
 
     /**
-     * Beschriftungen fuer die Blattknoten (LK) eines Rahmens, jeweils mit
-     * der uebergeordneten Handlungskompetenz als Praefix und der idnumber
-     * dahinter.
+     * Der Rahmen als Baum, so wie er im Bildungsplan gegliedert ist:
+     * Handlungskompetenzbereiche, darunter ihre Handlungskompetenzen,
+     * darunter deren Leistungskriterien.
      *
-     * Der shortname eines LK allein ist in der Praxis nicht sprechend
-     * genug - dieselbe Formulierung kommt in mehreren Handlungskompetenzen
-     * vor. Mit HK davor bleibt jeder Eintrag in der Auswahlliste von
-     * block_kompetenzen.php eindeutig und ueber beide Ebenen durchsuchbar.
+     * Eine flache Liste taugt fuer die Auswahl nicht: dieselbe
+     * LK-Bezeichnung kommt unter mehreren Handlungskompetenzen vor und ist
+     * ohne ihren Platz im Rahmen nicht zu unterscheiden. Im Baum steht
+     * jedes LK unter seiner HK, damit ist es eindeutig.
      *
-     * Die Werte sind unformatiert: die aufrufende Seite schickt sie durch
-     * format_string().
+     * Die Reihenfolge ist die der uebergebenen Liste - wer die Gliederung
+     * des Bildungsplans will, uebergibt nach 'sortorder' sortiert.
      *
      * @param competency[] $kompetenzen Alle Kompetenzen eines Rahmens
-     * @return array<int, string> LK-id => Beschriftung, natuerlich sortiert
+     * @return array<int, array{bereich: competency, handlungskompetenzen: array}>
      */
-    public function blatt_beschriftungen(array $kompetenzen): array {
-        $namen = [];
+    public function baum(array $kompetenzen): array {
+        $kinder = [];
         foreach ($kompetenzen as $kompetenz) {
-            $namen[(int) $kompetenz->get('id')] = (string) $kompetenz->get('shortname');
+            $kinder[(int) $kompetenz->get('parentid')][] = $kompetenz;
         }
 
-        $beschriftungen = [];
-        foreach ($this->nur_blaetter($kompetenzen) as $blatt) {
-            $beschriftung = (string) $blatt->get('shortname');
-
-            $idnumber = (string) $blatt->get('idnumber');
-            if ($idnumber !== '') {
-                $beschriftung .= ' (' . $idnumber . ')';
+        $baum = [];
+        foreach ($kinder[0] ?? [] as $bereich) {
+            $handlungskompetenzen = [];
+            foreach ($kinder[(int) $bereich->get('id')] ?? [] as $handlungskompetenz) {
+                $handlungskompetenzen[] = [
+                    'kompetenz' => $handlungskompetenz,
+                    // Ueber nur_blaetter() statt der direkten Kinder: ein
+                    // Rahmen mit einer Zwischenebene mehr faellt so nicht
+                    // hinten runter.
+                    'leistungskriterien' => $this->nur_blaetter(
+                        $this->nachfahren($handlungskompetenz, $kinder)
+                    ),
+                ];
             }
 
-            $elternid = (int) $blatt->get('parentid');
-            if (isset($namen[$elternid])) {
-                $beschriftung = $namen[$elternid] . ': ' . $beschriftung;
-            }
-
-            $beschriftungen[(int) $blatt->get('id')] = $beschriftung;
+            $baum[] = ['bereich' => $bereich, 'handlungskompetenzen' => $handlungskompetenzen];
         }
 
-        // Sortierung ueber die fertige Beschriftung, damit die LK einer
-        // Handlungskompetenz in der Auswahlliste beieinander stehen - die
-        // Reihenfolge der uebergebenen Liste tut das nicht.
-        asort($beschriftungen, SORT_NATURAL | SORT_FLAG_CASE);
+        return $baum;
+    }
 
-        return $beschriftungen;
+    /**
+     * Kurzes Kuerzel aus der ID-Nummer, als Anker zum gedruckten
+     * Bildungsplan: aus "7777BE b.07" wird "b.07".
+     *
+     * Die ID-Nummern tragen den Rahmen als Praefix, der in jeder Zeile
+     * derselbe waere und nur Platz kostet. Uebrig bleibt der Teil, den
+     * auch der Bildungsplan verwendet. Enthaelt die ID-Nummer kein
+     * Leerzeichen, steht sie unveraendert da.
+     *
+     * Unformatiert - die aufrufende Seite schickt den Wert durch
+     * format_string().
+     *
+     * @param competency $kompetenz
+     */
+    public static function kuerzel(competency $kompetenz): string {
+        return self::kuerzel_aus_idnumber((string) $kompetenz->get('idnumber'));
+    }
+
+    /**
+     * Dasselbe Kuerzel, aber aus einer ID-Nummer statt aus einer Kompetenz -
+     * fuer Angaben, die von aussen kommen und nicht aus dem Rahmen, etwa
+     * die Wahlpflicht-Einstellung.
+     *
+     * Die Schreibweise bleibt, wie sie ist: wer das Kuerzel zum Vergleich
+     * braucht und nicht zur Anzeige, schreibt beide Seiten selbst klein.
+     *
+     * @param string $idnumber
+     */
+    public static function kuerzel_aus_idnumber(string $idnumber): string {
+        $idnumber = trim($idnumber);
+        if ($idnumber === '') {
+            return '';
+        }
+
+        $teile = preg_split('/\s+/', $idnumber);
+
+        return (string) end($teile);
+    }
+
+    /**
+     * Alle Kompetenzen unterhalb eines Knotens, ueber beliebig viele Ebenen.
+     *
+     * @param competency $knoten
+     * @param competency[] $kinder parentid => direkte Kinder
+     * @return competency[]
+     */
+    private function nachfahren(competency $knoten, array $kinder): array {
+        $nachfahren = [];
+        foreach ($kinder[(int) $knoten->get('id')] ?? [] as $kind) {
+            $nachfahren[] = $kind;
+            $nachfahren = array_merge($nachfahren, $this->nachfahren($kind, $kinder));
+        }
+
+        return $nachfahren;
     }
 
     /**

@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace local_berufsbildung\service;
 
 use advanced_testcase;
+use core_competency\competency;
 
 /**
  * Tests fuer kompetenz_baum.
@@ -89,12 +90,12 @@ final class kompetenz_baum_test extends advanced_testcase {
     }
 
     /**
-     * Die Auswahlliste in block_kompetenzen.php braucht die
-     * Handlungskompetenz als Praefix und die idnumber dahinter, sonst sind
-     * gleich benannte LK aus verschiedenen HK nicht unterscheidbar. Die
-     * Reihenfolge kommt aus der Beschriftung, nicht aus der Eingabeliste.
+     * Der Baum fuer die Auswahl in block_kompetenzen.php: Bereiche mit
+     * ihren Handlungskompetenzen und den LK darunter. Die Reihenfolge ist
+     * die der uebergebenen Liste, nicht das Alphabet - nur so folgt die
+     * Auswahl der Gliederung des Bildungsplans.
      */
-    public function test_blatt_beschriftungen_haben_hk_praefix_und_idnumber(): void {
+    public function test_baum_gliedert_nach_bereich_und_handlungskompetenz(): void {
         $this->resetAfterTest();
 
         $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
@@ -109,87 +110,134 @@ final class kompetenz_baum_test extends advanced_testcase {
             'competencyframeworkid' => $rahmen->get('id'),
             'parentid' => $hkb->get('id'),
             'shortname' => 'a1 Kundengespraech',
-            'idnumber' => 'a1',
+            'idnumber' => '7777BE a.01',
         ]);
         $hk2 = $generator->create_competency([
             'competencyframeworkid' => $rahmen->get('id'),
             'parentid' => $hkb->get('id'),
             'shortname' => 'a2 Offerten',
-            'idnumber' => 'a2',
-        ]);
-        $lk2 = $generator->create_competency([
-            'competencyframeworkid' => $rahmen->get('id'),
-            'parentid' => $hk2->get('id'),
-            'shortname' => 'Angebot erstellen',
-            'idnumber' => 'a2.1',
+            'idnumber' => '7777BE a.02',
         ]);
         $lk1 = $generator->create_competency([
             'competencyframeworkid' => $rahmen->get('id'),
             'parentid' => $hk1->get('id'),
-            'shortname' => 'Bedarf klaeren',
-            'idnumber' => 'a1.1',
+            'shortname' => 'AU a1 01 1-2',
         ]);
-
-        // Absichtlich in der "falschen" Reihenfolge uebergeben.
-        $beschriftungen = (new kompetenz_baum())->blatt_beschriftungen([$hkb, $hk1, $hk2, $lk2, $lk1]);
-
-        $this->assertSame([
-            (int) $lk1->get('id') => 'a1 Kundengespraech: Bedarf klaeren (a1.1)',
-            (int) $lk2->get('id') => 'a2 Offerten: Angebot erstellen (a2.1)',
-        ], $beschriftungen);
-    }
-
-    /**
-     * Randfall: Blatt auf oberster Ebene - es gibt keine Handlungskompetenz
-     * davor, die Beschriftung darf deswegen nicht mit einem Trenner
-     * beginnen.
-     */
-    public function test_blatt_beschriftungen_ohne_eltern_ohne_praefix(): void {
-        $this->resetAfterTest();
-
-        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
-        $rahmen = $generator->create_framework(['idnumber' => 'flach-2022']);
-        $eins = $generator->create_competency([
+        $lk2 = $generator->create_competency([
             'competencyframeworkid' => $rahmen->get('id'),
-            'shortname' => 'Werkzeuge instand halten',
-            'idnumber' => 'w1',
+            'parentid' => $hk2->get('id'),
+            'shortname' => 'AU a2 01 1-2',
         ]);
+
+        $baum = (new kompetenz_baum())->baum([$hkb, $hk1, $hk2, $lk1, $lk2]);
+
+        $this->assertCount(1, $baum);
+        $this->assertSame((int) $hkb->get('id'), (int) $baum[0]['bereich']->get('id'));
+
+        $handlungskompetenzen = $baum[0]['handlungskompetenzen'];
+        $this->assertCount(2, $handlungskompetenzen);
+
+        // Reihenfolge wie uebergeben, nicht alphabetisch neu sortiert.
+        $this->assertSame((int) $hk1->get('id'), (int) $handlungskompetenzen[0]['kompetenz']->get('id'));
+        $this->assertSame((int) $hk2->get('id'), (int) $handlungskompetenzen[1]['kompetenz']->get('id'));
 
         $this->assertSame(
-            [(int) $eins->get('id') => 'Werkzeuge instand halten (w1)'],
-            (new kompetenz_baum())->blatt_beschriftungen([$eins])
+            [(int) $lk1->get('id')],
+            array_map(
+                static fn ($lk): int => (int) $lk->get('id'),
+                $handlungskompetenzen[0]['leistungskriterien']
+            )
+        );
+        $this->assertSame(
+            [(int) $lk2->get('id')],
+            array_map(
+                static fn ($lk): int => (int) $lk->get('id'),
+                $handlungskompetenzen[1]['leistungskriterien']
+            )
         );
     }
 
     /**
-     * Randfall: der Elternknoten ist nicht Teil der uebergebenen Liste.
-     * Dann fehlt der Praefix, statt dass die Beschriftung ausfaellt.
+     * Randfall: eine Handlungskompetenz ohne Leistungskriterien darf nicht
+     * verschwinden - sie bleibt als Ganzes auswaehlbar.
      */
-    public function test_blatt_beschriftungen_bei_unbekanntem_eltern_ohne_praefix(): void {
+    public function test_baum_haelt_handlungskompetenz_ohne_leistungskriterien(): void {
         $this->resetAfterTest();
 
         $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
         $rahmen = $generator->create_framework(['idnumber' => 'au-2022']);
+        $hkb = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id')]);
         $hk = $generator->create_competency([
             'competencyframeworkid' => $rahmen->get('id'),
-            'shortname' => 'a1 Kundengespraech',
-            'idnumber' => 'a1',
-        ]);
-        $lk = $generator->create_competency([
-            'competencyframeworkid' => $rahmen->get('id'),
-            'parentid' => $hk->get('id'),
-            'shortname' => 'Bedarf klaeren',
-            'idnumber' => 'a1.1',
+            'parentid' => $hkb->get('id'),
         ]);
 
+        $baum = (new kompetenz_baum())->baum([$hkb, $hk]);
+
+        $this->assertCount(1, $baum[0]['handlungskompetenzen']);
+        $this->assertSame([], $baum[0]['handlungskompetenzen'][0]['leistungskriterien']);
+    }
+
+    /**
+     * Randfall: eine Ebene mehr als die ueblichen drei. Die Blaetter
+     * gehoeren dann trotzdem zu ihrer Handlungskompetenz, statt dass die
+     * Zwischenebene als Leistungskriterium erscheint.
+     */
+    public function test_baum_holt_blaetter_auch_aus_tieferen_ebenen(): void {
+        $this->resetAfterTest();
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework(['idnumber' => 'tief-2022']);
+        $hkb = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id')]);
+        $hk = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'parentid' => $hkb->get('id'),
+        ]);
+        $zwischen = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'parentid' => $hk->get('id'),
+        ]);
+        $blatt = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'parentid' => $zwischen->get('id'),
+        ]);
+
+        $baum = (new kompetenz_baum())->baum([$hkb, $hk, $zwischen, $blatt]);
+
         $this->assertSame(
-            [(int) $lk->get('id') => 'Bedarf klaeren (a1.1)'],
-            (new kompetenz_baum())->blatt_beschriftungen([$lk])
+            [(int) $blatt->get('id')],
+            array_map(
+                static fn ($lk): int => (int) $lk->get('id'),
+                $baum[0]['handlungskompetenzen'][0]['leistungskriterien']
+            )
         );
     }
 
-    public function test_blatt_beschriftungen_bei_leerer_liste_ist_leer(): void {
-        $this->assertSame([], (new kompetenz_baum())->blatt_beschriftungen([]));
+    public function test_baum_bei_leerer_liste_ist_leer(): void {
+        $this->assertSame([], (new kompetenz_baum())->baum([]));
+    }
+
+    /**
+     * Das Kuerzel ist der Anker zum gedruckten Bildungsplan: der
+     * Rahmen-Praefix faellt weg, der Rest bleibt. Ohne Leerzeichen bleibt
+     * die ID-Nummer unveraendert, ohne ID-Nummer entfaellt sie ganz.
+     */
+    public function test_kuerzel_schneidet_den_rahmenpraefix_ab(): void {
+        // Ohne Datenbank: kuerzel() liest nur die idnumber, und eine leere
+        // idnumber liesse sich ueber den Generator nicht sauber erzeugen -
+        // der Unique-Index gilt je Rahmen.
+        $this->assertSame(
+            'b.07',
+            kompetenz_baum::kuerzel(new competency(0, (object) ['idnumber' => '7777BE b.07']))
+        );
+        $this->assertSame(
+            'b07',
+            kompetenz_baum::kuerzel(new competency(0, (object) ['idnumber' => 'b07']))
+        );
+        $this->assertSame(
+            '',
+            kompetenz_baum::kuerzel(new competency(0, (object) ['idnumber' => '']))
+        );
     }
 
     /**

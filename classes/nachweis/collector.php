@@ -157,10 +157,18 @@ class collector {
                 continue;
             }
 
+            // Der Hinweis ist optional und wird erst nach der URL geholt:
+            // ohne Erfassung gibt es keine Aktion, an der er haengen koennte
+            // - und keinen Grund, die Quelle dafuer rechnen zu lassen.
+            $hinweis = $einzelprovider instanceof quelle_mit_hinweis
+                ? $einzelprovider->get_erfassen_hinweis($lernendeid)
+                : null;
+
             $aktionen[] = new erfassen_aktion(
                 $einzelprovider->get_quelle_key(),
                 $einzelprovider->get_erfassen_label(),
-                $url->out(false)
+                $url->out(false),
+                $hinweis
             );
         }
 

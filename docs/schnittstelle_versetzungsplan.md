@@ -49,7 +49,11 @@ Moodle fasst aufeinanderfolgende Wochen mit demselben Block dann selbst zusammen
 
 ## 2. Regeln für den Inhalt
 
-**Vollständigkeit.** Jede Lieferung enthält den **gesamten** aktuellen Plan aller Lernenden, nicht nur Änderungen. Moodle ersetzt den Bestand vollständig. Teillieferungen würden dazu führen, dass in der Excel gelöschte Einsätze in Moodle stehen bleiben.
+**Vollständigkeit.** Jede Lieferung enthält den **gesamten** aktuellen Plan aller Lernenden für den gelieferten Zeitraum, nicht nur Änderungen. Teillieferungen innerhalb des Zeitraums würden dazu führen, dass in der Excel gelöschte Einsätze in Moodle stehen bleiben.
+
+**Zeitraum der Lieferung.** Der Plan muss nicht die ganze Lehrzeit umfassen; in der Praxis deckt er ein Planungsjahr ab. Moodle ersetzt je Person genau den Zeitraum, den ihre gelieferten Zeilen aufspannen — von der frühesten `kw_von` bis zur spätesten `kw_bis`. Einsätze **ausserhalb** dieses Zeitraums bleiben unangetastet, damit sich die Historie über aufeinanderfolgende Lieferungen zur vollen Lehrzeit ergänzt. Darauf stützt sich die Lückenanalyse: Sie rechnet über die gesamte bisherige Ausbildung, nicht nur über die letzte Lieferung.
+
+Daraus folgt für das liefernde Skript: Einen Einsatz zu entfernen, heisst, den Zeitraum weiterhin mitzuliefern — nur ohne diese Zeile. Wird ein ganzes Jahr nicht mehr geliefert, bleibt es in Moodle so stehen, wie es zuletzt geliefert wurde.
 
 **Das Skript filtert nicht.** Es liefert alle Lernenden, unabhängig davon, wer im Plugin geführt wird. Welche Personen tatsächlich verarbeitet werden, entscheidet Moodle — siehe Abschnitt 2a. Damit muss das Skript beim Ausweiten des Teilnehmerkreises nicht angefasst werden.
 

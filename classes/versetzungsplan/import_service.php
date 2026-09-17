@@ -49,8 +49,8 @@ use local_berufsbildung\persistent\zuordnung;
  * 4. Vollstaendigkeitsschutz: deutlich weniger verarbeitete Personen als
  *    beim letzten erfolgreichen Lauf -> abgewiesen, ausser bestaetigt.
  * 5. Testlauf endet hier, ohne zu schreiben. Sonst: pro verarbeiteter
- *    Person die bestehenden Einsaetze vollstaendig ersetzen, in einer
- *    Transaktion.
+ *    Person die bestehenden Einsaetze im Zeitraum der Lieferung ersetzen,
+ *    in einer Transaktion.
  */
 class import_service {
     /**
@@ -262,9 +262,10 @@ class import_service {
 
     /**
      * Legt fehlende Bloecke an, ersetzt je verarbeiteter Person die
-     * bestehenden Einsaetze vollstaendig und schreibt das Importprotokoll -
-     * alles in einer Transaktion, damit ein Fehler mittendrin den
-     * bestehenden Datenbestand nicht antastet (Architekturregel 5).
+     * bestehenden Einsaetze im Zeitraum der Lieferung und schreibt das
+     * Importprotokoll - alles in einer Transaktion, damit ein Fehler
+     * mittendrin den bestehenden Datenbestand nicht antastet
+     * (Architekturregel 5).
      *
      * @param array $nachuserid Struktur: array<int,array>
      * @param string $quelle
@@ -334,7 +335,27 @@ class import_service {
 
         $einsaetzeerzeugt = 0;
         foreach ($nachuserid as $userid => $eintraege) {
-            foreach (einsatz::get_records(['userid' => $userid]) as $bestehend) {
+            // Eine Lieferung deckt einen Planungszeitraum ab, nicht die
+            // ganze Lehrzeit. Ersetzt wird deshalb nur, was in diesem
+            // Zeitraum liegt: wuerde der gesamte Bestand geloescht, naehme
+            // die Lieferung fuers dritte Lehrjahr die Einsaetze der ersten
+            // beiden mit - und die Lueckenanalyse rechnete anschliessend
+            // mit einem Bruchteil der tatsaechlichen Ausbildung.
+            $fenstervon = min(array_column($eintraege, 'von'));
+            $fensterbis = max(array_column($eintraege, 'bis'));
+
+            // Dieselbe Ueberschneidungslogik wie plan_service::get_einsaetze():
+            // was in den Zeitraum hineinreicht, gehoert dazu. Fuer diesen
+            // Zeitraum ist die Lieferung massgebend, auch wenn ein
+            // bestehender Einsatz nur teilweise hineinragt - sonst blieben
+            // an den Raendern zwei widersprechende Einsaetze nebeneinander
+            // stehen.
+            foreach (
+                einsatz::get_records_select(
+                    'userid = :userid AND bis >= :fenstervon AND von <= :fensterbis',
+                    ['userid' => $userid, 'fenstervon' => $fenstervon, 'fensterbis' => $fensterbis]
+                ) as $bestehend
+            ) {
                 $bestehend->delete();
             }
 

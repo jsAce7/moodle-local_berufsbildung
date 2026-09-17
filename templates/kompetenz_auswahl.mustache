@@ -1,0 +1,180 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_berufsbildung/kompetenz_auswahl
+
+    Auswahl der Kompetenzen eines Ausbildungsblocks entlang der Gliederung
+    des Bildungsplans: Handlungskompetenzbereich, darunter die
+    Handlungskompetenzen, darunter deren Leistungskriterien.
+
+    Auswaehlbar sind beide Ebenen - die Handlungskompetenz als Ganzes oder
+    einzelne Leistungskriterien. Bereits zugeordnete Eintraege tragen statt
+    der Checkbox einen Hinweis; entfernt werden sie in der Tabelle darueber.
+
+    Der Bereich startet aufgeklappt, wo noch etwas offen ist, und zeigt
+    dann seine Handlungskompetenzen als kurze Liste. Die Leistungskriterien
+    bleiben zugeklappt: ein Rahmen hat je HK rund zehn davon, aufgeklappt
+    waeren es ueber alle Bereiche mehrere hundert Zeilen und die HK-Namen
+    gingen darin unter. Kein JavaScript, das native <details> genuegt.
+
+    Context variables required for this template:
+    * action - string, Ziel des Formulars
+    * sesskey - string
+    * blockid - int
+    * bereiche - array of {code, name, offen, handlungskompetenzen}
+    * handlungskompetenzen - array of {id, code, hatcode, name, beschreibung, hatbeschreibung,
+                                       kurzbeschreibung, istzugeordnet, hatlk, lktext, leistungskriterien}
+    * leistungskriterien - array of {id, code, hatcode, name, beschreibung, hatbeschreibung,
+                                     kurzbeschreibung, istzugeordnet}
+    * intensitaeten - array of {wert, text, gewaehlt}
+    * intensitaetlabel - string
+    * intensitaethilfe - string
+    * absenden - string, Beschriftung des Buttons
+    * zugeordnettext - string, Hinweis bei bereits zugeordneten Eintraegen
+
+    Example context (json):
+    {
+        "action": "/local/berufsbildung/block_kompetenzen.php",
+        "sesskey": "abc123",
+        "blockid": 7,
+        "intensitaetlabel": "Intensität",
+        "intensitaethilfe": "Gilt für alle jetzt ausgewählten Kompetenzen.",
+        "absenden": "Kompetenzen hinzufügen",
+        "zugeordnettext": "zugeordnet",
+        "intensitaeten": [
+            {"wert": "schwerpunkt", "text": "Schwerpunkt", "gewaehlt": true},
+            {"wert": "teilweise", "text": "teilweise", "gewaehlt": false}
+        ],
+        "bereiche": [
+            {
+                "code": "b",
+                "name": "Erstellen und Inbetriebnehmen von automatisierten Anlagen",
+                "offen": true,
+                "handlungskompetenzen": [
+                    {
+                        "id": 42,
+                        "code": "b.07",
+                        "hatcode": true,
+                        "name": "automatisierte Anlagen mit Robotern ergänzen und diese in Betrieb nehmen",
+                        "beschreibung": "Automatiker und Automatikerinnen ergänzen automatisierte Anlagen mit Robotern.",
+                        "hatbeschreibung": true,
+                        "kurzbeschreibung": "Automatiker und Automatikerinnen ergänzen automatisierte Anlagen...",
+                        "istzugeordnet": false,
+                        "hatlk": true,
+                        "lktext": "2 Leistungskriterien einzeln wählen",
+                        "leistungskriterien": [
+                            {"id": 43, "code": "", "hatcode": false, "name": "AU b1 01 1-2",
+                             "beschreibung": "Sie dokumentieren und archivieren ihre Arbeit nachvollziehbar.",
+                             "hatbeschreibung": true,
+                             "kurzbeschreibung": "Sie dokumentieren und archivieren ihre Arbeit...",
+                             "istzugeordnet": false},
+                            {"id": 44, "code": "", "hatcode": false, "name": "AU b8 01 1-2",
+                             "beschreibung": "", "hatbeschreibung": false,
+                             "kurzbeschreibung": "", "istzugeordnet": true}
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}}
+<form method="post" action="{{action}}" class="local-berufsbildung-auswahl">
+    <input type="hidden" name="sesskey" value="{{sesskey}}">
+    <input type="hidden" name="id" value="{{blockid}}">
+    <input type="hidden" name="speichern" value="1">
+
+    {{#bereiche}}
+        <details class="local-berufsbildung-auswahl-bereich card mb-2" {{#offen}}open{{/offen}}>
+            <summary class="local-berufsbildung-auswahl-bereichkopf card-header">
+                <span class="local-berufsbildung-auswahl-code badge bg-light text-dark border">{{code}}</span>
+                <span class="local-berufsbildung-auswahl-bereichname">{{name}}</span>
+            </summary>
+            <div class="card-body py-2">
+                {{#handlungskompetenzen}}
+                    <div class="local-berufsbildung-auswahl-hk">
+                        {{! Die Handlungskompetenz ist selbst die Zeile mit der Checkbox - ein Block
+                            deckt sie oft als Ganzes ab. Die Checkbox steht bewusst ausserhalb des
+                            <details> darunter: in einem <summary> wuerde jeder Klick darauf zugleich
+                            auf- oder zuklappen, und das liesse sich nur mit JavaScript trennen. }}
+                        <div class="local-berufsbildung-auswahl-eintrag local-berufsbildung-auswahl-hkzeile">
+                            {{#istzugeordnet}}
+                                <span class="badge bg-light text-dark border">{{zugeordnettext}}</span>
+                                {{#hatcode}}
+                                    <span class="local-berufsbildung-auswahl-code badge bg-light text-dark border">{{code}}</span>
+                                {{/hatcode}}
+                                <span class="local-berufsbildung-auswahl-hkname" title="{{beschreibung}}">{{name}}</span>
+                            {{/istzugeordnet}}
+                            {{^istzugeordnet}}
+                                <input class="form-check-input" type="checkbox" name="competencyids[]"
+                                       value="{{id}}" id="lbk-{{id}}">
+                                {{#hatcode}}
+                                    <span class="local-berufsbildung-auswahl-code badge bg-light text-dark border">{{code}}</span>
+                                {{/hatcode}}
+                                <label class="form-check-label local-berufsbildung-auswahl-hkname"
+                                       for="lbk-{{id}}" title="{{beschreibung}}">{{name}}</label>
+                            {{/istzugeordnet}}
+                        </div>
+                        {{#hatlk}}
+                            <details class="local-berufsbildung-auswahl-lk">
+                                <summary class="local-berufsbildung-auswahl-lkkopf small text-muted">{{lktext}}</summary>
+                                <div class="local-berufsbildung-auswahl-eintraege">
+                                    {{! Der Kurzname eines Leistungskriteriums ist nur ein Code. Die
+                                        Beschreibung aus dem Rahmen steht gekuerzt daneben, der volle
+                                        Text im Titel. }}
+                                    {{#leistungskriterien}}
+                                        <div class="local-berufsbildung-auswahl-eintrag">
+                                            {{#istzugeordnet}}
+                                                <span class="badge bg-light text-dark border">{{zugeordnettext}}</span>
+                                                <span title="{{beschreibung}}">
+                                                    <span class="local-berufsbildung-auswahl-lkcode">{{name}}</span>
+                                                    {{#hatbeschreibung}}
+                                                        <span class="local-berufsbildung-auswahl-lktext text-muted">{{kurzbeschreibung}}</span>
+                                                    {{/hatbeschreibung}}
+                                                </span>
+                                            {{/istzugeordnet}}
+                                            {{^istzugeordnet}}
+                                                <input class="form-check-input" type="checkbox" name="competencyids[]"
+                                                       value="{{id}}" id="lbk-{{id}}">
+                                                <label class="form-check-label" for="lbk-{{id}}" title="{{beschreibung}}">
+                                                    <span class="local-berufsbildung-auswahl-lkcode">{{name}}</span>
+                                                    {{#hatbeschreibung}}
+                                                        <span class="local-berufsbildung-auswahl-lktext text-muted">{{kurzbeschreibung}}</span>
+                                                    {{/hatbeschreibung}}
+                                                </label>
+                                            {{/istzugeordnet}}
+                                        </div>
+                                    {{/leistungskriterien}}
+                                </div>
+                            </details>
+                        {{/hatlk}}
+                    </div>
+                {{/handlungskompetenzen}}
+            </div>
+        </details>
+    {{/bereiche}}
+
+    <div class="local-berufsbildung-auswahl-fuss">
+        <label class="mb-0" for="lbk-intensitaet">{{intensitaetlabel}}</label>
+        <select class="custom-select form-select" name="intensitaet" id="lbk-intensitaet">
+            {{#intensitaeten}}
+                <option value="{{wert}}" {{#gewaehlt}}selected{{/gewaehlt}}>{{text}}</option>
+            {{/intensitaeten}}
+        </select>
+        <button type="submit" class="btn btn-primary">{{absenden}}</button>
+    </div>
+    <p class="small text-muted mt-1 mb-0">{{intensitaethilfe}}</p>
+</form>

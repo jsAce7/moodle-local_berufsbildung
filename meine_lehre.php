@@ -30,7 +30,7 @@ use local_berufsbildung\api;
 use local_berufsbildung\nachweis\collector;
 use local_berufsbildung\output\einsatz_karte;
 use local_berufsbildung\output\einsatz_timeline;
-use local_berufsbildung\output\luecken_liste;
+use local_berufsbildung\output\kompetenzraster;
 use local_berufsbildung\output\nachweis_liste;
 use local_berufsbildung\output\semester_stepper;
 
@@ -44,7 +44,11 @@ $titel = get_string('nav:meine_lehre', 'local_berufsbildung');
 $PAGE->set_title($titel);
 $PAGE->set_heading($titel);
 
-$datumsformat = get_string('strftimedaydate', 'langconfig');
+// Ein Format fuer ausgeschriebene Daten im Fliesstext, eines fuer die
+// kompakten Listen (siehe einsatz_darstellung) - mehr braucht die Seite
+// nicht. Bewusst ohne Wochentag: bei "Ihre Lehre beginnt am ..." ist das
+// Datum die Auskunft, der Wochentag nur Laenge.
+$datumsformat = get_string('strftimedate', 'langconfig');
 $phase = api::get_ausbildungsphase($lernendeid);
 
 // Nach Lehrabschluss loest sich der Ausbildungsstand zum Stichtag "jetzt"
@@ -63,11 +67,25 @@ if ($phase === api::PHASE_LAUFEND) {
 
 echo $OUTPUT->header();
 
-if ($stand !== null) {
-    echo html_writer::start_tag('div', ['class' => 'card local-berufsbildung-herokarte']);
-    echo html_writer::start_tag('div', ['class' => 'card-body']);
+// Ein Seitenabschnitt als eigene Karte. Die Seite bestand aus einer
+// einzigen Karte, in der Einordnung, Raster, Zeitstrahl und Taetigkeiten
+// ohne Abstand aufeinander folgten - vier Themen in einer Textwand. Jedes
+// Thema bekommt jetzt seine eigene Flaeche mit Abstand darum; die
+// Ueberschrift bringt der Inhalt selbst mit. Leerer Inhalt ergibt keine
+// leere Karte.
+$abschnitt = static function (string $inhalt): string {
+    return trim($inhalt) === ''
+        ? ''
+        : html_writer::div(html_writer::div($inhalt, 'card-body'), 'card mb-3');
+};
 
+if ($stand !== null) {
     $collector = new collector();
+
+    // Kopfkarte: wer bin ich, wo stehe ich, was kann ich jetzt tun.
+    ob_start();
+
+    echo html_writer::start_tag('div', ['class' => 'local-berufsbildung-herokarte-info']);
 
     if ($istbeendet) {
         echo html_writer::tag('p', get_string('meine_lehre:abgeschlossen', 'local_berufsbildung', (object) [
@@ -85,21 +103,6 @@ if ($stand !== null) {
     echo semester_stepper::render($stand->semester, $stand->gesamtsemester);
 
     if (!$istbeendet) {
-        // Direktlinks zum Erfassen, pro registrierter Quelle, die eine
-        // eigene Erfassung anbietet - siehe classes/nachweis/erfassbare_quelle.php.
-        // Kein 'class' im vierten Parameter von single_button(): das ist die
-        // Klasse des umschliessenden <div> (Default 'singlebutton'), nicht die
-        // des Buttons. Ein 'btn-*' landet dort auf einem Block-Element und
-        // wird zum vollflaechigen farbigen Balken. Die Button-Variante selbst
-        // haengt an $type, siehe \core\output\single_button.
-        foreach ($collector->get_erfassen_aktionen($lernendeid, $lernendeid) as $aktion) {
-            echo html_writer::div($OUTPUT->single_button(
-                new moodle_url($aktion->url),
-                $aktion->label,
-                'get'
-            ), 'mb-3');
-        }
-
         // "Wo bin ich gerade" - die unmittelbarste Information des Plans,
         // und nur solange die Lehre laeuft ueberhaupt eine Frage.
         $einsatz = api::get_aktueller_einsatz($lernendeid);
@@ -109,26 +112,74 @@ if ($stand !== null) {
                 echo einsatz_karte::render($einsatz, $blockname);
             }
         }
+    }
 
-        // Die Lueckenanalyse ist ein Planungsinstrument fuer die laufende
-        // Ausbildung. Nach dem Abschluss waere sie keine Planung mehr,
-        // sondern ein Urteil - und das ist nicht Sache dieses Plugins.
-        if (api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null) {
-            echo luecken_liste::render(api::get_luecken_nach_bereich($lernendeid));
+    echo html_writer::end_tag('div');
+
+    if (!$istbeendet) {
+        // Direktlinks zum Erfassen, pro registrierter Quelle, die eine
+        // eigene Erfassung anbietet - siehe classes/nachweis/erfassbare_quelle.php.
+        // Das ist die einzige Handlung der Seite und steht deshalb als
+        // Primaerschaltflaeche oben rechts, nicht als graue Schaltflaeche
+        // im Lesefluss. Ein gestylter Link statt single_button(): der Weg
+        // dahin ist ein GET, und die Klasse des Buttons laesst sich hier
+        // direkt setzen, ohne dass sie auf dem umschliessenden Block-
+        // Element landet und zum vollflaechigen Balken wird.
+        $aktionen = $collector->get_erfassen_aktionen($lernendeid, $lernendeid);
+        if (!empty($aktionen)) {
+            echo html_writer::start_tag('div', ['class' => 'local-berufsbildung-herokarte-aktionen']);
+            foreach ($aktionen as $aktion) {
+                echo html_writer::start_tag('div', ['class' => 'local-berufsbildung-herokarte-aktion']);
+                echo html_writer::link(
+                    new moodle_url($aktion->url),
+                    $aktion->label,
+                    ['class' => 'btn btn-primary']
+                );
+                // Der Hinweis der Quelle, z.B. bis wann der naechste Eintrag
+                // faellig ist. Er steht unter der Schaltflaeche, zu der er
+                // gehoert - bei mehreren Quellen waere sonst nicht erkennbar,
+                // welche gemeint ist. Formuliert hat ihn die Quelle, dieses
+                // Plugin gibt ihn unveraendert aus (quelle_mit_hinweis).
+                if ($aktion->hinweis !== null) {
+                    echo html_writer::tag('p', $aktion->hinweis, ['class' => 'small text-muted mt-1 mb-0']);
+                }
+                echo html_writer::end_tag('div');
+            }
+            echo html_writer::end_tag('div');
         }
     }
 
-    echo einsatz_timeline::render_fuer_lernende($lernendeid);
-
-    $nachweise = $collector->get_nachweise($lernendeid, $lernendeid, 0, time());
-    echo nachweis_liste::render(
-        $nachweise,
-        $collector->get_quelle_namen(),
-        api::get_semester_grenzen($lernendeid)
+    echo html_writer::div(
+        html_writer::div(ob_get_clean(), 'card-body local-berufsbildung-herokarte-body'),
+        'card local-berufsbildung-herokarte mb-3'
     );
 
-    echo html_writer::end_tag('div');
-    echo html_writer::end_tag('div');
+    // Die Kompetenzuebersicht ist ein Planungsinstrument fuer die laufende
+    // Ausbildung. Nach dem Abschluss waere sie keine Planung mehr, sondern
+    // ein Urteil - und das ist nicht Sache dieses Plugins.
+    //
+    // Nur das Raster, ohne Lueckenliste daneben: beide zeigen denselben
+    // Stand, die Liste nur ohne die Kuerzel, ueber die man sie im Raster
+    // wiederfinden wuerde. Die Bezugsgroesse ("x von y abgedeckt") bringt
+    // das Raster selbst mit, welche Kompetenzen offen sind, steht in seinen
+    // Zellen. Fuer die Berufsbildner/innen bleibt die Liste in
+    // meine_lernenden.php - dort ist das Raster kompakt und zeigt nur
+    // Kuerzel.
+    if (!$istbeendet && api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null) {
+        echo $abschnitt(kompetenzraster::render(
+            api::get_kompetenzraster($lernendeid),
+            api::get_planungshorizont($lernendeid)
+        ));
+    }
+
+    echo $abschnitt(einsatz_timeline::render_fuer_lernende($lernendeid));
+
+    echo $abschnitt(nachweis_liste::render(
+        $collector->get_nachweise($lernendeid, $lernendeid, 0, time()),
+        $collector->get_quelle_namen(),
+        api::get_semester_grenzen($lernendeid),
+        get_string('nachweis:titel', 'local_berufsbildung')
+    ));
 } else if ($phase === api::PHASE_VOR_BEGINN) {
     // Die Lehre beginnt erst - kein Semester, aber der Versetzungsplan
     // kann bereits vorliegen und beantwortet "wo fange ich an".
@@ -140,7 +191,7 @@ if ($stand !== null) {
         ),
         'info'
     );
-    echo einsatz_timeline::render_fuer_lernende($lernendeid);
+    echo $abschnitt(einsatz_timeline::render_fuer_lernende($lernendeid));
 } else {
     // Beruf oder Jahrgang fehlen im Profil - ohne beides ist hier nichts
     // aufloesbar, auch kein Versetzungsplan. Dieselbe Meldung deckt den

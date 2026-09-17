@@ -27,16 +27,16 @@ declare(strict_types=1);
 
 namespace local_berufsbildung\versetzungsplan;
 
-use core_competency\competency;
-use core_competency\competency_framework;
-use local_berufsbildung\api;
 use local_berufsbildung\bereich_abdeckung;
-use local_berufsbildung\service\kompetenz_baum;
+use local_berufsbildung\raster_bereich;
 
 /**
  * Ein Vorschlag fuer die Ausbildungsplanung, keine Festlegung
  * (Architekturregel 6) - eine Kompetenz "ohne Abdeckung" kann trotzdem
  * anderweitig vermittelt worden sein, ausserhalb des importierten Plans.
+ *
+ * Die Auswertung selbst macht raster_analyse; diese Klasse reduziert
+ * deren vollstaendiges Bild auf die Planungssicht "was fehlt noch".
  */
 class luecken_analyse {
     /**
@@ -73,68 +73,35 @@ class luecken_analyse {
      * @return bereich_abdeckung[] In der Reihenfolge des Kompetenzrahmens
      */
     public function get_abdeckung(int $lernendeid, ?int $stichtag = null): array {
-        $ausbildungsstand = api::get_ausbildungsstand($lernendeid, $stichtag);
-        if ($ausbildungsstand === null) {
-            return [];
-        }
+        return $this->aus_raster((new raster_analyse())->get_raster($lernendeid, $stichtag));
+    }
 
-        $frameworkidnumber = api::get_kompetenzrahmen_for_beruf($ausbildungsstand->beruf);
-        if ($frameworkidnumber === null) {
-            return [];
-        }
-
-        $framework = competency_framework::get_record(['idnumber' => $frameworkidnumber]);
-        if (!$framework) {
-            return [];
-        }
-
-        // Ausgewertet werden die Handlungskompetenzen (zweite Ebene, siehe
-        // kompetenz_baum), nicht die obersten Handlungskompetenzbereiche -
-        // sonst koennte innerhalb eines Bereichs eine einzelne fehlende HK
-        // unbemerkt bleiben. Die LK darunter werden den Ausbildungsblöcken
-        // zugeordnet und über plan_service auf ihre HK hochgerechnet.
-        $wahlpflicht = array_flip(api::get_wahlpflicht_hk_for_beruf($ausbildungsstand->beruf));
-        $rahmenkompetenzen = competency::get_records(['competencyframeworkid' => (int) $framework->get('id')], 'sortorder');
-
-        // Die Bereiche vorab in Rahmenreihenfolge anlegen, damit die
-        // Ausgabe der Gliederung des Rahmens folgt und nicht der
-        // Reihenfolge, in der die einzelnen HK auftauchen.
-        $bereiche = [];
-        foreach ($rahmenkompetenzen as $kompetenz) {
-            if ((int) $kompetenz->get('parentid') === 0) {
-                $bereiche[(int) $kompetenz->get('id')] = ['soll' => 0, 'luecken' => []];
-            }
-        }
-
-        $pflichtkompetenzen = array_filter(
-            (new kompetenz_baum())->nur_handlungskompetenzen($rahmenkompetenzen),
-            static fn (competency $kompetenz): bool => !isset($wahlpflicht[$kompetenz->get('idnumber')])
-        );
-
-        // Kein unterer Rand (0 = Unix-Epoche): der Versetzungsplan enthaelt
-        // ohnehin nur Einsaetze aus der tatsaechlichen Lehrzeit dieser
-        // Person, ein separat berechneter Lehrbeginn waere redundant.
-        $ausgebildet = array_flip(api::get_ausgebildete_kompetenzen($lernendeid, 0, $stichtag ?? time()));
-
-        foreach ($pflichtkompetenzen as $kompetenz) {
-            $bereichid = (int) $kompetenz->get('parentid');
-            $competencyid = (int) $kompetenz->get('id');
-
-            $bereiche[$bereichid]['soll']++;
-            if (!isset($ausgebildet[$competencyid])) {
-                $bereiche[$bereichid]['luecken'][] = $competencyid;
-            }
-        }
-
+    /**
+     * Dieselbe Reduktion wie get_abdeckung(), aber auf ein bereits
+     * berechnetes Raster - ohne Datenbankzugriff.
+     *
+     * Fuer Seiten, die beide Darstellungen zeigen (Liste und Raster):
+     * sie berechnen das Raster einmal und leiten die Liste daraus ab,
+     * statt dieselbe Auswertung zweimal anzustossen.
+     *
+     * @param raster_bereich[] $raster Ergebnis von raster_analyse::get_raster()
+     * @return bereich_abdeckung[] In derselben Reihenfolge
+     */
+    public function aus_raster(array $raster): array {
         $abdeckungen = [];
-        foreach ($bereiche as $bereichid => $zahlen) {
-            if ($zahlen['soll'] === 0) {
+
+        foreach ($raster as $bereich) {
+            // Bereiche, deren HK ausschliesslich Wahlpflicht sind,
+            // erscheinen nicht - sie haetten sonst eine leere
+            // Bezugsgroesse. Im Raster selbst bleiben sie sichtbar.
+            if ($bereich->soll() === 0) {
                 continue;
             }
+
             $abdeckungen[] = new bereich_abdeckung(
-                bereichid: $bereichid,
-                soll: $zahlen['soll'],
-                luecken: $zahlen['luecken'],
+                bereichid: $bereich->bereichid,
+                soll: $bereich->soll(),
+                luecken: $bereich->luecken(),
             );
         }
 

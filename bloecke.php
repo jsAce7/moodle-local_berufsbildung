@@ -91,7 +91,7 @@ if (empty($bloecke)) {
             s($block->get('name')),
             $beruf !== ''
                 ? s($beruf)
-                : html_writer::span(get_string('block:beruf_leer', 'local_berufsbildung'), 'text-muted'),
+                : html_writer::span(get_string('block:beruf_leer_label', 'local_berufsbildung'), 'text-muted'),
             $block->get('ist_betrieb') ? get_string('yes') : get_string('no'),
             $block->get('aktiv') ? get_string('yes') : get_string('no'),
             html_writer::span(
