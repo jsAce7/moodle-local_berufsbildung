@@ -34,6 +34,7 @@ require_once(__DIR__ . '/../../config.php');
 
 use local_berufsbildung\api;
 use local_berufsbildung\nachweis\collector;
+use local_berufsbildung\output\kompetenzraster;
 use local_berufsbildung\output\lernenden_kachel;
 use local_berufsbildung\output\lernenden_roster;
 use local_berufsbildung\output\luecken_liste;
@@ -92,15 +93,26 @@ if (empty($eintraege)) {
     $collector = new collector();
     $quellennamen = $collector->get_quelle_namen();
 
-    // Anzahl offener Luecken je Person - vorab fuer den gesamten Bestand
-    // berechnet (nicht nur die aktuell gefilterte Auswahl), damit die
-    // Zusammenfassung in der Toolbar unabhaengig von Suche/Filter bleibt.
+    // Kompetenzstand je Person - vorab fuer den gesamten Bestand berechnet
+    // (nicht nur die aktuell gefilterte Auswahl), damit die Zusammenfassung
+    // in der Toolbar unabhaengig von Suche/Filter bleibt.
+    //
+    // Einmal das Raster, daraus beides: die Zahl fuer die Kachel und
+    // weiter unten Lueckenliste wie Raster. Sonst liefe dieselbe
+    // Auswertung je Person mehrfach.
+    $raster = [];
     $anzahlluecken = [];
     foreach ($eintraege as $eintrag) {
         $stand = $eintrag['stand'];
-        $anzahlluecken[$eintrag['id']] = ($stand !== null && api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null)
-            ? count(api::get_luecken($eintrag['id']))
-            : 0;
+        $raster[$eintrag['id']] = ($stand !== null && api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null)
+            ? api::get_kompetenzraster($eintrag['id'])
+            : [];
+
+        $offen = 0;
+        foreach (api::abdeckung_aus_raster($raster[$eintrag['id']]) as $abdeckung) {
+            $offen += count($abdeckung->luecken);
+        }
+        $anzahlluecken[$eintrag['id']] = $offen;
     }
     $anzahlmitluecken = count(array_filter($anzahlluecken, static fn (int $anzahl): bool => $anzahl > 0));
 
@@ -152,8 +164,11 @@ if (empty($eintraege)) {
 
         ob_start();
 
-        if ($stand !== null && api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null) {
-            echo luecken_liste::render(api::get_luecken_nach_bereich($lernendeid), kompakt: false);
+        if (!empty($raster[$lernendeid])) {
+            // Das Raster kompakt: in einer Roster-Karte ist nur Platz fuer
+            // Kuerzel und Symbol, die Bezeichnung steht im Titel.
+            echo luecken_liste::render(api::abdeckung_aus_raster($raster[$lernendeid]), kompakt: false);
+            echo kompetenzraster::render($raster[$lernendeid], api::get_planungshorizont($lernendeid), kompakt: true);
         }
 
         $nachweise = $collector->get_nachweise($berufsbildnerid, $lernendeid, 0, time());

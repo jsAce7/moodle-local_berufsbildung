@@ -28,7 +28,7 @@ require_once($CFG->libdir . '/adminlib.php');
 use core_competency\competency;
 use core_competency\competency_framework;
 use local_berufsbildung\api;
-use local_berufsbildung\form\block_lk_form;
+use local_berufsbildung\output\kompetenz_auswahl;
 use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\block_lk;
 use local_berufsbildung\service\kompetenz_baum;
@@ -49,23 +49,53 @@ $PAGE->set_heading($titel);
 $PAGE->navbar->add(get_string('bloecke:uebersicht', 'local_berufsbildung'), $bloeckeurl);
 $PAGE->navbar->add($titel);
 
-// Die LK-Auswahl wird auf den Kompetenzrahmen des Berufs dieses Blocks
+// Die Auswahl wird auf den Kompetenzrahmen des Berufs dieses Blocks
 // eingeschraenkt - sonst stehen bei mehreren konfigurierten Berufen alle
-// Rahmen gemischt in einem Dropdown (siehe luecken_analyse.php fuer das
-// gleiche Aufloesungsmuster: Beruf -> Rahmen-idnumber -> Framework-Datensatz).
+// Rahmen gemischt beieinander (siehe raster_analyse.php fuer das gleiche
+// Aufloesungsmuster: Beruf -> Rahmen-idnumber -> Framework-Datensatz).
 $beruf = (string) $block->get('beruf');
 $framework = null;
-$alle = [];
+$baum = [];
+
+// Alles, was sich zuordnen laesst: Handlungskompetenzen und die
+// Leistungskriterien darunter. Je Eintrag zusaetzlich die zugehoerige HK,
+// damit die Tabelle der Zuordnungen den Platz im Rahmen mitzeigen kann.
+$auswaehlbar = [];
 
 if (get_config('core_competency', 'enabled') && $beruf !== '') {
     $frameworkidnumber = api::get_kompetenzrahmen_for_beruf($beruf);
     $framework = $frameworkidnumber !== null ? competency_framework::get_record(['idnumber' => $frameworkidnumber]) : false;
 
     if ($framework) {
-        $rahmenkompetenzen = competency::get_records(['competencyframeworkid' => (int) $framework->get('id')], 'shortname', 'ASC', 0, 1000);
+        // Nach 'sortorder', damit der Baum der Gliederung des
+        // Bildungsplans folgt (a1, a2, ... b1, b2) und nicht dem Alphabet.
+        $rahmenkompetenzen = competency::get_records(
+            ['competencyframeworkid' => (int) $framework->get('id')],
+            'sortorder',
+            'ASC',
+            0,
+            1000
+        );
 
-        foreach ((new kompetenz_baum())->blatt_beschriftungen($rahmenkompetenzen) as $kompetenzid => $beschriftung) {
-            $alle[$kompetenzid] = format_string($beschriftung);
+        $baum = (new kompetenz_baum())->baum($rahmenkompetenzen);
+
+        foreach ($baum as $zweig) {
+            foreach ($zweig['handlungskompetenzen'] as $eintrag) {
+                $handlungskompetenz = $eintrag['kompetenz'];
+                $auswaehlbar[(int) $handlungskompetenz->get('id')] = [
+                    'kompetenz' => $handlungskompetenz,
+                    'handlungskompetenz' => $handlungskompetenz,
+                    'isthk' => true,
+                ];
+
+                foreach ($eintrag['leistungskriterien'] as $lk) {
+                    $auswaehlbar[(int) $lk->get('id')] = [
+                        'kompetenz' => $lk,
+                        'handlungskompetenz' => $handlungskompetenz,
+                        'isthk' => false,
+                    ];
+                }
+            }
         }
     }
 }
@@ -75,22 +105,41 @@ foreach (block_lk::get_records(['blockid' => $id], 'id', 'ASC') as $abdeckung) {
     $zugeordnet[(int) $abdeckung->get('competencyid')] = $abdeckung;
 }
 
-// Bereits zugeordnete LK stehen nicht mehr zur Auswahl - besser gar nicht
+// Bereits Zugeordnetes steht nicht mehr zur Auswahl - besser gar nicht
 // anbieten, als hinterher die Duplikat-Fehlermeldung zu zeigen.
-$offen = array_diff_key($alle, $zugeordnet);
+$offen = array_diff_key($auswaehlbar, $zugeordnet);
 
-$form = new block_lk_form(null, ['blockid' => $id, 'kompetenzen' => $offen]);
+if (optional_param('speichern', 0, PARAM_BOOL)) {
+    require_sesskey();
 
-if (!empty($offen) && $data = $form->get_data()) {
-    // Gegen die angebotenen Optionen filtern: was nicht im Rahmen dieses
-    // Berufs steht, darf auch ueber ein manipuliertes POST nicht hereinkommen.
-    $auswahl = array_intersect(array_map('intval', (array) ($data->competencyids ?? [])), array_keys($offen));
+    // Gegen die angebotenen Eintraege filtern: was nicht im Rahmen dieses
+    // Berufs steht oder bereits zugeordnet ist, darf auch ueber ein
+    // manipuliertes POST nicht hereinkommen. Damit ist zugleich der
+    // Unique-Index abgedeckt, wenn zwei Formulare sich ueberholen.
+    $auswahl = array_intersect(
+        optional_param_array('competencyids', [], PARAM_INT),
+        array_keys($offen)
+    );
+
+    $intensitaet = optional_param('intensitaet', 'schwerpunkt', PARAM_ALPHA);
+    if (!in_array($intensitaet, ['schwerpunkt', 'teilweise'], true)) {
+        $intensitaet = 'schwerpunkt';
+    }
+
+    if (empty($auswahl)) {
+        redirect(
+            $returnurl,
+            get_string('blocklk:fehler_keine_auswahl', 'local_berufsbildung'),
+            null,
+            \core\output\notification::NOTIFY_ERROR
+        );
+    }
 
     foreach ($auswahl as $competencyid) {
         (new block_lk(0, (object) [
             'blockid' => $id,
             'competencyid' => $competencyid,
-            'intensitaet' => $data->intensitaet,
+            'intensitaet' => $intensitaet,
         ]))->create();
     }
 
@@ -132,18 +181,42 @@ if (!$block->get('ist_betrieb')) {
     echo $OUTPUT->notification(get_string('blocklk:kein_betrieb', 'local_berufsbildung'), 'warning');
 }
 
-// Anzeigereihenfolge aus $alle uebernehmen (nach Handlungskompetenz
-// gruppiert); die Einfuegereihenfolge der Zuordnungen sagt nichts aus.
+// Anzeigereihenfolge aus dem Rahmen uebernehmen; die Einfuegereihenfolge
+// der Zuordnungen sagt nichts aus. Je Zeile steht der Platz im Rahmen
+// dabei - ein LK-Kuerzel wie "AU b1 01 1-2" haengt unter einem Dutzend
+// Handlungskompetenzen und ist ohne diese Angabe nicht zuzuordnen.
 $zeilen = [];
-foreach ($alle as $kompetenzid => $beschriftung) {
-    if (isset($zugeordnet[$kompetenzid])) {
-        $zeilen[$kompetenzid] = $beschriftung;
+foreach ($auswaehlbar as $kompetenzid => $eintrag) {
+    if (!isset($zugeordnet[$kompetenzid])) {
+        continue;
     }
+
+    $handlungskompetenz = $eintrag['handlungskompetenz'];
+    $code = kompetenz_baum::kuerzel($handlungskompetenz);
+    $codebadge = $code !== ''
+        ? html_writer::span(format_string($code), 'badge bg-light text-dark border mr-1') . ' '
+        : '';
+
+    if ($eintrag['isthk']) {
+        $zeilen[$kompetenzid] = $codebadge
+            . html_writer::span(format_string($handlungskompetenz->get('shortname')), 'font-weight-bold')
+            . html_writer::div(
+                get_string('blocklk:ganze_hk', 'local_berufsbildung'),
+                'small text-muted'
+            );
+        continue;
+    }
+
+    $zeilen[$kompetenzid] = format_string($eintrag['kompetenz']->get('shortname'))
+        . html_writer::div(
+            $codebadge . format_string($handlungskompetenz->get('shortname')),
+            'small text-muted'
+        );
 }
 
-// LK, die nicht (mehr) im Rahmen dieses Berufs stehen - etwa weil der Beruf
-// des Blocks nachtraeglich geaendert wurde. Sie bleiben sichtbar und
-// entfernbar, statt stillschweigend zu verschwinden.
+// Zuordnungen, die nicht (mehr) im Rahmen dieses Berufs stehen - etwa weil
+// der Beruf des Blocks nachtraeglich geaendert wurde. Sie bleiben sichtbar
+// und entfernbar, statt stillschweigend zu verschwinden.
 foreach ($zugeordnet as $kompetenzid => $abdeckung) {
     if (!isset($zeilen[$kompetenzid])) {
         $zeilen[$kompetenzid] = '#' . $kompetenzid;
@@ -189,7 +262,7 @@ if (empty($zeilen)) {
     echo html_writer::table($table);
 }
 
-if (empty($alle)) {
+if (empty($auswaehlbar)) {
     // Sackgassen aufloesen: jeder Hinweis verlinkt die Seite, auf der das
     // Fehlende nachgetragen wird. Durchweg 'get' als Methode - der Default
     // 'post' laesst admin/settings.php in die sesskey-Pruefung laufen,
@@ -225,7 +298,8 @@ if (empty($alle)) {
     echo $OUTPUT->notification(get_string('blocklk:alle_zugeordnet', 'local_berufsbildung'), 'info');
 } else {
     echo html_writer::tag('h3', get_string('blocklk:hinzufuegen', 'local_berufsbildung'));
-    $form->display();
+    echo html_writer::tag('p', get_string('blocklk:auswahl_hinweis', 'local_berufsbildung'), ['class' => 'text-muted']);
+    echo kompetenz_auswahl::render($baum, $zugeordnet, $returnurl, $id);
 }
 
 echo html_writer::link($bloeckeurl, get_string('blocklk:zurueck', 'local_berufsbildung'));

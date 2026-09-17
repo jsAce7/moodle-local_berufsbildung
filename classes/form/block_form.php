@@ -51,7 +51,8 @@ class block_form extends \moodleform {
         $mform->setType('name', PARAM_TEXT);
 
         $berufe = $this->_customdata['berufe'] ?? [];
-        $berufauswahl = ['' => get_string('block:beruf_leer', 'local_berufsbildung')] + array_combine($berufe, $berufe);
+        $berufauswahl = ['' => get_string('block:beruf_leer_label', 'local_berufsbildung')]
+            + array_combine($berufe, $berufe);
         $mform->addElement('select', 'beruf', get_string('block:beruf', 'local_berufsbildung'), $berufauswahl);
         $mform->setType('beruf', PARAM_TEXT);
         $mform->addHelpButton('beruf', 'block_beruf', 'local_berufsbildung');

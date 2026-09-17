@@ -2,6 +2,26 @@
 
 Alle nennenswerten Änderungen an diesem Plugin werden hier festgehalten. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [Unveröffentlicht]
+
+### Behoben
+
+- **Der Import löschte die Einsatzhistorie früherer Lehrjahre.** `import_service` ersetzte je gelieferter Person deren gesamten Einsatzbestand. Solange der Versetzungsplan die volle Lehrzeit umfasste, war das richtig; deckt eine Lieferung nur ein Planungsjahr ab, nahm sie die Vorjahre mit. Die Lückenanalyse rechnet ab Unix-Epoche und meldete dadurch für alle ab dem zweiten Lehrjahr systematisch zu viele Lücken — sichtbar war das kaum, weil die Liste nur Namen ohne Historie zeigt. Ersetzt wird jetzt nur der Zeitraum, den die gelieferten Zeilen der jeweiligen Person aufspannen; Einsätze ausserhalb bleiben stehen und ergänzen sich über aufeinanderfolgende Lieferungen zur vollen Lehrzeit. Innerhalb des Zeitraums bleibt die Lieferung unverändert massgebend, auch für Einsätze, die nur teilweise hineinragen. `docs/schnittstelle_versetzungsplan.md` beschreibt die Regel für das liefernde Skript.
+
+### Hinzugefügt
+
+- **Kompetenzraster** (`classes/output/kompetenzraster.php`): die Handlungskompetenzen in derselben Anordnung wie im offiziellen Bildungsplan — Handlungskompetenzbereiche als Zeilen, Handlungskompetenzen als Spalten. Auf „Meine Lehre" vollständig, in den Roster-Karten von „Meine Lernenden" kompakt (Kürzel und Symbol, Bezeichnung im Titel). Die Farbe bedeutet dasselbe wie im gedruckten Plan, nämlich Pflicht oder Wahlpflicht; der Ausbildungsstand hängt an Symbol, Klartext und Flächendeckung, damit dieselbe Farbe hier nicht etwas anderes heisst als im Dokument daneben — und damit Farbe nie alleiniger Träger einer Information ist. Kein Beurteilungsstatus: gezeigt wird ausschliesslich, was im Versetzungsplan vorkommt.
+- **`api::get_kompetenzraster()`** mit den Wertobjekten `raster_bereich` und `raster_kompetenz`: alle Handlungskompetenzen des Rahmens mit einem von drei Ständen — bis zum Stichtag abgedeckt, im vorliegenden Plan später eingeplant, oder gar nicht im Plan. Die bisherige Lückenliste kannte nur „bis zum Stichtag nicht vorgekommen" und konnte „noch nicht" nicht von „gar nicht" unterscheiden. Anders als `get_luecken_nach_bereich()` zeigt das Raster auch die Wahlpflicht-HK und die Bereiche, die ausschliesslich aus solchen bestehen — im Bildungsplan stehen sie ja ebenfalls.
+- **`api::get_planungshorizont()`**: bis wohin der vorliegende Plan reicht. Ohne diese Angabe ist „nicht im Plan" nicht einzuordnen, weil eine Lieferung nur ihren eigenen Planungszeitraum abdeckt.
+- **`api::abdeckung_aus_raster()`**: leitet die Lückensicht ohne erneuten Datenbankzugriff aus einem bereits berechneten Raster ab, für Seiten, die beide Darstellungen zeigen.
+
+### Geändert
+
+- **Kompetenzzuordnung folgt dem Bildungsplan statt einer flachen Liste** (`block_kompetenzen.php`, neu `classes/output/kompetenz_auswahl.php`). Bisher ein Suchfeld über alle Leistungskriterien des Rahmens — dieselbe LK-Bezeichnung („AU b1 01 1-2") hängt aber unter einem Dutzend Handlungskompetenzen und war nur am vorangestellten HK-Satz zu unterscheiden; sortiert war alphabetisch nach diesem Satz, nicht in Rahmenreihenfolge. Jetzt aufklappbar nach Handlungskompetenzbereich und Handlungskompetenz, in der Reihenfolge des Rahmens (`sortorder`), mit dem Kürzel aus der ID-Nummer als Anker zum gedruckten Plan (`7777BE b.07` → `b.07`). Ohne JavaScript über `<details>`. Die generierte LK-ID-Nummer entfällt in der Anzeige — sie sagt nichts, was nicht schon im Kurznamen steht.
+- **Ein Block lässt sich direkt einer Handlungskompetenz zuordnen**, nicht nur einzelnen Leistungskriterien darunter. Für Lückenanalyse und Raster ist das gleichwertig, weil LK ohnehin auf ihre HK hochgerechnet werden; wer „dieser Block deckt b7 ab" meint, muss dafür nicht mehr vier Leistungskriterien einzeln suchen.
+- `kompetenz_baum::baum()` ersetzt `blatt_beschriftungen()`, das ausschliesslich die flache Auswahlliste bediente. Neu ausserdem `kompetenz_baum::kuerzel()`. Die Formularklasse `block_lk_form` entfällt ersatzlos — die Auswahl ist jetzt ein eigenes Template.
+- `luecken_analyse` rechnet nicht mehr selbst, sondern reduziert das Ergebnis von `raster_analyse` auf die Planungssicht „was fehlt noch". Damit können Liste und Raster nicht auseinanderlaufen. Das Verhalten von `get_luecken()` und `get_luecken_nach_bereich()` bleibt unverändert — eine später eingeplante Handlungskompetenz zählt dort weiterhin als Lücke, weil sie zum Stichtag genauso wenig ausgebildet ist wie eine offene.
+
 ## [0.3.0] — 2026-09-09
 
 ### Hinzugefügt

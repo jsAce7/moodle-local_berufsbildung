@@ -113,6 +113,195 @@
 }
 
 /*
+ * Kompetenzauswahl eines Ausbildungsblocks: die Gliederung des
+ * Bildungsplans als verschachtelte <details>. Die nativen Marker bleiben
+ * stehen - sie sind hier die einzige Aufklapp-Anzeige, anders als bei den
+ * Roster-Karten mit eigenem Chevron.
+ */
+.local-berufsbildung-auswahl-bereichkopf,
+.local-berufsbildung-auswahl-hkkopf {
+    cursor: pointer;
+}
+
+.local-berufsbildung-auswahl-bereichname,
+.local-berufsbildung-auswahl-hkname {
+    font-weight: 600;
+}
+
+.local-berufsbildung-auswahl-hk {
+    margin-bottom: 0.4rem;
+}
+
+.local-berufsbildung-auswahl-eintraege {
+    margin: 0.2rem 0 0.6rem 1.5rem;
+}
+
+.local-berufsbildung-auswahl-eintrag {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    padding: 0.1rem 0;
+}
+
+.local-berufsbildung-auswahl-eintrag .form-check-input {
+    position: static;
+    margin: 0.3rem 0 0;
+}
+
+.local-berufsbildung-auswahl-ganze-hk {
+    font-style: italic;
+}
+
+.local-berufsbildung-auswahl-fuss {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.local-berufsbildung-auswahl-fuss select {
+    width: auto;
+}
+
+/*
+ * Kompetenzraster: Handlungskompetenzbereiche als Zeilen,
+ * Handlungskompetenzen als Spalten - dieselbe Anordnung wie im gedruckten
+ * Bildungsplan. table-layout: fixed haelt die Spalten untereinander
+ * buendig, auch wenn die Bereiche unterschiedlich viele Kompetenzen haben.
+ */
+.local-berufsbildung-raster-titel {
+    font-weight: 600;
+}
+
+.local-berufsbildung-raster-caption {
+    caption-side: top;
+    padding-top: 0;
+}
+
+.local-berufsbildung-raster-tabelle {
+    table-layout: fixed;
+    min-width: 52rem;
+}
+
+.local-berufsbildung-raster-kompakt .local-berufsbildung-raster-tabelle {
+    min-width: 0;
+}
+
+.local-berufsbildung-raster-tabelle th,
+.local-berufsbildung-raster-tabelle td {
+    vertical-align: top;
+}
+
+.local-berufsbildung-raster-bereich {
+    width: 11rem;
+    padding: 0.4rem 0.5rem !important;
+    font-weight: 600;
+}
+
+.local-berufsbildung-raster-kompakt .local-berufsbildung-raster-bereich {
+    width: 5.5rem;
+    font-size: 0.8rem;
+}
+
+/*
+ * Die Flaeche liegt als eigene Ebene unter dem Text, damit ihre Deckung
+ * den Ausbildungsstand zeigen kann, ohne die Lesbarkeit der Beschriftung
+ * anzutasten. Die Farbe selbst kommt ueber eine Bootstrap-Klasse im
+ * Markup - siehe Kopfkommentar dieser Datei.
+ */
+.local-berufsbildung-raster-zelle {
+    position: relative;
+    padding: 0.4rem 0.5rem !important;
+}
+
+.local-berufsbildung-raster-fuellung {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+.local-berufsbildung-raster-abgedeckt > .local-berufsbildung-raster-fuellung {
+    opacity: 0.38;
+}
+
+.local-berufsbildung-raster-eingeplant > .local-berufsbildung-raster-fuellung {
+    opacity: 0.16;
+}
+
+.local-berufsbildung-raster-offen > .local-berufsbildung-raster-fuellung {
+    opacity: 0.05;
+}
+
+.local-berufsbildung-raster-inhalt {
+    position: relative;
+    display: block;
+    line-height: 1.25;
+}
+
+.local-berufsbildung-raster-kopf {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.local-berufsbildung-raster-name {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.8rem;
+}
+
+.local-berufsbildung-raster-status {
+    display: block;
+    margin-top: 0.15rem;
+    opacity: 0.75;
+}
+
+/*
+ * Kompakte Variante fuer die Roster-Karten: nur Kuerzel und Symbol. Name
+ * und Stand bleiben im Dokument und damit fuer Screenreader lesbar, sind
+ * aber visuell ausgeblendet. Eigene Regel statt sr-only/visually-hidden,
+ * weil diese Klasse zwischen Bootstrap 4 (Moodle 4.5) und Bootstrap 5
+ * (Moodle 5.x) den Namen wechselt.
+ */
+.local-berufsbildung-raster-kompakt .local-berufsbildung-raster-name,
+.local-berufsbildung-raster-kompakt .local-berufsbildung-raster-status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.local-berufsbildung-raster-legende {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.15rem 0.9rem;
+}
+
+.local-berufsbildung-raster-legendeneintrag {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.local-berufsbildung-raster-legendenfarbe {
+    display: inline-block;
+    width: 0.8rem;
+    height: 0.8rem;
+    border-radius: 0.15rem;
+    opacity: 0.38;
+}
+
+/*
  * Abstand zwischen den Buttons einer Tabellen-Aktionsspalte. Eigene Klasse
  * statt einer Bootstrap-Utility: mr-* (BS4, Moodle 4.5) und me-* (BS5,
  * Moodle 5.x) haben unterschiedliche Namen, gap funktioniert in beiden.

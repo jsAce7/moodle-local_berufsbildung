@@ -30,6 +30,7 @@ use local_berufsbildung\api;
 use local_berufsbildung\nachweis\collector;
 use local_berufsbildung\output\einsatz_karte;
 use local_berufsbildung\output\einsatz_timeline;
+use local_berufsbildung\output\kompetenzraster;
 use local_berufsbildung\output\luecken_liste;
 use local_berufsbildung\output\nachweis_liste;
 use local_berufsbildung\output\semester_stepper;
@@ -114,7 +115,13 @@ if ($stand !== null) {
         // Ausbildung. Nach dem Abschluss waere sie keine Planung mehr,
         // sondern ein Urteil - und das ist nicht Sache dieses Plugins.
         if (api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null) {
-            echo luecken_liste::render(api::get_luecken_nach_bereich($lernendeid));
+            // Einmal berechnen, zweimal darstellen: die Liste beantwortet
+            // "was fehlt", das Raster zeigt denselben Stand in der
+            // Gliederung des Bildungsplans. Die Liste wird aus dem Raster
+            // abgeleitet, damit beide nie auseinanderlaufen.
+            $raster = api::get_kompetenzraster($lernendeid);
+            echo luecken_liste::render(api::abdeckung_aus_raster($raster));
+            echo kompetenzraster::render($raster, api::get_planungshorizont($lernendeid));
         }
     }
 

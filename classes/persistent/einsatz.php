@@ -30,8 +30,11 @@ use core\persistent;
 
 /**
  * Einsatz einer lernenden Person in einem Ausbildungsblock ueber einen
- * zusammenhaengenden Kalenderwochen-Zeitraum. Wird komplett durch den
- * naechsten Import fuer dieselbe Person ersetzt, nie einzeln editiert.
+ * zusammenhaengenden Kalenderwochen-Zeitraum. Wird durch den naechsten
+ * Import fuer dieselbe Person ersetzt, sofern er in dessen Zeitraum faellt -
+ * nie einzeln editiert. Einsaetze ausserhalb des gelieferten Zeitraums
+ * bleiben stehen, damit sich die Historie ueber mehrere Lieferungen zur
+ * vollen Lehrzeit ergaenzt (siehe import_service::schreiben()).
  */
 class einsatz extends persistent {
     /** Tabellenname. */

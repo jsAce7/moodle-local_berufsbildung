@@ -37,6 +37,7 @@ use local_berufsbildung\service\wahlpflicht_resolver;
 use local_berufsbildung\service\semester_calculator;
 use local_berufsbildung\versetzungsplan\luecken_analyse;
 use local_berufsbildung\versetzungsplan\plan_service;
+use local_berufsbildung\versetzungsplan\raster_analyse;
 
 /**
  * Beantwortet "wer ist wofuer zustaendig" und "in welchem Semester steht
@@ -591,6 +592,51 @@ class api {
      */
     public static function get_luecken_nach_bereich(int $lernendeid, ?int $stichtag = null): array {
         return (new luecken_analyse())->get_abdeckung($lernendeid, $stichtag);
+    }
+
+    /**
+     * Alle Handlungskompetenzen des Rahmens mit ihrem Stand zum Stichtag,
+     * nach Handlungskompetenzbereich gruppiert - das vollstaendige Bild,
+     * aus dem get_luecken_nach_bereich() nur die Fehlstellen zeigt.
+     *
+     * Jede Handlungskompetenz traegt einen von drei Staenden: bis zum
+     * Stichtag abgedeckt, im vorliegenden Plan spaeter eingeplant, oder
+     * gar nicht im Plan. Bleibt genauso ein Vorschlag wie die Lueckenliste,
+     * keine Festlegung (Architekturregel 6).
+     *
+     * @param int $lernendeid
+     * @param int|null $stichtag Timestamp, null = jetzt
+     * @return raster_bereich[] In der Reihenfolge des Kompetenzrahmens
+     */
+    public static function get_kompetenzraster(int $lernendeid, ?int $stichtag = null): array {
+        return (new raster_analyse())->get_raster($lernendeid, $stichtag);
+    }
+
+    /**
+     * Leitet die Lueckensicht aus einem bereits berechneten Raster ab,
+     * ohne erneuten Datenbankzugriff - fuer Seiten, die beide
+     * Darstellungen nebeneinander zeigen.
+     *
+     * @param raster_bereich[] $raster Ergebnis von get_kompetenzraster()
+     * @return bereich_abdeckung[] Wie get_luecken_nach_bereich()
+     */
+    public static function abdeckung_aus_raster(array $raster): array {
+        return (new luecken_analyse())->aus_raster($raster);
+    }
+
+    /**
+     * Ende des zuletzt eingeplanten Einsatzes - bis wohin der vorliegende
+     * Versetzungsplan reicht.
+     *
+     * Noetig, um eine nicht abgedeckte Handlungskompetenz einordnen zu
+     * koennen: Eine Lieferung deckt nur ihren eigenen Planungszeitraum ab,
+     * spaetere Jahre koennen schlicht noch nicht geliefert sein.
+     *
+     * @param int $lernendeid
+     * @return int|null Timestamp, null wenn kein Einsatz vorliegt
+     */
+    public static function get_planungshorizont(int $lernendeid): ?int {
+        return (new raster_analyse())->get_planungshorizont($lernendeid);
     }
 
     /**

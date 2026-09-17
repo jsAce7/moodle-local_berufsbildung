@@ -252,10 +252,12 @@ final class import_service_test extends advanced_testcase {
     }
 
     /**
-     * Zweiter Import derselben Person ersetzt ihre Einsaetze vollstaendig,
-     * loescht aber nicht die Einsaetze einer anderen Person.
+     * Eine Lieferung deckt nur einen Planungszeitraum ab, nicht die ganze
+     * Lehrzeit: Einsaetze ausserhalb dieses Zeitraums bleiben erhalten,
+     * damit sich die Historie ueber mehrere Lieferungen ergaenzt. Die
+     * Einsaetze einer nicht gelieferten Person werden ohnehin nie beruehrt.
      */
-    public function test_zweiter_import_ersetzt_einsaetze_der_gelieferten_person_vollstaendig(): void {
+    public function test_zweiter_import_ersetzt_nur_den_gelieferten_zeitraum(): void {
         $this->resetAfterTest();
 
         $admin = $this->getDataGenerator()->create_user();
@@ -272,9 +274,10 @@ final class import_service_test extends advanced_testcase {
         );
         $this->assertCount(1, einsatz::get_records(['userid' => (int) $anna->id]));
 
-        // Neue Lieferung fuer Anna allein, mit anderem Block/Zeitraum. Nur
-        // noch eine von zuvor zwei Personen wuerde sonst den
-        // Vollstaendigkeitsschutz ausloesen - hier nicht Testgegenstand.
+        // Neue Lieferung fuer Anna allein, spaeterer Zeitraum ohne
+        // Ueberschneidung. Nur noch eine von zuvor zwei Personen wuerde
+        // sonst den Vollstaendigkeitsschutz ausloesen - hier nicht
+        // Testgegenstand.
         $service->verarbeiten(
             "email;block;kw_von;kw_bis\nanna@firma.ch;7;2027-W20;2027-W21\n",
             'upload',
@@ -283,11 +286,45 @@ final class import_service_test extends advanced_testcase {
             true
         );
 
-        $annaseinsaetze = einsatz::get_records(['userid' => (int) $anna->id]);
-        $this->assertCount(1, $annaseinsaetze);
-        $this->assertSame('2027-W20', reset($annaseinsaetze)->get('kw_von'));
+        $wochen = array_map(
+            static fn (einsatz $eintrag): string => $eintrag->get('kw_von'),
+            array_values(einsatz::get_records(['userid' => (int) $anna->id], 'von'))
+        );
+        $this->assertSame(['2027-W15', '2027-W20'], $wochen);
+
         // Beats Einsatz aus dem ersten Lauf bleibt unangetastet.
         $this->assertCount(1, einsatz::get_records(['userid' => (int) $beat->id]));
+    }
+
+    /**
+     * Innerhalb ihres Zeitraums bleibt die Lieferung massgebend: ein
+     * bestehender Einsatz, der hineinreicht, wird ersetzt und nicht neben
+     * den neuen gestellt.
+     */
+    public function test_lieferung_ersetzt_einsaetze_im_gelieferten_zeitraum(): void {
+        $this->resetAfterTest();
+
+        $admin = $this->getDataGenerator()->create_user();
+        $anna = $this->getDataGenerator()->create_user(['email' => 'anna@firma.ch']);
+        $this->lege_aktive_zuordnung_an($anna);
+
+        $service = new import_service();
+        $service->verarbeiten(
+            "email;block;kw_von;kw_bis\nanna@firma.ch;4;2027-W15;2027-W20\n",
+            'upload',
+            (int) $admin->id
+        );
+
+        // Ueberschneidet den bestehenden Einsatz ab W18.
+        $service->verarbeiten(
+            "email;block;kw_von;kw_bis\nanna@firma.ch;7;2027-W18;2027-W22\n",
+            'upload',
+            (int) $admin->id
+        );
+
+        $einsaetze = einsatz::get_records(['userid' => (int) $anna->id]);
+        $this->assertCount(1, $einsaetze);
+        $this->assertSame('2027-W18', reset($einsaetze)->get('kw_von'));
     }
 
     public function test_kopfzeilenfehler_ergibt_fehlgeschlagen_und_schreibt_nichts(): void {
