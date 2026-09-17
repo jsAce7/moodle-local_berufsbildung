@@ -67,7 +67,7 @@ class csv_parser {
             return ['eintraege' => [], 'fehler' => [], 'zeilen_gelesen' => 0];
         }
 
-        $kopf = str_getcsv((string) array_shift($zeilen), ';');
+        $kopf = str_getcsv((string) array_shift($zeilen), ';', '"', '\\');
         $spaltenindex = [];
         foreach ($kopf as $i => $name) {
             $spaltenindex[trim(mb_strtolower((string) $name))] = $i;
@@ -84,7 +84,7 @@ class csv_parser {
 
         foreach ($zeilen as $index => $roh) {
             $zeilennummer = $index + 2; // Zeile 1 ist die Kopfzeile.
-            $werte = str_getcsv($roh, ';');
+            $werte = str_getcsv($roh, ';', '"', '\\');
 
             $email = trim((string) ($werte[$spaltenindex['email']] ?? ''));
             $block = trim((string) ($werte[$spaltenindex['block']] ?? ''));

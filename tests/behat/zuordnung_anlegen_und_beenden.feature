@@ -44,7 +44,8 @@ Feature: Zuordnung anlegen und beenden
     And I press the escape key
     And I click on "Create assignment" "button"
     And I should see "active"
-    When I choose the "End assignment" item in the "Actions" action menu of the "Anna Muster" "table_row"
+    When I click on "Actions" "link" skipping visibility check
+    And I click on "End assignment" "link"
     And I set the field "gueltig_bis[enabled]" to "1"
     And I click on "id_submitbutton" "button"
     Then I should see "Assignment ended."
