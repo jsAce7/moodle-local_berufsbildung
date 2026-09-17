@@ -121,7 +121,21 @@ class kompetenz_baum {
      * @param competency $kompetenz
      */
     public static function kuerzel(competency $kompetenz): string {
-        $idnumber = trim((string) $kompetenz->get('idnumber'));
+        return self::kuerzel_aus_idnumber((string) $kompetenz->get('idnumber'));
+    }
+
+    /**
+     * Dasselbe Kuerzel, aber aus einer ID-Nummer statt aus einer Kompetenz -
+     * fuer Angaben, die von aussen kommen und nicht aus dem Rahmen, etwa
+     * die Wahlpflicht-Einstellung.
+     *
+     * Die Schreibweise bleibt, wie sie ist: wer das Kuerzel zum Vergleich
+     * braucht und nicht zur Anzeige, schreibt beide Seiten selbst klein.
+     *
+     * @param string $idnumber
+     */
+    public static function kuerzel_aus_idnumber(string $idnumber): string {
+        $idnumber = trim($idnumber);
         if ($idnumber === '') {
             return '';
         }

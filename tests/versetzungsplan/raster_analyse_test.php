@@ -192,6 +192,54 @@ final class raster_analyse_test extends advanced_testcase {
     }
 
     /**
+     * Die Einstellung beschreibt den Bildungsplan, die ID-Nummer im Rahmen
+     * traegt zusaetzlich einen Rahmen-Praefix. Beides muss zusammenfinden,
+     * sonst laeuft die Kennzeichnung stillschweigend ins Leere und alles
+     * erscheint als Pflicht.
+     *
+     * @dataProvider wahlpflicht_schreibweisen
+     * @param string $konfiguriert Schreibweise in der Einstellung
+     */
+    public function test_wahlpflicht_trifft_unabhaengig_vom_rahmenpraefix(string $konfiguriert): void {
+        $this->resetAfterTest();
+        set_config('beruf_wahlpflicht_hk', 'AU_EFZ=' . $konfiguriert, 'local_berufsbildung');
+        $lernende = $this->lege_lernende_an();
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework(['idnumber' => 'au-2022']);
+        $hkb = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id')]);
+        $wahl = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'parentid' => $hkb->get('id'),
+            'idnumber' => '7777BE a.04',
+        ]);
+        $pflicht = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'parentid' => $hkb->get('id'),
+            'idnumber' => '7777BE a.05',
+        ]);
+
+        $zellen = $this->zellen((new raster_analyse())->get_raster((int) $lernende->id));
+
+        $this->assertTrue($zellen[(int) $wahl->get('id')]->istwahlpflicht);
+        $this->assertFalse($zellen[(int) $pflicht->get('id')]->istwahlpflicht);
+    }
+
+    /**
+     * Schreibweisen, die alle dieselbe Handlungskompetenz meinen.
+     *
+     * @return array<string, string[]>
+     */
+    public static function wahlpflicht_schreibweisen(): array {
+        return [
+            'ohne Praefix' => ['a.04'],
+            'mit abweichendem Praefix' => ['7777 a.04'],
+            'voll ausgeschrieben' => ['7777BE a.04'],
+            'abweichende Schreibweise' => ['7777be A.04'],
+        ];
+    }
+
+    /**
      * Ein Bereich, dessen HK ausschliesslich Wahlpflicht sind, bleibt im
      * Raster sichtbar - sonst fehlte gegenueber dem gedruckten
      * Bildungsplan eine ganze Zeile. In der Lueckenliste entfaellt er

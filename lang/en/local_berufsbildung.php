@@ -45,7 +45,7 @@ $string['settings:lehrdauer_semester_desc'] = 'Number of semesters until complet
 $string['settings:beruf_dauer'] = 'Training length per occupation';
 $string['settings:beruf_dauer_desc'] = 'Overrides the training length for individual occupations, one line per occupation in the format CODE=semesters, e.g. "PM_EFZ=6" for a three-year programme. Occupations not listed here use the default length above.';
 $string['settings:beruf_wahlpflicht_hk'] = 'Elective competency areas per occupation';
-$string['settings:beruf_wahlpflicht_hk_desc'] = 'These competencies are not shown as missing in the gap analysis. One line per occupation in the format CODE=COMPETENCY-ID,COMPETENCY-ID, e.g. "AU_EFZ=7777 a.04,7777 a.05". Use the idnumber of a competency, not of a top-level area.';
+$string['settings:beruf_wahlpflicht_hk_desc'] = 'These competencies are not shown as missing in the gap analysis and appear green instead of yellow in the competency grid. One line per occupation in the format CODE=COMPETENCY-ID,COMPETENCY-ID, e.g. "AU_EFZ=a.04,a.05". Use the idnumber of a competency, not of a top-level area. The framework prefix may be left out: "a.04" also matches a competency whose idnumber is "7777BE a.04".';
 $string['settings:versetzungsplan_schwelle_prozent'] = 'Threshold for incomplete deliveries (%)';
 $string['settings:versetzungsplan_schwelle_prozent_desc'] = 'If a delivery contains significantly fewer people than the previous one, it is rejected instead of processed. Default: 20 (a drop of more than 20% counts as incomplete).';
 $string['settings:versetzungsplan_alterung_tage'] = 'Aging warning after (days)';

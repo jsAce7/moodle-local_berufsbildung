@@ -133,8 +133,10 @@ if ($hassiteconfig) {
         'local_berufsbildung/beruf_wahlpflicht_hk',
         new lang_string('settings:beruf_wahlpflicht_hk', 'local_berufsbildung'),
         new lang_string('settings:beruf_wahlpflicht_hk_desc', 'local_berufsbildung'),
-        'AU_EFZ=7777 a.04,7777 a.05,7777 a.06,7777 b.06,7777 b.07,7777 c.04,' .
-            '7777 c.05,7777 c.06,7777 d.04,7777 d.05,7777 d.06,7777 d.07',
+        // Ohne Rahmen-Praefix: verglichen wird ueber das Kuerzel, der
+        // Praefix ("7777BE") ist Sache des Rahmens und in jeder Zeile
+        // derselbe. Voll ausgeschriebene ID-Nummern passen weiterhin.
+        'AU_EFZ=a.04,a.05,a.06,b.06,b.07,c.04,c.05,c.06,d.04,d.05,d.06,d.07',
         PARAM_RAW
     ));
 

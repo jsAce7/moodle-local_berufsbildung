@@ -45,7 +45,7 @@ $string['settings:lehrdauer_semester_desc'] = 'Anzahl Semester bis zum Lehrabsch
 $string['settings:beruf_dauer'] = 'Lehrdauer je Beruf';
 $string['settings:beruf_dauer_desc'] = 'Abweichende Lehrdauer für einzelne Berufe, eine Zeile pro Beruf im Format CODE=Semester, z. B. "PM_EFZ=6" für eine dreijährige Lehre. Berufe, die hier nicht aufgeführt sind, verwenden die Lehrdauer oben.';
 $string['settings:beruf_wahlpflicht_hk'] = 'Wahlpflicht-Handlungskompetenzen je Beruf';
-$string['settings:beruf_wahlpflicht_hk_desc'] = 'Diese Handlungskompetenzen gelten in der Lückenanalyse nicht als fehlend. Eine Zeile je Beruf im Format CODE=HK-ID,HK-ID, z. B. "AU_EFZ=7777 a.04,7777 a.05". Gemeint ist die ID-Nummer einer Handlungskompetenz, nicht eines Bereichs. In der AU-Datei sind das die mit "W" markierten HK.';
+$string['settings:beruf_wahlpflicht_hk_desc'] = 'Diese Handlungskompetenzen gelten in der Lückenanalyse nicht als fehlend und erscheinen im Kompetenzraster grün statt gelb. Eine Zeile je Beruf im Format CODE=HK-ID,HK-ID, z. B. "AU_EFZ=a.04,a.05". Gemeint ist die ID-Nummer einer Handlungskompetenz, nicht eines Bereichs. Der Rahmen-Präfix darf weggelassen werden: "a.04" trifft auch eine Kompetenz mit der ID-Nummer "7777BE a.04". In der AU-Datei sind das die mit "W" markierten HK.';
 $string['settings:versetzungsplan_schwelle_prozent'] = 'Schwelle für unvollständige Lieferungen (%)';
 $string['settings:versetzungsplan_schwelle_prozent_desc'] = 'Enthält eine Lieferung deutlich weniger Personen als die vorherige, wird sie abgewiesen statt verarbeitet. Standard: 20 (Rückgang über 20 % gilt als unvollständig).';
 $string['settings:versetzungsplan_alterung_tage'] = 'Alterungshinweis nach (Tagen)';

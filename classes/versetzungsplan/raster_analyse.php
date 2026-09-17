@@ -75,7 +75,17 @@ class raster_analyse {
             return [];
         }
 
-        $wahlpflicht = array_flip(api::get_wahlpflicht_hk_for_beruf($ausbildungsstand->beruf));
+        // Verglichen wird ueber das Kuerzel, nicht ueber die volle
+        // ID-Nummer: der Rahmen-Praefix ("7777BE a.04") steht in jeder
+        // Zeile gleich da, und wer ihn in der Einstellung anders oder gar
+        // nicht schreibt, meint trotzdem dieselbe Handlungskompetenz.
+        // Ein exakter Vergleich liess die Kennzeichnung stillschweigend
+        // ins Leere laufen - alles erschien als Pflicht.
+        $wahlpflicht = [];
+        foreach (api::get_wahlpflicht_hk_for_beruf($ausbildungsstand->beruf) as $eintrag) {
+            $wahlpflicht[$this->vergleichsschluessel($eintrag)] = true;
+        }
+
         $rahmenkompetenzen = competency::get_records(['competencyframeworkid' => (int) $framework->get('id')], 'sortorder');
 
         // Zwei Zeitraeume, damit sich "noch nicht" und "kommt noch"
@@ -113,7 +123,7 @@ class raster_analyse {
             $bereiche[(int) $kompetenz->get('parentid')][] = new raster_kompetenz(
                 competencyid: $competencyid,
                 status: $status,
-                istwahlpflicht: isset($wahlpflicht[$kompetenz->get('idnumber')]),
+                istwahlpflicht: isset($wahlpflicht[$this->vergleichsschluessel((string) $kompetenz->get('idnumber'))]),
             );
         }
 
@@ -130,6 +140,20 @@ class raster_analyse {
         }
 
         return $raster;
+    }
+
+    /**
+     * Schluessel, unter dem eine ID-Nummer mit der Wahlpflicht-Einstellung
+     * abgeglichen wird: das Kuerzel ohne Rahmen-Praefix, klein geschrieben.
+     *
+     * Damit passen "7777BE a.04", "7777 a.04" und "a.04" auf dieselbe
+     * Handlungskompetenz - der Praefix ist Rahmensache, die Einstellung
+     * beschreibt den Bildungsplan.
+     *
+     * @param string $idnumber
+     */
+    private function vergleichsschluessel(string $idnumber): string {
+        return \core_text::strtolower(kompetenz_baum::kuerzel_aus_idnumber($idnumber));
     }
 
     /**

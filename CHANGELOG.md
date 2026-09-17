@@ -2,6 +2,12 @@
 
 Alle nennenswerten Änderungen an diesem Plugin werden hier festgehalten. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [0.4.1] — 2026-09-17
+
+### Behoben
+
+- **Die Wahlpflicht-Kennzeichnung griff nie.** Der Abgleich zwischen der Einstellung `beruf_wahlpflicht_hk` und dem Kompetenzrahmen war ein exakter Stringvergleich über die volle ID-Nummer. Die Voreinstellung nannte `7777 a.04`, die ID-Nummern im Rahmen lauten aber `7777BE a.04` — damit galt jede Handlungskompetenz als Pflicht, im Kompetenzraster war alles gelb und in der Lückenanalyse zählten Wahlpflicht-HK fälschlich in die Bezugsgrösse. Verglichen wird jetzt über das Kürzel ohne Rahmen-Präfix und ohne Rücksicht auf Gross-/Kleinschreibung: `a.04`, `7777 a.04` und `7777BE a.04` treffen dieselbe Handlungskompetenz. Die Voreinstellung nennt nur noch die Codes des Bildungsplans.
+
 ## [0.4.0] — 2026-09-17
 
 ### Behoben
