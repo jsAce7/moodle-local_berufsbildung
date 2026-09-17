@@ -112,6 +112,52 @@ final class einsatz_timeline_test extends advanced_testcase {
     }
 
     /**
+     * Derselbe Ausbildungsblock steht im Versetzungsplan regelmaessig
+     * mehrfach - ein ueK etwa in zwei getrennten Wochen. Ohne Kennzeichnung
+     * liest sich der zweite Eintrag wie ein doppelt importierter.
+     */
+    public function test_mehrfacher_block_weist_seine_folge_aus(): void {
+        $this->resetAfterTest();
+
+        $einsaetze = [
+            $this->einsatz(1, 1000, 2000),
+            $this->einsatz(2, 3000, 4000),
+            $this->einsatz(1, 5000, 6000),
+        ];
+
+        $html = einsatz_timeline::render($einsaetze, [1 => 'üK 3', 2 => 'Betriebsferien'], 9000);
+
+        // Nummeriert in Kalenderreihenfolge, nicht in Importreihenfolge.
+        $this->assertStringContainsString(
+            get_string('einsatz:teil', 'local_berufsbildung', (object) ['nummer' => 1, 'gesamt' => 2]),
+            $html
+        );
+        $this->assertStringContainsString(
+            get_string('einsatz:teil', 'local_berufsbildung', (object) ['nummer' => 2, 'gesamt' => 2]),
+            $html
+        );
+    }
+
+    /**
+     * Der Randfall dazu: ein Block, der nur einmal vorkommt, bekommt keine
+     * Teilangabe - "Teil 1 von 1" waere Rauschen an jedem zweiten Eintrag.
+     */
+    public function test_einmaliger_block_bleibt_ohne_teilangabe(): void {
+        $this->resetAfterTest();
+
+        $html = einsatz_timeline::render(
+            [$this->einsatz(1, 1000, 2000), $this->einsatz(2, 3000, 4000)],
+            [1 => 'Montage', 2 => 'Lager'],
+            9000
+        );
+
+        $this->assertStringNotContainsString(
+            get_string('einsatz:teil', 'local_berufsbildung', (object) ['nummer' => 1, 'gesamt' => 1]),
+            $html
+        );
+    }
+
+    /**
      * Ein Block, dessen Nummer beim Import unbekannt war, hat keinen
      * Namen - der Einsatz selbst bleibt trotzdem sichtbar, statt aus dem
      * Zeitstrahl zu verschwinden.

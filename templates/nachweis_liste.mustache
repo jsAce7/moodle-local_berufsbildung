@@ -24,11 +24,15 @@
     Context variables required for this template:
     * gruppen - array of {name, nachweise: [{bezeichnung, datum, hasergebnis, ergebnis, hasurl, url, hasquelle, quelle}]}
     * hasgruppen - bool
+    * hastitel - bool
+    * titel - string, Ueberschrift ueber der ganzen Liste
     * leertext - string, wenn keine Nachweise vorhanden sind
 
     Example context (json):
     {
         "hasgruppen": true,
+        "hastitel": true,
+        "titel": "Tätigkeiten",
         "leertext": "Keine Tätigkeiten vorhanden.",
         "gruppen": [
             {
@@ -50,6 +54,9 @@
     }
 }}
 <div class="local-berufsbildung-nachweise">
+    {{#hastitel}}
+        <h3 class="h5 mb-2">{{titel}}</h3>
+    {{/hastitel}}
     {{#hasgruppen}}
         {{#gruppen}}
             <div class="local-berufsbildung-nachweisgruppe mb-3">

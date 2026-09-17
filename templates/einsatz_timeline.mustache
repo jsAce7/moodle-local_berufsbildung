@@ -20,8 +20,12 @@
     Alle Einsaetze des Versetzungsplans chronologisch: wo die lernende
     Person war, wo sie ist, wo sie hinkommt.
 
+    Ein Ausbildungsblock, der mehrfach im Plan steht, weist seine Folge aus
+    ("Teil 1 von 2") - sonst liest sich die Wiederholung wie ein doppelt
+    importierter Eintrag.
+
     Context variables required for this template:
-    * eintraege - array of {blockname, zeitraum, haskw, kw, istvergangen, istaktuell, istkommend}
+    * eintraege - array of {blockname, zeitraum, haskw, kw, hasteil, teil, istvergangen, istaktuell, istkommend}
     * titel - string, Ueberschrift der Liste
 
     Example context (json):
@@ -33,6 +37,8 @@
                 "zeitraum": "02.02.26 bis 27.03.26",
                 "haskw": true,
                 "kw": "KW 06-13",
+                "hasteil": true,
+                "teil": "Teil 1 von 2",
                 "istvergangen": false,
                 "istaktuell": true,
                 "istkommend": false
@@ -40,14 +46,15 @@
         ]
     }
 }}
-<div class="local-berufsbildung-timeline mt-3">
-    <h4 class="h6 text-uppercase text-muted mb-2">{{titel}}</h4>
+<div class="local-berufsbildung-timeline">
+    <h3 class="h5 mb-2">{{titel}}</h3>
     <ol class="local-berufsbildung-timeline-liste list-unstyled mb-0">
         {{#eintraege}}
             <li class="local-berufsbildung-timeline-eintrag{{#istvergangen}} local-berufsbildung-timeline-vergangen{{/istvergangen}}{{#istaktuell}} local-berufsbildung-timeline-aktuell{{/istaktuell}}">
                 <span class="local-berufsbildung-timeline-punkt{{#istaktuell}} bg-primary{{/istaktuell}}{{#istvergangen}} bg-secondary{{/istvergangen}}{{#istkommend}} border bg-light{{/istkommend}}" aria-hidden="true"></span>
                 <span class="local-berufsbildung-timeline-text">
                     <span class="local-berufsbildung-timeline-blockname">{{blockname}}</span>
+                    {{#hasteil}}<span class="text-muted small ml-1">{{teil}}</span>{{/hasteil}}
                     {{#istaktuell}}<span class="badge bg-primary text-white ml-1">{{#str}} einsatz:aktuell, local_berufsbildung {{/str}}</span>{{/istaktuell}}
                     <span class="d-block text-muted small">{{zeitraum}}{{#haskw}} &middot; {{kw}}{{/haskw}}</span>
                 </span>

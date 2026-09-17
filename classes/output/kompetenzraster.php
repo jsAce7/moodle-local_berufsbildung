@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace local_berufsbildung\output;
 
 use core_competency\competency;
+use html_writer;
 use local_berufsbildung\raster_bereich;
 use local_berufsbildung\raster_kompetenz;
 use local_berufsbildung\service\kompetenz_baum;
@@ -74,10 +75,24 @@ class kompetenzraster {
             $spalten = max($spalten, count($bereich->kompetenzen));
         }
 
+        // Welche Staende und Arten im Raster ueberhaupt vorkommen. Die
+        // Legende erklaert nur diese: eine Zeile "spaeter eingeplant" unter
+        // einem Raster ohne einen einzigen eingeplanten Eintrag kostet
+        // Lesezeit und erklaert nichts.
+        $vorhandenestaende = [];
+        $vorhandenearten = [];
+        $abgedeckt = 0;
+        $soll = 0;
+
         $bereiche = [];
         foreach ($raster as $bereich) {
+            $abgedeckt += $bereich->anzahl_abgedeckt();
+            $soll += $bereich->soll();
+
             $zellen = [];
             foreach ($bereich->kompetenzen as $kompetenz) {
+                $vorhandenestaende[$kompetenz->status] = true;
+                $vorhandenearten[$kompetenz->istwahlpflicht ? 'wahlpflicht' : 'pflicht'] = true;
                 $zellen[] = self::zelle($kompetenz, $kompetenzen[$kompetenz->competencyid] ?? null);
             }
             for ($leer = count($zellen); $leer < $spalten; $leer++) {
@@ -98,17 +113,34 @@ class kompetenzraster {
         return $OUTPUT->render_from_template('local_berufsbildung/kompetenzraster', [
             'titel' => get_string('raster:titel', 'local_berufsbildung'),
             'beschreibung' => get_string('raster:beschreibung', 'local_berufsbildung'),
+            // Die Beschreibung stand frueher im <caption> der Tabelle. Sie
+            // steht jetzt darueber, damit die Legende zwischen Erklaerung
+            // und Raster passt - der Bezug zur Tabelle haengt deshalb an
+            // aria-describedby statt an der Verschachtelung.
+            'beschreibungid' => html_writer::random_id('local-berufsbildung-raster-'),
             'bereiche' => $bereiche,
             'kompakt' => $kompakt,
+            // Die Gesamtzahl beantwortet dasselbe wie eine Lueckenliste
+            // daneben, nur ohne dieselben Namen ein zweites Mal aufzuzaehlen
+            // - welche Kompetenzen gemeint sind, steht im Raster darunter.
+            // In der kompakten Variante traegt die Roster-Kachel diese Zahl
+            // bereits als Badge.
+            'haszusammenfassung' => !$kompakt && $soll > 0,
+            'zusammenfassung' => get_string('raster:zusammenfassung', 'local_berufsbildung', (object) [
+                'abgedeckt' => $abgedeckt,
+                'soll' => $soll,
+            ]),
             'hathorizont' => $horizont !== null,
             'horizont' => $horizont !== null
                 ? get_string(
                     'raster:horizont',
                     'local_berufsbildung',
-                    userdate($horizont, get_string('strftimedaydate', 'langconfig'))
+                    // Ohne Wochentag: bis wann der Plan reicht, ist eine
+                    // Datumsfrage - ob das ein Sonntag ist, sagt nichts.
+                    userdate($horizont, get_string('strftimedate', 'langconfig'))
                 )
                 : '',
-            'legende' => self::legende(),
+            'legende' => self::legende($vorhandenestaende, $vorhandenearten),
         ]);
     }
 
@@ -137,6 +169,15 @@ class kompetenzraster {
             // styles.css - siehe Kopfkommentar dort.
             'farbklasse' => $kompetenz->istwahlpflicht ? 'bg-success' : 'bg-warning',
             'statusklasse' => 'local-berufsbildung-raster-' . $kompetenz->status,
+            // Der haeufigste Stand bekommt das leiseste Zeichen: "nicht im
+            // Plan" trifft auf die grosse Mehrheit der Zellen zu und traegt
+            // damit den geringsten Informationswert. Sichtbares Symbol und
+            // Klartext bekommen nur die beiden Staende, die etwas aussagen;
+            // im Dokument bleibt der Klartext in jeder Zelle stehen, damit
+            // Screenreader und der Titel beim Darueberfahren vollstaendig
+            // bleiben - und Farbe nie der einzige Traeger der Information
+            // ist.
+            'hatzeichen' => $kompetenz->status !== raster_kompetenz::STATUS_OFFEN,
             'icon' => $darstellung['icon'],
             'statustext' => $darstellung['text'],
             // Im kompakten Raster steht nur das Kuerzel in der Zelle; der
@@ -167,16 +208,25 @@ class kompetenzraster {
     }
 
     /**
-     * Legende: was Farbe und Symbol bedeuten.
+     * Legende: was Farbe und Symbol bedeuten - aber nur fuer das, was im
+     * gezeigten Raster auch vorkommt. Eine Legende, die mehr erklaert als
+     * dasteht, laesst den Blick nach etwas suchen, das es nicht gibt.
      *
+     * @param array $vorhandenestaende Status => true, Struktur: array<string, bool>
+     * @param array $vorhandenearten 'pflicht'/'wahlpflicht' => true, Struktur: array<string, bool>
      * @return array Template-Kontext
      */
-    private static function legende(): array {
+    private static function legende(array $vorhandenestaende, array $vorhandenearten): array {
         $eintraege = [];
 
         foreach (['pflicht' => 'bg-warning', 'wahlpflicht' => 'bg-success'] as $art => $farbklasse) {
+            if (empty($vorhandenearten[$art])) {
+                continue;
+            }
+
             $eintraege[] = [
                 'istfarbe' => true,
+                'hatzeichen' => false,
                 'farbklasse' => $farbklasse,
                 'text' => get_string('raster:legende_' . $art, 'local_berufsbildung'),
             ];
@@ -187,9 +237,18 @@ class kompetenzraster {
             raster_kompetenz::STATUS_EINGEPLANT,
             raster_kompetenz::STATUS_OFFEN,
         ] as $status) {
+            if (empty($vorhandenestaende[$status])) {
+                continue;
+            }
+
             $darstellung = self::darstellung($status);
             $eintraege[] = [
                 'istfarbe' => false,
+                // "nicht im Plan" zeigt sich in der Zelle durch das Fehlen
+                // eines Zeichens - die Legende zeigt deshalb auch hier
+                // keins, sonst erklaert sie ein Symbol, das im Raster
+                // nirgends steht.
+                'hatzeichen' => $status !== raster_kompetenz::STATUS_OFFEN,
                 'icon' => $darstellung['icon'],
                 'text' => get_string('raster:legende_' . $status, 'local_berufsbildung'),
             ];

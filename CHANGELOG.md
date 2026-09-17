@@ -2,6 +2,18 @@
 
 Alle nennenswerten Änderungen an diesem Plugin werden hier festgehalten. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [0.4.4] — 2026-09-17
+
+### Geändert
+
+- **„Meine Lehre" zeigte dieselbe Information zweimal.** Die Lückenliste zählte alle noch offenen Handlungskompetenzen namentlich auf, das Kompetenzraster direkt darunter zeigte dieselben noch einmal — nur mit den Kürzeln (`a.01`…`d.07`), die in der Liste fehlten, sodass sich die beiden nicht einmal aufeinander beziehen liessen. Auf „Meine Lehre" steht jetzt nur noch das Raster; die Bezugsgrösse („x von y Pflicht-Handlungskompetenzen sind im Plan abgedeckt") bringt es selbst mit. In „Meine Lernenden" bleibt die Liste: dort ist das Raster kompakt und zeigt nur Kürzel.
+- **Der häufigste Zustand war der lauteste.** In 24 von 27 Rasterzellen standen ein Minuszeichen und der Text „nicht im Plan" — die Angabe mit dem geringsten Aussagewert, in fast jeder Zelle wiederholt. Sichtbares Symbol und Klartext tragen jetzt nur noch die beiden Stände, die etwas aussagen; „nicht im Plan" bleibt im Dokument (Screenreader, Titel beim Darüberfahren) und tritt visuell zurück. Die Legende erklärt nur noch, was im gezeigten Raster auch vorkommt, und steht über der Tabelle statt darunter.
+- **Die Seite war eine Textwand.** Einordnung, Kompetenzen, Versetzungsplan und Tätigkeiten lagen ohne Abstand in einer einzigen Karte. Jedes Thema hat jetzt seine eigene Karte mit eigener Überschrift. Der Erfassen-Button ist die einzige Handlung der Seite und steht als Primärschaltfläche oben rechts statt als graue Schaltfläche im Lesefluss. Die Tätigkeitenliste bekommt eine Überschrift, damit „Keine Tätigkeiten vorhanden." nicht mehr kontextlos am Seitenende hängt.
+- **Ein Ausbildungsblock, der mehrfach im Plan steht, weist seine Folge aus** („Teil 1 von 2"). Ein üK über zwei getrennte Wochen erschien bisher zweimal mit identischem Titel und las sich wie ein doppelt importierter Eintrag.
+- **Die Semesterleiste war unbeschriftet.** Sechs Punkte mit Trennstrichen liessen offen, ob sie Semester oder Lehrjahre zählen. Ausserhalb der Roster-Kacheln steht jetzt „Lehrjahr" davor und die Nummer unter jeder Gruppe.
+- Datumsangaben folgen nur noch zwei Formaten statt drei: ausgeschrieben im Fliesstext (ohne Wochentag — bei „Plan reicht bis …" ist das Datum die Auskunft), kompakt in den Listen.
+- Leere Rasterfelder am Ende kürzerer Zeilen tragen keinen Rahmen mehr; mit Rahmen lasen sie sich wie fehlende Daten statt wie das Ende der Zeile.
+
 ## [0.4.3] — 2026-09-17
 
 ### Geändert

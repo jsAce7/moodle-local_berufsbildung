@@ -166,9 +166,15 @@ if (empty($eintraege)) {
 
         if (!empty($raster[$lernendeid])) {
             // Das Raster kompakt: in einer Roster-Karte ist nur Platz fuer
-            // Kuerzel und Symbol, die Bezeichnung steht im Titel.
+            // Kuerzel und Symbol, die Bezeichnung steht im Titel. Die
+            // Lueckenliste bleibt hier - anders als in meine_lehre.php, wo
+            // das volle Raster die Namen selbst zeigt, sind die Kuerzel
+            // allein fuer die Planung zu wenig.
             echo luecken_liste::render(api::abdeckung_aus_raster($raster[$lernendeid]), kompakt: false);
-            echo kompetenzraster::render($raster[$lernendeid], api::get_planungshorizont($lernendeid), kompakt: true);
+            echo html_writer::div(
+                kompetenzraster::render($raster[$lernendeid], api::get_planungshorizont($lernendeid), kompakt: true),
+                'mb-3'
+            );
         }
 
         $nachweise = $collector->get_nachweise($berufsbildnerid, $lernendeid, 0, time());

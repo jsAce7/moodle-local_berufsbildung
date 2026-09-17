@@ -52,14 +52,24 @@ class semester_stepper {
             ];
         }
 
+        // Sechs Punkte mit Trennstrichen sind ohne Beschriftung ein Raetsel:
+        // Semester? Lehrjahre? Die Zahl unter jeder Gruppe und die
+        // vorangestellte Bezeichnung beantworten das, ohne dass man erst
+        // darueberfahren muss. In der kompakten Variante bleibt dafuer kein
+        // Platz - dort traegt der Titel die Information.
         $gruppen = [];
-        foreach ($lehrjahre as $punkte) {
-            $gruppen[] = ['punkte' => $punkte];
+        foreach ($lehrjahre as $lehrjahr => $punkte) {
+            $gruppen[] = [
+                'punkte' => $punkte,
+                'marke' => $lehrjahr,
+                'titel' => get_string('stepper:lehrjahr', 'local_berufsbildung', $lehrjahr),
+            ];
         }
 
         return $OUTPUT->render_from_template('local_berufsbildung/semester_stepper', [
             'gruppen' => $gruppen,
             'kompakt' => $kompakt,
+            'legendetext' => get_string('stepper:legende', 'local_berufsbildung'),
         ]);
     }
 }

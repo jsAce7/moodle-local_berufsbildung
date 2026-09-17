@@ -32,19 +32,25 @@
     Context variables required for this template:
     * titel - string, Ueberschrift
     * beschreibung - string, was das Raster zeigt
+    * beschreibungid - string, id der Beschreibung fuer aria-describedby
     * bereiche - array of {name, abdeckung, hatsoll, zellen}
     * zellen - array of {istleer} oder
-               {istleer, name, hascode, code, farbklasse, statusklasse, icon, statustext, titel}
+               {istleer, name, hascode, code, farbklasse, statusklasse, hatzeichen, icon, statustext, titel}
     * kompakt - bool, nur Kuerzel und Symbol statt der vollen Bezeichnung
+    * haszusammenfassung - bool
+    * zusammenfassung - string, "x von y abgedeckt" ueber alle Bereiche
     * hathorizont - bool
     * horizont - string, bis wann der vorliegende Plan reicht
-    * legende - array of {istfarbe, farbklasse, icon, text}
+    * legende - array of {istfarbe, hatzeichen, farbklasse, icon, text}
 
     Example context (json):
     {
         "titel": "Handlungskompetenzen",
         "beschreibung": "Stand aus dem Versetzungsplan. Kein Beurteilungsergebnis.",
+        "beschreibungid": "local-berufsbildung-raster-1",
         "kompakt": false,
+        "haszusammenfassung": true,
+        "zusammenfassung": "1 von 2 Pflicht-Handlungskompetenzen sind im Plan abgedeckt",
         "hathorizont": true,
         "horizont": "Plan reicht bis 20. August 2027",
         "bereiche": [
@@ -60,6 +66,7 @@
                         "code": "a1",
                         "farbklasse": "bg-warning",
                         "statusklasse": "local-berufsbildung-raster-abgedeckt",
+                        "hatzeichen": true,
                         "icon": "fa-check",
                         "statustext": "abgedeckt",
                         "titel": "Fertigungsunterlagen erstellen · Pflicht · abgedeckt"
@@ -71,6 +78,7 @@
                         "code": "a2",
                         "farbklasse": "bg-success",
                         "statusklasse": "local-berufsbildung-raster-offen",
+                        "hatzeichen": false,
                         "icon": "fa-minus",
                         "statustext": "nicht im Plan",
                         "titel": "Skizzen von Komponenten erstellen · Wahlpflicht · nicht im Plan"
@@ -80,21 +88,36 @@
             }
         ],
         "legende": [
-            {"istfarbe": true, "farbklasse": "bg-warning", "text": "Pflicht"},
-            {"istfarbe": false, "icon": "fa-check", "text": "abgedeckt"}
+            {"istfarbe": true, "hatzeichen": false, "farbklasse": "bg-warning", "text": "Pflicht"},
+            {"istfarbe": false, "hatzeichen": true, "icon": "fa-check", "text": "abgedeckt"}
         ]
     }
 }}
-<div class="local-berufsbildung-raster{{#kompakt}} local-berufsbildung-raster-kompakt{{/kompakt}} mb-3">
-    <p class="mb-1">
-        <span class="local-berufsbildung-raster-titel">{{titel}}</span>
-        {{#hathorizont}}
-            <span class="small text-muted d-block">{{horizont}}</span>
-        {{/hathorizont}}
+<div class="local-berufsbildung-raster{{#kompakt}} local-berufsbildung-raster-kompakt{{/kompakt}}">
+    <h3 class="{{#kompakt}}h6{{/kompakt}}{{^kompakt}}h5{{/kompakt}} mb-1">{{titel}}</h3>
+    {{#haszusammenfassung}}
+        <p class="local-berufsbildung-raster-zusammenfassung mb-1">{{zusammenfassung}}</p>
+    {{/haszusammenfassung}}
+    <p id="{{beschreibungid}}" class="small text-muted mb-2">
+        {{beschreibung}}
+        {{#hathorizont}}<span class="d-block">{{horizont}}</span>{{/hathorizont}}
     </p>
+    <ul class="local-berufsbildung-raster-legende list-unstyled small text-muted mb-2">
+        {{#legende}}
+            <li class="local-berufsbildung-raster-legendeneintrag">
+                {{#istfarbe}}
+                    <span class="local-berufsbildung-raster-legendenfarbe {{farbklasse}}" aria-hidden="true"></span>
+                {{/istfarbe}}
+                {{^istfarbe}}
+                    {{#hatzeichen}}<i class="icon fa {{icon}} fa-fw m-0" aria-hidden="true"></i>{{/hatzeichen}}
+                    {{^hatzeichen}}<span class="local-berufsbildung-raster-legendenleer" aria-hidden="true"></span>{{/hatzeichen}}
+                {{/istfarbe}}
+                {{text}}
+            </li>
+        {{/legende}}
+    </ul>
     <div class="table-responsive">
-        <table class="table table-sm table-bordered local-berufsbildung-raster-tabelle mb-1">
-            <caption class="local-berufsbildung-raster-caption small text-muted">{{beschreibung}}</caption>
+        <table class="table table-sm table-bordered local-berufsbildung-raster-tabelle mb-0" aria-describedby="{{beschreibungid}}">
             <tbody>
                 {{#bereiche}}
                     <tr>
@@ -113,15 +136,17 @@
                                     <span class="local-berufsbildung-raster-fuellung {{farbklasse}}" aria-hidden="true"></span>
                                     <span class="local-berufsbildung-raster-inhalt">
                                         <span class="local-berufsbildung-raster-kopf">
-                                            <i class="icon fa {{icon}} fa-fw m-0" aria-hidden="true"></i>
+                                            {{#hatzeichen}}<i class="icon fa {{icon}} fa-fw m-0" aria-hidden="true"></i>{{/hatzeichen}}
                                             {{#hascode}}<span class="local-berufsbildung-raster-code">{{code}}</span>{{/hascode}}
                                         </span>
                                         <span class="local-berufsbildung-raster-name">{{name}}</span>
-                                        {{! Im kompakten Raster blendet styles.css Name und Status visuell aus,
-                                            ohne sie aus dem Dokument zu nehmen - fuer Screenreader bleiben sie
-                                            lesbar. Eigene Regel statt sr-only/visually-hidden, weil die Klasse
-                                            zwischen Bootstrap 4 (Moodle 4.5) und 5 (Moodle 5.x) den Namen wechselt. }}
-                                        <span class="local-berufsbildung-raster-status small">{{statustext}}</span>
+                                        {{! Der haeufigste Stand - "nicht im Plan" - bleibt im Dokument, wird
+                                            aber nicht angezeigt: sonst steht in fast jeder Zelle dieselbe
+                                            Zeile, die nichts unterscheidet. Ebenso im kompakten Raster Name
+                                            und Status. Eigene Regel in styles.css statt sr-only/visually-hidden,
+                                            weil die Klasse zwischen Bootstrap 4 (Moodle 4.5) und 5 (Moodle 5.x)
+                                            den Namen wechselt. }}
+                                        <span class="local-berufsbildung-raster-status small{{^hatzeichen}} local-berufsbildung-nurtext{{/hatzeichen}}">{{statustext}}</span>
                                     </span>
                                 </td>
                             {{/istleer}}
@@ -131,17 +156,4 @@
             </tbody>
         </table>
     </div>
-    <ul class="local-berufsbildung-raster-legende list-unstyled small text-muted mb-0">
-        {{#legende}}
-            <li class="local-berufsbildung-raster-legendeneintrag">
-                {{#istfarbe}}
-                    <span class="local-berufsbildung-raster-legendenfarbe {{farbklasse}}" aria-hidden="true"></span>
-                {{/istfarbe}}
-                {{^istfarbe}}
-                    <i class="icon fa {{icon}} fa-fw m-0" aria-hidden="true"></i>
-                {{/istfarbe}}
-                {{text}}
-            </li>
-        {{/legende}}
-    </ul>
 </div>

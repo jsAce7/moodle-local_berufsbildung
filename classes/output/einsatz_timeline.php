@@ -82,7 +82,19 @@ class einsatz_timeline {
 
         $jetzt ??= time();
 
+        // Derselbe Ausbildungsblock kommt im Versetzungsplan regelmaessig
+        // mehrfach vor - ein ueK etwa in zwei getrennten Wochen. Ohne
+        // Kennzeichnung sieht der zweite Eintrag im Zeitstrahl wie ein
+        // doppelt importierter aus. Erst zaehlen, dann durchnummerieren:
+        // die Gesamtzahl steht schon im ersten Eintrag.
+        $anzahljeblock = [];
+        foreach ($einsaetze as $einzeleinsatz) {
+            $blockid = (int) $einzeleinsatz->get('blockid');
+            $anzahljeblock[$blockid] = ($anzahljeblock[$blockid] ?? 0) + 1;
+        }
+
         $eintraege = [];
+        $laufendejeblock = [];
         foreach ($einsaetze as $einzeleinsatz) {
             $blockid = (int) $einzeleinsatz->get('blockid');
             $von = (int) $einzeleinsatz->get('von');
@@ -92,7 +104,19 @@ class einsatz_timeline {
             // keinen Namen - der Einsatz selbst bleibt trotzdem sichtbar.
             $name = $blocknamen[$blockid] ?? get_string('einsatz:unbekannter_block', 'local_berufsbildung');
 
+            $gesamt = $anzahljeblock[$blockid];
+            $laufendejeblock[$blockid] = ($laufendejeblock[$blockid] ?? 0) + 1;
+
             $eintraege[] = einsatz_darstellung::zu_kontext($einzeleinsatz, $name) + [
+                'hasteil' => $gesamt > 1,
+                // Die Einsaetze kommen nach 'von' aufsteigend herein, die
+                // Nummerierung folgt deshalb dem Kalender.
+                'teil' => $gesamt > 1
+                    ? get_string('einsatz:teil', 'local_berufsbildung', (object) [
+                        'nummer' => $laufendejeblock[$blockid],
+                        'gesamt' => $gesamt,
+                    ])
+                    : '',
                 'istvergangen' => $bis < $jetzt,
                 'istaktuell' => $von <= $jetzt && $bis >= $jetzt,
                 'istkommend' => $von > $jetzt,
