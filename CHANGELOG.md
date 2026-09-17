@@ -2,7 +2,7 @@
 
 Alle nennenswerten Änderungen an diesem Plugin werden hier festgehalten. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
-## [Unveröffentlicht]
+## [0.4.0] — 2026-09-17
 
 ### Behoben
 
