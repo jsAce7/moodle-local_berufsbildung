@@ -225,11 +225,13 @@ class kompetenzraster {
             ];
         }
 
-        foreach ([
+        foreach (
+            [
             raster_kompetenz::STATUS_ABGEDECKT,
             raster_kompetenz::STATUS_EINGEPLANT,
             raster_kompetenz::STATUS_OFFEN,
-        ] as $status) {
+            ] as $status
+        ) {
             if (empty($vorhandenestaende[$status])) {
                 continue;
             }

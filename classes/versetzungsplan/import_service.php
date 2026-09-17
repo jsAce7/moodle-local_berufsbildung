@@ -350,10 +350,12 @@ class import_service {
             // bestehender Einsatz nur teilweise hineinragt - sonst blieben
             // an den Raendern zwei widersprechende Einsaetze nebeneinander
             // stehen.
-            foreach (einsatz::get_records_select(
-                'userid = :userid AND bis >= :fenstervon AND von <= :fensterbis',
-                ['userid' => $userid, 'fenstervon' => $fenstervon, 'fensterbis' => $fensterbis]
-            ) as $bestehend) {
+            foreach (
+                einsatz::get_records_select(
+                    'userid = :userid AND bis >= :fenstervon AND von <= :fensterbis',
+                    ['userid' => $userid, 'fenstervon' => $fenstervon, 'fensterbis' => $fensterbis]
+                ) as $bestehend
+            ) {
                 $bestehend->delete();
             }
 
