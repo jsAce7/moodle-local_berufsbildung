@@ -51,6 +51,16 @@ use moodle_url;
  */
 class kompetenz_auswahl {
     /**
+     * Zeichen, nach denen die angezeigte Beschreibung abgeschnitten wird.
+     * Genug, um ein Leistungskriterium zu erkennen, ohne dass eine Zeile
+     * zum Absatz wird - shorten_text() schneidet an der Wortgrenze.
+     */
+    private const BESCHREIBUNG_ZEICHEN = 120;
+
+    /** Zeichen, nach denen der volle Text im Titel abgeschnitten wird. */
+    private const TITEL_ZEICHEN = 500;
+
+    /**
      * Baut die Daten fuer das Template zusammen.
      *
      * @param array $baum Ergebnis von service\kompetenz_baum::baum()
@@ -154,11 +164,12 @@ class kompetenz_auswahl {
 
         // Die eigentliche Beschreibung der Kompetenz steht im Rahmen im
         // description-Feld, nicht im shortname - bei einem LK ist der
-        // shortname nur ein Code ("AU a1 01 1-2"). Als Titel, damit die
-        // Liste kurz bleibt und der Text trotzdem erreichbar ist.
-        $beschreibung = shorten_text(
-            content_to_text((string) $kompetenz->get('description'), (int) $kompetenz->get('descriptionformat')),
-            300
+        // shortname nur ein Code ("AU a1 01 1-2"), der fuer sich genommen
+        // nichts aussagt. Angezeigt wird sie gekuerzt, damit eine Zeile
+        // eine Zeile bleibt; der volle Text haengt im Titel.
+        $beschreibung = content_to_text(
+            (string) $kompetenz->get('description'),
+            (int) $kompetenz->get('descriptionformat')
         );
 
         return [
@@ -166,7 +177,9 @@ class kompetenz_auswahl {
             'code' => $code,
             'hatcode' => $code !== '',
             'name' => format_string($kompetenz->get('shortname')),
-            'beschreibung' => $beschreibung,
+            'hatbeschreibung' => $beschreibung !== '',
+            'kurzbeschreibung' => shorten_text($beschreibung, self::BESCHREIBUNG_ZEICHEN),
+            'beschreibung' => shorten_text($beschreibung, self::TITEL_ZEICHEN),
             'istzugeordnet' => isset($zugeordnet[$id]),
         ];
     }

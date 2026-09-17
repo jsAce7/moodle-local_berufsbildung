@@ -2,6 +2,12 @@
 
 Alle nennenswerten Änderungen an diesem Plugin werden hier festgehalten. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [0.4.3] — 2026-09-17
+
+### Geändert
+
+- **Leistungskriterien zeigen ihre Beschreibung.** Der Kurzname ist im Rahmen nur ein Code (`MEM 02 02`); was gemeint ist, steht im `description`-Feld und war bisher nur als Titel beim Darüberfahren erreichbar. Die Beschreibung steht jetzt gekürzt neben dem Code (120 Zeichen, an der Wortgrenze abgeschnitten), der volle Text bleibt im Titel.
+
 ## [0.4.2] — 2026-09-17
 
 ### Geändert

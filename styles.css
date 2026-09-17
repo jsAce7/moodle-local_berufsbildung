@@ -145,6 +145,19 @@
     margin: 0.2rem 0 0.6rem 1.5rem;
 }
 
+/*
+ * Code und Beschreibung eines Leistungskriteriums in einer Zeile: der
+ * Code bricht nie um, der Text dahinter schon.
+ */
+.local-berufsbildung-auswahl-lkcode {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.local-berufsbildung-auswahl-lktext {
+    margin-left: 0.35rem;
+}
+
 .local-berufsbildung-auswahl-eintrag {
     display: flex;
     align-items: flex-start;
