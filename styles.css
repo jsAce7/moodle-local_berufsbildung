@@ -208,10 +208,10 @@
 .local-berufsbildung-timeline-eintrag {
     position: relative;
     display: grid;
-    grid-template-columns: 5.25rem 1fr;
-    column-gap: 0.75rem;
+    grid-template-columns: 4.75rem minmax(0, 1fr);
+    column-gap: 0.65rem;
     align-items: start;
-    padding-bottom: 0.65rem;
+    padding-bottom: 0.75rem;
 }
 
 .local-berufsbildung-timeline-eintrag:last-child {
@@ -219,9 +219,26 @@
 }
 
 .local-berufsbildung-timeline-kw {
-    padding-top: 0.1rem;
+    padding-top: 0.15rem;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+}
+
+/*
+ * Name und Status gehoeren optisch zusammen, duerfen sich auf schmalen
+ * Bildschirmen aber nicht gegenseitig aus der Zeile druecken. Die eigene
+ * Titelzeile sorgt zudem fuer einen gleichmaessigen Abstand zum Badge.
+ */
+.local-berufsbildung-timeline-text {
+    min-width: 0;
+}
+
+.local-berufsbildung-timeline-titelzeile {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.2rem 0.4rem;
+    line-height: 1.35;
 }
 
 /*
@@ -254,6 +271,10 @@
 
 .local-berufsbildung-timeline-aktuell .local-berufsbildung-timeline-blockname {
     font-weight: bold;
+}
+
+.local-berufsbildung-timeline-aktuell .badge {
+    flex: 0 0 auto;
 }
 
 /*

@@ -50,8 +50,10 @@
             <span class="local-berufsbildung-timeline-punkt{{#istaktuell}} bg-primary{{/istaktuell}}{{#istvergangen}} bg-secondary{{/istvergangen}}{{#istkommend}} border bg-light{{/istkommend}}" aria-hidden="true"></span>
             <span class="local-berufsbildung-timeline-kw text-muted small">{{#haskw}}{{kw}}{{/haskw}}</span>
             <span class="local-berufsbildung-timeline-text">
-                <span class="local-berufsbildung-timeline-blockname">{{blockname}}</span>
-                {{#istaktuell}}<span class="badge bg-primary text-white ml-1">{{#str}} einsatz:aktuell, local_berufsbildung {{/str}}</span>{{/istaktuell}}
+                <span class="local-berufsbildung-timeline-titelzeile">
+                    <span class="local-berufsbildung-timeline-blockname">{{blockname}}</span>
+                    {{#istaktuell}}<span class="badge bg-primary text-white">{{#str}} einsatz:aktuell, local_berufsbildung {{/str}}</span>{{/istaktuell}}
+                </span>
                 <span class="d-block text-muted small">{{zeitraum}}</span>
             </span>
         </li>
