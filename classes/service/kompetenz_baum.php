@@ -149,7 +149,7 @@ class kompetenz_baum {
      * Alle Kompetenzen unterhalb eines Knotens, ueber beliebig viele Ebenen.
      *
      * @param competency $knoten
-     * @param array<int, competency[]> $kinder parentid => direkte Kinder
+     * @param competency[] $kinder parentid => direkte Kinder
      * @return competency[]
      */
     private function nachfahren(competency $knoten, array $kinder): array {

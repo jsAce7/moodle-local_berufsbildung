@@ -73,6 +73,12 @@ final class raster_analyse_test extends advanced_testcase {
     /**
      * Ein Einsatz, der die uebergebene Handlungskompetenz ueber ein
      * Leistungskriterium abdeckt - so, wie es in der Praxis gepflegt wird.
+     *
+     * @param int $lernendeid
+     * @param competency $hk
+     * @param int $von
+     * @param int $bis
+     * @return void
      */
     private function lege_einsatz_an(int $lernendeid, competency $hk, int $von, int $bis): void {
         static $nummer = 0;
