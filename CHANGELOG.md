@@ -2,6 +2,13 @@
 
 Alle nennenswerten Änderungen an diesem Plugin werden hier festgehalten. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [0.4.7] — 2026-09-17
+
+### Hinzugefügt
+
+- **Der laufende Ausbildungsblock steht in der Roster-Zeile.** Wo jemand gerade ist, war bisher nur nach dem Aufklappen und Scrollen zu sehen — beim Blick auf den Roster ist es die erste Frage. Der Block steht als eigene Spalte fester Breite, damit er über alle Zeilen hinweg bündig ist und sich vergleichen lässt; lange Bezeichnungen werden abgeschnitten und stehen vollständig im Titel. Läuft zum Stichtag kein Einsatz, bleibt die Spalte leer, behält aber ihre Breite. Blocknamen werden je Block einmal geladen, nicht je Person — im Roster stehen typischerweise mehrere Lernende im selben üK.
+- **Profilbilder in „Meine Lernenden".** Bisher stand dort ausschliesslich ein selbst gezeichneter Initialen-Kreis; `user_picture` kam in der ganzen Codebasis nicht vor. Wer ein Bild hinterlegt hat, erscheint jetzt damit. Wer keines hat, behält die Initialen: Moodles Ersatzbild ist für alle dieselbe graue Silhouette und unterscheidet damit niemanden. Das Bild kostet keine zusätzliche Abfrage — der Nutzerdatensatz wird für den Namen ohnehin vollständig geladen. Ohne Verlinkung, weil ein Link im `<summary>` bei jedem Klick zugleich auf- und zuklappen würde; der Weg ins Profil steht im Detailbereich. Für Screenreader ausgeblendet, weil der Name unmittelbar daneben steht.
+
 ## [0.4.6] — 2026-09-17
 
 ### Geändert

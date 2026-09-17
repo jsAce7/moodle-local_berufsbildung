@@ -23,7 +23,11 @@
 
     Context variables required for this template:
     * name - string
-    * initialen - string, z.B. "EF"
+    * hasbild - bool, Profilbild hinterlegt
+    * bildhtml - string, bereits gerendertes Profilbild, nur wenn hasbild
+    * initialen - string, z.B. "EF" - der Ersatz, wenn kein Bild hinterlegt ist
+    * haseinsatz - bool, laeuft gerade ein Einsatz
+    * einsatzname - string, Ausbildungsblock, in dem die Person gerade steht
     * hatstand - bool
     * ausbildungsstand - string, nur wenn hatstand
     * stepper - string, bereits gerendertes HTML, nur wenn hatstand
@@ -35,7 +39,11 @@
     Example context (json):
     {
         "name": "Elena Furrer",
+        "hasbild": false,
+        "bildhtml": "",
         "initialen": "EF",
+        "haseinsatz": true,
+        "einsatzname": "üK 3 - Niederspannungssteuerungen",
         "hatstand": true,
         "ausbildungsstand": "PM_EFZ, 3. Lehrjahr (Semester 5)",
         "stepper": "<span class=\"local-berufsbildung-stepper\"></span>",
@@ -47,12 +55,28 @@
 }}
 <details class="local-berufsbildung-kachel card mb-3">
     <summary class="local-berufsbildung-kachel-summary card-body">
-        <span class="local-berufsbildung-kachel-avatar bg-light text-dark border" aria-hidden="true">{{initialen}}</span>
+        {{! Das hinterlegte Profilbild, sonst die Initialen - Moodles
+            Ersatzbild ist fuer alle dasselbe und unterscheidet damit
+            niemanden. }}
+        {{#hasbild}}{{{bildhtml}}}{{/hasbild}}
+        {{^hasbild}}
+            <span class="local-berufsbildung-kachel-avatar bg-light text-dark border" aria-hidden="true">{{initialen}}</span>
+        {{/hasbild}}
         <span class="local-berufsbildung-kachel-info">
             <span class="local-berufsbildung-kachel-name">{{name}}</span>
             {{#hatstand}}
                 <span class="d-block text-muted small">{{ausbildungsstand}}</span>
             {{/hatstand}}
+        </span>
+        {{! Wo die Person gerade steht - die Frage, die man beim Blick auf den
+            Roster zuerst hat. Eigene Spalte statt einer Fortsetzung der
+            Namenszeile, damit sie ueber alle Zeilen hinweg buendig steht;
+            leer, wenn gerade kein Einsatz laeuft, aber mit gleicher Breite.
+            Der volle Name steht im Titel, weil Blockbezeichnungen lang sind. }}
+        <span class="local-berufsbildung-kachel-einsatz text-muted small" title="{{einsatzname}}">
+            {{#haseinsatz}}
+                <i class="icon fa fa-map-marker-alt fa-fw m-0" aria-hidden="true"></i> {{einsatzname}}
+            {{/haseinsatz}}
         </span>
         {{! Die Semesterleiste steht zwischen Name und Kennzahlen, nicht unter
             dem Namen: in einer Zeile ueber die volle Breite ist sie dort der

@@ -54,9 +54,13 @@ $titel = get_string('nav:meine_lernenden', 'local_berufsbildung');
 $PAGE->set_title($titel);
 $PAGE->set_heading($titel);
 
+// Der volle Datensatz bleibt stehen, nicht nur der Name: das Profilbild
+// haengt daran und kostet so keine zweite Abfrage je Person.
+$nutzer = [];
 $namen = [];
 foreach (api::get_lernende_for($berufsbildnerid) as $lernendeid) {
-    $namen[$lernendeid] = fullname(core_user::get_user($lernendeid, '*', MUST_EXIST));
+    $nutzer[$lernendeid] = core_user::get_user($lernendeid, '*', MUST_EXIST);
+    $namen[$lernendeid] = fullname($nutzer[$lernendeid]);
 }
 core_collator::asort($namen);
 
@@ -152,6 +156,11 @@ if (empty($eintraege)) {
     );
     echo html_writer::end_tag('form');
 
+    // Blockbezeichnungen einmal je Block, nicht einmal je Person: in einem
+    // Roster stehen typischerweise mehrere Lernende im selben ueK oder in
+    // derselben Abteilung.
+    $blocknamen = [];
+
     $gefiltert = lernenden_roster::filtere($eintraege, $suchbegriff, $berufsfilter);
 
     if (empty($gefiltert)) {
@@ -194,12 +203,44 @@ if (empty($eintraege)) {
 
         $detailhtml = ob_get_clean();
 
+        // Das Profilbild nur, wenn wirklich eines hinterlegt ist. Ohne
+        // Bild liefert Moodle fuer alle dieselbe graue Silhouette - vier
+        // identische Silhouetten untereinander unterscheiden sich
+        // schlechter als "GH / NW / NN / RS". Ohne Verlinkung, weil ein
+        // Link im <summary> bei jedem Klick zugleich auf- und zuklappen
+        // wuerde; der Weg ins Profil steht im Detailbereich. Nicht fuer
+        // Screenreader, weil der Name unmittelbar daneben steht.
+        $bildhtml = !empty($nutzer[$lernendeid]->picture)
+            ? $OUTPUT->user_picture($nutzer[$lernendeid], [
+                'size' => 40,
+                'link' => false,
+                'visibletoscreenreaders' => false,
+                'class' => 'userpicture local-berufsbildung-kachel-bild',
+            ])
+            : null;
+
+        // "Wo steht die Person gerade" - beim Blick auf den Roster die
+        // erste Frage. Der Plan ist ein Spiegel (Architekturregel 5):
+        // gezeigt wird, was zuletzt importiert wurde. Laeuft zum Stichtag
+        // kein Einsatz, bleibt die Spalte leer.
+        $einsatz = api::get_aktueller_einsatz($lernendeid);
+        $einsatzname = null;
+        if ($einsatz !== null) {
+            $blockid = (int) $einsatz->get('blockid');
+            if (!array_key_exists($blockid, $blocknamen)) {
+                $blocknamen[$blockid] = api::get_block_name($blockid);
+            }
+            $einsatzname = $blocknamen[$blockid];
+        }
+
         echo lernenden_kachel::render(
             $eintrag['name'],
             $stand,
             $anzahlluecken[$lernendeid],
             count($nachweise),
-            $detailhtml
+            $detailhtml,
+            bildhtml: $bildhtml,
+            einsatzname: $einsatzname
         );
     }
 

@@ -583,16 +583,31 @@
     display: none;
 }
 
+/*
+ * Profilbild und Initialen-Ersatz stehen an derselben Stelle und muessen
+ * deshalb dieselbe Flaeche einnehmen - sonst springt die Namensspalte je
+ * nachdem, ob eine Person ein Bild hinterlegt hat.
+ */
+.local-berufsbildung-kachel-avatar,
+.local-berufsbildung-kachel-bild {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
 .local-berufsbildung-kachel-avatar {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 50%;
     font-weight: 600;
     font-size: 0.85rem;
-    flex-shrink: 0;
+}
+
+/* Moodle liefert quadratische Bilder aus; cover faengt Abweichungen ab,
+   ohne das Gesicht zu verzerren. */
+.local-berufsbildung-kachel-bild {
+    object-fit: cover;
 }
 
 /*
@@ -619,6 +634,21 @@
     align-content: flex-start;
     gap: 0.35rem;
     flex-shrink: 0;
+}
+
+/*
+ * Der laufende Ausbildungsblock als eigene Spalte fester Breite: so steht
+ * er ueber alle Zeilen hinweg untereinander und laesst sich vergleichen.
+ * Blockbezeichnungen sind lang ("ueK 3 - Niederspannungssteuerungen und
+ * Leiterplattentechnik") und werden deshalb abgeschnitten - vollstaendig
+ * stehen sie im Titel.
+ */
+.local-berufsbildung-kachel-einsatz {
+    flex: 0 1 14rem;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /*

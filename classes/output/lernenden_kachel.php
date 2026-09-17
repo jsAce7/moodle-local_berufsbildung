@@ -44,19 +44,34 @@ class lernenden_kachel {
      * @param int $anzahltaetigkeiten
      * @param string $detailhtml Bereits gerendertes HTML fuer den ausgeklappten Bereich
      *                            (Luecken-Detail, Taetigkeitenliste, Profil-Link)
+     * @param string|null $bildhtml Bereits gerendertes Profilbild, siehe
+     *        core_renderer::user_picture(). Null, wenn die Person keines
+     *        hinterlegt hat - dann stehen die Initialen dort, und nicht
+     *        die fuer alle gleiche graue Silhouette.
+     * @param string|null $einsatzname Ausbildungsblock, in dem die Person
+     *        gerade steht, siehe api::get_aktueller_einsatz(). Null, wenn
+     *        zum Stichtag kein Einsatz laeuft oder kein Versetzungsplan
+     *        vorliegt - die Spalte bleibt dann leer und haelt trotzdem
+     *        ihre Breite, damit die Zeilen untereinander buendig bleiben.
      */
     public static function render(
         string $name,
         ?ausbildungsstand $stand,
         int $anzahlluecken,
         int $anzahltaetigkeiten,
-        string $detailhtml
+        string $detailhtml,
+        ?string $bildhtml = null,
+        ?string $einsatzname = null
     ): string {
         global $OUTPUT;
 
         return $OUTPUT->render_from_template('local_berufsbildung/lernenden_kachel', [
             'name' => $name,
+            'hasbild' => $bildhtml !== null,
+            'bildhtml' => $bildhtml ?? '',
             'initialen' => self::initialen($name),
+            'haseinsatz' => $einsatzname !== null,
+            'einsatzname' => $einsatzname ?? '',
             'hatstand' => $stand !== null,
             'ausbildungsstand' => $stand !== null ? get_string('form:ausbildungsstand', 'local_berufsbildung', (object) [
                 'beruf' => $stand->beruf,
