@@ -38,6 +38,7 @@ class erfassen_aktion {
      * @param string $quellekey Schluessel der liefernden Quelle, z.B. 'lerndokumentation'
      * @param string $label Beschriftung der Schaltflaeche, z.B. "Neuer Eintrag"
      * @param string $url Ziel-URL der Erfassen-Schaltflaeche
+     * @param string|null $hinweis Kurzer Hinweis unter der Schaltflaeche
      */
     public function __construct(
         /** @var string Schluessel der liefernden Quelle, z.B. 'lerndokumentation'. */
@@ -46,6 +47,8 @@ class erfassen_aktion {
         public readonly string $label,
         /** @var string Ziel-URL der Erfassen-Schaltflaeche. */
         public readonly string $url,
+        /** @var string|null Kurzer Hinweis unter der Schaltflaeche, siehe quelle_mit_hinweis. */
+        public readonly ?string $hinweis = null,
     ) {
     }
 }

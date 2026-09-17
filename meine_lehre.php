@@ -129,11 +129,21 @@ if ($stand !== null) {
         if (!empty($aktionen)) {
             echo html_writer::start_tag('div', ['class' => 'local-berufsbildung-herokarte-aktionen']);
             foreach ($aktionen as $aktion) {
+                echo html_writer::start_tag('div', ['class' => 'local-berufsbildung-herokarte-aktion']);
                 echo html_writer::link(
                     new moodle_url($aktion->url),
                     $aktion->label,
                     ['class' => 'btn btn-primary']
                 );
+                // Der Hinweis der Quelle, z.B. bis wann der naechste Eintrag
+                // faellig ist. Er steht unter der Schaltflaeche, zu der er
+                // gehoert - bei mehreren Quellen waere sonst nicht erkennbar,
+                // welche gemeint ist. Formuliert hat ihn die Quelle, dieses
+                // Plugin gibt ihn unveraendert aus (quelle_mit_hinweis).
+                if ($aktion->hinweis !== null) {
+                    echo html_writer::tag('p', $aktion->hinweis, ['class' => 'small text-muted mt-1 mb-0']);
+                }
+                echo html_writer::end_tag('div');
             }
             echo html_writer::end_tag('div');
         }
