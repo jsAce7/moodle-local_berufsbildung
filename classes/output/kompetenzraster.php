@@ -28,7 +28,6 @@ declare(strict_types=1);
 namespace local_berufsbildung\output;
 
 use core_competency\competency;
-use html_writer;
 use local_berufsbildung\raster_bereich;
 use local_berufsbildung\raster_kompetenz;
 use local_berufsbildung\service\kompetenz_baum;
@@ -112,12 +111,6 @@ class kompetenzraster {
 
         return $OUTPUT->render_from_template('local_berufsbildung/kompetenzraster', [
             'titel' => get_string('raster:titel', 'local_berufsbildung'),
-            'beschreibung' => get_string('raster:beschreibung', 'local_berufsbildung'),
-            // Die Beschreibung stand frueher im <caption> der Tabelle. Sie
-            // steht jetzt darueber, damit die Legende zwischen Erklaerung
-            // und Raster passt - der Bezug zur Tabelle haengt deshalb an
-            // aria-describedby statt an der Verschachtelung.
-            'beschreibungid' => html_writer::random_id('local-berufsbildung-raster-'),
             'bereiche' => $bereiche,
             'kompakt' => $kompakt,
             // Die Gesamtzahl beantwortet dasselbe wie eine Lueckenliste

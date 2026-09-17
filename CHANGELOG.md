@@ -2,6 +2,20 @@
 
 Alle nennenswerten Änderungen an diesem Plugin werden hier festgehalten. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [0.4.5] — 2026-09-17
+
+### Geändert
+
+- **Der Versetzungsplan war eine Liste aus zwanzig gleich aussehenden Zeilen.** Er ist jetzt nach Semestern gegliedert — dieselben Bezeichnungen wie in der Tätigkeitenliste, damit beide gleich gelesen werden. Die Kalenderwoche steht als eigene linke Spalte, an der das Auge die Liste hinunterlaufen kann, statt jede Zeile von vorn zu lesen; sie ist der bessere Anker als das Datum, weil der Plan selbst in Wochen geführt wird und sie immer gleich breit ist. Einsätze über die Semestergrenze bleiben im Semester ihres Beginns, Einsätze ausserhalb der Lehrzeit fallen nicht aus dem Plan.
+- **Jedes Semester ist ein eigener Aufklapper, offen ist das laufende.** Über die ganze Lehrzeit hat ein Versetzungsplan rund sechzig Einsätze — vollständig ausgeklappt ein Referenzdokument, kein Überblick, während die Fragen an die Liste („wo bin ich", „was kommt als Nächstes") immer nur ein Semester betreffen. Zugeklappt heisst nicht versteckt: der Plan bleibt mit einem Klick je Semester vollständig erreichbar (Architekturregel 5). Fällt „jetzt" in keinen Einsatz, öffnet das Semester mit dem nächsten kommenden; liegt der ganze Plan in der Vergangenheit, das letzte. Natives `<details>` wie in den Roster-Kacheln, kein JavaScript.
+- Vergangene Einsätze treten weniger stark zurück (Deckkraft 0.85 statt 0.7). Die Historie ist der halbe Zweck der Liste; zurückgenommen wird sie schon durch den Punkt in der Sekundärfarbe.
+- **Die Flächen im Kompetenzraster sind kräftiger** (Deckung 0.55 / 0.30 / 0.10 statt 0.38 / 0.16 / 0.05). Bei den alten Werten lagen alle drei Stände so nah beieinander, dass das Raster einheitlich cremefarben wirkte und die Fläche ihren Zweck — den Ausbildungsstand zu tragen — nicht erfüllte. Die Legendenfelder haben dieselbe Deckung wie eine abgedeckte Zelle, damit die Legende aussieht wie das, was sie erklärt.
+- Die Erklärzeile „Gegliedert wie im Bildungsplan. Gezeigt wird, was im Versetzungsplan vorkommt — kein Beurteilungsergebnis." entfällt; `raster:beschreibung` ist damit weg. Der Planungshorizont heisst jetzt „Vorliegender Versetzungsplan reicht bis …" statt „Vorliegender Plan reicht bis …".
+
+### Entfernt
+
+- **Die Teilangabe an mehrfach vorkommenden Ausbildungsblöcken** („Teil 1 von 2") aus 0.4.4. Sie sollte den wiederholten üK erklären, hängte sich aber an jeden wiederkehrenden Block — an drei Betriebsferien und zwei Verdathungsprojekten stand plötzlich eine Nummerierung, die nichts nummeriert: das sind keine Teile einer Sache, sondern getrennte Ereignisse. Auseinanderhalten lassen sich die beiden Fälle aus den Plandaten nicht. Die Gliederung nach Semestern und die Wochenspalte lösen das ursprüngliche Problem besser — zwei üK-Einträge Monate auseinander lesen sich in einer strukturierten Liste als das, was sie sind.
+
 ## [0.4.4] — 2026-09-17
 
 ### Geändert

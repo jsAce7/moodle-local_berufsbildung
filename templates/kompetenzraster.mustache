@@ -31,8 +31,6 @@
 
     Context variables required for this template:
     * titel - string, Ueberschrift
-    * beschreibung - string, was das Raster zeigt
-    * beschreibungid - string, id der Beschreibung fuer aria-describedby
     * bereiche - array of {name, abdeckung, hatsoll, zellen}
     * zellen - array of {istleer} oder
                {istleer, name, hascode, code, farbklasse, statusklasse, hatzeichen, icon, statustext, titel}
@@ -46,13 +44,11 @@
     Example context (json):
     {
         "titel": "Handlungskompetenzen",
-        "beschreibung": "Stand aus dem Versetzungsplan. Kein Beurteilungsergebnis.",
-        "beschreibungid": "local-berufsbildung-raster-1",
         "kompakt": false,
         "haszusammenfassung": true,
         "zusammenfassung": "1 von 2 Pflicht-Handlungskompetenzen sind im Plan abgedeckt",
         "hathorizont": true,
-        "horizont": "Plan reicht bis 20. August 2027",
+        "horizont": "Vorliegender Versetzungsplan reicht bis 20. August 2027.",
         "bereiche": [
             {
                 "name": "a Entwickeln von automatisierten Anlagen",
@@ -98,10 +94,9 @@
     {{#haszusammenfassung}}
         <p class="local-berufsbildung-raster-zusammenfassung mb-1">{{zusammenfassung}}</p>
     {{/haszusammenfassung}}
-    <p id="{{beschreibungid}}" class="small text-muted mb-2">
-        {{beschreibung}}
-        {{#hathorizont}}<span class="d-block">{{horizont}}</span>{{/hathorizont}}
-    </p>
+    {{#hathorizont}}
+        <p class="small text-muted mb-2">{{horizont}}</p>
+    {{/hathorizont}}
     <ul class="local-berufsbildung-raster-legende list-unstyled small text-muted mb-2">
         {{#legende}}
             <li class="local-berufsbildung-raster-legendeneintrag">
@@ -117,7 +112,7 @@
         {{/legende}}
     </ul>
     <div class="table-responsive">
-        <table class="table table-sm table-bordered local-berufsbildung-raster-tabelle mb-0" aria-describedby="{{beschreibungid}}">
+        <table class="table table-sm table-bordered local-berufsbildung-raster-tabelle mb-0">
             <tbody>
                 {{#bereiche}}
                     <tr>

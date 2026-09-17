@@ -137,6 +137,48 @@
     font-size: 1.05rem;
 }
 
+/*
+ * Versetzungsplan als Zeitstrahl, je Semester ein Aufklapper. Jede Gruppe
+ * traegt ihren eigenen Strang - der Schnitt zwischen zwei Semestern ist
+ * genau die Zaesur, die die Gliederung sichtbar machen soll. Der native
+ * Marker weicht einem eigenen Chevron, wie bei den Roster-Kacheln.
+ */
+.local-berufsbildung-timeline-gruppe + .local-berufsbildung-timeline-gruppe {
+    margin-top: 0.75rem;
+}
+
+.local-berufsbildung-timeline-gruppenkopf {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.2rem 0;
+    cursor: pointer;
+}
+
+.local-berufsbildung-timeline-gruppenkopf::-webkit-details-marker {
+    display: none;
+}
+
+.local-berufsbildung-timeline-chevron {
+    /* Auf der Breite des Strangs, damit die Koepfe untereinander stehen. */
+    width: 1rem;
+    flex-shrink: 0;
+    transition: transform 0.15s ease;
+}
+
+.local-berufsbildung-timeline-gruppe[open] .local-berufsbildung-timeline-chevron {
+    transform: rotate(90deg);
+}
+
+.local-berufsbildung-timeline-gruppenanzahl {
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+.local-berufsbildung-timeline-gruppe[open] .local-berufsbildung-timeline-liste {
+    margin-top: 0.35rem;
+}
+
 .local-berufsbildung-timeline-liste {
     position: relative;
     margin-left: 0.3rem;
@@ -145,13 +187,40 @@
     opacity: 0.95;
 }
 
+/*
+ * Kalenderwoche links, Bezeichnung rechts: eine Spalte, an der das Auge
+ * die Liste hinunterlaufen kann, statt jede Zeile von vorn zu lesen. Die
+ * Wochen stehen in Tabellenziffern, damit sie trotz unterschiedlicher
+ * Breite untereinander stehen.
+ */
 .local-berufsbildung-timeline-eintrag {
     position: relative;
-    padding-bottom: 0.6rem;
+    display: grid;
+    grid-template-columns: 5.25rem 1fr;
+    column-gap: 0.75rem;
+    align-items: start;
+    padding-bottom: 0.65rem;
 }
 
 .local-berufsbildung-timeline-eintrag:last-child {
     padding-bottom: 0;
+}
+
+.local-berufsbildung-timeline-kw {
+    padding-top: 0.1rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/*
+ * Auf schmalen Fenstern reicht die Breite nicht fuer zwei Spalten - dann
+ * steht die Woche ueber der Bezeichnung statt daneben.
+ */
+@media (max-width: 36rem) {
+    .local-berufsbildung-timeline-eintrag {
+        grid-template-columns: 1fr;
+        row-gap: 0.1rem;
+    }
 }
 
 .local-berufsbildung-timeline-punkt {
@@ -175,8 +244,13 @@
     font-weight: bold;
 }
 
+/*
+ * Vergangene Einsaetze treten zurueck, bleiben aber lesbar: die Historie
+ * ist der halbe Zweck der Liste. Das Zurueckgetretene traegt schon der
+ * Punkt in der Sekundaerfarbe.
+ */
 .local-berufsbildung-timeline-vergangen {
-    opacity: 0.7;
+    opacity: 0.85;
 }
 
 .local-berufsbildung-luecken-bereiche > .local-berufsbildung-luecken-bereich {
@@ -316,16 +390,23 @@
     left: 0;
 }
 
+/*
+ * Die Deckung traegt den Ausbildungsstand: je weiter eine Kompetenz ist,
+ * desto kraeftiger ihre Flaeche. Die Stufen liegen so weit auseinander,
+ * dass man sie ueber eine Zeile hinweg unterscheidet, und so tief, dass
+ * die dunkle Beschriftung darauf lesbar bleibt - bg-warning und bg-success
+ * sind bei diesen Werten hell genug fuer Text in Vordergrundfarbe.
+ */
 .local-berufsbildung-raster-abgedeckt > .local-berufsbildung-raster-fuellung {
-    opacity: 0.38;
+    opacity: 0.55;
 }
 
 .local-berufsbildung-raster-eingeplant > .local-berufsbildung-raster-fuellung {
-    opacity: 0.16;
+    opacity: 0.3;
 }
 
 .local-berufsbildung-raster-offen > .local-berufsbildung-raster-fuellung {
-    opacity: 0.05;
+    opacity: 0.1;
 }
 
 .local-berufsbildung-raster-inhalt {
@@ -394,12 +475,14 @@
     gap: 0.3rem;
 }
 
+/* Dieselbe Deckung wie eine abgedeckte Zelle - die Legende soll aussehen
+   wie das, was sie erklaert. */
 .local-berufsbildung-raster-legendenfarbe {
     display: inline-block;
     width: 0.8rem;
     height: 0.8rem;
     border-radius: 0.15rem;
-    opacity: 0.38;
+    opacity: 0.55;
 }
 
 /*
