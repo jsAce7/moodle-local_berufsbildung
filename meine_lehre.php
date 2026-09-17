@@ -109,7 +109,11 @@ if ($stand !== null) {
         if ($einsatz !== null) {
             $blockname = api::get_block_name((int) $einsatz->get('blockid'));
             if ($blockname !== null) {
-                echo einsatz_karte::render($einsatz, $blockname);
+                echo einsatz_karte::render(
+                    $einsatz,
+                    $blockname,
+                    api::get_block_kurs((int) $einsatz->get('blockid'))
+                );
             }
         }
     }

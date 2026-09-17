@@ -19,7 +19,14 @@ Aufsetzende Plugins: `local_lerndokumentation` (in Arbeit), später `local_bildu
 
 ## Architekturregeln — nicht verhandelbar
 
-1. **Kein Kurskontext.** Alles läuft über `context_user::instance($lernendeid)`. `$courseid` irgendwo im Code ist ein Designfehler.
+1. **Kein Kurskontext für Fachlogik.** Alles läuft über `context_user::instance($lernendeid)`.
+   Als eng begrenzte Ausnahme darf ein Ausbildungsblock optional auf einen
+   bestehenden Moodle-Kurs verweisen, damit in „Meine Lehre" während des
+   aktuellen Einsatzes ein Link angezeigt werden kann. Die Verknüpfung
+   schreibt weder Einschreibungen noch Rollen, liest keine Kursinhalte und
+   umgeht keine Zugriffsrechte; diese bleiben vollständig beim Moodle-Core.
+   Ausserhalb dieser reinen Anzeigeverknüpfung ist `$courseid` weiterhin ein
+   Designfehler.
 2. **Die Zuordnungstabelle ist die einzige Wahrheit — solange die Ausbildung läuft oder die Aufbewahrungsfrist noch nicht abgelaufen ist.** Zuordnungen werden grundsätzlich mit `gueltig_bis` beendet, damit vergangene Zuständigkeiten nachvollziehbar bleiben. Eine berechtigte Verwaltung darf jedoch eine nachweislich falsch erfasste Zuordnung über `api::loesche_zuordnung()` endgültig entfernen. Zusätzlich löscht `retention_monate` (Standard 12) nach dem über `api::get_ausbildungsende()` berechneten Ausbildungsabschluss alle Zuordnungen einer Person automatisch endgültig (`zuordnung_retention_service`), ausser eine Aufbewahrungspflicht ist dokumentiert (`api::hat_aufbewahrungspflicht()`). Bei einer Account-Löschung geschieht dieselbe endgültige Löschung sofort und unbedingt, unabhängig vom Ausbildungsstand.
 3. **Stichtag immer mitgeben.** `is_zustaendig()`, `get_ausbildungsstand()` und verwandte Methoden nehmen einen optionalen `$stichtag`. Ein abgeschlossener Bericht aus einem früheren Semester muss auch dann korrekt auflösbar sein, wenn die Zuordnung inzwischen beendet wurde. `null` bedeutet „jetzt", nie stillschweigend annehmen.
 4. **Feld `rolle` in der Zuordnung wird abgefragt, nicht angenommen.** In v1 hat es immer den Wert `hauptverantwortlich`. Prüfungen fragen den Wert trotzdem explizit ab — spätere Erweiterung um Fachvorgesetzte (Arbeitsplatzberichte) braucht dann keine Migration.

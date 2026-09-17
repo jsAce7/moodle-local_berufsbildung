@@ -64,6 +64,12 @@ class block_form extends \moodleform {
         $mform->addElement('advcheckbox', 'aktiv', get_string('block:aktiv', 'local_berufsbildung'));
         $mform->setDefault('aktiv', 1);
 
+        $kursauswahl = [0 => get_string('block:kein_kurs', 'local_berufsbildung')]
+            + ($this->_customdata['kurse'] ?? []);
+        $mform->addElement('select', 'courseid', get_string('block:kurs', 'local_berufsbildung'), $kursauswahl);
+        $mform->setType('courseid', PARAM_INT);
+        $mform->addHelpButton('courseid', 'block_kurs', 'local_berufsbildung');
+
         $mform->addElement('hidden', 'id', 0);
         $mform->setType('id', PARAM_INT);
 

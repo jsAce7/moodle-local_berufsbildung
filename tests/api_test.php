@@ -418,6 +418,40 @@ final class api_test extends advanced_testcase {
         $this->assertNull(api::get_block_name(999999));
     }
 
+    public function test_get_block_kurs_liefert_verknuepften_kurs(): void {
+        $this->resetAfterTest();
+
+        $kurs = $this->getDataGenerator()->create_course(['fullname' => 'Montage Grundlagen']);
+        $block = new block(0, (object) [
+            'nummer' => '4',
+            'name' => 'Abteilung Montage',
+            'ist_betrieb' => true,
+            'aktiv' => true,
+            'courseid' => (int) $kurs->id,
+        ]);
+        $block->create();
+
+        $treffer = api::get_block_kurs((int) $block->get('id'));
+
+        $this->assertNotNull($treffer);
+        $this->assertSame((int) $kurs->id, (int) $treffer->id);
+        $this->assertSame('Montage Grundlagen', $treffer->fullname);
+    }
+
+    public function test_get_block_kurs_ohne_verknuepfung_ist_null(): void {
+        $this->resetAfterTest();
+
+        $block = new block(0, (object) [
+            'nummer' => '4',
+            'name' => 'Abteilung Montage',
+            'ist_betrieb' => true,
+            'aktiv' => true,
+        ]);
+        $block->create();
+
+        $this->assertNull(api::get_block_kurs((int) $block->get('id')));
+    }
+
     public function test_set_zuordnung_legt_neue_zuordnung_an(): void {
         $this->resetAfterTest();
 

@@ -30,6 +30,7 @@ Die Trennung jetzt zu ziehen kostet ein Verzeichnis und eine Dependency-Zeile. S
 | Beruf, Lehrjahr, Semester einer lernenden Person | Vorlagen, Zustandsmaschinen, PDF |
 | Einsammeln von Nachweisen über Plugin-Grenzen | Wie ein Nachweis fachlich verwertet wird |
 | Kompetenzabdeckung der Ausbildungsblöcke | Was aus dieser Information gefolgert wird |
+| Optionale Anzeigeverknüpfung eines Ausbildungsblocks zu einem Moodle-Kurs | Einschreibungen, Rollen, Kursinhalte und Zugriffsrechte |
 | Import und Spiegelung des Versetzungsplans | — der Plan selbst gehört der Excel, nicht Moodle |
 
 **Bewusst nicht hier:**
@@ -180,11 +181,19 @@ local_berufsbildung_block
                                      -- bei der LK-Zuordnung. Leer = berufsübergreifend
   ist_betrieb        int(1)         -- 0 für Schule, üK, Ferien, Militär
   aktiv              int(1)
+  courseid           int(10)        -- optionaler FK -> course.id; Anzeige-Link, keine Einschreibung
 
   UNIQUE KEY (nummer)
 ```
 
 `beruf` wird beim manuellen Anlegen des Blocks gesetzt (Auswahl aus den auf der Seite „Kompetenzrahmen je Beruf" konfigurierten Codes) und schränkt die LK-Auswahl in `block_lk` auf den zum Beruf konfigurierten Kompetenzrahmen ein — ohne dieses Feld standen bei mehreren konfigurierten Berufen alle Rahmen gemischt in einem Dropdown. Leer bleibt es typischerweise bei berufsübergreifenden `ist_betrieb=0`-Blöcken (Schule, üK, Ferien, Militär), die für alle Berufe denselben Blockcode verwenden — `nummer` bleibt deshalb weiterhin der alleinige, berufsunabhängige Schlüssel aus der Excel-Zelle (siehe §5.1); der Import kennt `beruf` nicht und muss es auch nicht kennen, da Blöcke ohnehin manuell gepflegt werden.
+
+`courseid` ist eine manuell gepflegte, optionale Ergänzung zum Block. Sie
+verknüpft ihn mit einem bereits bestehenden Moodle-Kurs. Während eines
+aktuellen Einsatzes erscheint dessen Link in „Meine Lehre". Die Verknüpfung
+nimmt keine Einschreibung vor, ändert keine Rollen und umgeht keine Moodle-
+Zugriffsrechte; beim Öffnen des Links prüft Moodle den Kurszugriff wie
+üblich.
 
 ```
 local_berufsbildung_block_lk

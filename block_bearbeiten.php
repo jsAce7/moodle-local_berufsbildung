@@ -27,6 +27,7 @@ require_once($CFG->libdir . '/adminlib.php');
 
 use local_berufsbildung\form\block_form;
 use local_berufsbildung\persistent\block;
+use local_berufsbildung\service\block_kurs_service;
 use local_berufsbildung\service\rahmen_resolver;
 
 admin_externalpage_setup('local_berufsbildung_bloecke');
@@ -51,7 +52,10 @@ $block = $id ? new block($id) : null;
 $konfiguration = get_config('local_berufsbildung', 'beruf_rahmen_mapping');
 $berufe = (new rahmen_resolver())->alle_codes($konfiguration !== false ? (string) $konfiguration : '');
 
-$form = new block_form(null, ['berufe' => $berufe]);
+$form = new block_form(null, [
+    'berufe' => $berufe,
+    'kurse' => (new block_kurs_service())->get_kursauswahl(),
+]);
 
 if ($form->is_cancelled()) {
     redirect($returnurl);
@@ -65,6 +69,7 @@ if (!$form->is_submitted() && $block !== null) {
         'beruf' => $block->get('beruf'),
         'ist_betrieb' => $block->get('ist_betrieb') ? 1 : 0,
         'aktiv' => $block->get('aktiv') ? 1 : 0,
+        'courseid' => $block->get('courseid') ?? 0,
     ]);
 }
 
@@ -76,6 +81,7 @@ if ($data = $form->get_data()) {
             'beruf' => $data->beruf,
             'ist_betrieb' => (bool) $data->ist_betrieb,
             'aktiv' => (bool) $data->aktiv,
+            'courseid' => !empty($data->courseid) ? (int) $data->courseid : null,
         ]);
         $block->create();
     } else {
@@ -84,6 +90,7 @@ if ($data = $form->get_data()) {
         $block->set('beruf', $data->beruf);
         $block->set('ist_betrieb', (bool) $data->ist_betrieb);
         $block->set('aktiv', (bool) $data->aktiv);
+        $block->set('courseid', !empty($data->courseid) ? (int) $data->courseid : null);
         $block->update();
     }
 

@@ -368,5 +368,23 @@ function xmldb_local_berufsbildung_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026091400, 'local', 'berufsbildung');
     }
 
+    if ($oldversion < 2026091710) {
+        // Optionale Anzeigeverknuepfung: Der Block verweist auf einen
+        // bestehenden Moodle-Kurs, ohne dessen Einschreibungen, Rollen oder
+        // Inhalte zu verwalten.
+        $table = new xmldb_table('local_berufsbildung_block');
+        $field = new xmldb_field('courseid', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'aktiv');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $index = new xmldb_index('courseid', XMLDB_INDEX_NOTUNIQUE, ['courseid']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        upgrade_plugin_savepoint(true, 2026091710, 'local', 'berufsbildung');
+    }
+
     return true;
 }

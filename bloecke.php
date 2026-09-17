@@ -27,6 +27,7 @@ require_once($CFG->libdir . '/adminlib.php');
 
 use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\block_lk;
+use local_berufsbildung\api;
 
 admin_externalpage_setup('local_berufsbildung_bloecke');
 
@@ -57,6 +58,7 @@ if (empty($bloecke)) {
         get_string('block:beruf', 'local_berufsbildung'),
         get_string('block:ist_betrieb', 'local_berufsbildung'),
         get_string('block:aktiv', 'local_berufsbildung'),
+        get_string('block:kurs', 'local_berufsbildung'),
         get_string('block:kompetenzen', 'local_berufsbildung'),
         get_string('block:aktionen', 'local_berufsbildung'),
     ];
@@ -69,6 +71,7 @@ if (empty($bloecke)) {
         $kompetenzenurl = new moodle_url('/local/berufsbildung/block_kompetenzen.php', ['id' => $blockid]);
 
         $beruf = (string) $block->get('beruf');
+        $kurs = api::get_block_kurs($blockid);
 
         // Der Zugang zur Kompetenzzuordnung ist ein beschrifteter Button in
         // der Aktionsspalte, nicht die Zahl in der LK-Spalte: auf eine "0"
@@ -94,6 +97,12 @@ if (empty($bloecke)) {
                 : html_writer::span(get_string('block:beruf_leer_label', 'local_berufsbildung'), 'text-muted'),
             $block->get('ist_betrieb') ? get_string('yes') : get_string('no'),
             $block->get('aktiv') ? get_string('yes') : get_string('no'),
+            $kurs !== null
+                ? html_writer::link(
+                    new moodle_url('/course/view.php', ['id' => (int) $kurs->id]),
+                    format_string($kurs->fullname)
+                )
+                : html_writer::span(get_string('block:kein_kurs', 'local_berufsbildung'), 'text-muted'),
             html_writer::span(
                 (string) $anzahlkompetenzen,
                 'badge ' . ($anzahlkompetenzen > 0 ? 'bg-primary text-white' : 'bg-light text-dark border')

@@ -652,4 +652,18 @@ class api {
 
         return $block !== false ? (string) $block->get('name') : null;
     }
+
+    /**
+     * Der einem Ausbildungsblock optional zugeordnete Moodle-Kurs.
+     *
+     * Die Verknuepfung dient nur als Link in "Meine Lehre". Ob die lernende
+     * Person den Kurs tatsaechlich betreten darf, prueft Moodle beim Aufruf;
+     * dieses Plugin schreibt weder Einschreibungen noch Rollen.
+     *
+     * @param int $blockid
+     * @return \stdClass|null Kurs mit id, fullname und shortname oder null
+     */
+    public static function get_block_kurs(int $blockid): ?\stdClass {
+        return (new \local_berufsbildung\service\block_kurs_service())->get_kurs($blockid);
+    }
 }

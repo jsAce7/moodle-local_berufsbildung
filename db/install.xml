@@ -61,12 +61,16 @@
         <FIELD NAME="beruf" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Freitext, wie local_berufsbildung_zuordnung.beruf; steuert den Kompetenzrahmen bei der LK-Zuordnung. Leer = berufsuebergreifend (typischerweise ist_betrieb=0)"/>
         <FIELD NAME="ist_betrieb" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="0 fuer Schule, ueK, Ferien, Militaer - zaehlt dann nicht zur Kompetenzabdeckung"/>
         <FIELD NAME="aktiv" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Optionaler FK auf course.id; nur Anzeige-Link, keine Einschreibung"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="usermodified" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
         <KEY NAME="nummer" TYPE="unique" FIELDS="nummer"/>
       </KEYS>
+      <INDEXES>
+        <INDEX NAME="courseid" UNIQUE="false" FIELDS="courseid"/>
+      </INDEXES>
     </TABLE>
     <TABLE NAME="local_berufsbildung_block_lk" COMMENT="Kompetenzabdeckung eines Ausbildungsblocks - der einzige Teil, der in Moodle gepflegt wird">
       <FIELDS>

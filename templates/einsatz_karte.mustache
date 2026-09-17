@@ -27,6 +27,9 @@
     * zeitraum - string, formatierter Zeitraum
     * haskw - bool
     * kw - string, Kalenderwoche oder Wochenspanne
+    * haskurs - bool, ist ein Moodle-Kurs mit dem Block verknuepft
+    * kursname - string, voller Kursname
+    * kursurl - string, URL zum Moodle-Kurs
 
     Example context (json):
     {
@@ -49,4 +52,10 @@
             <span class="text-muted small ml-1">{{zeitraum}}{{#haskw}} &middot; {{kw}}{{/haskw}}</span>
         </span>
     </span>
+    {{#haskurs}}
+        <a class="btn btn-sm btn-outline-primary mt-2" href="{{kursurl}}">
+            <i class="icon fa fa-graduation-cap fa-fw" aria-hidden="true"></i>
+            {{#str}} einsatz:kurs_oeffnen, local_berufsbildung, {{kursname}} {{/str}}
+        </a>
+    {{/haskurs}}
 </div>

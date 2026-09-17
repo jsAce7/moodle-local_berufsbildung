@@ -41,13 +41,23 @@ class einsatz_karte {
      *
      * @param einsatz $einsatz Der laufende Einsatz, siehe api::get_aktueller_einsatz()
      * @param string $blockname Bezeichnung des Ausbildungsblocks, siehe api::get_block_name()
+     * @param \stdClass|null $kurs Optional verknuepfter Moodle-Kurs.
      */
-    public static function render(einsatz $einsatz, string $blockname): string {
+    public static function render(einsatz $einsatz, string $blockname, ?\stdClass $kurs = null): string {
         global $OUTPUT;
+
+        $kontext = einsatz_darstellung::zu_kontext($einsatz, $blockname);
+        $kontext += [
+            'haskurs' => $kurs !== null,
+            'kursname' => $kurs !== null ? format_string($kurs->fullname) : '',
+            'kursurl' => $kurs !== null
+                ? (new \moodle_url('/course/view.php', ['id' => (int) $kurs->id]))->out(false)
+                : '',
+        ];
 
         return $OUTPUT->render_from_template(
             'local_berufsbildung/einsatz_karte',
-            einsatz_darstellung::zu_kontext($einsatz, $blockname)
+            $kontext
         );
     }
 }

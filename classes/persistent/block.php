@@ -38,6 +38,11 @@ use core\persistent;
  * LK-Zuordnung zur Auswahl steht (siehe api::get_kompetenzrahmen_for_beruf()).
  * Leer = berufsuebergreifend, typischerweise fuer ist_betrieb=0-Bloecke
  * wie Schule, ueK, Ferien oder Militaer.
+ *
+ * 'courseid' ist optional. Er verknuepft einen Block mit einem bestehenden
+ * Moodle-Kurs, ohne Einschreibungen oder Kursdaten zu verwalten. Die
+ * lernende Person sieht den Link ausschliesslich waehrend ihres aktuellen
+ * Einsatzes in "Meine Lehre".
  */
 class block extends persistent {
     /** Tabellenname. */
@@ -68,6 +73,11 @@ class block extends persistent {
             'aktiv' => [
                 'type' => PARAM_BOOL,
                 'default' => true,
+            ],
+            'courseid' => [
+                'type' => PARAM_INT,
+                'null' => NULL_ALLOWED,
+                'default' => null,
             ],
         ];
     }
