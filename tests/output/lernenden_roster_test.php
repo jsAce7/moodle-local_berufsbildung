@@ -59,10 +59,11 @@ final class lernenden_roster_test extends advanced_testcase {
      * @param int $id
      * @param string $name
      * @param ausbildungsstand|null $stand
-     * @return array{id: int, name: string, stand: ?ausbildungsstand}
+     * @param bool $istextern
+     * @return array{id: int, name: string, stand: ?ausbildungsstand, istextern: bool}
      */
-    private function eintrag(int $id, string $name, ?ausbildungsstand $stand): array {
-        return ['id' => $id, 'name' => $name, 'stand' => $stand];
+    private function eintrag(int $id, string $name, ?ausbildungsstand $stand, bool $istextern = false): array {
+        return ['id' => $id, 'name' => $name, 'stand' => $stand, 'istextern' => $istextern];
     }
 
     /**
@@ -104,6 +105,21 @@ final class lernenden_roster_test extends advanced_testcase {
         $sortiert = lernenden_roster::sortiere($eintraege);
 
         $this->assertSame(['Ben', 'Aaron', 'Zoe'], array_column($sortiert, 'name'));
+    }
+
+    public function test_externe_teilnehmende_stehen_nach_regulaeren_lernenden(): void {
+        $this->resetAfterTest();
+
+        $eintraege = [
+            $this->eintrag(1, 'Anna', $this->stand(1), true),
+            $this->eintrag(2, 'Ben', $this->stand(3)),
+            $this->eintrag(3, 'Clara', null, true),
+            $this->eintrag(4, 'Dora', $this->stand(1)),
+        ];
+
+        $sortiert = lernenden_roster::sortiere($eintraege);
+
+        $this->assertSame(['Dora', 'Ben', 'Anna', 'Clara'], array_column($sortiert, 'name'));
     }
 
     public function test_leerer_filter_liefert_alle_unveraendert(): void {

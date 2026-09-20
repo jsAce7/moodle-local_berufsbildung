@@ -1,12 +1,13 @@
 # Changelog
 
-## [0.4.14] — 2026-09-20
+## [0.4.15] — 2026-09-20
 
 - **Externe üK-Teilnehmende.** Die Teilnahmeart gehört pro Person zum
   Berufsbildungsplugin, nicht zur gemeinsamen Kohorte. Externe Personen
   erscheinen weiterhin bei ihren Berufsbildner/innen und mit ihren
   üK-Nachweisen, führen aber keine Lerndokumentation und sehen keinen
   Einstieg „Meine Lehre“.
+- Externe üK-Teilnehmende stehen im Roster nach allen regulären Lernenden.
 - Der Umschalter der Teilnahmeart ist ein kompakter Button ohne zusätzlichen
   Rahmen; er bleibt eine sesskey-geschützte POST-Aktion.
 - **Steuerung auf „Meine Lernenden“ gegliedert:** Blockverwaltung, dann

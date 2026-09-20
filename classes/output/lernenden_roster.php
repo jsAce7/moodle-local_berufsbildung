@@ -33,11 +33,13 @@ use local_berufsbildung\ausbildungsstand;
  * Reine Array-Operationen auf dem Roster (id, name, Ausbildungsstand) -
  * keine DB-Zugriffe, deshalb ohne Weiteres unit-testbar.
  *
- * Eintraege haben die Form array{id: int, name: string, stand: ?ausbildungsstand}.
+ * Eintraege haben die Form array{id: int, name: string, stand: ?ausbildungsstand,
+ * istextern?: bool}.
  */
 class lernenden_roster {
     /**
-     * Sortiert nach laufendem Semester (aufsteigend), dann nach Namen.
+     * Sortiert reguläre Lernende nach laufendem Semester (aufsteigend),
+     * dann nach Namen. Externe üK-Teilnehmende stehen immer zuletzt.
      *
      * Erwartet die Eintraege bereits alphabetisch nach Namen sortiert (siehe
      * core_collator::asort() in meine_lernenden.php) - PHP-usort ist seit
@@ -50,11 +52,17 @@ class lernenden_roster {
      * null, siehe docs/schnitt1.md) stehen zuletzt, untereinander
      * weiterhin alphabetisch.
      *
-     * @param array $eintraege Struktur: array<int, array{id: int, name: string, stand: ?ausbildungsstand}>
-     * @return array<int, array{id: int, name: string, stand: ?ausbildungsstand}>
+     * @param array $eintraege Struktur: array<int, array{id: int, name: string, stand: ?ausbildungsstand, istextern?: bool}>
+     * @return array<int, array{id: int, name: string, stand: ?ausbildungsstand, istextern?: bool}>
      */
     public static function sortiere(array $eintraege): array {
         usort($eintraege, static function (array $a, array $b): int {
+            $externa = !empty($a['istextern']);
+            $externb = !empty($b['istextern']);
+            if ($externa !== $externb) {
+                return $externa <=> $externb;
+            }
+
             $semestera = $a['stand']?->semester ?? PHP_INT_MAX;
             $semesterb = $b['stand']?->semester ?? PHP_INT_MAX;
 
