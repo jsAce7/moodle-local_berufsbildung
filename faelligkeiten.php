@@ -1,5 +1,18 @@
 <?php
 // This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Central overview of own and supervised trainees' due actions.
@@ -30,7 +43,9 @@ $zeilen = [];
 foreach ($personids as $lernendeid) {
     foreach ($collector->get_faelligkeiten($userid, $lernendeid) as $faelligkeit) {
         $zeilen[] = (object) [
-            'name' => $lernendeid === $userid ? get_string('faelligkeiten:ich', 'local_berufsbildung') : fullname(core_user::get_user($lernendeid)),
+            'name' => $lernendeid === $userid
+                ? get_string('faelligkeiten:ich', 'local_berufsbildung')
+                : fullname(core_user::get_user($lernendeid)),
             'bezeichnung' => $lernendeid === $userid ? $faelligkeit->eigene_bezeichnung : $faelligkeit->bezeichnung,
             'datum' => userdate($faelligkeit->datum, get_string('strftimedate', 'langconfig')),
             'zeitpunkt' => $faelligkeit->datum,
@@ -47,7 +62,9 @@ if (empty($zeilen)) {
 } else {
     echo html_writer::start_tag('div', ['class' => 'list-group']);
     foreach ($zeilen as $zeile) {
-        $status = $zeile->ueberfaellig ? get_string('faelligkeiten:ueberfaellig', 'local_berufsbildung') . ' · ' . $zeile->datum : $zeile->datum;
+        $status = $zeile->ueberfaellig
+            ? get_string('faelligkeiten:ueberfaellig', 'local_berufsbildung') . ' · ' . $zeile->datum
+            : $zeile->datum;
         echo html_writer::link(
             new moodle_url($zeile->url),
             html_writer::tag('strong', s($zeile->name)) . html_writer::div(s($zeile->bezeichnung))
