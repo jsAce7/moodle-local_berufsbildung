@@ -232,18 +232,26 @@ if (empty($eintraege)) {
 
         if (has_capability('local/berufsbildung:managezuordnung', context_system::instance())) {
             $neueart = $eintrag['istextern'] ? api::TEILNAHMEART_LEHRE : api::TEILNAHMEART_UEK_EXTERN;
-            echo html_writer::div($OUTPUT->single_button(
-                new moodle_url('/local/berufsbildung/teilnahmeart_setzen.php', [
-                    'userid' => $lernendeid,
-                    'art' => $neueart,
-                ]),
+            // single_button() setzt Klassen auf seinen umschliessenden
+            // Container, nicht auf <button>; ein eigenes, kleines Formular
+            // wahrt POST + sesskey und vermeidet dessen sichtbaren Rahmen.
+            echo html_writer::start_tag('form', [
+                'method' => 'post',
+                'action' => (new moodle_url('/local/berufsbildung/teilnahmeart_setzen.php'))->out(false),
+                'class' => 'mt-2',
+            ]);
+            echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'userid', 'value' => $lernendeid]);
+            echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'art', 'value' => $neueart]);
+            echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+            echo html_writer::tag(
+                'button',
                 get_string(
                     $eintrag['istextern'] ? 'teilnahmeart:lehre_setzen' : 'teilnahmeart:uek_extern_setzen',
                     'local_berufsbildung'
                 ),
-                'post',
-                ['class' => 'btn btn-outline-secondary btn-sm']
-            ), 'mt-2');
+                ['type' => 'submit', 'class' => 'btn btn-outline-secondary btn-sm']
+            );
+            echo html_writer::end_tag('form');
         }
 
         $detailhtml = ob_get_clean();
