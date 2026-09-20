@@ -61,9 +61,6 @@
 }}
 <details class="local-berufsbildung-kachel card mb-3">
     <summary class="local-berufsbildung-kachel-summary card-body">
-        {{! Das hinterlegte Profilbild, sonst die Initialen - Moodles
-            Ersatzbild ist fuer alle dasselbe und unterscheidet damit
-            niemanden. }}
         {{#hasbild}}{{{bildhtml}}}{{/hasbild}}
         {{^hasbild}}
             <span class="local-berufsbildung-kachel-avatar bg-light text-dark border" aria-hidden="true">{{initialen}}</span>

@@ -49,14 +49,16 @@ $berufsbildnerid = (int) $USER->id;
 $suchbegriff = optional_param('suche', '', PARAM_TEXT);
 $berufsfilter = optional_param('beruf', '', PARAM_ALPHANUMEXT);
 
-$PAGE->set_context(context_user::instance($berufsbildnerid));
+// Der Systemkontext zeigt keinen Avatar der betreuenden Person im Moodle-
+// Seitenkopf. Die personenbezogenen Detaildaten bleiben separat geschützt.
+$PAGE->set_context(context_system::instance());
 $PAGE->set_url(new moodle_url('/local/berufsbildung/meine_lernenden.php'));
 $titel = get_string('nav:meine_lernenden', 'local_berufsbildung');
 $PAGE->set_title($titel);
 $PAGE->set_heading($titel);
 
 // Der volle Datensatz bleibt stehen, nicht nur der Name: das Profilbild
-// haengt daran und kostet so keine zweite Abfrage je Person.
+// hängt daran und kostet so keine zweite Abfrage je Person.
 $nutzer = [];
 $namen = [];
 foreach (api::get_lernende_for($berufsbildnerid) as $lernendeid) {
@@ -78,6 +80,9 @@ $eintraege = lernenden_roster::sortiere($eintraege);
 
 echo $OUTPUT->header();
 
+echo html_writer::start_tag('div', ['class' => 'card mb-3 local-berufsbildung-roster-steuerung']);
+echo html_writer::start_tag('div', ['class' => 'card-body']);
+
 // Nebeneingang zur Blockverwaltung statt eines eigenen
 // Navigationseintrags: wer Lernende betreut, pflegt die Ausbildungsbloecke
 // im selben Arbeitsgang, und die Leiste bleibt bei den zwei fachlichen
@@ -96,6 +101,8 @@ if (has_capability('local/berufsbildung:manageblocks', context_system::instance(
 }
 
 if (empty($eintraege)) {
+    echo html_writer::end_tag('div');
+    echo html_writer::end_tag('div');
     echo $OUTPUT->notification(get_string('meine_lernenden:keine_lernenden', 'local_berufsbildung'), 'info');
 } else {
     $collector = new collector();
@@ -178,6 +185,8 @@ if (empty($eintraege)) {
         'text-muted small local-berufsbildung-roster-toolbar-summary'
     );
     echo html_writer::end_tag('form');
+    echo html_writer::end_tag('div');
+    echo html_writer::end_tag('div');
 
     // Blockbezeichnungen einmal je Block, nicht einmal je Person: in einem
     // Roster stehen typischerweise mehrere Lernende im selben ueK oder in
@@ -256,13 +265,6 @@ if (empty($eintraege)) {
 
         $detailhtml = ob_get_clean();
 
-        // Das Profilbild nur, wenn wirklich eines hinterlegt ist. Ohne
-        // Bild liefert Moodle fuer alle dieselbe graue Silhouette - vier
-        // identische Silhouetten untereinander unterscheiden sich
-        // schlechter als "GH / NW / NN / RS". Ohne Verlinkung, weil ein
-        // Link im <summary> bei jedem Klick zugleich auf- und zuklappen
-        // wuerde; der Weg ins Profil steht im Detailbereich. Nicht fuer
-        // Screenreader, weil der Name unmittelbar daneben steht.
         $bildhtml = !empty($nutzer[$lernendeid]->picture)
             ? $OUTPUT->user_picture($nutzer[$lernendeid], [
                 'size' => 40,

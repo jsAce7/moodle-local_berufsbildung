@@ -95,25 +95,18 @@ class lernenden_kachel {
         ]);
     }
 
-    /**
-     * Erste Buchstaben von Vor- und Nachnamen, z.B. "Elena Furrer" -> "EF".
-     * Ein einzelnes Wort liefert dessen ersten Buchstaben.
-     *
-     * @param string $name
-     */
+    /** @param string $name Vollständiger Name */
     private static function initialen(string $name): string {
         $woerter = preg_split('/\s+/', trim($name), -1, PREG_SPLIT_NO_EMPTY);
         if (empty($woerter)) {
             return '';
         }
-
         $erstes = core_text::strtoupper(core_text::substr($woerter[0], 0, 1));
         if (count($woerter) === 1) {
             return $erstes;
         }
-
         $letztes = core_text::strtoupper(core_text::substr($woerter[count($woerter) - 1], 0, 1));
-
         return $erstes . $letztes;
     }
+
 }
