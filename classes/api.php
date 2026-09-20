@@ -52,23 +52,45 @@ class api {
     /** Ausbildungsphase: Beruf oder Jahrgang im Profil nicht aufloesbar. */
     public const PHASE_UNBEKANNT = 'unbekannt';
 
-    /** Teilnahmeart; fehlender Datensatz bedeutet die reguläre Lehre. */
+    /**
+     * Liefert die Teilnahmeart einer Person.
+     *
+     * Ein fehlender Datensatz bedeutet die reguläre Lehre.
+     *
+     * @param int $userid
+     * @return string
+     */
     public static function get_teilnahmeart(int $userid): string {
         $profil = teilnahmeprofil::get_record(['userid' => $userid]);
         return $profil === false ? self::TEILNAHMEART_LEHRE : (string) $profil->get('art');
     }
 
-    /** Ob die Person extern ausschliesslich an üK-Angeboten teilnimmt. */
+    /**
+     * Prüft, ob die Person extern ausschliesslich an üK-Angeboten teilnimmt.
+     *
+     * @param int $userid
+     * @return bool
+     */
     public static function ist_uek_extern(int $userid): bool {
         return self::get_teilnahmeart($userid) === self::TEILNAHMEART_UEK_EXTERN;
     }
 
-    /** Lerndokumentation ist nur Teil der regulären Lehre. */
+    /**
+     * Prüft, ob eine Lerndokumentation für die Person erforderlich ist.
+     *
+     * @param int $userid
+     * @return bool
+     */
     public static function ist_lerndokumentation_erforderlich(int $userid): bool {
         return !self::ist_uek_extern($userid);
     }
 
-    /** Setzt das personenbezogene Betreuungsprofil. */
+    /**
+     * Setzt die personenbezogene Teilnahmeart.
+     *
+     * @param int $userid
+     * @param string $art
+     */
     public static function set_teilnahmeart(int $userid, string $art): void {
         if (!in_array($art, [self::TEILNAHMEART_LEHRE, self::TEILNAHMEART_UEK_EXTERN], true)) {
             throw new \coding_exception('Ungültige Teilnahmeart.');

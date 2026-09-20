@@ -5,6 +5,11 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 /**
  * Teilnahmeprofil einer lernenden Person.
@@ -20,10 +25,18 @@ namespace local_berufsbildung\persistent;
 
 use core\persistent;
 
-/** Persönliches Betreuungsprofil, unabhängig von Kohorten und Zuordnungen. */
+/**
+ * Speichert die Teilnahmeart unabhängig von Kohorten und Zuordnungen.
+ */
 final class teilnahmeprofil extends persistent {
+    /** Datenbanktabelle des Teilnahmeprofils. */
     const TABLE = 'local_berufsbildung_teilnahmeprofil';
 
+    /**
+     * Definiert die persistierten Eigenschaften.
+     *
+     * @return array
+     */
     protected static function define_properties(): array {
         return [
             'userid' => ['type' => PARAM_INT],
