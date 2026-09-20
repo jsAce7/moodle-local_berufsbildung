@@ -53,6 +53,9 @@ class lernenden_kachel {
      *        zum Stichtag kein Einsatz laeuft oder kein Versetzungsplan
      *        vorliegt - die Spalte bleibt dann leer und haelt trotzdem
      *        ihre Breite, damit die Zeilen untereinander buendig bleiben.
+     * @param int $anzahlueberfaellig Nur überfällige Aufgaben erscheinen
+     *        bereits im geschlossenen Header; künftige Fristen stehen im
+     *        Detail, damit die Übersicht nicht zur Aufgabenliste wird.
      */
     public static function render(
         string $name,
@@ -61,7 +64,8 @@ class lernenden_kachel {
         int $anzahltaetigkeiten,
         string $detailhtml,
         ?string $bildhtml = null,
-        ?string $einsatzname = null
+        ?string $einsatzname = null,
+        int $anzahlueberfaellig = 0
     ): string {
         global $OUTPUT;
 
@@ -81,6 +85,8 @@ class lernenden_kachel {
             'stepper' => $stand !== null ? semester_stepper::render($stand->semester, $stand->gesamtsemester, kompakt: true) : '',
             'hasluecken' => $anzahlluecken > 0,
             'anzahlluecken' => $anzahlluecken,
+            'hasueberfaellig' => $anzahlueberfaellig > 0,
+            'anzahlueberfaellig' => $anzahlueberfaellig,
             'anzahltaetigkeiten' => $anzahltaetigkeiten,
             'detailhtml' => $detailhtml,
         ]);

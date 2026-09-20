@@ -33,6 +33,8 @@
     * stepper - string, bereits gerendertes HTML, nur wenn hatstand
     * hasluecken - bool
     * anzahlluecken - int
+    * hasueberfaellig - bool
+    * anzahlueberfaellig - int
     * anzahltaetigkeiten - int
     * detailhtml - string, bereits gerendertes HTML fuer den ausgeklappten Bereich
 
@@ -49,6 +51,8 @@
         "stepper": "<span class=\"local-berufsbildung-stepper\"></span>",
         "hasluecken": true,
         "anzahlluecken": 2,
+        "hasueberfaellig": true,
+        "anzahlueberfaellig": 1,
         "anzahltaetigkeiten": 9,
         "detailhtml": "<p>...</p>"
     }
@@ -91,6 +95,14 @@
                     {{#str}} luecken:titel_anzahl, local_berufsbildung, {{anzahlluecken}} {{/str}}
                 </span>
             {{/hasluecken}}
+            {{! Nur Überfälliges muss schon vor dem Aufklappen sichtbar sein;
+                künftige Fälligkeiten gehören in den Detailkontext. }}
+            {{#hasueberfaellig}}
+                <span class="badge bg-danger">
+                    <i class="icon fa fa-exclamation-circle fa-fw" aria-hidden="true"></i>
+                    {{#str}} faelligkeiten:ueberfaellig_anzahl, local_berufsbildung, {{anzahlueberfaellig}} {{/str}}
+                </span>
+            {{/hasueberfaellig}}
             <span class="badge bg-light text-dark border">
                 <i class="icon fa fa-tasks fa-fw" aria-hidden="true"></i>
                 {{#str}} meine_lernenden:taetigkeiten_anzahl, local_berufsbildung, {{anzahltaetigkeiten}} {{/str}}

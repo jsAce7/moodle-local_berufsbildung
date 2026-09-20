@@ -1,12 +1,12 @@
 # Changelog
 
-## [0.4.10] — 2026-09-20
+## [0.4.11] — 2026-09-20
 
 - **Fälligkeiten sind in den Arbeitskontext integriert.** Sie stehen nicht
   mehr als dritter Einstieg in der primären Navigation: Lernende sehen ihre
-  eigenen Fristen in „Meine Lehre“, Berufsbildner/innen die nach Datum
-  priorisierte Übersicht oben in „Meine Lernenden“ und nochmals im Detail
-  der jeweiligen Person. Die bisherige, losgelöste Seite wurde entfernt.
+  eigenen Fristen in „Meine Lehre“, Berufsbildner/innen im Detail der
+  jeweiligen Person. Überfällige Aufgaben sind bereits im geschlossenen
+  Header sichtbar. Die bisherige, losgelöste Seite wurde entfernt.
 
 Alle nennenswerten Änderungen an diesem Plugin werden hier festgehalten. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 

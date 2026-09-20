@@ -27,13 +27,18 @@ final class faelligkeiten_liste {
     /**
      * @param object[] $zeilen name ist optional (bei eigenen Fälligkeiten).
      * @param string $titel Abschnittsüberschrift
+     * @param bool $kompakt Im aufgeklappten Detail einer lernenden Person.
      */
-    public static function render(array $zeilen, string $titel): string {
+    public static function render(array $zeilen, string $titel, bool $kompakt = false): string {
         if (empty($zeilen)) {
             return '';
         }
 
-        $inhalt = html_writer::tag('h2', $titel, ['class' => 'h4']);
+        $inhalt = html_writer::tag(
+            $kompakt ? 'h3' : 'h2',
+            $titel,
+            ['class' => $kompakt ? 'h5 mb-2' : 'h4']
+        );
         $inhalt .= html_writer::start_tag('div', ['class' => 'list-group']);
         foreach ($zeilen as $zeile) {
             $status = $zeile->ueberfaellig
@@ -53,6 +58,9 @@ final class faelligkeiten_liste {
         }
         $inhalt .= html_writer::end_tag('div');
 
-        return $inhalt;
+        return html_writer::div(
+            $inhalt,
+            'local-berufsbildung-faelligkeiten' . ($kompakt ? ' mb-4' : '')
+        );
     }
 }
