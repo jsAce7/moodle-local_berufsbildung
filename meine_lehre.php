@@ -45,6 +45,15 @@ $titel = get_string('nav:meine_lehre', 'local_berufsbildung');
 $PAGE->set_title($titel);
 $PAGE->set_heading($titel);
 
+// Der Direktaufruf bleibt harmlos, obwohl externe üK-Teilnehmende keinen
+// Navigationseintrag erhalten: Für sie verwaltet dieses Plugin keine Lehre.
+if (api::ist_uek_extern($lernendeid)) {
+    echo $OUTPUT->header();
+    echo $OUTPUT->notification(get_string('meine_lehre:uek_extern', 'local_berufsbildung'), 'info');
+    echo $OUTPUT->footer();
+    exit;
+}
+
 // Ein Format fuer ausgeschriebene Daten im Fliesstext, eines fuer die
 // kompakten Listen (siehe einsatz_darstellung) - mehr braucht die Seite
 // nicht. Bewusst ohne Wochentag: bei "Ihre Lehre beginnt am ..." ist das

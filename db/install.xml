@@ -158,5 +158,22 @@
         <INDEX NAME="lernendeid_gueltigbis" UNIQUE="false" FIELDS="lernendeid, gueltig_bis" COMMENT="Fuer die Stichtag-Abfrage, analog zur Zuordnungstabelle"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="local_berufsbildung_teilnahmeprofil" COMMENT="Personenbezogene Teilnahmeart, unabhaengig von der gemeinsamen Kohorte">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK auf user.id"/>
+        <FIELD NAME="art" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="lehre" SEQUENCE="false" COMMENT="'lehre' | 'uek_extern'"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="usermodified" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="userid" UNIQUE="true" FIELDS="userid"/>
+      </INDEXES>
+    </TABLE>
   </TABLES>
 </XMLDB>

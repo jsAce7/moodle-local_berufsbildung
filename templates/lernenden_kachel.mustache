@@ -35,6 +35,7 @@
     * anzahlluecken - int
     * hasueberfaellig - bool
     * anzahlueberfaellig - int
+    * hasextern - bool
     * anzahltaetigkeiten - int
     * detailhtml - string, bereits gerendertes HTML fuer den ausgeklappten Bereich
 
@@ -53,6 +54,7 @@
         "anzahlluecken": 2,
         "hasueberfaellig": true,
         "anzahlueberfaellig": 1,
+        "hasextern": false,
         "anzahltaetigkeiten": 9,
         "detailhtml": "<p>...</p>"
     }
@@ -95,6 +97,11 @@
                     {{#str}} luecken:titel_anzahl, local_berufsbildung, {{anzahlluecken}} {{/str}}
                 </span>
             {{/hasluecken}}
+            {{#hasextern}}
+                <span class="badge bg-light text-dark border">
+                    {{#str}} teilnahmeart:uek_extern, local_berufsbildung {{/str}}
+                </span>
+            {{/hasextern}}
             {{! Nur Überfälliges muss schon vor dem Aufklappen sichtbar sein;
                 künftige Fälligkeiten gehören in den Detailkontext. }}
             {{#hasueberfaellig}}

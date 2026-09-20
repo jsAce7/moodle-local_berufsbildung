@@ -386,5 +386,22 @@ function xmldb_local_berufsbildung_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026091710, 'local', 'berufsbildung');
     }
 
+    if ($oldversion < 2026092004) {
+        $table = new xmldb_table('local_berufsbildung_teilnahmeprofil');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('usermodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('art', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, 'lehre');
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('usermodified', XMLDB_KEY_FOREIGN, ['usermodified'], 'user', ['id']);
+        $table->add_index('userid', XMLDB_INDEX_UNIQUE, ['userid']);
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+        upgrade_plugin_savepoint(true, 2026092004, 'local', 'berufsbildung');
+    }
+
     return true;
 }

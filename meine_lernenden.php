@@ -71,6 +71,7 @@ foreach ($namen as $lernendeid => $name) {
         'id' => $lernendeid,
         'name' => $name,
         'stand' => api::get_ausbildungsstand($lernendeid),
+        'istextern' => api::ist_uek_extern($lernendeid),
     ];
 }
 $eintraege = lernenden_roster::sortiere($eintraege);
@@ -132,7 +133,7 @@ if (empty($eintraege)) {
     $anzahlluecken = [];
     foreach ($eintraege as $eintrag) {
         $stand = $eintrag['stand'];
-        $raster[$eintrag['id']] = ($stand !== null && api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null)
+        $raster[$eintrag['id']] = (!$eintrag['istextern'] && $stand !== null && api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null)
             ? api::get_kompetenzraster($eintrag['id'])
             : [];
 
@@ -229,6 +230,22 @@ if (empty($eintraege)) {
             get_string('meine_lernenden:profil_oeffnen', 'local_berufsbildung')
         ), 'mt-3');
 
+        if (has_capability('local/berufsbildung:managezuordnung', context_system::instance())) {
+            $neueart = $eintrag['istextern'] ? api::TEILNAHMEART_LEHRE : api::TEILNAHMEART_UEK_EXTERN;
+            echo html_writer::div($OUTPUT->single_button(
+                new moodle_url('/local/berufsbildung/teilnahmeart_setzen.php', [
+                    'userid' => $lernendeid,
+                    'art' => $neueart,
+                ]),
+                get_string(
+                    $eintrag['istextern'] ? 'teilnahmeart:lehre_setzen' : 'teilnahmeart:uek_extern_setzen',
+                    'local_berufsbildung'
+                ),
+                'post',
+                ['class' => 'btn btn-outline-secondary btn-sm']
+            ), 'mt-2');
+        }
+
         $detailhtml = ob_get_clean();
 
         // Das Profilbild nur, wenn wirklich eines hinterlegt ist. Ohne
@@ -263,13 +280,17 @@ if (empty($eintraege)) {
 
         echo lernenden_kachel::render(
             $eintrag['name'],
-            $stand,
+            // Externe Personen haben keinen Ausbildungsstand in diesem
+            // Plugin; ihr allfälliger aktueller üK-Einsatz bleibt separat
+            // sichtbar, aber Semesterleiste und Lehrberuf nicht.
+            $eintrag['istextern'] ? null : $stand,
             $anzahlluecken[$lernendeid],
             count($nachweise),
             $detailhtml,
             bildhtml: $bildhtml,
             einsatzname: $einsatzname,
-            anzahlueberfaellig: $anzahlueberfaellig[$lernendeid] ?? 0
+            anzahlueberfaellig: $anzahlueberfaellig[$lernendeid] ?? 0,
+            istextern: $eintrag['istextern']
         );
     }
 

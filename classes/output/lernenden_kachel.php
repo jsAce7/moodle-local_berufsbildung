@@ -56,6 +56,7 @@ class lernenden_kachel {
      * @param int $anzahlueberfaellig Nur überfällige Aufgaben erscheinen
      *        bereits im geschlossenen Header; künftige Fristen stehen im
      *        Detail, damit die Übersicht nicht zur Aufgabenliste wird.
+     * @param bool $istextern Externe üK-Teilnahme statt regulärer Lehre.
      */
     public static function render(
         string $name,
@@ -65,7 +66,8 @@ class lernenden_kachel {
         string $detailhtml,
         ?string $bildhtml = null,
         ?string $einsatzname = null,
-        int $anzahlueberfaellig = 0
+        int $anzahlueberfaellig = 0,
+        bool $istextern = false
     ): string {
         global $OUTPUT;
 
@@ -87,6 +89,7 @@ class lernenden_kachel {
             'anzahlluecken' => $anzahlluecken,
             'hasueberfaellig' => $anzahlueberfaellig > 0,
             'anzahlueberfaellig' => $anzahlueberfaellig,
+            'hasextern' => $istextern,
             'anzahltaetigkeiten' => $anzahltaetigkeiten,
             'detailhtml' => $detailhtml,
         ]);

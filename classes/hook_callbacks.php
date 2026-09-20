@@ -64,7 +64,7 @@ class hook_callbacks {
         // Reihenfolge in der Leiste.
         $eintraege = [];
 
-        if (api::get_ausbildungsstand($userid) !== null) {
+        if (!api::ist_uek_extern($userid) && api::get_ausbildungsstand($userid) !== null) {
             $eintraege['local_berufsbildung_meine_lehre'] = ['nav:meine_lehre', 'meine_lehre.php'];
         }
 

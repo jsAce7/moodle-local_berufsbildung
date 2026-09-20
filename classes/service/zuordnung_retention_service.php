@@ -28,6 +28,7 @@ namespace local_berufsbildung\service;
 
 use local_berufsbildung\api;
 use local_berufsbildung\persistent\aufbewahrung;
+use local_berufsbildung\persistent\teilnahmeprofil;
 use local_berufsbildung\persistent\zuordnung;
 
 /**
@@ -87,6 +88,9 @@ class zuordnung_retention_service {
 
         foreach (aufbewahrung::get_records(['lernendeid' => $lernendeid]) as $vermerk) {
             $vermerk->delete();
+        }
+        foreach (teilnahmeprofil::get_records(['userid' => $lernendeid]) as $profil) {
+            $profil->delete();
         }
 
         // War das die letzte laufende Zuordnung einer betreuenden Person,

@@ -29,6 +29,7 @@ namespace local_berufsbildung;
 use local_berufsbildung\persistent\aufbewahrung;
 use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\einsatz;
+use local_berufsbildung\persistent\teilnahmeprofil;
 use local_berufsbildung\persistent\zuordnung;
 use local_berufsbildung\service\lehrdauer_resolver;
 use local_berufsbildung\service\rahmen_resolver;
@@ -44,8 +45,42 @@ use local_berufsbildung\versetzungsplan\raster_analyse;
  * diese Person" - die einzige Wahrheit ist die Zuordnungstabelle.
  */
 class api {
+    /** Reguläre Lehre mit allen Nachweisen. */
+    public const TEILNAHMEART_LEHRE = 'lehre';
+    /** Externe Person, die nur an üK-Angeboten teilnimmt. */
+    public const TEILNAHMEART_UEK_EXTERN = 'uek_extern';
     /** Ausbildungsphase: Beruf oder Jahrgang im Profil nicht aufloesbar. */
     public const PHASE_UNBEKANNT = 'unbekannt';
+
+    /** Teilnahmeart; fehlender Datensatz bedeutet die reguläre Lehre. */
+    public static function get_teilnahmeart(int $userid): string {
+        $profil = teilnahmeprofil::get_record(['userid' => $userid]);
+        return $profil === false ? self::TEILNAHMEART_LEHRE : (string) $profil->get('art');
+    }
+
+    /** Ob die Person extern ausschliesslich an üK-Angeboten teilnimmt. */
+    public static function ist_uek_extern(int $userid): bool {
+        return self::get_teilnahmeart($userid) === self::TEILNAHMEART_UEK_EXTERN;
+    }
+
+    /** Lerndokumentation ist nur Teil der regulären Lehre. */
+    public static function ist_lerndokumentation_erforderlich(int $userid): bool {
+        return !self::ist_uek_extern($userid);
+    }
+
+    /** Setzt das personenbezogene Betreuungsprofil. */
+    public static function set_teilnahmeart(int $userid, string $art): void {
+        if (!in_array($art, [self::TEILNAHMEART_LEHRE, self::TEILNAHMEART_UEK_EXTERN], true)) {
+            throw new \coding_exception('Ungültige Teilnahmeart.');
+        }
+        $profil = teilnahmeprofil::get_record(['userid' => $userid]);
+        if ($profil === false) {
+            (new teilnahmeprofil(0, (object) ['userid' => $userid, 'art' => $art]))->create();
+            return;
+        }
+        $profil->set('art', $art);
+        $profil->update();
+    }
 
     /** Ausbildungsphase: Lehre beginnt zum Stichtag erst noch. */
     public const PHASE_VOR_BEGINN = 'vor_beginn';
