@@ -59,8 +59,8 @@ $string['role:planung_desc'] = 'Systemweite Rolle für die Pflege der Ausbildung
 
 $string['nav:meine_lehre'] = 'Meine Lehre';
 $string['nav:meine_lernenden'] = 'Meine Lernenden';
-$string['nav:faelligkeiten'] = 'Fälligkeiten';
 $string['faelligkeiten:titel'] = 'Fälligkeiten';
+$string['faelligkeiten:meine_lernenden'] = 'Fälligkeiten meiner Lernenden';
 $string['faelligkeiten:ich'] = 'Ich';
 $string['faelligkeiten:leer'] = 'Aktuell sind keine Fälligkeiten vorhanden.';
 $string['faelligkeiten:ueberfaellig'] = 'Überfällig';

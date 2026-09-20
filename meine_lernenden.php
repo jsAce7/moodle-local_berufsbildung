@@ -36,6 +36,7 @@ require_once(__DIR__ . '/../../config.php');
 
 use local_berufsbildung\api;
 use local_berufsbildung\nachweis\collector;
+use local_berufsbildung\output\faelligkeiten_liste;
 use local_berufsbildung\output\kompetenzraster;
 use local_berufsbildung\output\lernenden_kachel;
 use local_berufsbildung\output\lernenden_roster;
@@ -98,6 +99,32 @@ if (empty($eintraege)) {
 } else {
     $collector = new collector();
     $quellennamen = $collector->get_quelle_namen();
+    $datumsformat = get_string('strftimedate', 'langconfig');
+
+    // Die Übersicht beantwortet die Arbeitsfrage vor der Detailansicht:
+    // Welche Person braucht als Nächstes Aufmerksamkeit? Die gleichen
+    // Fälligkeiten erscheinen weiter unten nochmals im jeweiligen Profil,
+    // dort aber ohne Namen, weil der Kontext bereits klar ist.
+    $faelligkeiten = [];
+    $faelligkeitenjelernende = [];
+    foreach ($eintraege as $eintrag) {
+        $lernendeid = $eintrag['id'];
+        foreach ($collector->get_faelligkeiten($berufsbildnerid, $lernendeid) as $faelligkeit) {
+            $zeile = (object) [
+                'name' => $eintrag['name'],
+                'bezeichnung' => $faelligkeit->bezeichnung,
+                'datum' => userdate($faelligkeit->datum, $datumsformat),
+                'zeitpunkt' => $faelligkeit->datum,
+                'ueberfaellig' => $faelligkeit->datum < time(),
+                'url' => $faelligkeit->url,
+            ];
+            $faelligkeiten[] = $zeile;
+            $detailzeile = clone $zeile;
+            unset($detailzeile->name);
+            $faelligkeitenjelernende[$lernendeid][] = $detailzeile;
+        }
+    }
+    usort($faelligkeiten, static fn (object $a, object $b): int => $a->zeitpunkt <=> $b->zeitpunkt);
 
     // Kompetenzstand je Person - vorab fuer den gesamten Bestand berechnet
     // (nicht nur die aktuell gefilterte Auswahl), damit die Zusammenfassung
@@ -156,6 +183,19 @@ if (empty($eintraege)) {
     );
     echo html_writer::end_tag('form');
 
+    if (!empty($faelligkeiten)) {
+        echo html_writer::div(
+            html_writer::div(
+                faelligkeiten_liste::render(
+                    $faelligkeiten,
+                    get_string('faelligkeiten:meine_lernenden', 'local_berufsbildung')
+                ),
+                'card-body'
+            ),
+            'card mb-3'
+        );
+    }
+
     // Blockbezeichnungen einmal je Block, nicht einmal je Person: in einem
     // Roster stehen typischerweise mehrere Lernende im selben ueK oder in
     // derselben Abteilung.
@@ -187,6 +227,11 @@ if (empty($eintraege)) {
                 'mb-3'
             );
         }
+
+        echo faelligkeiten_liste::render(
+            $faelligkeitenjelernende[$lernendeid] ?? [],
+            get_string('faelligkeiten:titel', 'local_berufsbildung')
+        );
 
         $nachweise = $collector->get_nachweise($berufsbildnerid, $lernendeid, 0, time());
         echo nachweis_liste::render(

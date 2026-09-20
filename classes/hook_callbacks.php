@@ -72,10 +72,6 @@ class hook_callbacks {
             $eintraege['local_berufsbildung_meine_lernenden'] = ['nav:meine_lernenden', 'meine_lernenden.php'];
         }
 
-        if (!empty($eintraege)) {
-            $eintraege['local_berufsbildung_faelligkeiten'] = ['nav:faelligkeiten', 'faelligkeiten.php'];
-        }
-
         // Vor die Website-Administration einsortieren: die fachlichen
         // Einstiege sind Alltag, der Admin-Knoten die Ausnahme. add() haengt
         // immer hinten an, eine Position kennt nur add_node(). Fehlt der

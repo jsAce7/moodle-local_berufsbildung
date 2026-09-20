@@ -30,6 +30,7 @@ use local_berufsbildung\api;
 use local_berufsbildung\nachweis\collector;
 use local_berufsbildung\output\einsatz_karte;
 use local_berufsbildung\output\einsatz_timeline;
+use local_berufsbildung\output\faelligkeiten_liste;
 use local_berufsbildung\output\kompetenzraster;
 use local_berufsbildung\output\nachweis_liste;
 use local_berufsbildung\output\semester_stepper;
@@ -157,6 +158,24 @@ if ($stand !== null) {
         html_writer::div(ob_get_clean(), 'card-body local-berufsbildung-herokarte-body'),
         'card local-berufsbildung-herokarte mb-3'
     );
+
+    // Fälligkeiten stehen bei der eigenen Lehre, nicht als dritter Einstieg
+    // daneben. Die Erfassungsaktion führt unmittelbar zur zuständigen
+    // Quelle; die Liste zeigt zusätzlich auch Fristen von Quellen ohne
+    // eigene Schaltfläche.
+    $faelligkeiten = [];
+    foreach ($collector->get_faelligkeiten($lernendeid, $lernendeid) as $faelligkeit) {
+        $faelligkeiten[] = (object) [
+            'bezeichnung' => $faelligkeit->eigene_bezeichnung,
+            'datum' => userdate($faelligkeit->datum, $datumsformat),
+            'ueberfaellig' => $faelligkeit->datum < time(),
+            'url' => $faelligkeit->url,
+        ];
+    }
+    echo $abschnitt(faelligkeiten_liste::render(
+        $faelligkeiten,
+        get_string('faelligkeiten:titel', 'local_berufsbildung')
+    ));
 
     // Die Kompetenzuebersicht ist ein Planungsinstrument fuer die laufende
     // Ausbildung. Nach dem Abschluss waere sie keine Planung mehr, sondern

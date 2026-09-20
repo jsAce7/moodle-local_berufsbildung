@@ -59,8 +59,8 @@ $string['role:planung_desc'] = 'Site-wide role for maintaining the training bloc
 
 $string['nav:meine_lehre'] = 'My apprenticeship';
 $string['nav:meine_lernenden'] = 'My trainees';
-$string['nav:faelligkeiten'] = 'Due dates';
 $string['faelligkeiten:titel'] = 'Due dates';
+$string['faelligkeiten:meine_lernenden'] = 'Due dates for my trainees';
 $string['faelligkeiten:ich'] = 'Me';
 $string['faelligkeiten:leer'] = 'There are currently no due dates.';
 $string['faelligkeiten:ueberfaellig'] = 'Overdue';
