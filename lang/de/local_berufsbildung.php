@@ -59,6 +59,11 @@ $string['role:planung_desc'] = 'Systemweite Rolle für die Pflege der Ausbildung
 
 $string['nav:meine_lehre'] = 'Meine Lehre';
 $string['nav:meine_lernenden'] = 'Meine Lernenden';
+$string['nav:faelligkeiten'] = 'Fälligkeiten';
+$string['faelligkeiten:titel'] = 'Fälligkeiten';
+$string['faelligkeiten:ich'] = 'Ich';
+$string['faelligkeiten:leer'] = 'Aktuell sind keine Fälligkeiten vorhanden.';
+$string['faelligkeiten:ueberfaellig'] = 'Überfällig';
 $string['form:ausbildungsstand'] = '{$a->beruf}, {$a->lehrjahr}. Lehrjahr (Semester {$a->semester})';
 $string['form:keine_taetigkeiten'] = 'Keine Tätigkeiten vorhanden.';
 $string['luecken:titel'] = 'Noch nicht ausgebildete Pflicht-Handlungskompetenzen';

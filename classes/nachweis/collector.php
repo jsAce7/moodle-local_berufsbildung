@@ -174,4 +174,29 @@ class collector {
 
         return $aktionen;
     }
+
+    /**
+     * Fälligkeiten einer Person aus allen Quellen. Die gleiche
+     * Zuständigkeitsgrenze wie bei Leistungsnachweisen gilt auch für
+     * Planungsdaten.
+     *
+     * @param int $abrufendeid
+     * @param int $lernendeid
+     * @return faelligkeit[]
+     */
+    public function get_faelligkeiten(int $abrufendeid, int $lernendeid): array {
+        if ($abrufendeid !== $lernendeid && !api::is_zustaendig($abrufendeid, $lernendeid)) {
+            throw new moodle_exception('error:keinezustaendigkeit', 'local_berufsbildung');
+        }
+
+        $ergebnis = [];
+        foreach ($this->providers as $provider) {
+            if ($provider instanceof quelle_mit_faelligkeiten) {
+                $ergebnis = array_merge($ergebnis, $provider->get_faelligkeiten($lernendeid));
+            }
+        }
+        usort($ergebnis, static fn (faelligkeit $a, faelligkeit $b): int => $a->datum <=> $b->datum);
+
+        return $ergebnis;
+    }
 }

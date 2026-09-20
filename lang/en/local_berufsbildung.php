@@ -59,6 +59,11 @@ $string['role:planung_desc'] = 'Site-wide role for maintaining the training bloc
 
 $string['nav:meine_lehre'] = 'My apprenticeship';
 $string['nav:meine_lernenden'] = 'My trainees';
+$string['nav:faelligkeiten'] = 'Due dates';
+$string['faelligkeiten:titel'] = 'Due dates';
+$string['faelligkeiten:ich'] = 'Me';
+$string['faelligkeiten:leer'] = 'There are currently no due dates.';
+$string['faelligkeiten:ueberfaellig'] = 'Overdue';
 $string['form:ausbildungsstand'] = '{$a->beruf}, year {$a->lehrjahr} (semester {$a->semester})';
 $string['form:keine_taetigkeiten'] = 'No activities recorded.';
 $string['luecken:titel'] = 'Required competency areas not yet trained';
