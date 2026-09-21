@@ -57,6 +57,17 @@ $PAGE->set_heading($titel);
 $PAGE->navbar->add(get_string('bloecke:uebersicht', 'local_berufsbildung'), $bloeckeurl);
 $PAGE->navbar->add($titel);
 
+// Live-Suche als Ergaenzung: ohne dieses Skript bleibt das Suchformular
+// ein gewoehnlicher GET-Filter, den kompetenz_auswahl::filtere() auswertet.
+// Kein AMD-Modul, weil das Plugin keine Build-Kette hat und neben amd/src
+// auch ein amd/build/*.min.js noetig waere - zwei Kopien, die nichts
+// synchron haelt. Die Plugin-Version als Parameter, damit der Browser nach
+// einem Update nicht die alte Fassung aus dem Zwischenspeicher nimmt;
+// requires->js() haengt anders als AMD von sich aus keine an.
+$PAGE->requires->js(new moodle_url('/local/berufsbildung/js/kompetenz_suche.js', [
+    'v' => (string) get_config('local_berufsbildung', 'version'),
+]));
+
 // Die Auswahl wird auf den Kompetenzrahmen des Berufs dieses Blocks
 // eingeschraenkt - sonst stehen bei mehreren konfigurierten Berufen alle
 // Rahmen gemischt beieinander (siehe raster_analyse.php fuer das gleiche

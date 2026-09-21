@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.5.1] — 2026-09-21
+
+### Hinzugefügt
+
+- **Die Suche in der Kompetenzauswahl filtert beim Tippen** (`js/kompetenz_suche.js`). Ergänzung, keine Voraussetzung: ohne JavaScript bleibt das Formular der GET-Filter aus 0.5.0, den `kompetenz_auswahl::filtere()` auswertet — dieselben Regeln, dasselbe Ergebnis. Mit Skript entfällt der Seitenaufbau, und **angekreuzte Kompetenzen bleiben über mehrere Suchen hinweg stehen**; beim Serverfilter gehen sie mit jedem Neuladen verloren. Die Schaltfläche „Suchen" blendet sich aus, sobald das Skript läuft.
+
+  Gesucht wird in `data-suchtext`, nicht im sichtbaren Text: dort ist die Beschreibung auf 120 Zeichen gekürzt. Das Attribut trägt denselben Text, den auch der Serverfilter durchsucht — beide können damit nicht auseinanderlaufen.
+
+  Bewusst eine einfache Datei über `$PAGE->requires->js()` statt eines AMD-Moduls: das Plugin hat keine Build-Kette, ein AMD-Modul bräuchte neben `amd/src` auch ein `amd/build/*.min.js`, und zwei Kopien hält hier nichts synchron. Die Plugin-Version hängt als Parameter an der URL, weil `requires->js()` anders als AMD von sich aus kein Cache-Busting mitbringt.
+
+### Geändert
+
+- `blocklk:suche_keine_treffer` nennt den Suchbegriff nicht mehr. Die Live-Suche blendet dieselbe Meldung ohne Neuladen ein und würde sonst den Begriff des letzten Seitenaufbaus nennen.
+
 ## [0.5.0] — 2026-09-21
 
 ### Hinzugefügt

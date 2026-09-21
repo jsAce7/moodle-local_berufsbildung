@@ -43,10 +43,15 @@
     * suchaktiv - bool
     * suchelabel, sucheplaceholder, suchen, suchezuruecksetzen, keinetreffer - string
     * handlungskompetenzen - array of {id, code, hatcode, name, beschreibung, hatbeschreibung,
-                                       kurzbeschreibung, istzugeordnet, hatlk, lkoffen, lktext,
-                                       leistungskriterien}
+                                       kurzbeschreibung, suchtext, istzugeordnet, hatlk, lkoffen,
+                                       lktext, leistungskriterien}
     * leistungskriterien - array of {id, code, hatcode, name, beschreibung, hatbeschreibung,
-                                     kurzbeschreibung, istzugeordnet}
+                                     kurzbeschreibung, suchtext, istzugeordnet}
+
+    suchtext traegt Bezeichnung, ID-Nummer und volle Beschreibung klein
+    geschrieben - die Grundlage der Live-Suche in js/kompetenz_suche.js.
+    Aus dem sichtbaren Text liesse sich das nicht gewinnen, dort ist die
+    Beschreibung gekuerzt.
     * intensitaeten - array of {wert, text, gewaehlt}
     * intensitaetlabel - string
     * intensitaethilfe - string
@@ -90,6 +95,7 @@
                         "beschreibung": "Automatiker und Automatikerinnen ergänzen automatisierte Anlagen mit Robotern.",
                         "hatbeschreibung": true,
                         "kurzbeschreibung": "Automatiker und Automatikerinnen ergänzen automatisierte Anlagen...",
+                        "suchtext": "automatisierte anlagen mit robotern ergänzen 7777be b.07",
                         "istzugeordnet": false,
                         "hatlk": true,
                         "lkoffen": false,
@@ -99,10 +105,11 @@
                              "beschreibung": "Sie dokumentieren und archivieren ihre Arbeit nachvollziehbar.",
                              "hatbeschreibung": true,
                              "kurzbeschreibung": "Sie dokumentieren und archivieren ihre Arbeit...",
+                             "suchtext": "au b1 01 1-2 sie dokumentieren und archivieren ihre arbeit.",
                              "istzugeordnet": false},
                             {"id": 44, "code": "", "hatcode": false, "name": "AU b8 01 1-2",
                              "beschreibung": "", "hatbeschreibung": false,
-                             "kurzbeschreibung": "", "istzugeordnet": true}
+                             "kurzbeschreibung": "", "suchtext": "au b8 01 1-2", "istzugeordnet": true}
                         ]
                     }
                 ]
@@ -115,21 +122,24 @@
     nicht zulaessig, nebeneinander stehende schon. Serverseitig gefiltert,
     damit die Suche ohne JavaScript auskommt.
 }}
-<form method="get" action="{{sucheaction}}" class="local-berufsbildung-auswahl-suche">
+<form method="get" action="{{sucheaction}}" class="local-berufsbildung-auswahl-suche"
+      data-region="berufsbildung-auswahl-suche">
     <input type="hidden" name="id" value="{{blockid}}">
     <input type="text" class="form-control" name="suche" value="{{suchbegriff}}"
            placeholder="{{sucheplaceholder}}" aria-label="{{suchelabel}}">
-    <button type="submit" class="btn btn-secondary">{{suchen}}</button>
+    <button type="submit" class="btn btn-secondary" data-region="suche-absenden">{{suchen}}</button>
     {{#suchaktiv}}
         <a href="{{zuruecksetzenurl}}">{{suchezuruecksetzen}}</a>
     {{/suchaktiv}}
 </form>
 
-{{^hatbereiche}}
-    <p class="text-muted">{{keinetreffer}}</p>
-{{/hatbereiche}}
+{{! Immer im Dokument, damit die Live-Suche ihn ein- und ausblenden kann;
+    ohne Skript entscheidet der Server ueber hatbereiche. }}
+<p class="text-muted{{#hatbereiche}} d-none{{/hatbereiche}}" aria-live="polite"
+   data-region="berufsbildung-auswahl-keine-treffer">{{keinetreffer}}</p>
 
-<form method="post" action="{{action}}" class="local-berufsbildung-auswahl">
+<form method="post" action="{{action}}" class="local-berufsbildung-auswahl"
+      data-region="berufsbildung-auswahl">
     <input type="hidden" name="sesskey" value="{{sesskey}}">
     <input type="hidden" name="id" value="{{blockid}}">
     <input type="hidden" name="speichern" value="1">
@@ -138,14 +148,15 @@
     <input type="hidden" name="suche" value="{{suchbegriff}}">
 
     {{#bereiche}}
-        <details class="local-berufsbildung-auswahl-bereich card mb-2" {{#offen}}open{{/offen}}>
+        <details class="local-berufsbildung-auswahl-bereich card mb-2" {{#offen}}open{{/offen}}
+                 data-region="bereich">
             <summary class="local-berufsbildung-auswahl-bereichkopf card-header">
                 <span class="local-berufsbildung-auswahl-code badge bg-light text-dark border">{{code}}</span>
                 <span class="local-berufsbildung-auswahl-bereichname">{{name}}</span>
             </summary>
             <div class="card-body py-2">
                 {{#handlungskompetenzen}}
-                    <div class="local-berufsbildung-auswahl-hk">
+                    <div class="local-berufsbildung-auswahl-hk" data-region="hk" data-suchtext="{{suchtext}}">
                         {{! Die Handlungskompetenz ist selbst die Zeile mit der Checkbox - ein Block
                             deckt sie oft als Ganzes ab. Die Checkbox steht bewusst ausserhalb des
                             <details> darunter: in einem <summary> wuerde jeder Klick darauf zugleich
@@ -169,14 +180,16 @@
                             {{/istzugeordnet}}
                         </div>
                         {{#hatlk}}
-                            <details class="local-berufsbildung-auswahl-lk" {{#lkoffen}}open{{/lkoffen}}>
+                            <details class="local-berufsbildung-auswahl-lk" {{#lkoffen}}open{{/lkoffen}}
+                                     data-region="lk-aufklapper">
                                 <summary class="local-berufsbildung-auswahl-lkkopf small text-muted">{{lktext}}</summary>
                                 <div class="local-berufsbildung-auswahl-eintraege">
                                     {{! Der Kurzname eines Leistungskriteriums ist nur ein Code. Die
                                         Beschreibung aus dem Rahmen steht gekuerzt daneben, der volle
                                         Text im Titel. }}
                                     {{#leistungskriterien}}
-                                        <div class="local-berufsbildung-auswahl-eintrag">
+                                        <div class="local-berufsbildung-auswahl-eintrag"
+                                             data-region="lk" data-suchtext="{{suchtext}}">
                                             {{#istzugeordnet}}
                                                 <span class="badge bg-light text-dark border">{{zugeordnettext}}</span>
                                                 <span title="{{beschreibung}}">

@@ -155,9 +155,10 @@ class kompetenz_auswahl {
             'sucheplaceholder' => get_string('blocklk:suche_placeholder', 'local_berufsbildung'),
             'suchen' => get_string('blocklk:suchen', 'local_berufsbildung'),
             'suchezuruecksetzen' => get_string('blocklk:suche_zuruecksetzen', 'local_berufsbildung'),
-            // Ohne s(): Mustache maskiert die Ausgabe selbst, zweimal
-            // maskiert stuende ein &quot; in der Meldung.
-            'keinetreffer' => get_string('blocklk:suche_keine_treffer', 'local_berufsbildung', $suchbegriff),
+            // Ohne den Suchbegriff im Text: die Live-Suche blendet dieselbe
+            // Meldung ein, ohne die Seite neu zu laden, und wuerde sonst
+            // den Begriff des letzten Seitenaufbaus nennen.
+            'keinetreffer' => get_string('blocklk:suche_keine_treffer', 'local_berufsbildung'),
             'intensitaeten' => [
                 [
                     'wert' => 'schwerpunkt',
@@ -250,7 +251,22 @@ class kompetenz_auswahl {
      * @param string $nadel Bereits klein geschriebener Suchbegriff
      */
     private static function trifft(competency $kompetenz, string $nadel): bool {
-        $heuhaufen = \core_text::strtolower(implode(' ', [
+        return str_contains(self::suchtext($kompetenz), $nadel);
+    }
+
+    /**
+     * Der Text, in dem gesucht wird: Bezeichnung, ID-Nummer und
+     * Beschreibung, klein geschrieben.
+     *
+     * Steht auch als data-Attribut im Markup, damit die Live-Suche im
+     * Browser dieselbe Grundlage hat wie filtere() auf dem Server. Aus dem
+     * sichtbaren Text liesse sich das nicht gewinnen: die Beschreibung ist
+     * dort auf 120 Zeichen gekuerzt.
+     *
+     * @param competency $kompetenz
+     */
+    private static function suchtext(competency $kompetenz): string {
+        return \core_text::strtolower(implode(' ', [
             (string) $kompetenz->get('shortname'),
             (string) $kompetenz->get('idnumber'),
             content_to_text(
@@ -258,8 +274,6 @@ class kompetenz_auswahl {
                 (int) $kompetenz->get('descriptionformat')
             ),
         ]));
-
-        return str_contains($heuhaufen, $nadel);
     }
 
     /**
@@ -290,6 +304,7 @@ class kompetenz_auswahl {
             'code' => $code,
             'hatcode' => $code !== '',
             'name' => format_string($kompetenz->get('shortname')),
+            'suchtext' => self::suchtext($kompetenz),
             'hatbeschreibung' => $beschreibung !== '',
             'kurzbeschreibung' => shorten_text($beschreibung, self::BESCHREIBUNG_ZEICHEN),
             'beschreibung' => shorten_text($beschreibung, self::TITEL_ZEICHEN),
