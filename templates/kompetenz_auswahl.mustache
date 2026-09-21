@@ -36,8 +36,15 @@
     * sesskey - string
     * blockid - int
     * bereiche - array of {code, name, offen, handlungskompetenzen}
+    * hatbereiche - bool, false wenn der Filter nichts uebrig laesst
+    * sucheaction - string, Ziel des Suchformulars
+    * zuruecksetzenurl - string, Seite ohne Filter
+    * suchbegriff - string, aktiver Filter
+    * suchaktiv - bool
+    * suchelabel, sucheplaceholder, suchen, suchezuruecksetzen, keinetreffer - string
     * handlungskompetenzen - array of {id, code, hatcode, name, beschreibung, hatbeschreibung,
-                                       kurzbeschreibung, istzugeordnet, hatlk, lktext, leistungskriterien}
+                                       kurzbeschreibung, istzugeordnet, hatlk, lkoffen, lktext,
+                                       leistungskriterien}
     * leistungskriterien - array of {id, code, hatcode, name, beschreibung, hatbeschreibung,
                                      kurzbeschreibung, istzugeordnet}
     * intensitaeten - array of {wert, text, gewaehlt}
@@ -55,6 +62,16 @@
         "intensitaethilfe": "Gilt für alle jetzt ausgewählten Kompetenzen.",
         "absenden": "Kompetenzen hinzufügen",
         "zugeordnettext": "zugeordnet",
+        "hatbereiche": true,
+        "sucheaction": "/local/berufsbildung/block_kompetenzen.php",
+        "zuruecksetzenurl": "/local/berufsbildung/block_kompetenzen.php?id=7",
+        "suchbegriff": "",
+        "suchaktiv": false,
+        "suchelabel": "Kompetenz suchen",
+        "sucheplaceholder": "Bezeichnung, Code oder Beschreibung…",
+        "suchen": "Suchen",
+        "suchezuruecksetzen": "Filter zurücksetzen",
+        "keinetreffer": "Keine Kompetenz gefunden.",
         "intensitaeten": [
             {"wert": "schwerpunkt", "text": "Schwerpunkt", "gewaehlt": true},
             {"wert": "teilweise", "text": "teilweise", "gewaehlt": false}
@@ -75,6 +92,7 @@
                         "kurzbeschreibung": "Automatiker und Automatikerinnen ergänzen automatisierte Anlagen...",
                         "istzugeordnet": false,
                         "hatlk": true,
+                        "lkoffen": false,
                         "lktext": "2 Leistungskriterien einzeln wählen",
                         "leistungskriterien": [
                             {"id": 43, "code": "", "hatcode": false, "name": "AU b1 01 1-2",
@@ -92,10 +110,32 @@
         ]
     }
 }}
+{{!
+    Eigenes GET-Formular vor dem Auswahlformular - geschachtelte <form> sind
+    nicht zulaessig, nebeneinander stehende schon. Serverseitig gefiltert,
+    damit die Suche ohne JavaScript auskommt.
+}}
+<form method="get" action="{{sucheaction}}" class="local-berufsbildung-auswahl-suche">
+    <input type="hidden" name="id" value="{{blockid}}">
+    <input type="text" class="form-control" name="suche" value="{{suchbegriff}}"
+           placeholder="{{sucheplaceholder}}" aria-label="{{suchelabel}}">
+    <button type="submit" class="btn btn-secondary">{{suchen}}</button>
+    {{#suchaktiv}}
+        <a href="{{zuruecksetzenurl}}">{{suchezuruecksetzen}}</a>
+    {{/suchaktiv}}
+</form>
+
+{{^hatbereiche}}
+    <p class="text-muted">{{keinetreffer}}</p>
+{{/hatbereiche}}
+
 <form method="post" action="{{action}}" class="local-berufsbildung-auswahl">
     <input type="hidden" name="sesskey" value="{{sesskey}}">
     <input type="hidden" name="id" value="{{blockid}}">
     <input type="hidden" name="speichern" value="1">
+    {{! Den Filter mitschicken, damit man nach dem Speichern weiterarbeitet,
+        wo man war, statt wieder vor dem ganzen Rahmen zu stehen. }}
+    <input type="hidden" name="suche" value="{{suchbegriff}}">
 
     {{#bereiche}}
         <details class="local-berufsbildung-auswahl-bereich card mb-2" {{#offen}}open{{/offen}}>
@@ -129,7 +169,7 @@
                             {{/istzugeordnet}}
                         </div>
                         {{#hatlk}}
-                            <details class="local-berufsbildung-auswahl-lk">
+                            <details class="local-berufsbildung-auswahl-lk" {{#lkoffen}}open{{/lkoffen}}>
                                 <summary class="local-berufsbildung-auswahl-lkkopf small text-muted">{{lktext}}</summary>
                                 <div class="local-berufsbildung-auswahl-eintraege">
                                     {{! Der Kurzname eines Leistungskriteriums ist nur ein Code. Die

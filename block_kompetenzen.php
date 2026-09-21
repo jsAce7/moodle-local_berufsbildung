@@ -36,11 +36,19 @@ use local_berufsbildung\service\kompetenz_baum;
 admin_externalpage_setup('local_berufsbildung_bloecke');
 
 $id = required_param('id', PARAM_INT);
+$suchbegriff = optional_param('suche', '', PARAM_TEXT);
 $block = new block($id);
 
 $bloeckeurl = new moodle_url('/local/berufsbildung/bloecke.php');
 $blockurl = new moodle_url('/local/berufsbildung/block_bearbeiten.php', ['id' => $id]);
+
+// Der Filter bleibt in der Rueckkehr-Adresse stehen: nach dem Speichern
+// steht man dort weiter, wo man gesucht hat, statt wieder vor dem ganzen
+// Rahmen.
 $returnurl = new moodle_url('/local/berufsbildung/block_kompetenzen.php', ['id' => $id]);
+if (trim($suchbegriff) !== '') {
+    $returnurl->param('suche', $suchbegriff);
+}
 
 $PAGE->set_url($returnurl);
 $titel = get_string('blocklk:uebersicht', 'local_berufsbildung', $block->get('nummer'));
@@ -299,7 +307,13 @@ if (empty($auswaehlbar)) {
 } else {
     echo html_writer::tag('h3', get_string('blocklk:hinzufuegen', 'local_berufsbildung'));
     echo html_writer::tag('p', get_string('blocklk:auswahl_hinweis', 'local_berufsbildung'), ['class' => 'text-muted']);
-    echo kompetenz_auswahl::render($baum, $zugeordnet, $returnurl, $id);
+    echo kompetenz_auswahl::render(
+        kompetenz_auswahl::filtere($baum, $suchbegriff),
+        $zugeordnet,
+        $returnurl,
+        $id,
+        $suchbegriff
+    );
 }
 
 echo html_writer::link($bloeckeurl, get_string('blocklk:zurueck', 'local_berufsbildung'));

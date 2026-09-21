@@ -300,6 +300,24 @@
  * stehen - sie sind hier die einzige Aufklapp-Anzeige, anders als bei den
  * Roster-Karten mit eigenem Chevron.
  */
+.local-berufsbildung-auswahl-suche {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+/*
+ * Ein .form-control ist in Bootstrap 100 % breit und draengte die
+ * Schaltflaeche sonst in eine zweite Zeile - dieselbe Begrenzung wie in
+ * der Filterleiste von "Meine Lernenden".
+ */
+.local-berufsbildung-auswahl-suche .form-control {
+    flex: 0 1 22rem;
+    width: auto;
+}
+
 .local-berufsbildung-auswahl-bereichkopf,
 .local-berufsbildung-auswahl-lkkopf {
     cursor: pointer;

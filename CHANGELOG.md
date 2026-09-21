@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.5.0] — 2026-09-21
+
+### Hinzugefügt
+
+- **Suche in der Kompetenzauswahl** (`kompetenz_auswahl::filtere()`). Ein Rahmen hat über 250 Leistungskriterien; wer den Code eines bestimmten kennt, sollte ihn nicht über vier Bereiche und zwei Dutzend Handlungskompetenzen zusammensuchen müssen. Gesucht wird in Bezeichnung, ID-Nummer und Beschreibung, unabhängig von Gross-/Kleinschreibung.
+
+  Der Filter gibt die Gliederung nicht auf: Bereich und Handlungskompetenz bleiben stehen, damit ein Treffer weiterhin seinen Platz im Bildungsplan zeigt. Trifft ein Bereich oder eine Handlungskompetenz selbst, gehört alles darunter dazu — wer „Instandhalten" sucht, meint den ganzen Bereich. Trifft nur ein Leistungskriterium, bleibt von seiner Handlungskompetenz genau dieses übrig, und die Aufklapper öffnen sich, weil ein Treffer hinter einer zugeklappten Zeile das Gegenteil dessen wäre, wofür man sucht.
+
+  Serverseitig als GET-Filter, ohne JavaScript — dasselbe Muster wie die Suche in „Meine Lernenden". Der Filter überlebt das Speichern, damit man nach dem Zuordnen dort weiterarbeitet, wo man war.
+
 ## [0.4.16] — 2026-09-20
 
 - **Externe üK-Teilnehmende.** Die Teilnahmeart gehört pro Person zum

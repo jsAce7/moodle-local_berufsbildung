@@ -63,13 +63,22 @@ class kompetenz_auswahl {
     /**
      * Baut die Daten fuer das Template zusammen.
      *
-     * @param array $baum Ergebnis von service\kompetenz_baum::baum()
+     * @param array $baum Ergebnis von service\kompetenz_baum::baum(), bereits durch filtere() gegangen
      * @param array $zugeordnet competencyid => beliebiger Wert, geprueft wird nur der Schluessel
      * @param moodle_url $actionurl Ziel des Formulars
      * @param int $blockid
+     * @param string $suchbegriff Aktiver Filter, leer wenn keiner gesetzt ist
      */
-    public static function render(array $baum, array $zugeordnet, moodle_url $actionurl, int $blockid): string {
+    public static function render(
+        array $baum,
+        array $zugeordnet,
+        moodle_url $actionurl,
+        int $blockid,
+        string $suchbegriff = ''
+    ): string {
         global $OUTPUT;
+
+        $suchaktiv = trim($suchbegriff) !== '';
 
         $bereiche = [];
         foreach ($baum as $zweig) {
@@ -98,6 +107,11 @@ class kompetenz_auswahl {
                 $handlungskompetenzen[] = self::eintrag($eintrag['kompetenz'], $zugeordnet, true) + [
                     'leistungskriterien' => $leistungskriterien,
                     'hatlk' => !empty($leistungskriterien),
+                    // Bei aktiver Suche aufgeklappt: der Treffer kann in
+                    // einem Leistungskriterium liegen, und den hinter einem
+                    // zugeklappten Aufklapper zu verstecken waere das
+                    // Gegenteil dessen, wofuer man sucht.
+                    'lkoffen' => $suchaktiv,
                     'lktext' => get_string(
                         'blocklk:lk_aufklappen',
                         'local_berufsbildung',
@@ -121,15 +135,29 @@ class kompetenz_auswahl {
                 'code' => format_string(kompetenz_baum::kuerzel($zweig['bereich'])),
                 'name' => format_string($zweig['bereich']->get('shortname')),
                 'handlungskompetenzen' => $handlungskompetenzen,
-                'offen' => self::hat_offene($alle, $zugeordnet),
+                'offen' => $suchaktiv || self::hat_offene($alle, $zugeordnet),
             ];
         }
+
+        $seite = new moodle_url('/local/berufsbildung/block_kompetenzen.php');
 
         return $OUTPUT->render_from_template('local_berufsbildung/kompetenz_auswahl', [
             'action' => $actionurl->out(false),
             'sesskey' => sesskey(),
             'blockid' => $blockid,
             'bereiche' => $bereiche,
+            'hatbereiche' => !empty($bereiche),
+            'sucheaction' => $seite->out(false),
+            'zuruecksetzenurl' => (new moodle_url($seite, ['id' => $blockid]))->out(false),
+            'suchbegriff' => $suchbegriff,
+            'suchaktiv' => $suchaktiv,
+            'suchelabel' => get_string('blocklk:suche', 'local_berufsbildung'),
+            'sucheplaceholder' => get_string('blocklk:suche_placeholder', 'local_berufsbildung'),
+            'suchen' => get_string('blocklk:suchen', 'local_berufsbildung'),
+            'suchezuruecksetzen' => get_string('blocklk:suche_zuruecksetzen', 'local_berufsbildung'),
+            // Ohne s(): Mustache maskiert die Ausgabe selbst, zweimal
+            // maskiert stuende ein &quot; in der Meldung.
+            'keinetreffer' => get_string('blocklk:suche_keine_treffer', 'local_berufsbildung', $suchbegriff),
             'intensitaeten' => [
                 [
                     'wert' => 'schwerpunkt',
@@ -147,6 +175,91 @@ class kompetenz_auswahl {
             'absenden' => get_string('blocklk:hinzufuegen', 'local_berufsbildung'),
             'zugeordnettext' => get_string('blocklk:bereits_zugeordnet', 'local_berufsbildung'),
         ]);
+    }
+
+    /**
+     * Schraenkt den Baum auf einen Suchbegriff ein, ohne seine Gliederung
+     * aufzugeben - gesucht wird in Bezeichnung, ID-Nummer und Beschreibung.
+     *
+     * Wer den Code eines Leistungskriteriums kennt, soll ihn nicht ueber
+     * vier Bereiche und zwei Dutzend Handlungskompetenzen suchen muessen.
+     * Bereich und Handlungskompetenz bleiben aber stehen, damit ein Treffer
+     * weiterhin seinen Platz im Bildungsplan zeigt.
+     *
+     * Trifft der Bereich oder die Handlungskompetenz selbst, gehoert alles
+     * darunter dazu: wer "Instandhalten" sucht, meint den ganzen Bereich.
+     * Trifft nur ein Leistungskriterium, bleibt von seiner
+     * Handlungskompetenz nur dieses uebrig.
+     *
+     * Rein lesend und ohne Datenbankzugriff - die Kompetenzen sind bereits
+     * geladen, und ein Volltextindex waere fuer einige hundert Zeilen
+     * unverhaeltnismaessig.
+     *
+     * @param array $baum Ergebnis von service\kompetenz_baum::baum()
+     * @param string $suchbegriff Leer = unveraendert zurueck
+     * @return array Baum in derselben Struktur
+     */
+    public static function filtere(array $baum, string $suchbegriff): array {
+        $nadel = \core_text::strtolower(trim($suchbegriff));
+        if ($nadel === '') {
+            return $baum;
+        }
+
+        $gefiltert = [];
+        foreach ($baum as $zweig) {
+            if (self::trifft($zweig['bereich'], $nadel)) {
+                $gefiltert[] = $zweig;
+                continue;
+            }
+
+            $handlungskompetenzen = [];
+            foreach ($zweig['handlungskompetenzen'] as $eintrag) {
+                if (self::trifft($eintrag['kompetenz'], $nadel)) {
+                    $handlungskompetenzen[] = $eintrag;
+                    continue;
+                }
+
+                $treffer = array_values(array_filter(
+                    $eintrag['leistungskriterien'],
+                    static fn (competency $lk): bool => self::trifft($lk, $nadel)
+                ));
+
+                if (!empty($treffer)) {
+                    $handlungskompetenzen[] = [
+                        'kompetenz' => $eintrag['kompetenz'],
+                        'leistungskriterien' => $treffer,
+                    ];
+                }
+            }
+
+            if (!empty($handlungskompetenzen)) {
+                $gefiltert[] = [
+                    'bereich' => $zweig['bereich'],
+                    'handlungskompetenzen' => $handlungskompetenzen,
+                ];
+            }
+        }
+
+        return $gefiltert;
+    }
+
+    /**
+     * Passt eine Kompetenz auf den Suchbegriff?
+     *
+     * @param competency $kompetenz
+     * @param string $nadel Bereits klein geschriebener Suchbegriff
+     */
+    private static function trifft(competency $kompetenz, string $nadel): bool {
+        $heuhaufen = \core_text::strtolower(implode(' ', [
+            (string) $kompetenz->get('shortname'),
+            (string) $kompetenz->get('idnumber'),
+            content_to_text(
+                (string) $kompetenz->get('description'),
+                (int) $kompetenz->get('descriptionformat')
+            ),
+        ]));
+
+        return str_contains($heuhaufen, $nadel);
     }
 
     /**
