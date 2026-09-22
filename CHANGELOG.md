@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.5.2] — 2026-09-22
+
+### Hinzugefügt
+
+- **`api::get_aktive_lernende()`**. Es gab bisher keinen Weg, alle aktiven Lernenden aufzuzählen, ohne die Zuordnungstabelle direkt zu lesen — `get_lernende_for()` braucht eine `berufsbildnerid` als Eingabe. Gebraucht von `local_lerndokumentation`, dessen Erinnerungs-Task über alle aktiven Lernenden iterieren muss, auch über solche ohne eigene Periode. Gleiche Stichtagsbedingung wie `is_zustaendig()`. Optionaler Parameter `$ohneuekextern` schliesst üK-externe Personen direkt aus, für aufrufende Plugins, die sie gar nicht erst sehen sollen.
+
 ## [0.5.1] — 2026-09-21
 
 ### Hinzugefügt

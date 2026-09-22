@@ -168,6 +168,74 @@ final class api_test extends advanced_testcase {
         $this->assertSame([], api::get_lernende_for((int) $berufsbildner->id));
     }
 
+    public function test_get_aktive_lernende(): void {
+        $this->resetAfterTest();
+
+        $berufsbildnereins = $this->getDataGenerator()->create_user();
+        $berufsbildnerzwei = $this->getDataGenerator()->create_user();
+        $aktuell = $this->getDataGenerator()->create_user();
+        $ebenfallsaktuell = $this->getDataGenerator()->create_user();
+        $beendet = $this->getDataGenerator()->create_user();
+
+        // Zwei gleichzeitige Zuordnungen derselben Person duerfen nicht zu
+        // einem doppelten Eintrag fuehren.
+        $this->lege_zuordnung_an((int) $berufsbildnereins->id, (int) $aktuell->id, strtotime('-1 year'));
+        $this->lege_zuordnung_an(
+            (int) $berufsbildnerzwei->id,
+            (int) $aktuell->id,
+            strtotime('-1 year'),
+            null,
+            'stellvertretung'
+        );
+        $this->lege_zuordnung_an((int) $berufsbildnerzwei->id, (int) $ebenfallsaktuell->id, strtotime('-1 year'));
+        $this->lege_zuordnung_an(
+            (int) $berufsbildnereins->id,
+            (int) $beendet->id,
+            strtotime('-2 years'),
+            strtotime('-1 month')
+        );
+
+        $aktive = api::get_aktive_lernende();
+        sort($aktive);
+        $erwartet = [(int) $aktuell->id, (int) $ebenfallsaktuell->id];
+        sort($erwartet);
+        $this->assertSame($erwartet, $aktive);
+    }
+
+    public function test_get_aktive_lernende_stichtag(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $von = strtotime('-2 years');
+        $bis = strtotime('-1 year');
+        $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $lernende->id, $von, $bis);
+
+        $waehrendzuordnung = strtotime('-18 months');
+        $this->assertSame([(int) $lernende->id], api::get_aktive_lernende($waehrendzuordnung));
+        $this->assertSame([], api::get_aktive_lernende());
+    }
+
+    public function test_get_aktive_lernende_ohneuekextern_schliesst_uek_externe_aus(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $regulaer = $this->getDataGenerator()->create_user();
+        $uekextern = $this->getDataGenerator()->create_user();
+
+        $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $regulaer->id, strtotime('-1 year'));
+        $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $uekextern->id, strtotime('-1 year'));
+        api::set_teilnahmeart((int) $uekextern->id, api::TEILNAHMEART_UEK_EXTERN);
+
+        $ohneparameter = api::get_aktive_lernende();
+        sort($ohneparameter);
+        $erwartetohneparameter = [(int) $regulaer->id, (int) $uekextern->id];
+        sort($erwartetohneparameter);
+        $this->assertSame($erwartetohneparameter, $ohneparameter);
+
+        $this->assertSame([(int) $regulaer->id], api::get_aktive_lernende(null, true));
+    }
+
     public function test_get_berufsbildner_for(): void {
         $this->resetAfterTest();
 

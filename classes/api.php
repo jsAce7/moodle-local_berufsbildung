@@ -167,6 +167,47 @@ class api {
     }
 
     /**
+     * Alle lernenden Personen mit einer zum Stichtag gueltigen Zuordnung,
+     * unabhaengig von der zustaendigen Person.
+     *
+     * Fuer Prozesse, die ueber alle aktiven Lernenden iterieren muessen
+     * (z.B. Erinnerungen), ohne selbst auf die Zuordnungstabelle zuzugreifen.
+     * Ob eine üK-externe Person eine eigene Fachfunktion braucht (z.B.
+     * Lerndokumentation), entscheidet diese Methode nicht selbst - der
+     * Parameter deckt nur den Fall ab, dass ein aufrufendes Plugin sie
+     * gar nicht erst sehen soll.
+     *
+     * @param int|null $stichtag Timestamp, null bedeutet "jetzt"
+     * @param bool $ohneuekextern Wenn true, üK-externe Personen ausschliessen
+     * @return int[] Distinkte Liste von userids
+     */
+    public static function get_aktive_lernende(?int $stichtag = null, bool $ohneuekextern = false): array {
+        $stichtag ??= time();
+
+        $select = 'gueltig_von <= :stichtag1
+                    AND (gueltig_bis IS NULL OR gueltig_bis >= :stichtag2)';
+
+        $zuordnungen = zuordnung::get_records_select($select, [
+            'stichtag1' => $stichtag,
+            'stichtag2' => $stichtag,
+        ]);
+
+        $lernendeids = array_values(array_unique(array_map(
+            static fn (zuordnung $zuordnung): int => $zuordnung->get('lernendeid'),
+            $zuordnungen
+        )));
+
+        if (!$ohneuekextern) {
+            return $lernendeids;
+        }
+
+        return array_values(array_filter(
+            $lernendeids,
+            static fn (int $lernendeid): bool => !self::ist_uek_extern($lernendeid)
+        ));
+    }
+
+    /**
      * Alle Berufsbildner/innen dieser lernenden Person zum Stichtag - die
      * Umkehrung von get_lernende_for().
      *
