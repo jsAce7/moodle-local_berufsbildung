@@ -30,6 +30,7 @@ use advanced_testcase;
 use local_berufsbildung\persistent\aufbewahrung;
 use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\zuordnung;
+use local_berufsbildung\service\kompetenz_baum;
 use local_berufsbildung\service\semester_calculator;
 
 /**
@@ -464,6 +465,28 @@ final class api_test extends advanced_testcase {
         set_config('beruf_rahmen_mapping', 'AU_EFZ=au-2022', 'local_berufsbildung');
 
         $this->assertNull(api::get_kompetenzrahmen_for_beruf('KR_EFZ'));
+    }
+
+    /**
+     * Dieselbe Nummer wie im Kompetenzraster. Einen Stichtag-Randfall gibt
+     * es hier nicht - die Methode liest nur die uebergebene ID-Nummer.
+     */
+    public function test_get_kompetenz_kuerzel_schneidet_den_rahmenpraefix_ab(): void {
+        $this->assertSame('b.07', api::get_kompetenz_kuerzel('7777BE b.07'));
+        $this->assertSame(
+            kompetenz_baum::kuerzel_aus_idnumber('7777BE a.01'),
+            api::get_kompetenz_kuerzel('7777BE a.01')
+        );
+    }
+
+    /**
+     * Randfall: ohne Leerzeichen bleibt die ID-Nummer unveraendert, ohne
+     * ID-Nummer gibt es kein Kuerzel statt eines Fehlers.
+     */
+    public function test_get_kompetenz_kuerzel_ohne_praefix_oder_leer(): void {
+        $this->assertSame('b07', api::get_kompetenz_kuerzel('b07'));
+        $this->assertSame('', api::get_kompetenz_kuerzel(''));
+        $this->assertSame('', api::get_kompetenz_kuerzel('   '));
     }
 
     public function test_get_block_name_bekannter_block(): void {

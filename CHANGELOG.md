@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.5.3] — 2026-09-24
+
+### Hinzugefügt
+
+- **`api::get_kompetenz_kuerzel()`**: das Kürzel einer Kompetenz aus ihrer ID-Nummer („7777BE b.07" → „b.07"), dieselbe Regel wie im Kompetenzraster (`kompetenz_baum::kuerzel_aus_idnumber()`). Gebraucht von `local_lerndokumentation`, das die Nummern der Handlungskompetenzen im Eintragsformular gleich anzeigen soll wie das Raster — ohne die Regel nachzubauen und ohne auf die Service-Klassen dieses Plugins zuzugreifen.
+
 ## [0.5.2] — 2026-09-22
 
 ### Hinzugefügt

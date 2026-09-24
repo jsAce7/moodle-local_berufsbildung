@@ -31,6 +31,7 @@ use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\einsatz;
 use local_berufsbildung\persistent\teilnahmeprofil;
 use local_berufsbildung\persistent\zuordnung;
+use local_berufsbildung\service\kompetenz_baum;
 use local_berufsbildung\service\lehrdauer_resolver;
 use local_berufsbildung\service\rahmen_resolver;
 use local_berufsbildung\service\zuordnung_service;
@@ -663,6 +664,22 @@ class api {
         $konfiguration = $konfiguration !== false ? (string) $konfiguration : '';
 
         return (new rahmen_resolver())->loese_auf($beruf, $konfiguration);
+    }
+
+    /**
+     * Kuerzel einer Kompetenz aus ihrer ID-Nummer, wie es das
+     * Kompetenzraster anzeigt: aus "7777BE b.07" wird "b.07". Damit
+     * aufsetzende Plugins dieselbe Nummer zeigen, ohne die Regel
+     * nachzubauen.
+     *
+     * Unformatiert - die aufrufende Seite schickt den Wert durch
+     * format_string().
+     *
+     * @param string $idnumber core_competency\competency::idnumber
+     * @return string Leer ohne ID-Nummer
+     */
+    public static function get_kompetenz_kuerzel(string $idnumber): string {
+        return kompetenz_baum::kuerzel_aus_idnumber($idnumber);
     }
 
     /**
