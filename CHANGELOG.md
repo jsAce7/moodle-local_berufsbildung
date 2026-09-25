@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.6] — 2026-09-25
+
+### Hinzugefügt
+
+- **Ausstehendes je Quelle in „Tätigkeiten"** (`nachweis\quelle_mit_ausstehenden`, Wertobjekt `nachweis\ausstehend`): eine Quelle kann melden, was für die Person noch aussteht — umgesetzt in `local_uekkn` für die üK des Berufs, die noch keinen angezeigten Nachweis haben (geplant, laufend, besucht, noch nicht eingeplant, Wahlpflicht noch nicht gewählt). Die Liste zeigt es blass und ohne Link unter „Noch ausstehend" in der Gruppe der Quelle, auf „Meine Lehre" und „Meine Lernenden". Eine Quelle ohne Nachweise, aber mit Ausstehendem bekommt ihre Gruppe trotzdem — zu Beginn der Lehre ist genau das die Auskunft. Was aussteht und wie der Stand lautet, entscheidet und formuliert die Quelle; das Basis-Plugin zeigt es unverändert.
+- `collector::get_ausstehende()` mit derselben Zuständigkeitsprüfung wie `get_nachweise()` (Architekturregel 7): auch das Soll einer Person — welche üK sie noch vor sich hat, wann sie eingeplant ist — geht nur sie selbst und ihre zuständige Berufsbildner/in etwas an. Nach Lehrabschluss fragt „Meine Lehre" nicht mehr danach.
+
 ## [0.5.5] — 2026-09-25
 
 ### Hinzugefügt

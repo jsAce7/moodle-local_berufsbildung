@@ -192,6 +192,16 @@
     flex: 0 0 auto;
 }
 
+/*
+ * Was noch aussteht, steht unter den Nachweisen derselben Quelle, mit
+ * eigener kleiner Zwischenzeile - sonst liest sich ein geplanter ueK wie
+ * ein weiterer abgeschlossener.
+ */
+.local-berufsbildung-ausstehend-titel {
+    margin-top: 0.6rem;
+    font-weight: normal;
+}
+
 .local-berufsbildung-einsatz-aktuell .local-berufsbildung-einsatz-blockname {
     font-size: 1.05rem;
 }

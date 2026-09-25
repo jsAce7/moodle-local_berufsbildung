@@ -118,6 +118,7 @@ $string['nachweis:ohne_semester'] = 'Ausserhalb der Lehrzeit';
 $string['nachweis:ergebnis'] = 'Ergebnis {$a}';
 $string['nachweis:anzahl'] = '{$a} Nachweise';
 $string['nachweis:anzahl_eins'] = '1 Nachweis';
+$string['nachweis:ausstehend_titel'] = 'Noch ausstehend';
 $string['error:keinezustaendigkeit'] = 'Keine Zuständigkeit für diese lernende Person.';
 $string['error:aufbewahrunggrundleer'] = 'Die Aufbewahrungspflicht benötigt eine Begründung.';
 

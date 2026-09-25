@@ -234,7 +234,8 @@ if (empty($eintraege)) {
             // auch keine Semester, in die sich ein Nachweis einordnen liesse.
             $eintrag['istextern'] ? [] : api::get_semester_grenzen($lernendeid),
             get_string('nachweis:titel', 'local_berufsbildung'),
-            $collector->get_zusammenfassungen($nachweise)
+            $collector->get_zusammenfassungen($nachweise),
+            $collector->get_ausstehende($berufsbildnerid, $lernendeid)
         );
 
         $profilurl = new moodle_url('/user/profile.php', ['id' => $lernendeid]);

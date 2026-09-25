@@ -118,6 +118,7 @@ $string['nachweis:ohne_semester'] = 'Outside the apprenticeship period';
 $string['nachweis:ergebnis'] = 'Result {$a}';
 $string['nachweis:anzahl'] = '{$a} records';
 $string['nachweis:anzahl_eins'] = '1 record';
+$string['nachweis:ausstehend_titel'] = 'Still to come';
 $string['error:keinezustaendigkeit'] = 'Not responsible for this trainee.';
 $string['error:aufbewahrunggrundleer'] = 'The retention obligation needs a reason.';
 

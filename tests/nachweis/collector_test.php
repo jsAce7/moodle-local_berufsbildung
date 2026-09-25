@@ -38,6 +38,7 @@ require_once(__DIR__ . '/../fixtures/collector_test_provider.php');
 require_once(__DIR__ . '/../fixtures/collector_test_erfassbarer_provider.php');
 require_once(__DIR__ . '/../fixtures/collector_test_hinweis_provider.php');
 require_once(__DIR__ . '/../fixtures/collector_test_zusammenfassung_provider.php');
+require_once(__DIR__ . '/../fixtures/collector_test_ausstehend_provider.php');
 
 /**
  * Tests fuer collector.
@@ -319,5 +320,74 @@ final class collector_test extends advanced_testcase {
         $this->assertSame([], $zusammenfassungen);
         $this->assertNull($ohnenachweise->erhaltene);
         $this->assertNotNull($ohneaussage->erhaltene);
+    }
+
+    /**
+     * Die zustaendige Berufsbildner/in bekommt das Ausstehende je Quelle;
+     * eine Quelle ohne quelle_mit_ausstehenden und eine ohne Eintraege
+     * erscheinen nicht.
+     */
+    public function test_get_ausstehende_liefert_je_quelle(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $lernende->id);
+
+        $mitsoll = new collector_test_ausstehend_provider([
+            new ausstehend('soll', 'üK 4: Steuerungen', 'noch nicht eingeplant'),
+        ]);
+        $leer = new collector_test_zusammenfassung_provider('leer', null);
+
+        $ergebnis = (new collector([$mitsoll, $leer, new collector_test_provider()]))
+            ->get_ausstehende((int) $berufsbildner->id, (int) $lernende->id);
+
+        $this->assertSame(['soll'], array_keys($ergebnis));
+        $this->assertSame('üK 4: Steuerungen', $ergebnis['soll'][0]->bezeichnung);
+    }
+
+    /**
+     * Auch das Soll einer Person ist nur fuer sie selbst und ihre
+     * zustaendige Berufsbildner/in: eine fremde Person bekommt eine
+     * Exception, und die Quelle wird gar nicht erst gefragt.
+     */
+    public function test_get_ausstehende_fuer_fremde_person_fragt_die_quelle_nicht(): void {
+        $this->resetAfterTest();
+
+        $fremder = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+
+        $provider = new collector_test_ausstehend_provider([new ausstehend('soll', 'üK 4', 'offen')]);
+
+        try {
+            (new collector([$provider]))->get_ausstehende((int) $fremder->id, (int) $lernende->id);
+            $this->fail('Eine fremde Person darf das Ausstehende nicht abfragen.');
+        } catch (moodle_exception $e) {
+            $this->assertSame('error:keinezustaendigkeit', $e->errorcode);
+        }
+
+        $this->assertFalse($provider->wurdeaufgerufen);
+    }
+
+    /**
+     * Randfall am Stichtag: eine Zuordnung, die gestern geendet hat, gibt
+     * heute keinen Zugriff mehr auf das Soll.
+     */
+    public function test_get_ausstehende_nach_beendeter_zuordnung_verweigert(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_zuordnung([
+            'berufsbildnerid' => (int) $berufsbildner->id,
+            'lernendeid' => (int) $lernende->id,
+            'gueltig_von' => time() - YEARSECS,
+            'gueltig_bis' => time() - DAYSECS,
+        ]);
+
+        $provider = new collector_test_ausstehend_provider([new ausstehend('soll', 'üK 4', 'offen')]);
+
+        $this->expectException(moodle_exception::class);
+        (new collector([$provider]))->get_ausstehende((int) $berufsbildner->id, (int) $lernende->id);
     }
 }

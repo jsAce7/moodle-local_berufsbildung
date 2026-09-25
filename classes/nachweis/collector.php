@@ -157,6 +157,39 @@ class collector {
     }
 
     /**
+     * Was je Quelle fuer die Person noch aussteht (siehe
+     * quelle_mit_ausstehenden), fuer die Taetigkeitenliste.
+     *
+     * Dieselbe Zustaendigkeitspruefung wie bei get_nachweise(): auch das
+     * Soll einer Person - welche ueK sie noch vor sich hat, wann sie
+     * eingeplant ist - geht nur die Person selbst und ihre zustaendige
+     * Berufsbildner/in etwas an.
+     *
+     * @param int $abrufendeid Wer fragt ab
+     * @param int $lernendeid Fuer wen
+     * @return array<string, ausstehend[]> Quelle-Key => Ausstehendes, nur Quellen mit Eintraegen
+     */
+    public function get_ausstehende(int $abrufendeid, int $lernendeid): array {
+        if ($abrufendeid !== $lernendeid && !api::is_zustaendig($abrufendeid, $lernendeid)) {
+            throw new moodle_exception('error:keinezustaendigkeit', 'local_berufsbildung');
+        }
+
+        $ergebnis = [];
+        foreach ($this->providers as $einzelprovider) {
+            if (!$einzelprovider instanceof quelle_mit_ausstehenden) {
+                continue;
+            }
+
+            $ausstehende = array_values($einzelprovider->get_ausstehende($lernendeid));
+            if (!empty($ausstehende)) {
+                $ergebnis[$einzelprovider->get_quelle_key()] = $ausstehende;
+            }
+        }
+
+        return $ergebnis;
+    }
+
+    /**
      * Erfassen-Aktionen aller Quellen, die `erfassbare_quelle` zusaetzlich
      * implementieren - fuer "Meine Lehre", damit die lernende Person direkt
      * dorthin verlinkt einen neuen Eintrag anlegen kann.

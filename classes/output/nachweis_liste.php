@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace local_berufsbildung\output;
 
+use local_berufsbildung\nachweis\ausstehend;
 use local_berufsbildung\nachweis\nachweis;
 
 /**
@@ -59,13 +60,19 @@ class nachweis_liste {
      *        der Leertext sonst ohne Bezug auf der Seite.
      * @param array $zusammenfassungen Quelle-Key => Text fuer den Gruppenkopf, Struktur: array<string, string>
      *        siehe collector::get_zusammenfassungen()
+     * @param array $ausstehende Quelle-Key => ausstehend[], Struktur: array<string, ausstehend[]>
+     *        siehe collector::get_ausstehende(). Steht unter den Nachweisen
+     *        derselben Quelle; eine Quelle ohne Nachweise, aber mit
+     *        Ausstehendem bekommt trotzdem ihre Gruppe - zu Beginn der Lehre
+     *        ist genau das die Auskunft.
      */
     public static function render(
         array $nachweise,
         array $quellennamen,
         array $semestergrenzen = [],
         ?string $titel = null,
-        array $zusammenfassungen = []
+        array $zusammenfassungen = [],
+        array $ausstehende = []
     ): string {
         global $OUTPUT;
 
@@ -73,7 +80,8 @@ class nachweis_liste {
             self::eindeutige($nachweise),
             $quellennamen,
             $semestergrenzen,
-            $zusammenfassungen
+            $zusammenfassungen,
+            $ausstehende
         );
 
         return $OUTPUT->render_from_template('local_berufsbildung/nachweis_liste', [
@@ -132,22 +140,28 @@ class nachweis_liste {
      * @param array $quellennamen Struktur: array<string, string>
      * @param array $semestergrenzen Struktur: array<int, array{0: int, 1: int}>
      * @param array $zusammenfassungen Struktur: array<string, string>
+     * @param array $ausstehende Struktur: array<string, ausstehend[]>
      * @return array<int, array>
      */
     private static function gruppiere_nach_quelle(
         array $nachweise,
         array $quellennamen,
         array $semestergrenzen,
-        array $zusammenfassungen
+        array $zusammenfassungen,
+        array $ausstehende
     ): array {
         $jequelle = array_fill_keys(array_keys($quellennamen), []);
         foreach ($nachweise as $einzelnachweis) {
             $jequelle[$einzelnachweis->quellekey][] = $einzelnachweis;
         }
+        foreach (array_keys($ausstehende) as $quellekey) {
+            $jequelle[$quellekey] ??= [];
+        }
 
         $gruppen = [];
         foreach ($jequelle as $quellekey => $einzelnachweise) {
-            if (empty($einzelnachweise)) {
+            $offen = self::zu_ausstehenden_zeilen($ausstehende[$quellekey] ?? []);
+            if (empty($einzelnachweise) && empty($offen)) {
                 continue;
             }
 
@@ -156,16 +170,35 @@ class nachweis_liste {
 
             $gruppen[] = [
                 'name' => format_string($quellennamen[$quellekey] ?? (string) $quellekey),
+                // Ohne Nachweis keine Anzahl: "0 Nachweise" ueber einer Liste
+                // von Ausstehendem sagte nur, was darunter ohnehin steht.
+                'hasanzahl' => $anzahl > 0,
                 'anzahl' => $anzahl === 1
                     ? get_string('nachweis:anzahl_eins', 'local_berufsbildung')
                     : get_string('nachweis:anzahl', 'local_berufsbildung', $anzahl),
                 'haszusammenfassung' => $zusammenfassung !== '',
                 'zusammenfassung' => $zusammenfassung,
+                'hasnachweise' => $anzahl > 0,
                 'nachweise' => self::zu_zeilen($einzelnachweise, $semestergrenzen),
+                'hasausstehende' => !empty($offen),
+                'ausstehende' => $offen,
             ];
         }
 
         return $gruppen;
+    }
+
+    /**
+     * Formt das Ausstehende einer Quelle in Listenzeilen um.
+     *
+     * @param ausstehend[] $ausstehende
+     * @return array<int, array{bezeichnung: string, stand: string}>
+     */
+    private static function zu_ausstehenden_zeilen(array $ausstehende): array {
+        return array_map(static fn (ausstehend $einzel): array => [
+            'bezeichnung' => format_string($einzel->bezeichnung),
+            'stand' => format_string($einzel->stand),
+        ], array_values($ausstehende));
     }
 
     /**

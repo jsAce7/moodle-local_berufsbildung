@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace local_berufsbildung\output;
 
 use advanced_testcase;
+use local_berufsbildung\nachweis\ausstehend;
 use local_berufsbildung\nachweis\nachweis;
 
 /**
@@ -225,6 +226,46 @@ final class nachweis_liste_test extends advanced_testcase {
         $this->assertSame(1, substr_count($html, 'Schnitt 5.5'));
         $this->assertGreaterThan(strpos($html, 'Überbetriebliche Kurse'), strpos($html, 'Schnitt 5.5'));
         $this->assertLessThan(strpos($html, 'üK 2'), strpos($html, 'Schnitt 5.5'));
+    }
+
+    /**
+     * Was noch aussteht, steht in der Gruppe seiner Quelle unter den
+     * Nachweisen, mit dem Stand, den die Quelle formuliert hat.
+     */
+    public function test_ausstehendes_steht_unter_den_nachweisen_seiner_quelle(): void {
+        $this->resetAfterTest();
+
+        $html = nachweis_liste::render(
+            [new nachweis('uek', 'üK 2: Kleinspannung', 1000, '5.5', null, null)],
+            ['lerndoku' => 'Lerndokumentation', 'uek' => 'Überbetriebliche Kurse'],
+            ausstehende: ['uek' => [new ausstehend('uek', 'üK 4: Steuerungen', 'noch nicht eingeplant')]]
+        );
+
+        $this->assertStringContainsString('noch nicht eingeplant', $html);
+        $this->assertStringContainsString(get_string('nachweis:ausstehend_titel', 'local_berufsbildung'), $html);
+        $this->assertLessThan(strpos($html, 'üK 4: Steuerungen'), strpos($html, 'üK 2: Kleinspannung'));
+        // Die Lerndokumentation hat weder Nachweise noch Ausstehendes - keine Gruppe.
+        $this->assertStringNotContainsString('Lerndokumentation', $html);
+    }
+
+    /**
+     * Randfall zu Beginn der Lehre: noch kein einziger Nachweis, aber die
+     * kommenden ueK sind bekannt. Dann steht die Gruppe trotzdem da, ohne
+     * "0 Nachweise" im Kopf, und nicht der Leertext.
+     */
+    public function test_quelle_nur_mit_ausstehendem_bekommt_ihre_gruppe(): void {
+        $this->resetAfterTest();
+
+        $html = nachweis_liste::render(
+            [],
+            ['uek' => 'Überbetriebliche Kurse'],
+            ausstehende: ['uek' => [new ausstehend('uek', 'üK 1: Grundlagen', 'geplant')]]
+        );
+
+        $this->assertStringContainsString('Überbetriebliche Kurse', $html);
+        $this->assertStringContainsString('üK 1: Grundlagen', $html);
+        $this->assertStringNotContainsString(get_string('nachweis:anzahl', 'local_berufsbildung', 0), $html);
+        $this->assertStringNotContainsString(get_string('form:keine_taetigkeiten', 'local_berufsbildung'), $html);
     }
 
     /**

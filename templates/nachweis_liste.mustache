@@ -31,9 +31,14 @@
     die Semesterkoepfe des Versetzungsplans.
 
     Context variables required for this template:
-    * gruppen - array of {name, anzahl, haszusammenfassung, zusammenfassung,
-      nachweise: [{bezeichnung, datum, hasergebnis, ergebnis, hasurl, url, hassemester, semester}]},
+    * gruppen - array of {name, hasanzahl, anzahl, haszusammenfassung, zusammenfassung,
+      hasnachweise, nachweise: [{bezeichnung, datum, hasergebnis, ergebnis, hasurl, url, hassemester, semester}],
+      hasausstehende, ausstehende: [{bezeichnung, stand}]},
       ergebnis bereits beschriftet ("Ergebnis 5.0")
+
+    Unter den Nachweisen einer Quelle steht, was sie fuer die Person noch
+    erwartet (siehe quelle_mit_ausstehenden) - blass und ohne Link, weil es
+    noch nichts zu oeffnen gibt. Den Stand formuliert die Quelle.
     * hasgruppen - bool
     * hastitel - bool
     * titel - string, Ueberschrift ueber der ganzen Liste
@@ -48,9 +53,15 @@
         "gruppen": [
             {
                 "name": "üK-Kompetenznachweise",
+                "hasanzahl": true,
                 "anzahl": "2 Nachweise",
                 "haszusammenfassung": true,
                 "zusammenfassung": "Schnitt 5.5",
+                "hasausstehende": true,
+                "ausstehende": [
+                    {"bezeichnung": "üK 4: Steuerungen programmieren", "stand": "noch nicht eingeplant"}
+                ],
+                "hasnachweise": true,
                 "nachweise": [
                     {
                         "bezeichnung": "üK 3: Steuerungstechnik",
@@ -76,8 +87,11 @@
             <div class="local-berufsbildung-nachweisgruppe">
                 <h4 class="local-berufsbildung-nachweisgruppe-kopf h6 mb-1">
                     <span class="local-berufsbildung-quellenname">{{name}}</span>
-                    <span class="local-berufsbildung-nachweisgruppe-info text-muted small">{{anzahl}}{{#haszusammenfassung}} · <span class="local-berufsbildung-nachweisgruppe-zusammenfassung">{{zusammenfassung}}</span>{{/haszusammenfassung}}</span>
+                    {{#hasanzahl}}
+                        <span class="local-berufsbildung-nachweisgruppe-info text-muted small">{{anzahl}}{{#haszusammenfassung}} · <span class="local-berufsbildung-nachweisgruppe-zusammenfassung">{{zusammenfassung}}</span>{{/haszusammenfassung}}</span>
+                    {{/hasanzahl}}
                 </h4>
+                {{#hasnachweise}}
                 <ul class="list-unstyled mb-0">
                     {{#nachweise}}
                         <li class="local-berufsbildung-nachweis border-bottom">
@@ -94,6 +108,20 @@
                         </li>
                     {{/nachweise}}
                 </ul>
+                {{/hasnachweise}}
+                {{#hasausstehende}}
+                    <h5 class="local-berufsbildung-ausstehend-titel small text-muted mb-0">{{#str}} nachweis:ausstehend_titel, local_berufsbildung {{/str}}</h5>
+                    <ul class="list-unstyled mb-0">
+                        {{#ausstehende}}
+                            <li class="local-berufsbildung-nachweis local-berufsbildung-ausstehend border-bottom">
+                                <span class="local-berufsbildung-nachweis-titelzeile">
+                                    <span class="local-berufsbildung-nachweis-titel text-muted">{{bezeichnung}}</span>
+                                </span>
+                                <span class="d-block text-muted small">{{stand}}</span>
+                            </li>
+                        {{/ausstehende}}
+                    </ul>
+                {{/hasausstehende}}
             </div>
         {{/gruppen}}
     {{/hasgruppen}}
