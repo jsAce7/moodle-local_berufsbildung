@@ -86,6 +86,7 @@ final class einsatz_timeline_test extends advanced_testcase {
         // Genau ein Eintrag ist als laufend markiert.
         $this->assertSame(1, substr_count($html, 'local-berufsbildung-timeline-aktuell'));
         $this->assertSame(1, substr_count($html, 'local-berufsbildung-timeline-vergangen'));
+        $this->assertSame(1, substr_count($html, 'local-berufsbildung-timeline-kommend'));
     }
 
     /**

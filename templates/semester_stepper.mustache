@@ -17,49 +17,54 @@
 {{!
     @template local_berufsbildung/semester_stepper
 
-    Dekorativer Fortschritts-Stepper - die gleiche Information steht als
+    Dekorativer Fortschrittsbalken - die gleiche Information steht als
     Text daneben (form:ausbildungsstand), deshalb aria-hidden.
 
-    Die Punkte allein sagen nicht, wovon sie zaehlen. Ausserhalb der
-    kompakten Variante steht deshalb "Lehrjahr" davor und die Nummer des
-    Lehrjahres unter seiner Gruppe.
+    Ein Segment je Semester, gruppiert nach Lehrjahr: abgeschlossene und
+    laufendes Semester in der Primaerfarbe, kommende blass - dieselbe
+    Farbsprache wie der Strang des Versetzungsplans (einsatz_timeline).
+    Das laufende Semester ist hoeher als die anderen, damit es sich auch
+    von den abgeschlossenen abhebt. Unter jeder Gruppe steht das Lehrjahr
+    ausgeschrieben, das laufende hervorgehoben; in der kompakten Variante
+    traegt nur der Titel die Beschriftung.
 
     Context variables required for this template:
-    * gruppen - array of {punkte: [{istvergangen, istaktuell}], marke, titel}, ein Eintrag je Lehrjahr
+    * gruppen - array of {segmente: [{istvergangen, istaktuell, istkommend}], titel, istaktuell}, ein Eintrag je Lehrjahr
     * kompakt - bool
-    * legendetext - string, Bezeichnung der Zaehlung ("Lehrjahr")
 
     Example context (json):
     {
         "kompakt": false,
-        "legendetext": "Lehrjahr",
         "gruppen": [
             {
-                "marke": 1,
                 "titel": "1. Lehrjahr",
-                "punkte": [{"istvergangen": true, "istaktuell": false}, {"istvergangen": false, "istaktuell": true}]
+                "istaktuell": true,
+                "segmente": [
+                    {"istvergangen": true, "istaktuell": false, "istkommend": false},
+                    {"istvergangen": false, "istaktuell": true, "istkommend": false}
+                ]
             },
             {
-                "marke": 2,
                 "titel": "2. Lehrjahr",
-                "punkte": [{"istvergangen": false, "istaktuell": false}, {"istvergangen": false, "istaktuell": false}]
+                "istaktuell": false,
+                "segmente": [
+                    {"istvergangen": false, "istaktuell": false, "istkommend": true},
+                    {"istvergangen": false, "istaktuell": false, "istkommend": true}
+                ]
             }
         ]
     }
 }}
 <span class="local-berufsbildung-stepper{{#kompakt}} local-berufsbildung-stepper-kompakt{{/kompakt}}" aria-hidden="true">
-    {{^kompakt}}
-        <span class="local-berufsbildung-stepper-legende text-muted">{{legendetext}}</span>
-    {{/kompakt}}
     {{#gruppen}}
         <span class="local-berufsbildung-stepper-lehrjahr" title="{{titel}}">
-            <span class="local-berufsbildung-stepper-punkte">
-                {{#punkte}}
-                    <span class="local-berufsbildung-stepper-punkt{{#istaktuell}} local-berufsbildung-stepper-punkt-aktuell bg-primary{{/istaktuell}}{{#istvergangen}} bg-primary{{/istvergangen}}{{^istvergangen}}{{^istaktuell}} border bg-light{{/istaktuell}}{{/istvergangen}}"></span>
-                {{/punkte}}
+            <span class="local-berufsbildung-stepper-segmente">
+                {{#segmente}}
+                    <span class="local-berufsbildung-stepper-segment{{#istvergangen}} bg-primary{{/istvergangen}}{{#istaktuell}} local-berufsbildung-stepper-segment-aktuell bg-primary{{/istaktuell}}{{#istkommend}} bg-secondary{{/istkommend}}"></span>
+                {{/segmente}}
             </span>
             {{^kompakt}}
-                <span class="local-berufsbildung-stepper-marke text-muted">{{marke}}</span>
+                <span class="local-berufsbildung-stepper-marke{{#istaktuell}} local-berufsbildung-stepper-marke-aktuell{{/istaktuell}}{{^istaktuell}} text-muted{{/istaktuell}}">{{titel}}</span>
             {{/kompakt}}
         </span>
     {{/gruppen}}

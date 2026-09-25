@@ -102,7 +102,6 @@ $string['raster:legende_wahlpflicht'] = 'Elective competency area';
 $string['raster:legende_abgedeckt'] = 'already occurred in a placement';
 $string['raster:legende_eingeplant'] = 'scheduled later in the plan on file';
 $string['raster:legende_offen'] = 'no marker: not contained in the plan on file';
-$string['stepper:legende'] = 'Year';
 $string['stepper:lehrjahr'] = 'Year {$a}';
 $string['einsatz:zeitraum'] = '{$a->von} to {$a->bis}';
 $string['einsatz:kw'] = 'Week {$a}';

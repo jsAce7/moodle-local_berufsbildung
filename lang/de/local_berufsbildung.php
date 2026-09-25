@@ -102,7 +102,6 @@ $string['raster:legende_wahlpflicht'] = 'Wahlpflicht-Handlungskompetenz';
 $string['raster:legende_abgedeckt'] = 'kam bereits in einem Einsatz vor';
 $string['raster:legende_eingeplant'] = 'im vorliegenden Plan später eingeplant';
 $string['raster:legende_offen'] = 'ohne Zeichen: im vorliegenden Plan nicht enthalten';
-$string['stepper:legende'] = 'Lehrjahr';
 $string['stepper:lehrjahr'] = '{$a}. Lehrjahr';
 $string['einsatz:zeitraum'] = '{$a->von} bis {$a->bis}';
 $string['einsatz:kw'] = 'KW {$a}';

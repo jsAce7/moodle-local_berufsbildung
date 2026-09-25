@@ -21,10 +21,19 @@
     einsatz_timeline sie an zwei Stellen einsetzt: im Aufklapper eines
     Semesters und - ohne Semestergrenzen - als durchgehende Liste.
 
-    Kalenderwoche links, Bezeichnung rechts: eine Spalte, an der das Auge
-    die Liste hinunterlaufen kann, statt jede Zeile von vorn zu lesen. Die
-    Kalenderwoche ist der Anker, weil der Versetzungsplan selbst in Wochen
-    gefuehrt wird und sie anders als das Datum immer gleich breit ist.
+    Kalenderwoche links, Strang in der Mitte, Bezeichnung rechts: eine
+    Spalte, an der das Auge die Liste hinunterlaufen kann, statt jede Zeile
+    von vorn zu lesen. Die Kalenderwoche ist der Anker, weil der
+    Versetzungsplan selbst in Wochen gefuehrt wird und sie anders als das
+    Datum immer gleich breit ist.
+
+    Der Strang liest sich wie die Semesterleiste: zurueckgelegter Weg und
+    abgeschlossene Einsaetze gefuellt in der Primaerfarbe, kommende als
+    leerer Ring an einer blassen Linie. Jeder Eintrag zeichnet nur sein
+    Stueck bis zum naechsten Punkt - so endet der Strang genau am letzten
+    Einsatz, statt ins Leere zu laufen. Der laufende Einsatz traegt eine
+    getoente Flaeche ueber die ganze Zeile; das Badge sagt dasselbe als
+    Text.
 
     Context variables required for this template:
     * eintraege - array of {blockname, zeitraum, haskw, kw, istvergangen, istaktuell, istkommend}
@@ -46,12 +55,16 @@
 }}
 <ol class="local-berufsbildung-timeline-liste list-unstyled mb-0">
     {{#eintraege}}
-        <li class="local-berufsbildung-timeline-eintrag{{#istvergangen}} local-berufsbildung-timeline-vergangen{{/istvergangen}}{{#istaktuell}} local-berufsbildung-timeline-aktuell{{/istaktuell}}">
-            <span class="local-berufsbildung-timeline-punkt{{#istaktuell}} bg-primary{{/istaktuell}}{{#istvergangen}} bg-secondary{{/istvergangen}}{{#istkommend}} border bg-light{{/istkommend}}" aria-hidden="true"></span>
-            <span class="local-berufsbildung-timeline-kw text-muted small">{{#haskw}}{{kw}}{{/haskw}}</span>
+        <li class="local-berufsbildung-timeline-eintrag{{#istvergangen}} local-berufsbildung-timeline-vergangen{{/istvergangen}}{{#istaktuell}} local-berufsbildung-timeline-aktuell{{/istaktuell}}{{#istkommend}} local-berufsbildung-timeline-kommend{{/istkommend}}">
+            {{#istaktuell}}<span class="local-berufsbildung-timeline-flaeche bg-primary" aria-hidden="true"></span>{{/istaktuell}}
+            <span class="local-berufsbildung-timeline-kw small{{#istaktuell}} text-primary{{/istaktuell}}{{^istaktuell}} text-muted{{/istaktuell}}">{{#haskw}}{{kw}}{{/haskw}}</span>
+            <span class="local-berufsbildung-timeline-strang" aria-hidden="true">
+                <span class="local-berufsbildung-timeline-verbindung{{#istvergangen}} bg-primary{{/istvergangen}}{{^istvergangen}} bg-secondary{{/istvergangen}}"></span>
+                <span class="local-berufsbildung-timeline-punkt{{#istvergangen}} bg-primary{{/istvergangen}}{{#istaktuell}} bg-primary{{/istaktuell}}{{#istkommend}} bg-white border border-secondary{{/istkommend}}"></span>
+            </span>
             <span class="local-berufsbildung-timeline-text">
                 <span class="local-berufsbildung-timeline-titelzeile">
-                    <span class="local-berufsbildung-timeline-blockname">{{blockname}}</span>
+                    <span class="local-berufsbildung-timeline-blockname{{#istvergangen}} text-muted{{/istvergangen}}">{{blockname}}</span>
                     {{#istaktuell}}<span class="badge bg-primary text-white">{{#str}} einsatz:aktuell, local_berufsbildung {{/str}}</span>{{/istaktuell}}
                 </span>
                 <span class="d-block text-muted small">{{zeitraum}}</span>

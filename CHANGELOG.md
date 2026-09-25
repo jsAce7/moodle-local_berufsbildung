@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.4] — 2026-09-25
+
+### Geändert
+
+- **Versetzungsplan-Zeitleiste neu gestaltet** (`einsatz_timeline_eintraege.mustache`): Kalenderwoche links, Strang in einer eigenen Spalte, Bezeichnung rechts. Abgeschlossene Einsätze und der zurückgelegte Weg stehen gefüllt in der Primärfarbe, kommende als leerer Ring an einer blassen Linie; der laufende Einsatz trägt eine getönte Fläche über die ganze Zeile. Jeder Eintrag zeichnet nur sein Stück bis zum nächsten Punkt, der Strang endet damit am letzten Einsatz. Vorher war er ein `border-left` in voller Textfarbe, auf dem die Punkte mit festen Versätzen sassen, und vergangene und kommende Einsätze waren kaum zu unterscheiden. Im Semesterkopf steht die Anzahl direkt hinter dem Namen statt am rechten Rand, zwischen den Semestern trennt eine Linie.
+- **Semesterleiste als Segmentbalken** (`semester_stepper`): ein Segment je Semester, die Lehrjahre durch eine Lücke statt eines Trennstrichs gegliedert, darunter das Lehrjahr ausgeschrieben („2. Lehrjahr"), das laufende hervorgehoben. Dieselbe Farbsprache wie die Zeitleiste; das laufende Semester ist höher als die anderen. Die vorangestellte Legende „Lehrjahr" entfällt samt String `stepper:legende`. Erstmals mit Tests (`tests/output/semester_stepper_test.php`), inklusive erstem und letztem Semester.
+
 ## [0.5.3] — 2026-09-24
 
 ### Hinzugefügt

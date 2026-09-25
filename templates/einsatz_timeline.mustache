@@ -61,15 +61,15 @@
     }
 }}
 <div class="local-berufsbildung-timeline">
-    <h3 class="h5 mb-2">{{titel}}</h3>
+    <h3 class="h5 mb-3">{{titel}}</h3>
     {{#gruppen}}
         {{#hasname}}
-            <details class="local-berufsbildung-timeline-gruppe"{{#istoffen}} open{{/istoffen}}>
+            <details class="local-berufsbildung-timeline-gruppe border-top"{{#istoffen}} open{{/istoffen}}>
                 <summary class="local-berufsbildung-timeline-gruppenkopf">
-                    <span class="local-berufsbildung-timeline-chevron" aria-hidden="true">
+                    <span class="local-berufsbildung-timeline-chevron text-muted" aria-hidden="true">
                         <i class="icon fa fa-chevron-right fa-fw m-0"></i>
                     </span>
-                    <span class="local-berufsbildung-timeline-gruppenname h6 text-uppercase text-muted mb-0">{{name}}</span>
+                    <span class="local-berufsbildung-timeline-gruppenname h6 mb-0">{{name}}</span>
                     <span class="local-berufsbildung-timeline-gruppenanzahl text-muted small">{{anzahl}}</span>
                 </summary>
                 {{> local_berufsbildung/einsatz_timeline_eintraege }}

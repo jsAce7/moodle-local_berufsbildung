@@ -16,9 +16,10 @@
 
 /**
  * Rendert den Fortschritt einer lernenden Person durch ihre Lehre als
- * Semester-Punkte, gruppiert nach Lehrjahr. Rein visuell - dieselbe
- * Information steht bereits als Text daneben (form:ausbildungsstand),
- * deshalb bleibt der Stepper dekorativ (aria-hidden).
+ * Segmentbalken, ein Segment je Semester, gruppiert nach Lehrjahr. Rein
+ * visuell - dieselbe Information steht bereits als Text daneben
+ * (form:ausbildungsstand), deshalb bleibt der Stepper dekorativ
+ * (aria-hidden).
  *
  * @package    local_berufsbildung
  * @copyright  2026 jsAce7
@@ -49,27 +50,27 @@ class semester_stepper {
             $lehrjahre[$lehrjahr][] = [
                 'istvergangen' => $einzelsemester < $semester,
                 'istaktuell' => $einzelsemester === $semester,
+                'istkommend' => $einzelsemester > $semester,
             ];
         }
 
-        // Sechs Punkte mit Trennstrichen sind ohne Beschriftung ein Raetsel:
-        // Semester? Lehrjahre? Die Zahl unter jeder Gruppe und die
-        // vorangestellte Bezeichnung beantworten das, ohne dass man erst
-        // darueberfahren muss. In der kompakten Variante bleibt dafuer kein
+        // Segmente ohne Beschriftung sind ein Raetsel: Semester? Lehrjahre?
+        // Unter jeder Gruppe steht deshalb das Lehrjahr ausgeschrieben - eine
+        // vorangestellte Legende mit einzelnen Ziffern darunter musste man
+        // erst zusammensetzen. In der kompakten Variante bleibt dafuer kein
         // Platz - dort traegt der Titel die Information.
         $gruppen = [];
-        foreach ($lehrjahre as $lehrjahr => $punkte) {
+        foreach ($lehrjahre as $lehrjahr => $segmente) {
             $gruppen[] = [
-                'punkte' => $punkte,
-                'marke' => $lehrjahr,
+                'segmente' => $segmente,
                 'titel' => get_string('stepper:lehrjahr', 'local_berufsbildung', $lehrjahr),
+                'istaktuell' => in_array(true, array_column($segmente, 'istaktuell'), true),
             ];
         }
 
         return $OUTPUT->render_from_template('local_berufsbildung/semester_stepper', [
             'gruppen' => $gruppen,
             'kompakt' => $kompakt,
-            'legendetext' => get_string('stepper:legende', 'local_berufsbildung'),
         ]);
     }
 }

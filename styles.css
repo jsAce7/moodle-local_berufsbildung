@@ -5,9 +5,10 @@
  */
 
 /*
- * Semesterleiste: die Punkte gruppieren sich je Lehrjahr in einer Spalte -
- * Punkte oben, Nummer des Lehrjahres darunter. Ohne diese Nummer und die
- * vorangestellte Bezeichnung sind es nur Punkte mit Trennstrichen.
+ * Semesterleiste als Segmentbalken: ein Segment je Semester, die beiden
+ * Semester eines Lehrjahres dicht beieinander, zwischen den Lehrjahren
+ * eine groessere Luecke statt eines Trennstrichs. Darunter steht je Gruppe
+ * das Lehrjahr ausgeschrieben.
  */
 .local-berufsbildung-stepper {
     display: flex;
@@ -16,64 +17,68 @@
     margin: 0.5rem 0 1rem;
 }
 
-.local-berufsbildung-stepper-legende {
-    padding-top: 0.1rem;
-    font-size: 0.75rem;
-    line-height: 1;
-}
-
 .local-berufsbildung-stepper-lehrjahr {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 0.2rem;
-    padding-right: 0.5rem;
-    border-right: 1px solid currentColor;
-    opacity: 0.9;
+    align-items: stretch;
+    gap: 0.3rem;
 }
 
-.local-berufsbildung-stepper-lehrjahr:last-child {
-    border-right: 0;
-    padding-right: 0;
-}
-
-.local-berufsbildung-stepper-punkte {
+/*
+ * Die Segmente stehen auf einer gemeinsamen Mittellinie. min-height haelt
+ * die Zeile gleich hoch, ob das hoehere laufende Segment darin steht oder
+ * nicht - sonst stuenden die Beschriftungen der Lehrjahre ungleich hoch.
+ */
+.local-berufsbildung-stepper-segmente {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
-    /* Haelt die Zeile gleich hoch, ob der grosse aktuelle Punkt drin ist oder nicht. */
-    min-height: 0.9rem;
+    gap: 0.2rem;
+    min-height: 0.6rem;
+}
+
+.local-berufsbildung-stepper-segment {
+    display: block;
+    width: 2.4rem;
+    height: 0.3rem;
+    border-radius: 0.15rem;
+}
+
+.local-berufsbildung-stepper-segment-aktuell {
+    height: 0.6rem;
+    border-radius: 0.3rem;
 }
 
 .local-berufsbildung-stepper-marke {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     line-height: 1;
+    white-space: nowrap;
 }
 
-.local-berufsbildung-stepper-punkt {
-    display: inline-block;
-    width: 0.6rem;
-    height: 0.6rem;
-    border-radius: 50%;
+.local-berufsbildung-stepper-marke-aktuell {
+    font-weight: 600;
 }
 
-.local-berufsbildung-stepper-punkt-aktuell {
-    width: 0.9rem;
-    height: 0.9rem;
+/*
+ * Kompakt fuer die Roster-Zeilen: kuerzere Segmente, keine Beschriftung.
+ * Die Luecke zwischen den Lehrjahren bleibt - sie ist dort die einzige
+ * Gliederung.
+ */
+.local-berufsbildung-stepper-kompakt {
+    gap: 0.35rem;
 }
 
-.local-berufsbildung-stepper-kompakt .local-berufsbildung-stepper-punkt {
-    width: 0.4rem;
-    height: 0.4rem;
+.local-berufsbildung-stepper-kompakt .local-berufsbildung-stepper-segmente {
+    gap: 0.15rem;
+    min-height: 0.5rem;
 }
 
-.local-berufsbildung-stepper-kompakt .local-berufsbildung-stepper-punkt-aktuell {
-    width: 0.65rem;
-    height: 0.65rem;
+.local-berufsbildung-stepper-kompakt .local-berufsbildung-stepper-segment {
+    width: 1rem;
+    height: 0.25rem;
 }
 
-.local-berufsbildung-stepper-kompakt .local-berufsbildung-stepper-punkte {
-    min-height: 0.65rem;
+.local-berufsbildung-stepper-kompakt .local-berufsbildung-stepper-segment-aktuell {
+    height: 0.5rem;
 }
 
 /*
@@ -152,18 +157,34 @@
 /*
  * Versetzungsplan als Zeitstrahl, je Semester ein Aufklapper. Jede Gruppe
  * traegt ihren eigenen Strang - der Schnitt zwischen zwei Semestern ist
- * genau die Zaesur, die die Gliederung sichtbar machen soll. Der native
- * Marker weicht einem eigenen Chevron, wie bei den Roster-Kacheln.
+ * genau die Zaesur, die die Gliederung sichtbar machen soll; die Linie
+ * zwischen den Gruppen (border-top im Markup) macht ihn sichtbar. Der
+ * native Marker weicht einem eigenen Chevron, wie bei den Roster-Kacheln.
  */
-.local-berufsbildung-timeline-gruppe + .local-berufsbildung-timeline-gruppe {
-    margin-top: 0.75rem;
+.local-berufsbildung-timeline-gruppe {
+    padding: 0.4rem 0;
 }
 
+.local-berufsbildung-timeline-gruppe:first-of-type {
+    border-top: 0 !important;
+    padding-top: 0;
+}
+
+.local-berufsbildung-timeline-gruppe:last-child {
+    padding-bottom: 0;
+}
+
+/*
+ * Anzahl direkt hinter dem Namen statt am rechten Rand: auf einer breiten
+ * Karte stand sie sonst so weit weg, dass sie zu keiner Gruppe mehr
+ * gehoerte.
+ */
 .local-berufsbildung-timeline-gruppenkopf {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 0.5rem;
-    padding: 0.2rem 0;
+    padding: 0.35rem 0;
+    list-style: none;
     cursor: pointer;
 }
 
@@ -172,7 +193,6 @@
 }
 
 .local-berufsbildung-timeline-chevron {
-    /* Auf der Breite des Strangs, damit die Koepfe untereinander stehen. */
     width: 1rem;
     flex-shrink: 0;
     transition: transform 0.15s ease;
@@ -182,46 +202,105 @@
     transform: rotate(90deg);
 }
 
+.local-berufsbildung-timeline-gruppenname {
+    font-weight: 600;
+}
+
 .local-berufsbildung-timeline-gruppenanzahl {
-    margin-left: auto;
     white-space: nowrap;
 }
 
-.local-berufsbildung-timeline-gruppe[open] .local-berufsbildung-timeline-liste {
-    margin-top: 0.35rem;
-}
-
-.local-berufsbildung-timeline-liste {
-    position: relative;
-    margin-left: 0.3rem;
-    padding-left: 1rem;
-    border-left: 1px solid currentColor;
-    opacity: 0.95;
+/*
+ * Eingerueckt um Chevron und Abstand: die Eintraege stehen unter dem
+ * Namen ihres Semesters, nicht unter dem Aufklapp-Pfeil.
+ */
+.local-berufsbildung-timeline-gruppe .local-berufsbildung-timeline-liste {
+    margin: 0.25rem 0 0.25rem 1rem;
 }
 
 /*
- * Kalenderwoche links, Bezeichnung rechts: eine Spalte, an der das Auge
- * die Liste hinunterlaufen kann, statt jede Zeile von vorn zu lesen. Die
- * Wochen stehen in Tabellenziffern, damit sie trotz unterschiedlicher
- * Breite untereinander stehen.
+ * Kalenderwoche links, Strang in der Mitte, Bezeichnung rechts. Der Strang
+ * ist eine eigene Spalte statt eines Rahmens am Listenrand - Punkt und
+ * Linie liegen damit in derselben Zelle und koennen nicht gegeneinander
+ * verrutschen. Die Wochen stehen in Tabellenziffern, damit sie trotz
+ * unterschiedlicher Breite untereinander stehen.
+ *
+ * Alle Masse haengen an der Hoehe der ersten Zeile (1.3rem) und dem
+ * Innenabstand oben (0.45rem): die Mitte des Punkts liegt bei
+ * 0.45rem + 1.3rem / 2 = 1.1rem, auf Hoehe der Bezeichnung.
  */
 .local-berufsbildung-timeline-eintrag {
     position: relative;
     display: grid;
-    grid-template-columns: 4.75rem minmax(0, 1fr);
-    column-gap: 0.65rem;
+    grid-template-columns: 4.5rem 1rem minmax(0, 1fr);
+    grid-template-areas: "kw strang text";
+    column-gap: 0.75rem;
     align-items: start;
-    padding-bottom: 0.75rem;
+    padding: 0.45rem 0.5rem;
 }
 
-.local-berufsbildung-timeline-eintrag:last-child {
-    padding-bottom: 0;
-}
-
+/*
+ * Kalenderwoche und Text liegen ueber der Flaeche des laufenden Einsatzes,
+ * nicht darunter - positionierte Elemente zeichnen sich ueber
+ * unpositionierte.
+ */
 .local-berufsbildung-timeline-kw {
-    padding-top: 0.15rem;
+    position: relative;
+    grid-area: kw;
+    line-height: 1.3rem;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+}
+
+/*
+ * Der Strang reicht ueber den Innenabstand hinweg von Oberkante zu
+ * Unterkante des Eintrags, damit die Verbindung ohne Luecke in den
+ * naechsten Eintrag laeuft.
+ */
+.local-berufsbildung-timeline-strang {
+    position: relative;
+    grid-area: strang;
+    align-self: stretch;
+    margin: -0.45rem 0;
+}
+
+/*
+ * Jeder Eintrag zeichnet nur das Stueck von seinem Punkt bis zum Punkt
+ * des naechsten - der Strang beginnt damit am ersten Einsatz und endet am
+ * letzten.
+ */
+.local-berufsbildung-timeline-verbindung {
+    position: absolute;
+    top: 1.1rem;
+    bottom: -1.1rem;
+    left: 50%;
+    width: 2px;
+    transform: translateX(-50%);
+}
+
+.local-berufsbildung-timeline-eintrag:last-child .local-berufsbildung-timeline-verbindung {
+    display: none;
+}
+
+.local-berufsbildung-timeline-punkt {
+    position: absolute;
+    top: 1.1rem;
+    left: 50%;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.local-berufsbildung-timeline-aktuell .local-berufsbildung-timeline-punkt {
+    width: 0.9rem;
+    height: 0.9rem;
+}
+
+/* .border ist 1px - als Ring um einen leeren Punkt zu duenn, um ihn
+   neben den gefuellten ueberhaupt zu sehen. */
+.local-berufsbildung-timeline-kommend .local-berufsbildung-timeline-punkt {
+    border-width: 2px !important;
 }
 
 /*
@@ -230,6 +309,8 @@
  * Titelzeile sorgt zudem fuer einen gleichmaessigen Abstand zum Badge.
  */
 .local-berufsbildung-timeline-text {
+    position: relative;
+    grid-area: text;
     min-width: 0;
 }
 
@@ -237,40 +318,31 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.2rem 0.4rem;
-    line-height: 1.35;
+    gap: 0 0.5rem;
+    line-height: 1.3rem;
 }
 
 /*
- * Auf schmalen Fenstern reicht die Breite nicht fuer zwei Spalten - dann
- * steht die Woche ueber der Bezeichnung statt daneben.
+ * Der laufende Einsatz als getoente Flaeche ueber die ganze Zeile -
+ * dieselbe Technik wie die Fuellung im Kompetenzraster: eine eigene Ebene
+ * in der Primaerfarbe, deren Deckung den Text nicht antastet.
  */
-@media (max-width: 36rem) {
-    .local-berufsbildung-timeline-eintrag {
-        grid-template-columns: 1fr;
-        row-gap: 0.1rem;
-    }
-}
-
-.local-berufsbildung-timeline-punkt {
+.local-berufsbildung-timeline-flaeche {
     position: absolute;
-    top: 0.35rem;
-    left: -1.3rem;
-    display: inline-block;
-    width: 0.6rem;
-    height: 0.6rem;
-    border-radius: 50%;
-}
-
-.local-berufsbildung-timeline-aktuell .local-berufsbildung-timeline-punkt {
-    top: 0.25rem;
-    left: -1.45rem;
-    width: 0.9rem;
-    height: 0.9rem;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    border-radius: 0.5rem;
+    opacity: 0.08;
 }
 
 .local-berufsbildung-timeline-aktuell .local-berufsbildung-timeline-blockname {
-    font-weight: bold;
+    font-weight: 600;
+}
+
+.local-berufsbildung-timeline-aktuell .local-berufsbildung-timeline-kw {
+    font-weight: 600;
 }
 
 .local-berufsbildung-timeline-aktuell .badge {
@@ -278,12 +350,17 @@
 }
 
 /*
- * Vergangene Einsaetze treten zurueck, bleiben aber lesbar: die Historie
- * ist der halbe Zweck der Liste. Das Zurueckgetretene traegt schon der
- * Punkt in der Sekundaerfarbe.
+ * Auf schmalen Fenstern reicht die Breite nicht fuer drei Spalten - dann
+ * steht die Woche ueber der Bezeichnung statt daneben, der Strang bleibt
+ * links.
  */
-.local-berufsbildung-timeline-vergangen {
-    opacity: 0.85;
+@media (max-width: 36rem) {
+    .local-berufsbildung-timeline-eintrag {
+        grid-template-columns: 1rem minmax(0, 1fr);
+        grid-template-areas:
+            "strang kw"
+            "strang text";
+    }
 }
 
 .local-berufsbildung-luecken-bereiche > .local-berufsbildung-luecken-bereich {
