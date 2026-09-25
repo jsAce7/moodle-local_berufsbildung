@@ -230,7 +230,11 @@ if (empty($eintraege)) {
         echo nachweis_liste::render(
             $nachweise,
             $quellennamen,
-            titel: get_string('nachweis:titel', 'local_berufsbildung')
+            // Externe Personen haben hier keinen Ausbildungsstand und damit
+            // auch keine Semester, in die sich ein Nachweis einordnen liesse.
+            $eintrag['istextern'] ? [] : api::get_semester_grenzen($lernendeid),
+            get_string('nachweis:titel', 'local_berufsbildung'),
+            $collector->get_zusammenfassungen($nachweise)
         );
 
         $profilurl = new moodle_url('/user/profile.php', ['id' => $lernendeid]);
@@ -295,7 +299,9 @@ if (empty($eintraege)) {
             // sichtbar, aber Semesterleiste und Lehrberuf nicht.
             $eintrag['istextern'] ? null : $stand,
             $anzahlluecken[$lernendeid],
-            count($nachweise),
+            // Dieselbe Zaehlung wie die Liste im Detail: ein Lerndoku-Eintrag
+            // mit mehreren Handlungskompetenzen ist eine Taetigkeit.
+            count(nachweis_liste::eindeutige($nachweise)),
             $detailhtml,
             bildhtml: $bildhtml,
             einsatzname: $einsatzname,

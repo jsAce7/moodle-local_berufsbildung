@@ -17,12 +17,23 @@
 {{!
     @template local_berufsbildung/nachweis_liste
 
-    Nachweise gruppiert, neueste zuerst je Gruppe. Die Gruppe ist je nach
-    Aufruf die Quelle oder das Semester - im zweiten Fall weist jede Zeile
-    zusaetzlich ihre Quelle aus (hasquelle).
+    Nachweise gruppiert nach Quelle - Lerndokumentation, ueK-Nachweise,
+    spaeter Bildungsbericht -, neueste zuerst je Gruppe. Im Gruppenkopf
+    stehen die Anzahl und, sofern die Quelle eine liefert, ihre
+    Zusammenfassung (z.B. "Schnitt 5.5", siehe quelle_mit_zusammenfassung).
+
+    Je Zeile Bezeichnung und Ergebnis oben, Datum und Semester als
+    Metazeile darunter - derselbe Aufbau wie im Versetzungsplan
+    (einsatz_timeline) und in den Eintraegen der Lerndokumentation. Das
+    Ergebnis traegt eine Beschriftung, weil "5.5" allein nicht sagt, wovon;
+    bewusst "Ergebnis" statt "Note", denn eine Quelle darf auch "bestanden"
+    liefern (siehe nachweis). Die Gruppenueberschrift hat dieselbe Form wie
+    die Semesterkoepfe des Versetzungsplans.
 
     Context variables required for this template:
-    * gruppen - array of {name, nachweise: [{bezeichnung, datum, hasergebnis, ergebnis, hasurl, url, hasquelle, quelle}]}
+    * gruppen - array of {name, anzahl, haszusammenfassung, zusammenfassung,
+      nachweise: [{bezeichnung, datum, hasergebnis, ergebnis, hasurl, url, hassemester, semester}]},
+      ergebnis bereits beschriftet ("Ergebnis 5.0")
     * hasgruppen - bool
     * hastitel - bool
     * titel - string, Ueberschrift ueber der ganzen Liste
@@ -36,17 +47,20 @@
         "leertext": "Keine Tätigkeiten vorhanden.",
         "gruppen": [
             {
-                "name": "3. Semester",
+                "name": "üK-Kompetenznachweise",
+                "anzahl": "2 Nachweise",
+                "haszusammenfassung": true,
+                "zusammenfassung": "Schnitt 5.5",
                 "nachweise": [
                     {
                         "bezeichnung": "üK 3: Steuerungstechnik",
                         "datum": "14. März 2026",
                         "hasergebnis": true,
-                        "ergebnis": "5.0",
+                        "ergebnis": "Ergebnis 5.0",
                         "hasurl": false,
                         "url": "",
-                        "hasquelle": true,
-                        "quelle": "Überbetriebliche Kurse"
+                        "hassemester": true,
+                        "semester": "3. Semester"
                     }
                 ]
             }
@@ -55,21 +69,28 @@
 }}
 <div class="local-berufsbildung-nachweise">
     {{#hastitel}}
-        <h3 class="h5 mb-2">{{titel}}</h3>
+        <h3 class="h5 mb-3">{{titel}}</h3>
     {{/hastitel}}
     {{#hasgruppen}}
         {{#gruppen}}
-            <div class="local-berufsbildung-nachweisgruppe mb-3">
-                <h4 class="local-berufsbildung-quellenname h6 text-uppercase text-muted mb-2">{{name}}</h4>
+            <div class="local-berufsbildung-nachweisgruppe">
+                <h4 class="local-berufsbildung-nachweisgruppe-kopf h6 mb-1">
+                    <span class="local-berufsbildung-quellenname">{{name}}</span>
+                    <span class="local-berufsbildung-nachweisgruppe-info text-muted small">{{anzahl}}{{#haszusammenfassung}} · <span class="local-berufsbildung-nachweisgruppe-zusammenfassung">{{zusammenfassung}}</span>{{/haszusammenfassung}}</span>
+                </h4>
                 <ul class="list-unstyled mb-0">
                     {{#nachweise}}
-                        <li class="local-berufsbildung-nachweis d-flex justify-content-between align-items-baseline py-1 border-bottom">
-                            <span class="local-berufsbildung-nachweis-titel">
-                                {{#hasurl}}<a href="{{url}}">{{/hasurl}}{{bezeichnung}}{{#hasurl}}</a> <i class="icon fa fa-external-link-alt fa-fw" aria-hidden="true"></i>{{/hasurl}}
-                                {{#hasergebnis}}<span class="badge bg-secondary ml-2">{{ergebnis}}</span>{{/hasergebnis}}
-                                {{#hasquelle}}<span class="local-berufsbildung-nachweis-quelle badge bg-light text-dark border ml-2">{{quelle}}</span>{{/hasquelle}}
+                        <li class="local-berufsbildung-nachweis border-bottom">
+                            <span class="local-berufsbildung-nachweis-titelzeile">
+                                <span class="local-berufsbildung-nachweis-titel">
+                                    {{#hasurl}}<a href="{{url}}">{{bezeichnung}} <i class="icon fa fa-external-link-alt fa-fw m-0 small" aria-hidden="true"></i></a>{{/hasurl}}
+                                    {{^hasurl}}{{bezeichnung}}{{/hasurl}}
+                                </span>
+                                {{#hasergebnis}}<span class="local-berufsbildung-nachweis-ergebnis badge bg-light text-dark border">{{ergebnis}}</span>{{/hasergebnis}}
                             </span>
-                            <span class="local-berufsbildung-nachweis-datum text-muted small text-nowrap ml-2">{{datum}}</span>
+                            <span class="d-block text-muted small">
+                                <span class="local-berufsbildung-nachweis-datum">{{datum}}</span>{{#hassemester}} · <span class="local-berufsbildung-nachweis-semester">{{semester}}</span>{{/hassemester}}
+                            </span>
                         </li>
                     {{/nachweise}}
                 </ul>

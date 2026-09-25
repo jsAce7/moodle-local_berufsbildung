@@ -206,11 +206,17 @@ if ($stand !== null) {
 
     echo $abschnitt(einsatz_timeline::render_fuer_lernende($lernendeid));
 
+    // Nach Quelle gruppiert, das Semester steht je Zeile - jede Art von
+    // Nachweis bringt ihre eigene Zusammenfassung mit, etwa den ueK-Schnitt.
+    // Die Zusammenfassung rechnet ueber dieselben Nachweise, die hier
+    // angezeigt werden, also nur ueber die bereits besprochenen.
+    $nachweise = $collector->get_nachweise($lernendeid, $lernendeid, 0, time());
     echo $abschnitt(nachweis_liste::render(
-        $collector->get_nachweise($lernendeid, $lernendeid, 0, time()),
+        $nachweise,
         $collector->get_quelle_namen(),
         api::get_semester_grenzen($lernendeid),
-        get_string('nachweis:titel', 'local_berufsbildung')
+        get_string('nachweis:titel', 'local_berufsbildung'),
+        $collector->get_zusammenfassungen($nachweise)
     ));
 } else if ($phase === api::PHASE_VOR_BEGINN) {
     // Die Lehre beginnt erst - kein Semester, aber der Versetzungsplan

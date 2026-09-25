@@ -30,7 +30,13 @@ namespace local_berufsbildung\output;
 use local_berufsbildung\nachweis\nachweis;
 
 /**
- * Liste der eingesammelten Nachweise.
+ * Liste der eingesammelten Nachweise, eine Gruppe je Quelle.
+ *
+ * Nach Quelle statt nach Semester: Lerndoku-Eintraege, ueK-Nachweise und
+ * spaeter der Bildungsbericht sind verschiedene Arten von Nachweisen, und
+ * jede Art hat ihre eigene Zusammenfassung - den Schnitt der ueK-Noten
+ * etwa, der ueber Lerndoku-Eintraege nichts aussagt. Das Semester steht
+ * stattdessen in jeder Zeile.
  */
 class nachweis_liste {
     /**
@@ -41,28 +47,34 @@ class nachweis_liste {
      *                               Reihenfolge je Gruppe bleibt erhalten,
      *                               es wird nicht neu sortiert.
      * @param array $quellennamen Quelle-Key => Anzeigename, Struktur: array<string, string>
-     *                                              siehe collector::get_quelle_namen()
+     *        siehe collector::get_quelle_namen(). Legt zugleich die
+     *        Reihenfolge der Gruppen fest - die der Registrierung, damit
+     *        eine Quelle nicht mit jedem neuen Nachweis den Platz wechselt.
      * @param array $semestergrenzen Semesternummer => [von, bis], Struktur: array<int, array{0: int, 1: int}>
-     *        siehe api::get_semester_grenzen(). Leer (Standard) gruppiert nach
-     *        Quelle; gefuellt gruppiert nach Semester, weil eine lernende
-     *        Person ihre Ausbildung in Semestern denkt und nicht in
-     *        liefernden Plugins.
+     *        siehe api::get_semester_grenzen(). Gefuellt nennt jede Zeile ihr
+     *        Semester; leer (Standard) nur das Datum.
      * @param string|null $titel Ueberschrift ueber der ganzen Liste. Null, wo
      *        die Liste bereits in einem beschrifteten Bereich steht - etwa im
      *        aufgeklappten Teil einer Roster-Kachel. Ohne Ueberschrift haengt
      *        der Leertext sonst ohne Bezug auf der Seite.
+     * @param array $zusammenfassungen Quelle-Key => Text fuer den Gruppenkopf, Struktur: array<string, string>
+     *        siehe collector::get_zusammenfassungen()
      */
     public static function render(
         array $nachweise,
         array $quellennamen,
         array $semestergrenzen = [],
-        ?string $titel = null
+        ?string $titel = null,
+        array $zusammenfassungen = []
     ): string {
         global $OUTPUT;
 
-        $gruppen = empty($semestergrenzen)
-            ? self::gruppiere_nach_quelle($nachweise, $quellennamen)
-            : self::gruppiere_nach_semester($nachweise, $quellennamen, $semestergrenzen);
+        $gruppen = self::gruppiere_nach_quelle(
+            self::eindeutige($nachweise),
+            $quellennamen,
+            $semestergrenzen,
+            $zusammenfassungen
+        );
 
         return $OUTPUT->render_from_template('local_berufsbildung/nachweis_liste', [
             'gruppen' => $gruppen,
@@ -74,72 +86,82 @@ class nachweis_liste {
     }
 
     /**
-     * Gruppiert die Nachweise nach liefernder Quelle.
+     * Die Nachweise ohne Dubletten, fuer die Liste und fuer jede Anzahl, die
+     * zu ihr passen muss (etwa "X Taetigkeiten" in meine_lernenden.php).
+     *
+     * Eine Quelle darf denselben Nachweis mehrfach liefern, einmal je
+     * Kompetenz: die Lerndokumentation gibt einen Eintrag mit drei
+     * Handlungskompetenzen als drei Nachweise ab, die sich nur in
+     * competencyid unterscheiden. Fuer die Kompetenzzuordnung ist das
+     * richtig, in einer Liste fuer Menschen stuende derselbe Eintrag dreimal.
+     * Gleich ist, was in Quelle, Bezeichnung, Datum, Ergebnis und Link
+     * uebereinstimmt - also in allem, was die Liste zeigt. Der erste
+     * gewinnt, die Reihenfolge bleibt erhalten.
      *
      * @param nachweis[] $nachweise
-     * @param array $quellennamen Struktur: array<string, string>
-     * @return array<int, array{name: string, nachweise: array}>
+     * @return nachweis[]
      */
-    private static function gruppiere_nach_quelle(array $nachweise, array $quellennamen): array {
-        $nachweisenachquelle = [];
+    public static function eindeutige(array $nachweise): array {
+        $gesehen = [];
+        $ergebnis = [];
+
         foreach ($nachweise as $einzelnachweis) {
-            $nachweisenachquelle[$einzelnachweis->quellekey][] = $einzelnachweis;
+            $schluessel = json_encode([
+                $einzelnachweis->quellekey,
+                $einzelnachweis->bezeichnung,
+                $einzelnachweis->datum,
+                $einzelnachweis->ergebnis,
+                $einzelnachweis->url,
+            ]);
+            if (isset($gesehen[$schluessel])) {
+                continue;
+            }
+            $gesehen[$schluessel] = true;
+            $ergebnis[] = $einzelnachweis;
         }
 
-        $gruppen = [];
-        foreach ($nachweisenachquelle as $quellekey => $einzelnachweise) {
-            $gruppen[] = [
-                'name' => format_string($quellennamen[$quellekey] ?? $quellekey),
-                // Die Quelle steht bereits als Ueberschrift der Gruppe.
-                'nachweise' => self::zu_zeilen($einzelnachweise, $quellennamen, false),
-            ];
-        }
-
-        return $gruppen;
+        return $ergebnis;
     }
 
     /**
-     * Neuestes Semester zuerst - die aktuelle Ausbildungsphase steht oben,
-     * nicht der Lehrbeginn. Nachweise ausserhalb jedes Semesters (etwa aus
-     * der Zeit vor Lehrbeginn) gehen nicht verloren, sondern sammeln sich
-     * in einer eigenen Gruppe am Ende.
+     * Gruppiert die Nachweise nach liefernder Quelle, in der Reihenfolge der
+     * registrierten Quellen. Eine Quelle ohne Anzeigenamen - etwa ein
+     * inzwischen deaktivierter Provider - steht danach unter ihrem Key.
      *
      * @param nachweis[] $nachweise
      * @param array $quellennamen Struktur: array<string, string>
      * @param array $semestergrenzen Struktur: array<int, array{0: int, 1: int}>
-     * @return array<int, array{name: string, nachweise: array}>
+     * @param array $zusammenfassungen Struktur: array<string, string>
+     * @return array<int, array>
      */
-    private static function gruppiere_nach_semester(
+    private static function gruppiere_nach_quelle(
         array $nachweise,
         array $quellennamen,
-        array $semestergrenzen
+        array $semestergrenzen,
+        array $zusammenfassungen
     ): array {
-        $nachsemester = [];
-        $ohnesemester = [];
-
+        $jequelle = array_fill_keys(array_keys($quellennamen), []);
         foreach ($nachweise as $einzelnachweis) {
-            $semester = self::finde_semester($einzelnachweis->datum, $semestergrenzen);
-            if ($semester === null) {
-                $ohnesemester[] = $einzelnachweis;
-                continue;
-            }
-            $nachsemester[$semester][] = $einzelnachweis;
+            $jequelle[$einzelnachweis->quellekey][] = $einzelnachweis;
         }
-
-        krsort($nachsemester);
 
         $gruppen = [];
-        foreach ($nachsemester as $semester => $einzelnachweise) {
-            $gruppen[] = [
-                'name' => get_string('nachweis:semester', 'local_berufsbildung', $semester),
-                'nachweise' => self::zu_zeilen($einzelnachweise, $quellennamen, true),
-            ];
-        }
+        foreach ($jequelle as $quellekey => $einzelnachweise) {
+            if (empty($einzelnachweise)) {
+                continue;
+            }
 
-        if (!empty($ohnesemester)) {
+            $anzahl = count($einzelnachweise);
+            $zusammenfassung = $zusammenfassungen[$quellekey] ?? '';
+
             $gruppen[] = [
-                'name' => get_string('nachweis:ohne_semester', 'local_berufsbildung'),
-                'nachweise' => self::zu_zeilen($ohnesemester, $quellennamen, true),
+                'name' => format_string($quellennamen[$quellekey] ?? (string) $quellekey),
+                'anzahl' => $anzahl === 1
+                    ? get_string('nachweis:anzahl_eins', 'local_berufsbildung')
+                    : get_string('nachweis:anzahl', 'local_berufsbildung', $anzahl),
+                'haszusammenfassung' => $zusammenfassung !== '',
+                'zusammenfassung' => $zusammenfassung,
+                'nachweise' => self::zu_zeilen($einzelnachweise, $semestergrenzen),
             ];
         }
 
@@ -164,29 +186,39 @@ class nachweis_liste {
     }
 
     /**
-     * Formt die Nachweise in Tabellenzeilen um.
+     * Formt die Nachweise in Listenzeilen um.
      *
      * @param nachweis[] $nachweise
-     * @param array $quellennamen Struktur: array<string, string>
-     * @param bool $mitquelle Quelle je Zeile ausweisen - noetig, sobald die
-     *                         Gruppe nicht selbst die Quelle ist
+     * @param array $semestergrenzen Struktur: array<int, array{0: int, 1: int}>
      * @return array<int, array>
      */
-    private static function zu_zeilen(array $nachweise, array $quellennamen, bool $mitquelle): array {
-        return array_map(static function (nachweis $einzelnachweis) use ($quellennamen, $mitquelle): array {
+    private static function zu_zeilen(array $nachweise, array $semestergrenzen): array {
+        return array_map(static function (nachweis $einzelnachweis) use ($semestergrenzen): array {
             $ergebnis = $einzelnachweis->ergebnis;
+
+            $semester = '';
+            if (!empty($semestergrenzen)) {
+                $nummer = self::finde_semester($einzelnachweis->datum, $semestergrenzen);
+                // Ein Nachweis ausserhalb jedes Semesters - etwa aus der Zeit
+                // vor Lehrbeginn - bleibt in der Liste und sagt das.
+                $semester = $nummer !== null
+                    ? get_string('nachweis:semester', 'local_berufsbildung', $nummer)
+                    : get_string('nachweis:ohne_semester', 'local_berufsbildung');
+            }
 
             return [
                 'bezeichnung' => format_string($einzelnachweis->bezeichnung),
                 'datum' => userdate($einzelnachweis->datum, get_string('strftimedate', 'langconfig')),
                 'hasergebnis' => $ergebnis !== null && $ergebnis !== '',
-                'ergebnis' => $ergebnis !== null ? s($ergebnis) : '',
+                // Beschriftet ("Ergebnis 5.5") und roh - die Maskierung macht
+                // das Template, s() hier maskierte doppelt.
+                'ergebnis' => $ergebnis !== null
+                    ? get_string('nachweis:ergebnis', 'local_berufsbildung', $ergebnis)
+                    : '',
                 'hasurl' => $einzelnachweis->url !== null,
                 'url' => $einzelnachweis->url ?? '',
-                'hasquelle' => $mitquelle,
-                'quelle' => $mitquelle
-                    ? format_string($quellennamen[$einzelnachweis->quellekey] ?? $einzelnachweis->quellekey)
-                    : '',
+                'hassemester' => $semester !== '',
+                'semester' => $semester,
             ];
         }, $nachweise);
     }

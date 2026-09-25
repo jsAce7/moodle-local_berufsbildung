@@ -115,6 +115,9 @@ $string['einsatz:unbekannter_block'] = 'Ausbildungsblock ohne Bezeichnung';
 $string['nachweis:titel'] = 'Tätigkeiten';
 $string['nachweis:semester'] = '{$a}. Semester';
 $string['nachweis:ohne_semester'] = 'Ausserhalb der Lehrzeit';
+$string['nachweis:ergebnis'] = 'Ergebnis {$a}';
+$string['nachweis:anzahl'] = '{$a} Nachweise';
+$string['nachweis:anzahl_eins'] = '1 Nachweis';
 $string['error:keinezustaendigkeit'] = 'Keine Zuständigkeit für diese lernende Person.';
 $string['error:aufbewahrunggrundleer'] = 'Die Aufbewahrungspflicht benötigt eine Begründung.';
 

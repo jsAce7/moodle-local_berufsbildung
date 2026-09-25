@@ -75,8 +75,8 @@ class einsatz_timeline {
      *        siehe api::get_semester_grenzen(). Leer (Standard) ergibt eine
      *        durchgehende Liste; gefuellt gliedert sie nach Semestern - ein
      *        Plan ueber die ganze Lehrzeit ist sonst eine Liste aus
-     *        zwanzig gleich aussehenden Zeilen. Dieselbe Gliederung wie in
-     *        der Taetigkeitenliste, damit beide gleich gelesen werden.
+     *        zwanzig gleich aussehenden Zeilen. Dieselben
+     *        Semesterbezeichnungen wie in der Taetigkeitenliste.
      * @return string Leerer String, wenn keine Einsaetze vorliegen
      */
     public static function render(

@@ -37,6 +37,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once(__DIR__ . '/../fixtures/collector_test_provider.php');
 require_once(__DIR__ . '/../fixtures/collector_test_erfassbarer_provider.php');
 require_once(__DIR__ . '/../fixtures/collector_test_hinweis_provider.php');
+require_once(__DIR__ . '/../fixtures/collector_test_zusammenfassung_provider.php');
 
 /**
  * Tests fuer collector.
@@ -276,5 +277,47 @@ final class collector_test extends advanced_testcase {
 
         $this->assertSame([], $aktionen);
         $this->assertFalse($provider->hinweiswurdeaufgerufen);
+    }
+
+    /**
+     * Jede Quelle fasst nur ihre eigenen Nachweise zusammen - der ueK-Schnitt
+     * darf keinen Lerndoku-Eintrag mitzaehlen. Eine Quelle ohne
+     * quelle_mit_zusammenfassung bleibt aussen vor.
+     */
+    public function test_get_zusammenfassungen_gibt_jeder_quelle_nur_ihre_nachweise(): void {
+        $uek = new collector_test_zusammenfassung_provider('uek', 'Schnitt 5.5');
+        $ohne = new collector_test_provider();
+
+        $nachweise = [
+            new nachweis('uek', 'üK 2', 2000, '5.5', null, null),
+            new nachweis('test', 'Eintrag', 1500, null, null, null),
+            new nachweis('uek', 'üK 1', 1000, '5.0', null, null),
+        ];
+
+        $zusammenfassungen = (new collector([$uek, $ohne]))->get_zusammenfassungen($nachweise);
+
+        $this->assertSame(['uek' => 'Schnitt 5.5'], $zusammenfassungen);
+        $this->assertNotNull($uek->erhaltene);
+        $this->assertCount(2, $uek->erhaltene);
+        foreach ($uek->erhaltene as $erhalten) {
+            $this->assertSame('uek', $erhalten->quellekey);
+        }
+    }
+
+    /**
+     * Randfall: eine Quelle ohne Nachweise wird nicht gefragt, und eine, die
+     * nichts zu sagen hat, erscheint nicht im Ergebnis.
+     */
+    public function test_get_zusammenfassungen_ohne_nachweise_oder_ohne_aussage_bleibt_leer(): void {
+        $ohnenachweise = new collector_test_zusammenfassung_provider('uek', 'Schnitt 5.5');
+        $ohneaussage = new collector_test_zusammenfassung_provider('bericht', null);
+
+        $zusammenfassungen = (new collector([$ohnenachweise, $ohneaussage]))->get_zusammenfassungen([
+            new nachweis('bericht', 'Bildungsbericht 1', 1000, null, null, null),
+        ]);
+
+        $this->assertSame([], $zusammenfassungen);
+        $this->assertNull($ohnenachweise->erhaltene);
+        $this->assertNotNull($ohneaussage->erhaltene);
     }
 }

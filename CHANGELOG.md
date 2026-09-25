@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.5.5] — 2026-09-25
+
+### Hinzugefügt
+
+- **`nachweis\quelle_mit_zusammenfassung`**: optionale Schnittstelle, über die eine Quelle eine kurze Zusammenfassung ihrer Nachweise für den Gruppenkopf liefert, etwa den Schnitt der üK-Noten (umgesetzt in `local_uekkn`). Die Rechnung bleibt in der Quelle — `nachweis` kennt weiterhin keine Notenlogik. Abgefragt über `collector::get_zusammenfassungen()`, das die bereits eingesammelten Nachweise entgegennimmt statt einer Personen-ID: die Zuständigkeit ist damit geprüft, und jede Quelle fasst genau das zusammen, was daneben angezeigt wird — bei der lernenden Person also nur, was sie selbst sehen darf.
+- `nachweis_liste::eindeutige()`: fasst Nachweise zusammen, die sich nur in `competencyid` unterscheiden.
+
+### Geändert
+
+- **„Tätigkeiten" nach Art des Nachweises gruppiert statt nach Semester** (`nachweis_liste`), auch auf „Meine Lehre": Lerndokumentation, üK-Kompetenznachweise und später der Bildungsbericht haben je ihre eigene Zusammenfassung, die über die anderen nichts aussagt. Die Gruppen stehen in der Reihenfolge der registrierten Quellen; das Semester steht jetzt in jeder Zeile, der Gruppenkopf nennt Anzahl und Zusammenfassung („2 Nachweise · Schnitt 5.5"). „Meine Lernenden" zeigt das Semester ebenfalls.
+- **Zeilen der Tätigkeitenliste neu aufgebaut**: Bezeichnung und Ergebnis oben, Datum und Semester darunter, statt einer Reihe aus Link, Symbol, Ergebnis- und Quellen-Badge mit dem Datum am rechten Rand. Das Ergebnis ist beschriftet („Ergebnis 5.5"), bewusst nicht „Note", weil eine Quelle auch „bestanden" liefern darf. Neue Strings `nachweis:ergebnis`, `nachweis:anzahl`, `nachweis:anzahl_eins`.
+
+### Behoben
+
+- **Lerndoku-Einträge standen mehrfach in „Tätigkeiten"**: die Lerndokumentation liefert einen Eintrag je zugeordneter Handlungskompetenz als eigenen Nachweis. Liste und Zähler „X Tätigkeiten" auf „Meine Lernenden" zeigen ihn jetzt einmal; der Provider bleibt unverändert, weil die Zuordnung je Kompetenz für sich richtig ist.
+
 ## [0.5.4] — 2026-09-25
 
 ### Geändert

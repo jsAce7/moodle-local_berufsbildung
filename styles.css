@@ -142,12 +142,54 @@
     border: 0;
 }
 
-.local-berufsbildung-nachweisgruppe:last-child {
-    margin-bottom: 0 !important;
+/*
+ * Taetigkeiten: Gruppenkopf in derselben Form wie die Semesterkoepfe des
+ * Versetzungsplans, je Zeile Bezeichnung und Ergebnis oben, Datum und
+ * Quelle darunter.
+ */
+.local-berufsbildung-nachweisgruppe + .local-berufsbildung-nachweisgruppe {
+    margin-top: 1rem;
+}
+
+/* Anzahl und Zusammenfassung stehen direkt hinter dem Namen, wie die
+   Anzahl im Semesterkopf des Versetzungsplans. */
+.local-berufsbildung-nachweisgruppe-kopf {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 0.5rem;
+}
+
+.local-berufsbildung-quellenname {
+    font-weight: 600;
+}
+
+.local-berufsbildung-nachweisgruppe-info {
+    font-weight: normal;
+}
+
+.local-berufsbildung-nachweis {
+    padding: 0.45rem 0;
 }
 
 .local-berufsbildung-nachweis:last-child {
     border-bottom: 0 !important;
+}
+
+.local-berufsbildung-nachweis-titelzeile {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 0.5rem;
+    line-height: 1.3rem;
+}
+
+.local-berufsbildung-nachweis-titel {
+    min-width: 0;
+}
+
+.local-berufsbildung-nachweis-ergebnis {
+    flex: 0 0 auto;
 }
 
 .local-berufsbildung-einsatz-aktuell .local-berufsbildung-einsatz-blockname {

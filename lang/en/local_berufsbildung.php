@@ -115,6 +115,9 @@ $string['einsatz:unbekannter_block'] = 'Unnamed training block';
 $string['nachweis:titel'] = 'Activities';
 $string['nachweis:semester'] = 'Semester {$a}';
 $string['nachweis:ohne_semester'] = 'Outside the apprenticeship period';
+$string['nachweis:ergebnis'] = 'Result {$a}';
+$string['nachweis:anzahl'] = '{$a} records';
+$string['nachweis:anzahl_eins'] = '1 record';
 $string['error:keinezustaendigkeit'] = 'Not responsible for this trainee.';
 $string['error:aufbewahrunggrundleer'] = 'The retention obligation needs a reason.';
 

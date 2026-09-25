@@ -78,14 +78,21 @@ final class nachweis_liste_test extends advanced_testcase {
         $this->assertLessThan($posaelter, $posneuer);
     }
 
-    public function test_ergebnis_wird_angezeigt(): void {
+    /**
+     * Das Ergebnis steht beschriftet da - "5.5" allein sagt nicht, wovon.
+     * Neutral als "Ergebnis", weil eine Quelle auch "bestanden" liefern darf.
+     */
+    public function test_ergebnis_wird_beschriftet_angezeigt(): void {
         $this->resetAfterTest();
 
         $nachweise = [new nachweis('uek', 'üK 3', time(), 'bestanden', null, null)];
 
         $html = nachweis_liste::render($nachweise, ['uek' => 'ÜK']);
 
-        $this->assertStringContainsString('bestanden', $html);
+        $this->assertStringContainsString(
+            get_string('nachweis:ergebnis', 'local_berufsbildung', 'bestanden'),
+            $html
+        );
     }
 
     /**
@@ -104,11 +111,11 @@ final class nachweis_liste_test extends advanced_testcase {
     }
 
     /**
-     * Mit Semestergrenzen gruppiert die Liste nach Semester statt nach
-     * Quelle - eine lernende Person denkt ihre Ausbildung in Semestern,
-     * nicht in liefernden Plugins. Das neueste Semester steht oben.
+     * Auch mit Semestergrenzen bleibt die Gruppe die Quelle - jede Art von
+     * Nachweis hat ihre eigene Zusammenfassung. Das Semester steht dafuer
+     * in jeder Zeile.
      */
-    public function test_gruppiert_nach_semester_neuestes_zuerst(): void {
+    public function test_nennt_das_semester_je_zeile_und_gruppiert_nach_quelle(): void {
         $this->resetAfterTest();
 
         $semestergrenzen = [
@@ -117,20 +124,107 @@ final class nachweis_liste_test extends advanced_testcase {
         ];
 
         $nachweise = [
-            new nachweis('uek', 'Eintrag im zweiten Semester', 2500, null, null, null),
-            new nachweis('lerndoku', 'Eintrag im ersten Semester', 1500, null, null, null),
+            new nachweis('uek', 'üK im zweiten Semester', 2500, null, null, null),
+            new nachweis('uek', 'üK im ersten Semester', 1500, null, null, null),
         ];
 
         $html = nachweis_liste::render($nachweise, ['uek' => 'Überbetriebliche Kurse'], $semestergrenzen);
 
-        $poszweites = strpos($html, get_string('nachweis:semester', 'local_berufsbildung', 2));
-        $poserstes = strpos($html, get_string('nachweis:semester', 'local_berufsbildung', 1));
-        $this->assertNotFalse($poszweites);
-        $this->assertNotFalse($poserstes);
-        $this->assertLessThan($poserstes, $poszweites);
+        $this->assertSame(1, substr_count($html, 'Überbetriebliche Kurse'));
+        $this->assertStringContainsString(get_string('nachweis:semester', 'local_berufsbildung', 1), $html);
+        $this->assertStringContainsString(get_string('nachweis:semester', 'local_berufsbildung', 2), $html);
 
-        // Die Quelle steht nun je Zeile, weil die Gruppe das Semester ist.
-        $this->assertStringContainsString('Überbetriebliche Kurse', $html);
+        // Innerhalb der Gruppe bleibt die Reihenfolge des Collectors: neueste zuerst.
+        $this->assertLessThan(
+            strpos($html, 'üK im ersten Semester'),
+            strpos($html, 'üK im zweiten Semester')
+        );
+    }
+
+    /**
+     * Die Gruppen stehen in der Reihenfolge der registrierten Quellen, nicht
+     * in der des juengsten Nachweises - sonst wechselte eine Quelle mit
+     * jedem neuen Eintrag den Platz.
+     */
+    public function test_gruppen_folgen_der_reihenfolge_der_quellen(): void {
+        $this->resetAfterTest();
+
+        $nachweise = [
+            new nachweis('uek', 'Neuester üK', 3000, '5.0', null, null),
+            new nachweis('lerndoku', 'Aelterer Eintrag', 1000, null, null, null),
+        ];
+
+        $html = nachweis_liste::render($nachweise, [
+            'lerndoku' => 'Lerndokumentation',
+            'uek' => 'Überbetriebliche Kurse',
+        ]);
+
+        $this->assertLessThan(strpos($html, 'Überbetriebliche Kurse'), strpos($html, 'Lerndokumentation'));
+    }
+
+    /**
+     * Die Lerndokumentation liefert einen Eintrag je Handlungskompetenz als
+     * eigenen Nachweis. In der Liste steht er trotzdem nur einmal, und die
+     * Anzahl im Gruppenkopf zaehlt ihn einmal.
+     */
+    public function test_fasst_nachweise_je_kompetenz_zu_einer_zeile_zusammen(): void {
+        $this->resetAfterTest();
+
+        $nachweise = [
+            new nachweis('lerndoku', 'Schaltschrank verdrahtet', 1000, null, 11, '/local/x'),
+            new nachweis('lerndoku', 'Schaltschrank verdrahtet', 1000, null, 12, '/local/x'),
+            new nachweis('lerndoku', 'Schaltschrank verdrahtet', 1000, null, 13, '/local/x'),
+        ];
+
+        $html = nachweis_liste::render($nachweise, ['lerndoku' => 'Lerndokumentation']);
+
+        $this->assertSame(1, substr_count($html, 'Schaltschrank verdrahtet'));
+        $this->assertStringContainsString(get_string('nachweis:anzahl_eins', 'local_berufsbildung'), $html);
+    }
+
+    /**
+     * Randfall zur Zusammenfassung: gleich ist nur, was in allem uebereinstimmt,
+     * was die Liste zeigt. Ein anderes Datum oder eine andere Bezeichnung ist
+     * ein anderer Nachweis.
+     */
+    public function test_eindeutige_behaelt_verschiedene_nachweise(): void {
+        $nachweise = [
+            new nachweis('lerndoku', 'Eintrag', 1000, null, 11, '/local/x'),
+            new nachweis('lerndoku', 'Eintrag', 1000, null, 12, '/local/x'),
+            new nachweis('lerndoku', 'Eintrag', 2000, null, 11, '/local/x'),
+            new nachweis('lerndoku', 'Anderer Eintrag', 1000, null, 11, '/local/x'),
+            new nachweis('uek', 'Eintrag', 1000, null, null, '/local/x'),
+        ];
+
+        $eindeutige = nachweis_liste::eindeutige($nachweise);
+
+        $this->assertCount(4, $eindeutige);
+        // Der erste gewinnt, die Reihenfolge bleibt.
+        $this->assertSame(11, $eindeutige[0]->competencyid);
+        $this->assertSame(2000, $eindeutige[1]->datum);
+    }
+
+    /**
+     * Die Zusammenfassung einer Quelle steht in deren Gruppenkopf, und nur
+     * dort.
+     */
+    public function test_zeigt_die_zusammenfassung_im_kopf_ihrer_quelle(): void {
+        $this->resetAfterTest();
+
+        $nachweise = [
+            new nachweis('lerndoku', 'Eintrag', 2000, null, null, null),
+            new nachweis('uek', 'üK 2', 1000, '5.5', null, null),
+        ];
+
+        $html = nachweis_liste::render(
+            $nachweise,
+            ['lerndoku' => 'Lerndokumentation', 'uek' => 'Überbetriebliche Kurse'],
+            zusammenfassungen: ['uek' => 'Schnitt 5.5']
+        );
+
+        $this->assertSame(1, substr_count($html, 'Schnitt 5.5'));
+        $this->assertGreaterThan(strpos($html, 'Überbetriebliche Kurse'), strpos($html, 'Schnitt 5.5'));
+        $this->assertLessThan(strpos($html, 'üK 2'), strpos($html, 'Schnitt 5.5'));
     }
 
     /**

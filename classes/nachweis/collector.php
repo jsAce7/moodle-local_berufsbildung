@@ -123,6 +123,40 @@ class collector {
     }
 
     /**
+     * Zusammenfassungen je Quelle ueber bereits eingesammelte Nachweise, fuer
+     * den Gruppenkopf der Taetigkeitenliste (siehe quelle_mit_zusammenfassung).
+     *
+     * Nimmt das Ergebnis von get_nachweise() entgegen statt einer
+     * Personen-ID: die Zustaendigkeit ist damit bereits geprueft, und jede
+     * Quelle fasst genau die Nachweise zusammen, die daneben angezeigt
+     * werden. Eine Quelle ohne Nachweise wird nicht gefragt.
+     *
+     * @param nachweis[] $nachweise Ergebnis von get_nachweise()
+     * @return array<string, string> Quelle-Key => Zusammenfassung, nur Quellen mit einer
+     */
+    public function get_zusammenfassungen(array $nachweise): array {
+        $jequelle = [];
+        foreach ($nachweise as $einzelnachweis) {
+            $jequelle[$einzelnachweis->quellekey][] = $einzelnachweis;
+        }
+
+        $zusammenfassungen = [];
+        foreach ($this->providers as $einzelprovider) {
+            $quellekey = $einzelprovider->get_quelle_key();
+            if (!$einzelprovider instanceof quelle_mit_zusammenfassung || empty($jequelle[$quellekey])) {
+                continue;
+            }
+
+            $zusammenfassung = $einzelprovider->get_zusammenfassung($jequelle[$quellekey]);
+            if ($zusammenfassung !== null && $zusammenfassung !== '') {
+                $zusammenfassungen[$quellekey] = $zusammenfassung;
+            }
+        }
+
+        return $zusammenfassungen;
+    }
+
+    /**
      * Erfassen-Aktionen aller Quellen, die `erfassbare_quelle` zusaetzlich
      * implementieren - fuer "Meine Lehre", damit die lernende Person direkt
      * dorthin verlinkt einen neuen Eintrag anlegen kann.
