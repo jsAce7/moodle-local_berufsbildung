@@ -89,6 +89,29 @@ final class api_test extends advanced_testcase {
         $this->assertFalse(api::is_zustaendig((int) $berufsbildner->id, (int) $lernende->id));
     }
 
+    public function test_is_zustaendig_heute_oder_am_gilt_fuer_neue_und_fuer_vorherige_person(): void {
+        $this->resetAfterTest();
+
+        $vorherige = $this->getDataGenerator()->create_user();
+        $neue = $this->getDataGenerator()->create_user();
+        $fremde = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $wechsel = strtotime('-1 month');
+        $this->lege_zuordnung_an((int) $vorherige->id, (int) $lernende->id, strtotime('-2 years'), $wechsel - 1);
+        $this->lege_zuordnung_an((int) $neue->id, (int) $lernende->id, $wechsel);
+
+        $vordemwechsel = strtotime('-3 months');
+        $this->assertTrue(api::is_zustaendig_heute_oder_am((int) $vorherige->id, (int) $lernende->id, $vordemwechsel));
+        $this->assertTrue(api::is_zustaendig_heute_oder_am((int) $neue->id, (int) $lernende->id, $vordemwechsel));
+        $this->assertFalse(api::is_zustaendig_heute_oder_am((int) $vorherige->id, (int) $lernende->id, null));
+        $this->assertFalse(api::is_zustaendig_heute_oder_am((int) $fremde->id, (int) $lernende->id, $vordemwechsel));
+
+        // Randfall: am letzten Tag der alten Zuordnung gilt sie noch, am
+        // ersten Tag der neuen nicht mehr.
+        $this->assertTrue(api::is_zustaendig_heute_oder_am((int) $vorherige->id, (int) $lernende->id, $wechsel - 1));
+        $this->assertFalse(api::is_zustaendig_heute_oder_am((int) $vorherige->id, (int) $lernende->id, $wechsel));
+    }
+
     public function test_is_zustaendig_noch_nicht_begonnene_zuordnung_gilt_nicht(): void {
         $this->resetAfterTest();
 

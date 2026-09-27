@@ -142,6 +142,28 @@ class api {
     }
 
     /**
+     * Ist diese Person heute oder zum Stichtag zustaendig?
+     *
+     * Die Pruefung fuer alles, was sich auf einen zurueckliegenden oder
+     * kuenftigen Zeitraum bezieht (eine Periode, ein Bericht, ein Eintrag):
+     * zustaendig ist, wer es damals war, und ebenso, wer es heute ist. Nur
+     * am Stichtag geprueft, koennte nach einem Wechsel niemand mehr einen
+     * noch offenen Zeitraum abschliessen - die vorherige Person ist nicht
+     * mehr da, die neue war es am Stichtag noch nicht. Nur heute geprueft,
+     * verloere die vorherige Person den Zugriff auf das, was sie selbst
+     * verantwortet hat.
+     *
+     * @param int $berufsbildnerid
+     * @param int $lernendeid
+     * @param int|null $stichtag Timestamp, null prueft nur "jetzt"
+     * @return bool
+     */
+    public static function is_zustaendig_heute_oder_am(int $berufsbildnerid, int $lernendeid, ?int $stichtag): bool {
+        return self::is_zustaendig($berufsbildnerid, $lernendeid, null)
+            || ($stichtag !== null && self::is_zustaendig($berufsbildnerid, $lernendeid, $stichtag));
+    }
+
+    /**
      * Alle Lernenden dieser/dieses Berufsbildner/in zum Stichtag.
      *
      * @param int $berufsbildnerid
