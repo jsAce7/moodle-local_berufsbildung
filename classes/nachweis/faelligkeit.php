@@ -42,6 +42,8 @@ final class faelligkeit {
     // phpcs:disable moodle.NamingConventions.ValidVariableName.MemberNameUnderscore
     /** @var string Description when viewing one's own due dates. */
     public readonly string $eigene_bezeichnung;
+    /** @var bool Whether the learner sees this item among their own due dates. */
+    public readonly bool $fuer_lernende;
     // phpcs:enable moodle.NamingConventions.ValidVariableName.MemberNameUnderscore
 
     // Preserve the public constructor parameter name for named arguments.
@@ -54,19 +56,22 @@ final class faelligkeit {
      * @param int $datum Deadline timestamp
      * @param string $url Destination for the action
      * @param string|null $eigene_bezeichnung Optional description for the learner
+     * @param bool $fuer_lernende False for tasks of the supervising person only
      */
     public function __construct(
         string $quellekey,
         string $bezeichnung,
         int $datum,
         string $url,
-        ?string $eigene_bezeichnung = null
+        ?string $eigene_bezeichnung = null,
+        bool $fuer_lernende = true
     ) {
         $this->quellekey = $quellekey;
         $this->bezeichnung = $bezeichnung;
         $this->datum = $datum;
         $this->url = $url;
         $this->eigene_bezeichnung = $eigene_bezeichnung ?? $bezeichnung;
+        $this->fuer_lernende = $fuer_lernende;
     }
     // phpcs:enable moodle.NamingConventions.ValidVariableName.VariableNameUnderscore
 }

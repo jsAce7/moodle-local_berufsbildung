@@ -171,9 +171,13 @@ if ($stand !== null) {
     // Fälligkeiten stehen bei der eigenen Lehre, nicht als dritter Einstieg
     // daneben. Die Erfassungsaktion führt unmittelbar zur zuständigen
     // Quelle; die Liste zeigt zusätzlich auch Fristen von Quellen ohne
-    // eigene Schaltfläche.
+    // eigene Schaltfläche. Aufgaben der Berufsbildner/in (etwa einen
+    // Bildungsbericht schreiben) sind keine Frist der lernenden Person.
     $faelligkeiten = [];
     foreach ($collector->get_faelligkeiten($lernendeid, $lernendeid) as $faelligkeit) {
+        if (!$faelligkeit->fuer_lernende) {
+            continue;
+        }
         $faelligkeiten[] = (object) [
             'bezeichnung' => $faelligkeit->eigene_bezeichnung,
             'datum' => userdate($faelligkeit->datum, $datumsformat),
