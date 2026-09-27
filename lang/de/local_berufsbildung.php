@@ -24,7 +24,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['pdf:seite'] = 'Seite {$a->nr} von {$a->gesamt}';
 $string['pluginname'] = 'Berufsbildung';
+$string['settings:akzentfarbe'] = 'Akzentfarbe der PDF-Dokumente';
+$string['settings:akzentfarbe_desc'] = 'Trägt die Abschnittstitel, die Kopfzeilen der Tabellen und die Gruppenbänder. Alle getönten Flächen sind dieselbe Farbe in unterschiedlicher Stärke. Dunkel wählen: die Kopfzeilen tragen weisse Schrift, und die Dokumente werden oft schwarzweiss kopiert. Leer lassen für den Standardwert.';
 $string['settings:einstellungen'] = 'Einstellungen';
 $string['admin:uebersicht'] = 'Berufsbildung';
 $string['admin:organisation'] = 'Zuordnungen und Gruppen';
@@ -33,6 +36,10 @@ $string['admin:lernbegleitung'] = 'Lernbegleitung';
 $string['admin:system'] = 'Einstellungen und Datenschutz';
 $string['berufsbildung:managezuordnung'] = 'Zuordnungen zwischen Berufsbildner/innen und Lernenden verwalten';
 $string['berufsbildung:viewzuordnung'] = 'Zuordnungsübersicht einsehen, ohne zu ändern';
+$string['settings:logo'] = 'Logo für den Kopf der PDF-Dokumente';
+$string['settings:logo_desc'] = 'PNG oder JPEG, wird oben rechts in den Kopf gesetzt und in ein Feld von 44 × 13 Millimetern eingepasst; das Seitenverhältnis bleibt erhalten. Empfohlen ist eine Bildbreite ab 500 Pixeln. Das Logo behält seine eigenen Farben. Eine Transparenz wird gegen Weiss aufgelöst, damit das Logo auf keinem Server in Graustufen erscheint. Eine beschädigte Datei lässt kein Dokument scheitern: es entsteht dann ohne Logo.';
+$string['settings:pdf_gestaltung'] = 'Gestaltung der PDF-Dokumente';
+$string['settings:pdf_gestaltung_desc'] = 'Gilt für alle PDF-Dokumente der Berufsbildung: die üK-Kompetenznachweise und die Bildungs- und Probezeitberichte.';
 $string['settings:profilefield_beruf'] = 'Profilfeld: Beruf';
 $string['settings:profilefield_beruf_desc'] = 'Benutzerdefiniertes Profilfeld, das den Beruf (z. B. \'AU_EFZ\') enthält.';
 $string['settings:profilefield_jahrgang'] = 'Profilfeld: Jahrgang';

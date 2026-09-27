@@ -24,7 +24,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['pdf:seite'] = 'Page {$a->nr} of {$a->gesamt}';
 $string['pluginname'] = 'Vocational training';
+$string['settings:akzentfarbe'] = 'Accent colour of the PDF documents';
+$string['settings:akzentfarbe_desc'] = 'Used for section headings, table header rows and group bands. Every tinted surface is this one colour at different strengths. Choose a dark colour: header rows carry white text, and the documents are often photocopied in black and white. Leave empty for the default.';
 $string['settings:einstellungen'] = 'Settings';
 $string['admin:uebersicht'] = 'Vocational training administration';
 $string['admin:organisation'] = 'Assignments and groups';
@@ -33,6 +36,10 @@ $string['admin:lernbegleitung'] = 'Learning support';
 $string['admin:system'] = 'Settings and data protection';
 $string['berufsbildung:managezuordnung'] = 'Manage assignments between trainers and trainees';
 $string['berufsbildung:viewzuordnung'] = 'View the assignment overview without changing it';
+$string['settings:logo'] = 'Logo for the PDF header';
+$string['settings:logo_desc'] = 'PNG or JPEG, placed top right in the header and fitted into a 44 × 13 mm box; the aspect ratio is kept. An image width of at least 500 pixels is recommended. The logo keeps its own colours. Transparency is resolved against white so the logo never turns greyscale. A damaged file never makes a document fail: it is then produced without a logo.';
+$string['settings:pdf_gestaltung'] = 'PDF document design';
+$string['settings:pdf_gestaltung_desc'] = 'Applies to every PDF document of the vocational training plugins: the üK competence records and the training and probation reports.';
 $string['settings:profilefield_beruf'] = 'Profile field: occupation';
 $string['settings:profilefield_beruf_desc'] = 'Custom profile field holding the occupation (e.g. \'AU_EFZ\').';
 $string['settings:profilefield_jahrgang'] = 'Profile field: cohort year';

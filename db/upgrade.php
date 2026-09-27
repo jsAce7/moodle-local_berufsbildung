@@ -403,5 +403,13 @@ function xmldb_local_berufsbildung_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026092004, 'local', 'berufsbildung');
     }
 
+    if ($oldversion < 2026092702) {
+        // Logo und Akzentfarbe gelten jetzt fuer alle PDF-Dokumente der
+        // Berufsbildung und liegen hier statt in local_uekkn und
+        // local_bildungsbericht.
+        \local_berufsbildung\pdf\gestaltung::uebernehme_bisherige_einstellungen();
+        upgrade_plugin_savepoint(true, 2026092702, 'local', 'berufsbildung');
+    }
+
     return true;
 }

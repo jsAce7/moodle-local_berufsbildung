@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.6.0] — 2026-09-27
+
+### Hinzugefügt
+
+- **Gemeinsame PDF-Grundlage `local_berufsbildung\pdf`** für alle PDF-Dokumente der Berufsbildung: `gestaltung` (Schrift, Akzentfarbe, Logo), `dokument` (Laufkopf, Fusszeile mit Seitenzahl) und `zeichnen` (Seitenmasse, Tabellenzeile, Kopfzeile, Gruppenzeile, Infofeld, Wasserzeichen …). Bisher je eine Kopie in `local_uekkn` und `local_bildungsbericht`, die bereits auseinanderliefen. `zeichnen::zusammenhaengend()` setzt einen Block auf demselben Dokumentobjekt zurück (`rollbackTransaction(true)`) statt eine Kopie zurückzugeben.
+- **Einstellungen „Gestaltung der PDF-Dokumente“** (Logo, Akzentfarbe) — ein einheitliches Erscheinungsbild für üK-Kompetenznachweise und Bildungsberichte. Upgrade und Installation übernehmen die bisherigen Werte von `local_uekkn`, ersatzweise von `local_bildungsbericht` (`gestaltung::uebernehme_bisherige_einstellungen()`, idempotent, überschreibt keine eigene Einstellung).
+
+## [0.5.8] — 2026-09-27
+
+### Hinzugefügt
+
+- **`api::is_zustaendig_heute_oder_am()`**: zuständig ist, wer es heute oder am Stichtag ist. Die Prüfung für alles, was sich auf einen Zeitraum bezieht (Periode, Bericht, Eintrag) — nur am Stichtag geprüft, kann nach einem Wechsel der ausbildenden Person niemand mehr einen offenen Zeitraum abschliessen. Bisher in `local_bildungsbericht` selbst ausprogrammiert, in `local_lerndokumentation` gefehlt.
+
+## [0.5.7] — 2026-09-27
+
+### Hinzugefügt
+
+- **`faelligkeit::$fuer_lernende`** (optionaler Konstruktorparameter, Standard `true`): Eine Quelle kann eine Fälligkeit als Aufgabe allein der Berufsbildner/in kennzeichnen. „Meine Lehre“ zeigt solche Einträge der lernenden Person nicht an; auf „Meine Lernenden“ bleiben sie sichtbar. Bestehende Quellen verhalten sich unverändert.
+
 ## [0.5.6] — 2026-09-25
 
 ### Hinzugefügt

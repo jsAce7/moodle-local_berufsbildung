@@ -79,4 +79,8 @@ function xmldb_local_berufsbildung_install() {
     // ueberhaupt zur Auswahl, weil get_assignable_roles() fuer alle
     // anderen genau an dieser Matrix filtert.
     (new \local_berufsbildung\service\role_matrix_service())->synchronisiere();
+
+    // Kommt das Plugin zu einer bestehenden üK- oder Bildungsbericht-
+    // Installation dazu, bringt es deren PDF-Gestaltung mit.
+    \local_berufsbildung\pdf\gestaltung::uebernehme_bisherige_einstellungen();
 }

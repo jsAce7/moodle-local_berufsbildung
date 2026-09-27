@@ -163,6 +163,30 @@ if ($hassiteconfig) {
         '12',
         PARAM_INT
     ));
+
+    // Ein Erscheinungsbild fuer alle PDF-Dokumente der Berufsbildung
+    // (üK-Kompetenznachweise, Bildungsberichte), siehe pdf\gestaltung.
+    $settings->add(new admin_setting_heading(
+        'local_berufsbildung/pdf_gestaltung',
+        new lang_string('settings:pdf_gestaltung', 'local_berufsbildung'),
+        new lang_string('settings:pdf_gestaltung_desc', 'local_berufsbildung')
+    ));
+
+    $settings->add(new admin_setting_configstoredfile(
+        'local_berufsbildung/' . \local_berufsbildung\pdf\gestaltung::LOGO_BEREICH,
+        new lang_string('settings:logo', 'local_berufsbildung'),
+        new lang_string('settings:logo_desc', 'local_berufsbildung'),
+        \local_berufsbildung\pdf\gestaltung::LOGO_BEREICH,
+        0,
+        ['maxfiles' => 1, 'subdirs' => 0, 'accepted_types' => ['.png', '.jpg', '.jpeg']]
+    ));
+
+    $settings->add(new admin_setting_configcolourpicker(
+        'local_berufsbildung/' . \local_berufsbildung\pdf\gestaltung::AKZENT_EINSTELLUNG,
+        new lang_string('settings:akzentfarbe', 'local_berufsbildung'),
+        new lang_string('settings:akzentfarbe_desc', 'local_berufsbildung'),
+        \local_berufsbildung\pdf\gestaltung::AKZENT_STANDARD
+    ));
 }
 
 // Die Verwaltungsseiten selbst: jede prueft ihre eigene Capability.
