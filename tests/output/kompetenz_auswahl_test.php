@@ -64,12 +64,12 @@ final class kompetenz_auswahl_test extends advanced_testcase {
             'shortname' => 'a Entwickeln von automatisierten Anlagen',
             'idnumber' => '7777BE a',
         ]);
-        $ersteHk = $anlegen([
+        $erstehk = $anlegen([
             'shortname' => 'Fertigungsunterlagen erstellen oder überarbeiten',
             'idnumber' => '7777BE a.01',
             'parentid' => $bereich->get('id'),
         ]);
-        $zweiteHk = $anlegen([
+        $zweitehk = $anlegen([
             'shortname' => 'Netze planen und parametrieren',
             'idnumber' => '7777BE a.03',
             'parentid' => $bereich->get('id'),
@@ -77,22 +77,22 @@ final class kompetenz_auswahl_test extends advanced_testcase {
 
         $anlegen([
             'shortname' => 'MEM 02 02',
-            'parentid' => $ersteHk->get('id'),
+            'parentid' => $erstehk->get('id'),
             'description' => 'Sie dokumentieren und archivieren ihre Arbeit nachvollziehbar.',
         ]);
         $anlegen([
             'shortname' => 'AU a1 01 1-2',
-            'parentid' => $ersteHk->get('id'),
+            'parentid' => $erstehk->get('id'),
             'description' => 'Sie erstellen Stücklisten.',
         ]);
         $anlegen([
             'shortname' => 'MEM 07 01',
-            'parentid' => $zweiteHk->get('id'),
+            'parentid' => $zweitehk->get('id'),
             'description' => 'Sie parametrieren Netzwerkkomponenten.',
         ]);
         $anlegen([
             'shortname' => 'AU a3 03',
-            'parentid' => $zweiteHk->get('id'),
+            'parentid' => $zweitehk->get('id'),
             'description' => 'Sie prüfen die Verkabelung.',
         ]);
 

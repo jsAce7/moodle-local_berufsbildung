@@ -95,7 +95,12 @@ class lernenden_kachel {
         ]);
     }
 
-    /** @param string $name Vollständiger Name */
+    /**
+     * Initialen aus erstem und letztem Wort des Namens.
+     *
+     * @param string $name Vollständiger Name
+     * @return string
+     */
     private static function initialen(string $name): string {
         $woerter = preg_split('/\s+/', trim($name), -1, PREG_SPLIT_NO_EMPTY);
         if (empty($woerter)) {
@@ -108,5 +113,4 @@ class lernenden_kachel {
         $letztes = core_text::strtoupper(core_text::substr($woerter[count($woerter) - 1], 0, 1));
         return $erstes . $letztes;
     }
-
 }
