@@ -39,6 +39,7 @@ require_once(__DIR__ . '/../fixtures/collector_test_erfassbarer_provider.php');
 require_once(__DIR__ . '/../fixtures/collector_test_hinweis_provider.php');
 require_once(__DIR__ . '/../fixtures/collector_test_zusammenfassung_provider.php');
 require_once(__DIR__ . '/../fixtures/collector_test_ausstehend_provider.php');
+require_once(__DIR__ . '/../fixtures/collector_test_zustaendigen_provider.php');
 
 /**
  * Tests fuer collector.
@@ -389,5 +390,92 @@ final class collector_test extends advanced_testcase {
 
         $this->expectException(moodle_exception::class);
         (new collector([$provider]))->get_ausstehende((int) $berufsbildner->id, (int) $lernende->id);
+    }
+
+    public function test_get_zustaendigen_aktionen_liefert_aktion_mit_schluessel_der_quelle(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $lernende->id);
+
+        $provider = new collector_test_zustaendigen_provider(
+            new erfassen_aktion('fremd', 'Bericht erfassen', '/local/test/bericht.php', 'Fällig bis morgen')
+        );
+        $aktionen = (new collector([$provider, new collector_test_provider()]))
+            ->get_zustaendigen_aktionen((int) $berufsbildner->id, (int) $lernende->id);
+
+        $this->assertCount(1, $aktionen);
+        $this->assertSame('testzustaendig', $aktionen[0]->quellekey);
+        $this->assertSame('Bericht erfassen', $aktionen[0]->label);
+        $this->assertSame('/local/test/bericht.php', $aktionen[0]->url);
+        $this->assertSame('Fällig bis morgen', $aktionen[0]->hinweis);
+    }
+
+    public function test_get_zustaendigen_aktionen_ohne_anstehendes_bleibt_leer(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $lernende->id);
+
+        $provider = new collector_test_zustaendigen_provider(null);
+        $aktionen = (new collector([$provider]))->get_zustaendigen_aktionen((int) $berufsbildner->id, (int) $lernende->id);
+
+        $this->assertSame([], $aktionen);
+        $this->assertTrue($provider->wurdeaufgerufen);
+    }
+
+    /**
+     * Wer fuer sich selbst erfasst, bekommt hier nichts - dafuer gibt es
+     * get_erfassen_aktionen(). Die Quelle wird gar nicht erst gefragt.
+     */
+    public function test_get_zustaendigen_aktionen_fuer_sich_selbst_bleibt_leer(): void {
+        $this->resetAfterTest();
+
+        $lernende = $this->getDataGenerator()->create_user();
+        $provider = new collector_test_zustaendigen_provider(new erfassen_aktion('x', 'X', '/x.php'));
+
+        $aktionen = (new collector([$provider]))->get_zustaendigen_aktionen((int) $lernende->id, (int) $lernende->id);
+
+        $this->assertSame([], $aktionen);
+        $this->assertFalse($provider->wurdeaufgerufen);
+    }
+
+    public function test_get_zustaendigen_aktionen_fuer_fremde_person_fragt_die_quelle_nicht(): void {
+        $this->resetAfterTest();
+
+        $fremder = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $provider = new collector_test_zustaendigen_provider(new erfassen_aktion('x', 'X', '/x.php'));
+
+        $this->expectException(moodle_exception::class);
+
+        try {
+            (new collector([$provider]))->get_zustaendigen_aktionen((int) $fremder->id, (int) $lernende->id);
+        } finally {
+            $this->assertFalse($provider->wurdeaufgerufen);
+        }
+    }
+
+    /**
+     * Erfasst wird jetzt: eine Zuordnung, die gestern geendet hat, gibt
+     * keine Aktion mehr, auch wenn sie das Semester des Berichts abdeckte.
+     */
+    public function test_get_zustaendigen_aktionen_nach_beendeter_zuordnung_verweigert(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_zuordnung([
+            'berufsbildnerid' => (int) $berufsbildner->id,
+            'lernendeid' => (int) $lernende->id,
+            'gueltig_von' => time() - YEARSECS,
+            'gueltig_bis' => time() - DAYSECS,
+        ]);
+
+        $this->expectException(moodle_exception::class);
+        (new collector([new collector_test_zustaendigen_provider()]))
+            ->get_zustaendigen_aktionen((int) $berufsbildner->id, (int) $lernende->id);
     }
 }

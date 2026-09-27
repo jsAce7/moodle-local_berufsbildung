@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.6.1] — 2026-09-28
+
+### Hinzugefügt
+
+- **Erfassen-Aktion für die zuständige Berufsbildner/in** (`nachweis\quelle_mit_zustaendigen_aktion`, `collector::get_zustaendigen_aktionen()`): das Gegenstück zu `erfassbare_quelle`. Eine Quelle, in der die Berufsbildner/in *für* eine lernende Person erfasst, meldet, was als Nächstes ansteht, etwa den fälligen Bildungsbericht. „Meine Lernenden“ zeigt die Aktion zuoberst im Detail der Person als Schaltfläche, mit dem Hinweis der Quelle darunter. Der Collector prüft die heutige Zuständigkeit, bevor er die Quelle fragt, und setzt den Quellen-Schlüssel selbst. Für die eigene Person gibt es hier nichts, dafür bleibt `get_erfassen_aktionen()`.
+
 ## [0.6.0] — 2026-09-27
 
 ### Hinzugefügt

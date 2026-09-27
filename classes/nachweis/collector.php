@@ -243,6 +243,53 @@ class collector {
     }
 
     /**
+     * Aktionen aller Quellen, die `quelle_mit_zustaendigen_aktion`
+     * implementieren - fuer "Meine Lernenden", damit die zustaendige
+     * Berufsbildner/in direkt dorthin verlinkt fuer die Person erfasst.
+     *
+     * Gespiegelt zu get_erfassen_aktionen(): dort nur fuer die eigene
+     * Person, hier nur fuer eine, fuer die die abrufende Person heute
+     * zustaendig ist - erfasst wird jetzt, nicht fuer einen vergangenen
+     * Stichtag. Auch fuer sich selbst gibt es hier nichts: wer fuer sich
+     * erfasst, nutzt get_erfassen_aktionen().
+     *
+     * @param int $abrufendeid Wer fragt ab
+     * @param int $lernendeid Fuer wen
+     * @return erfassen_aktion[]
+     */
+    public function get_zustaendigen_aktionen(int $abrufendeid, int $lernendeid): array {
+        if ($abrufendeid === $lernendeid) {
+            return [];
+        }
+        if (!api::is_zustaendig($abrufendeid, $lernendeid)) {
+            throw new moodle_exception('error:keinezustaendigkeit', 'local_berufsbildung');
+        }
+
+        $aktionen = [];
+        foreach ($this->providers as $einzelprovider) {
+            if (!$einzelprovider instanceof quelle_mit_zustaendigen_aktion) {
+                continue;
+            }
+
+            $aktion = $einzelprovider->get_zustaendigen_aktion($abrufendeid, $lernendeid);
+            if ($aktion === null) {
+                continue;
+            }
+
+            // Der Schluessel kommt von der registrierten Quelle, nicht aus
+            // der Aktion - eine Quelle kann sich nicht als andere ausgeben.
+            $aktionen[] = new erfassen_aktion(
+                $einzelprovider->get_quelle_key(),
+                $aktion->label,
+                $aktion->url,
+                $aktion->hinweis
+            );
+        }
+
+        return $aktionen;
+    }
+
+    /**
      * Fälligkeiten einer Person aus allen Quellen. Die gleiche
      * Zuständigkeitsgrenze wie bei Leistungsnachweisen gilt auch für
      * Planungsdaten.

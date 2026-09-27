@@ -207,6 +207,25 @@ if (empty($eintraege)) {
 
         ob_start();
 
+        // Was die Berufsbildner/in fuer die Person als Naechstes erfasst,
+        // etwa den faelligen Bildungsbericht - siehe
+        // classes/nachweis/quelle_mit_zustaendigen_aktion.php. Zuoberst,
+        // weil es die Handlung ist, fuer die man die Person aufklappt; ein
+        // gestylter Link wie auf meine_lehre.php, der Weg dahin ist ein GET.
+        $aktionen = $collector->get_zustaendigen_aktionen($berufsbildnerid, $lernendeid);
+        if (!empty($aktionen)) {
+            echo html_writer::start_tag('div', ['class' => 'local-berufsbildung-roster-erfassen mb-3']);
+            foreach ($aktionen as $aktion) {
+                echo html_writer::start_tag('div', ['class' => 'local-berufsbildung-roster-erfassen-aktion']);
+                echo html_writer::link(new moodle_url($aktion->url), $aktion->label, ['class' => 'btn btn-primary btn-sm']);
+                if ($aktion->hinweis !== null) {
+                    echo html_writer::tag('p', $aktion->hinweis, ['class' => 'small text-muted mt-1 mb-0']);
+                }
+                echo html_writer::end_tag('div');
+            }
+            echo html_writer::end_tag('div');
+        }
+
         if (!empty($raster[$lernendeid])) {
             // Beides, anders als auf meine_lehre.php: die Lueckenliste
             // beantwortet die Planungsfrage "was muss ich noch einplanen"

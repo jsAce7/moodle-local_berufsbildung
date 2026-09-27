@@ -116,6 +116,22 @@
     text-align: right;
 }
 
+/*
+ * Erfassen-Aktionen im Detail einer Person auf "Meine Lernenden": wie auf
+ * der Herokarte nebeneinander, aber linksbuendig im Lesefluss des Details.
+ */
+.local-berufsbildung-roster-erfassen {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.local-berufsbildung-roster-erfassen-aktion {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
 .local-berufsbildung-herokarte .local-berufsbildung-stepper {
     margin-top: 0.75rem;
 }
