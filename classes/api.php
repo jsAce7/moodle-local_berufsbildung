@@ -31,6 +31,7 @@ use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\einsatz;
 use local_berufsbildung\persistent\teilnahmeprofil;
 use local_berufsbildung\persistent\zuordnung;
+use local_berufsbildung\service\beruf_katalog;
 use local_berufsbildung\service\kompetenz_baum;
 use local_berufsbildung\service\lehrdauer_resolver;
 use local_berufsbildung\service\rahmen_resolver;
@@ -669,6 +670,20 @@ class api {
      */
     public static function get_aktueller_einsatz(int $lernendeid): ?einsatz {
         return (new plan_service())->get_aktueller_einsatz($lernendeid);
+    }
+
+    /**
+     * Alle Beruf-Codes, die im Beruf-Profilfeld zur Auswahl stehen oder
+     * dort hinterlegt sind - fuer Auswahllisten aufsetzender Plugins, damit
+     * ein Beruf nicht zeichengenau von Hand eingetippt werden muss (siehe
+     * service\beruf_katalog).
+     *
+     * @return string[] Eindeutig, natuerlich sortiert
+     */
+    public static function get_berufe(): array {
+        $profilfeld = get_config('local_berufsbildung', 'profilefield_beruf');
+
+        return (new beruf_katalog())->alle_codes($profilfeld !== false ? (string) $profilfeld : 'beruf');
     }
 
     /**

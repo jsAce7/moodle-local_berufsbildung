@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.6.3] — 2026-09-28
+
+### Hinzugefügt
+
+- **`api::get_berufe()`**: alle Beruf-Codes aus dem Beruf-Profilfeld (Auswahloptionen und hinterlegte Werte, wie `serviceeruf_katalog`), damit aufsetzende Plugins eine Auswahlliste anbieten können, statt den Beruf zeichengenau eintippen zu lassen. Genutzt von `local_bildungsbericht` 0.3.0 beim Zuweisen einer Vorlage.
+
 ## [0.6.2] — 2026-09-28
 
 ### Geändert
