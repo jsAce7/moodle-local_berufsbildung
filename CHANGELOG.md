@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.2] — 2026-09-28
+
+### Geändert
+
+- **Teilnahmeart wird in der Zuordnungsübersicht gepflegt, nicht mehr auf „Meine Lernenden“**: Die Schaltfläche „Als extern (nur üK) markieren“ stand im Detail jeder Person direkt unter den Tätigkeiten und stellte mit einem Klick, ohne Rückfrage, Ausbildungsstand, Kompetenzraster und Lerndokumentation ab. Die Teilnahmeart ist Stammdatum der Person, keine Handlung der Betreuung. Die Zuordnungsübersicht zeigt sie jetzt als Spalte „Teilnahmeart“ und bietet je Zeile die passende Umstellung an; `teilnahmeart_setzen.php` fragt vor dem Speichern nach. Auf „Meine Lernenden“ bleibt das Badge „Extern · nur üK“.
+- **Tätigkeitenliste ohne Link-Symbol** (`nachweis_liste`), auf „Meine Lehre“ und „Meine Lernenden“: Das Symbol für externe Links war falsch, weil der Link innerhalb von Moodle weiterführt, und wurde je nach Font-Awesome-Version nur als leeres Kästchen dargestellt.
+
 ## [0.6.1] — 2026-09-28
 
 ### Hinzugefügt

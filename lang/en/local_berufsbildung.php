@@ -66,9 +66,13 @@ $string['role:planung_desc'] = 'Site-wide role for maintaining the training bloc
 
 $string['nav:meine_lehre'] = 'My apprenticeship';
 $string['nav:meine_lernenden'] = 'My trainees';
+$string['teilnahmeart:titel'] = 'Participation type';
+$string['teilnahmeart:lehre'] = 'Apprenticeship';
 $string['teilnahmeart:uek_extern'] = 'External · inter-company courses only';
 $string['teilnahmeart:uek_extern_setzen'] = 'Mark as external (inter-company courses only)';
+$string['teilnahmeart:uek_extern_bestaetigung'] = '{$a} will be managed as an external person who only attends inter-company courses. Training status, competency grid and learning journal will no longer be shown for this person. Continue?';
 $string['teilnahmeart:lehre_setzen'] = 'Manage as regular apprenticeship';
+$string['teilnahmeart:lehre_bestaetigung'] = '{$a} will be managed as a regular apprenticeship again, with training status, competency grid and learning journal. Continue?';
 $string['teilnahmeart:gespeichert'] = 'Participation type saved.';
 $string['faelligkeiten:titel'] = 'Due dates';
 $string['faelligkeiten:ich'] = 'Me';

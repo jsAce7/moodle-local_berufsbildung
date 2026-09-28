@@ -66,9 +66,13 @@ $string['role:planung_desc'] = 'Systemweite Rolle für die Pflege der Ausbildung
 
 $string['nav:meine_lehre'] = 'Meine Lehre';
 $string['nav:meine_lernenden'] = 'Meine Lernenden';
+$string['teilnahmeart:titel'] = 'Teilnahmeart';
+$string['teilnahmeart:lehre'] = 'Lehre';
 $string['teilnahmeart:uek_extern'] = 'Extern · nur üK';
 $string['teilnahmeart:uek_extern_setzen'] = 'Als extern (nur üK) markieren';
+$string['teilnahmeart:uek_extern_bestaetigung'] = '{$a} wird als externe Person geführt, die nur an überbetrieblichen Kursen teilnimmt. Ausbildungsstand, Kompetenzraster und Lerndokumentation werden für diese Person nicht mehr angezeigt. Fortfahren?';
 $string['teilnahmeart:lehre_setzen'] = 'Als reguläre Lehre führen';
+$string['teilnahmeart:lehre_bestaetigung'] = '{$a} wird wieder als reguläre Lehre geführt, mit Ausbildungsstand, Kompetenzraster und Lerndokumentation. Fortfahren?';
 $string['teilnahmeart:gespeichert'] = 'Teilnahmeart gespeichert.';
 $string['faelligkeiten:titel'] = 'Fälligkeiten';
 $string['faelligkeiten:ich'] = 'Ich';

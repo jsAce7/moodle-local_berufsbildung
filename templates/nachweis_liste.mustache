@@ -28,7 +28,8 @@
     Ergebnis traegt eine Beschriftung, weil "5.5" allein nicht sagt, wovon;
     bewusst "Ergebnis" statt "Note", denn eine Quelle darf auch "bestanden"
     liefern (siehe nachweis). Die Gruppenueberschrift hat dieselbe Form wie
-    die Semesterkoepfe des Versetzungsplans.
+    die Semesterkoepfe des Versetzungsplans. Der Link traegt kein Symbol:
+    er fuehrt innerhalb von Moodle weiter, ein "externer Link" waere falsch.
 
     Context variables required for this template:
     * gruppen - array of {name, hasanzahl, anzahl, haszusammenfassung, zusammenfassung,
@@ -97,7 +98,7 @@
                         <li class="local-berufsbildung-nachweis border-bottom">
                             <span class="local-berufsbildung-nachweis-titelzeile">
                                 <span class="local-berufsbildung-nachweis-titel">
-                                    {{#hasurl}}<a href="{{url}}">{{bezeichnung}} <i class="icon fa fa-external-link-alt fa-fw m-0 small" aria-hidden="true"></i></a>{{/hasurl}}
+                                    {{#hasurl}}<a href="{{url}}">{{bezeichnung}}</a>{{/hasurl}}
                                     {{^hasurl}}{{bezeichnung}}{{/hasurl}}
                                 </span>
                                 {{#hasergebnis}}<span class="local-berufsbildung-nachweis-ergebnis badge bg-light text-dark border">{{ergebnis}}</span>{{/hasergebnis}}

@@ -127,6 +127,22 @@ class zuordnungen extends system_report {
                 return $stand !== null ? (string) $stand->lehrjahr : '-';
             }));
 
+        // Ebenfalls ueber die API statt SQL: die Teilnahmeart hat einen
+        // Standard ("lehre") fuer Personen ohne eigenen Eintrag.
+        $this->add_column((new column(
+            'teilnahmeart',
+            new lang_string('teilnahmeart:titel', 'local_berufsbildung'),
+            $this->get_entity('zuordnung')->get_entity_name()
+        ))
+            ->add_fields("{$this->get_entity('zuordnung')->get_table_alias('local_berufsbildung_zuordnung')}.lernendeid")
+            ->set_type(column::TYPE_TEXT)
+            ->add_callback(static function ($unused, stdClass $row): string {
+                return get_string(
+                    api::ist_uek_extern((int) $row->lernendeid) ? 'teilnahmeart:uek_extern' : 'teilnahmeart:lehre',
+                    'local_berufsbildung'
+                );
+            }));
+
         $this->add_column_from_entity('zuordnung:status');
         $this->add_column_from_entity('zuordnung:gueltig_von');
         $this->add_column_from_entity('zuordnung:gueltig_bis');
@@ -171,6 +187,27 @@ class zuordnungen extends system_report {
             return $row->gueltig_bis !== null
                 && has_capability('local/berufsbildung:managezuordnung', context_system::instance());
         }));
+
+        // Teilnahmeart der lernenden Person umstellen - je nach aktuellem
+        // Stand genau eine der beiden Aktionen. Hier statt auf "Meine
+        // Lernenden", weil sie Stammdatum der Person ist; die Seite fragt
+        // vor dem Umstellen nach.
+        $umstellungen = [
+            api::TEILNAHMEART_UEK_EXTERN => 'teilnahmeart:uek_extern_setzen',
+            api::TEILNAHMEART_LEHRE => 'teilnahmeart:lehre_setzen',
+        ];
+        foreach ($umstellungen as $art => $label) {
+            $this->add_action((new action(
+                new moodle_url('/local/berufsbildung/teilnahmeart_setzen.php', ['userid' => ':lernendeid', 'art' => $art]),
+                new pix_icon('i/settings', '', 'core'),
+                [],
+                false,
+                new lang_string($label, 'local_berufsbildung')
+            ))->add_callback(static function (stdClass $row) use ($art): bool {
+                return api::get_teilnahmeart((int) $row->lernendeid) !== $art
+                    && has_capability('local/berufsbildung:managezuordnung', context_system::instance());
+            }));
+        }
 
         $this->add_action((new action(
             new moodle_url('/local/berufsbildung/zuordnung_loeschen.php', ['id' => ':id']),

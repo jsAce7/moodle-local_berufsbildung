@@ -15,7 +15,11 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Ändert die Teilnahmeart einer lernenden Person.
+ * Ändert die Teilnahmeart einer lernenden Person, nach Bestätigung.
+ *
+ * Erreichbar als Zeilenaktion der Zuordnungsübersicht. Die Bestätigung
+ * steht davor, weil die Umstellung auf "extern" Ausbildungsstand,
+ * Kompetenzraster und Lerndokumentation der Person ausblendet.
  *
  * @package    local_berufsbildung
  * @copyright  2026 jsAce7
@@ -23,20 +27,52 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
+require_once($CFG->libdir . '/adminlib.php');
 
 use local_berufsbildung\api;
 
-require_login();
-require_sesskey();
+admin_externalpage_setup('local_berufsbildung_zuordnung');
 require_capability('local/berufsbildung:managezuordnung', context_system::instance());
 
 $userid = required_param('userid', PARAM_INT);
 $art = required_param('art', PARAM_ALPHANUMEXT);
-api::set_teilnahmeart($userid, $art);
+if (!in_array($art, [api::TEILNAHMEART_LEHRE, api::TEILNAHMEART_UEK_EXTERN], true)) {
+    throw new moodle_exception('invalidparameter', 'debug');
+}
+$nutzer = core_user::get_user($userid, '*', MUST_EXIST);
 
-redirect(
-    new moodle_url('/local/berufsbildung/meine_lernenden.php'),
-    get_string('teilnahmeart:gespeichert', 'local_berufsbildung'),
-    null,
-    \core\output\notification::NOTIFY_SUCCESS
+$returnurl = new moodle_url('/local/berufsbildung/zuordnung.php');
+$titel = get_string(
+    $art === api::TEILNAHMEART_UEK_EXTERN ? 'teilnahmeart:uek_extern_setzen' : 'teilnahmeart:lehre_setzen',
+    'local_berufsbildung'
 );
+$PAGE->set_url(new moodle_url('/local/berufsbildung/teilnahmeart_setzen.php', ['userid' => $userid, 'art' => $art]));
+$PAGE->set_title($titel);
+$PAGE->set_heading($titel);
+
+if (optional_param('bestaetigt', 0, PARAM_BOOL) && confirm_sesskey()) {
+    api::set_teilnahmeart($userid, $art);
+    redirect(
+        $returnurl,
+        get_string('teilnahmeart:gespeichert', 'local_berufsbildung'),
+        null,
+        \core\output\notification::NOTIFY_SUCCESS
+    );
+}
+
+echo $OUTPUT->header();
+echo $OUTPUT->confirm(
+    get_string(
+        $art === api::TEILNAHMEART_UEK_EXTERN ? 'teilnahmeart:uek_extern_bestaetigung' : 'teilnahmeart:lehre_bestaetigung',
+        'local_berufsbildung',
+        fullname($nutzer)
+    ),
+    new moodle_url('/local/berufsbildung/teilnahmeart_setzen.php', [
+        'userid' => $userid,
+        'art' => $art,
+        'bestaetigt' => 1,
+        'sesskey' => sesskey(),
+    ]),
+    $returnurl
+);
+echo $OUTPUT->footer();
