@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.6.4] — 2026-09-30
+
+### Hinzugefügt
+
+- **Abweichender Lehrbeginn je Person** (`api::get_lehrbeginn()`, Einstellung *Profilfeld: Lehrbeginn*): Ein optionales Profilfeld hält den tatsächlichen Beginn des Lehrverhältnisses fest, für eine Lehre, die an einem anderen Tag, in einem anderen Monat oder mit Einstieg in ein späteres Semester beginnt. Gelesen wird ein Datumsfeld oder ein Textfeld mit „15.08.2026“ bzw. „2026-08-15“. Ohne Feld oder bei leerem Wert gilt wie bisher der 1. des Startmonats im Jahrgang (`api::get_ausbildungsbeginn()`). Semester, Ausbildungsstand und Aufbewahrung rechnen unverändert mit Jahrgang und Startmonat, das Datum bestimmt nur den Beginn der Probezeit in `local_bildungsbericht` 0.7.2.
+
 ## [0.6.3] — 2026-09-28
 
 ### Hinzugefügt

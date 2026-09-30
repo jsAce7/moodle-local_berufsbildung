@@ -105,6 +105,20 @@ if ($hassiteconfig) {
         $profilefields
     ));
 
+    // Optional, deshalb mit leerer Auswahl als Standard: ohne Feld gilt der
+    // aus Jahrgang und Startmonat berechnete Lehrbeginn (api::get_lehrbeginn()).
+    $settings->add(new admin_setting_configselect(
+        'local_berufsbildung/profilefield_lehrbeginn',
+        new lang_string('settings:profilefield_lehrbeginn', 'local_berufsbildung'),
+        new lang_string('settings:profilefield_lehrbeginn_desc', 'local_berufsbildung'),
+        '',
+        ['' => get_string('settings:profilefield_keines', 'local_berufsbildung')] + array_filter(
+            $profilefields,
+            fn($shortname) => $shortname !== '',
+            ARRAY_FILTER_USE_KEY
+        )
+    ));
+
     $settings->add(new admin_setting_configselect(
         'local_berufsbildung/startmonat',
         new lang_string('settings:startmonat', 'local_berufsbildung'),

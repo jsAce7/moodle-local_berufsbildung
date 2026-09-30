@@ -33,6 +33,7 @@ Alle Einstellungen unter *Site administration ▸ Plugins ▸ Local plugins ▸ 
 | Einstellung | Zweck |
 |---|---|
 | Profile field: occupation / cohort year | Welches Profilfeld Beruf bzw. Jahrgang enthält |
+| Profile field: start of apprenticeship (optional) | Profilfeld (am besten ein Datumsfeld) mit einem abweichenden Lehrbeginn je Person, z. B. 15. August, Februar oder Einstieg in ein späteres Semester. Leer = 1. des Startmonats im Jahrgang. Bestimmt nur den Beginn der Probezeit (`api::get_lehrbeginn()`), nicht die Semester. |
 | Training start month | Monat, in dem alle Lehren starten |
 | Training length in semesters | Standard-Lehrdauer, überschreibbar je Beruf |
 | Competency framework per occupation | Beruf → `core_competency`-Rahmen-Zuordnung |

@@ -928,6 +928,84 @@ final class api_test extends advanced_testcase {
         $this->assertNull(api::get_ausbildungsbeginn((int) $lernende->id));
     }
 
+    /**
+     * Ohne konfiguriertes Profilfeld oder bei leerem Wert ist der
+     * Lehrbeginn der berechnete Ausbildungsbeginn.
+     */
+    public function test_get_lehrbeginn_ohne_abweichung_ist_ausbildungsbeginn(): void {
+        $this->resetAfterTest();
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung');
+        $lernende = $generator->create_lernende(['beruf' => 'AU_EFZ', 'jahrgang' => '2026']);
+        $lernendeid = (int) $lernende->id;
+
+        $this->assertSame(api::get_ausbildungsbeginn($lernendeid), api::get_lehrbeginn($lernendeid));
+
+        $this->getDataGenerator()->create_custom_profile_field([
+            'datatype' => 'text',
+            'shortname' => 'lehrbeginn',
+            'name' => 'Lehrbeginn',
+        ]);
+        set_config('profilefield_lehrbeginn', 'lehrbeginn', 'local_berufsbildung');
+
+        $this->assertSame(api::get_ausbildungsbeginn($lernendeid), api::get_lehrbeginn($lernendeid));
+    }
+
+    /**
+     * Ein Datumsfeld verschiebt nur den Lehrbeginn, nicht die Semester.
+     */
+    public function test_get_lehrbeginn_aus_datumsfeld(): void {
+        $this->resetAfterTest();
+        $this->getDataGenerator()->create_custom_profile_field([
+            'datatype' => 'datetime',
+            'shortname' => 'lehrbeginn',
+            'name' => 'Lehrbeginn',
+            'param1' => 2000,
+            'param2' => 2050,
+        ]);
+        set_config('profilefield_lehrbeginn', 'lehrbeginn', 'local_berufsbildung');
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung');
+        $lernende = $generator->create_lernende([
+            'beruf' => 'AU_EFZ',
+            'jahrgang' => '2026',
+            'profile_field_lehrbeginn' => mktime(0, 0, 0, 8, 15, 2026),
+        ]);
+        $lernendeid = (int) $lernende->id;
+
+        $this->assertSame(mktime(0, 0, 0, 8, 15, 2026), api::get_lehrbeginn($lernendeid));
+        $this->assertSame(mktime(0, 0, 0, 8, 1, 2026), api::get_ausbildungsbeginn($lernendeid));
+    }
+
+    /**
+     * Ein Textfeld wird in beiden Schreibweisen gelesen, Unlesbares faellt
+     * auf den berechneten Ausbildungsbeginn zurueck.
+     */
+    public function test_get_lehrbeginn_aus_textfeld(): void {
+        $this->resetAfterTest();
+        $this->getDataGenerator()->create_custom_profile_field([
+            'datatype' => 'text',
+            'shortname' => 'lehrbeginn',
+            'name' => 'Lehrbeginn',
+        ]);
+        set_config('profilefield_lehrbeginn', 'lehrbeginn', 'local_berufsbildung');
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung');
+
+        $faelle = [
+            '01.02.2027' => mktime(0, 0, 0, 2, 1, 2027),
+            '2026-10-15' => mktime(0, 0, 0, 10, 15, 2026),
+            '31.02.2027' => mktime(0, 0, 0, 8, 1, 2026),
+            'Oktober' => mktime(0, 0, 0, 8, 1, 2026),
+        ];
+        foreach ($faelle as $wert => $erwartet) {
+            $lernende = $generator->create_lernende([
+                'beruf' => 'AU_EFZ',
+                'jahrgang' => '2026',
+                'profile_field_lehrbeginn' => $wert,
+            ]);
+            $this->assertSame($erwartet, api::get_lehrbeginn((int) $lernende->id), $wert);
+        }
+    }
+
     public function test_get_ausbildungsphase_laufende_lehre(): void {
         $this->resetAfterTest();
         $lernende = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_lernende([

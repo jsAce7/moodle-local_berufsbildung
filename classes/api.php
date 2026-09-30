@@ -406,6 +406,74 @@ class api {
     }
 
     /**
+     * Tatsaechlicher Beginn des Lehrverhaeltnisses der Person, 00:00 Uhr:
+     * das Datum aus dem Profilfeld profilefield_lehrbeginn, sonst
+     * get_ausbildungsbeginn(). Fuer einen Lehrbeginn an einem anderen Tag
+     * oder in einem anderen Monat als dem Startmonat, und fuer den Einstieg
+     * in ein spaeteres Semester (verkuerzte Lehre, Lehrbetriebswechsel).
+     *
+     * Bewusst getrennt von get_ausbildungsbeginn(): Semester, Ausbildungs-
+     * stand und Aufbewahrung rechnen weiter mit Jahrgang und Startmonat,
+     * das abweichende Datum gilt nur dort, wo ein Aufrufer ausdruecklich
+     * den Beginn des Lehrverhaeltnisses braucht (Probezeit).
+     *
+     * @param int $lernendeid
+     * @return int|null Null, wenn weder das Profilfeld noch Beruf und Jahrgang aufloesbar sind
+     */
+    public static function get_lehrbeginn(int $lernendeid): ?int {
+        global $CFG;
+
+        $feld = (string) get_config('local_berufsbildung', 'profilefield_lehrbeginn');
+        if ($feld !== '') {
+            require_once($CFG->dirroot . '/user/profile/lib.php');
+            $wert = profile_user_record($lernendeid, false)->{$feld} ?? null;
+            $datum = self::lies_datum($wert);
+            if ($datum !== null) {
+                return $datum;
+            }
+        }
+
+        return self::get_ausbildungsbeginn($lernendeid);
+    }
+
+    /**
+     * Liest ein Datum aus einem Profilfeld: Timestamp eines Datumsfelds
+     * oder Text im Format "15.08.2026" bzw. "2026-08-15" (CSV-Import in ein
+     * Textfeld). Liefert 00:00 Uhr dieses Tages wie semester_calculator.
+     *
+     * @param mixed $wert
+     * @return int|null Null bei leerem oder nicht lesbarem Wert
+     */
+    private static function lies_datum($wert): ?int {
+        $wert = trim((string) $wert);
+        if ($wert === '' || $wert === '0') {
+            return null;
+        }
+
+        if (ctype_digit($wert)) {
+            // Ein Datumsfeld speichert 00:00 Uhr in der Zeitzone der
+            // erfassenden Person. Mit zwoelf Stunden Zuschlag faellt der
+            // Tag auch bei abweichender Serverzeitzone nicht auf den Vortag.
+            $mittag = (int) $wert + 12 * HOURSECS;
+            return mktime(0, 0, 0, (int) date('n', $mittag), (int) date('j', $mittag), (int) date('Y', $mittag));
+        }
+
+        if (preg_match('/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/', $wert, $teile) === 1) {
+            [, $tag, $monat, $jahr] = $teile;
+        } else if (preg_match('/^(\d{4})-(\d{1,2})-(\d{1,2})$/', $wert, $teile) === 1) {
+            [, $jahr, $monat, $tag] = $teile;
+        } else {
+            return null;
+        }
+
+        if (!checkdate((int) $monat, (int) $tag, (int) $jahr)) {
+            return null;
+        }
+
+        return mktime(0, 0, 0, (int) $monat, (int) $tag, (int) $jahr);
+    }
+
+    /**
      * In welcher Phase steht die Ausbildung zum Stichtag?
      *
      * get_ausbildungsstand() liefert in drei fachlich sehr verschiedenen
