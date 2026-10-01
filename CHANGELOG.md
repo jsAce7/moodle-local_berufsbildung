@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.6.5] — 2026-10-01
+
+### Hinzugefügt
+
+- **Schnellaktionen auf der geschlossenen Kachel von „Meine Lernenden“** (`nachweis\quelle_mit_schnellaktion`, `nachweis\schnellaktion`, `collector::get_schnellaktionen()`): Eine Quelle kann eine Handlung anbieten, die die zuständige Berufsbildner/in jederzeit nebenbei ausführt, etwa eine Notiz zum Bildungsbericht in `local_bildungsbericht` 0.8.0. Die Schaltfläche steht rechts in der Kopfzeile der Kachel, ohne dass die Person aufgeklappt werden muss. Sie liegt ausserhalb von `<details>`, damit sie kein verschachteltes Bedienelement im Umschalter ist. Der Collector prüft wie bei `get_zustaendigen_aktionen()` die heutige Zuständigkeit und setzt den Quellen-Schlüssel selbst. Bringt die Aktion ein AMD-Modul mit, lädt „Meine Lernenden“ es einmal je Seite; ohne JavaScript führt der Link auf die URL der Aktion.
+
+### Geändert
+
+- **Roster-Kachel**: Die Karte (`card mb-3`) liegt jetzt auf einem umschliessenden `<div class="local-berufsbildung-kachel-rahmen">`, nicht mehr auf `<details>` selbst. Aussehen und Verhalten ohne Schnellaktionen bleiben gleich.
+
 ## [0.6.4] — 2026-09-30
 
 ### Hinzugefügt

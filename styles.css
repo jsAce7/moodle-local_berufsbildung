@@ -759,6 +759,37 @@
 }
 
 /*
+ * Schnellaktionen (nachweis\quelle_mit_schnellaktion) stehen ausserhalb von
+ * <details> und werden auf die Kopfzeile gelegt: rechts aussen, neben dem
+ * Chevron. Dieselbe card-body-Polsterung wie der Umschalter, damit sie
+ * unabhaengig von der Bootstrap-Version auf seiner Hoehe beginnen; die
+ * Mindesthoehe ist die des Avatars, nach dem sich die erste Zeile richtet.
+ *
+ * Der Umschalter haelt rechts Platz fuer eine Schaltflaeche frei, in jeder
+ * umgebrochenen Zeile - so ueberdeckt sie auch auf schmalen Fenstern weder
+ * Name noch Kennzahlen. Bietet eine weitere Quelle eine Schnellaktion an,
+ * muss dieser Platz mitwachsen.
+ */
+.local-berufsbildung-kachel-mit-schnellaktionen .local-berufsbildung-kachel-summary {
+    padding-right: 8.5rem;
+}
+
+.local-berufsbildung-kachel-schnellaktionen {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 2.5rem;
+    box-sizing: content-box;
+}
+
+.local-berufsbildung-kachel-schnellaktionen .btn {
+    white-space: nowrap;
+}
+
+/*
  * Kopfzeile einer Person: Initialen, Name mit Ausbildungsstand, dann
  * rechtsbuendig Semesterleiste, Kennzahlen und Chevron. Alles auf einer
  * Zeile - bei voller Breite muss "Automatiker/in EFZ, 1. Lehrjahr

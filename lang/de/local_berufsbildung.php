@@ -96,6 +96,7 @@ $string['meine_lernenden:beruf_alle'] = 'Alle Berufe';
 $string['meine_lernenden:filtern'] = 'Filtern';
 $string['meine_lernenden:zusammenfassung'] = '{$a->anzahl} Lernende · {$a->luecken} mit offenen Lücken';
 $string['meine_lernenden:bloecke'] = 'Ausbildungsblöcke verwalten';
+$string['meine_lernenden:schnellaktion_fuer'] = '{$a->aktion}: {$a->name}';
 $string['meine_lehre:kein_ausbildungsstand'] = 'Für Ihr Profil ist kein Beruf oder Jahrgang hinterlegt.';
 $string['meine_lehre:uek_extern'] = 'Sie nehmen extern nur an überbetrieblichen Kursen teil. Eine Lehre und eine Lerndokumentation werden hier nicht geführt.';
 $string['meine_lehre:vor_beginn'] = 'Ihre Lehre beginnt am {$a}.';

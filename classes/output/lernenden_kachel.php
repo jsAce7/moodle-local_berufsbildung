@@ -28,6 +28,7 @@ namespace local_berufsbildung\output;
 
 use core_text;
 use local_berufsbildung\ausbildungsstand;
+use local_berufsbildung\nachweis\schnellaktion;
 
 /**
  * Kompakte Zusammenfassung als <summary>, volle Details (Luecken-
@@ -57,6 +58,10 @@ class lernenden_kachel {
      *        bereits im geschlossenen Header; künftige Fristen stehen im
      *        Detail, damit die Übersicht nicht zur Aufgabenliste wird.
      * @param bool $istextern Externe üK-Teilnahme statt regulärer Lehre.
+     * @param int $lernendeid Fuer die Schnellaktionen (data-lernendeid);
+     *        ohne Schnellaktionen ohne Bedeutung.
+     * @param schnellaktion[] $schnellaktionen Aus collector::get_schnellaktionen(),
+     *        stehen in der Kopfzeile, ohne dass die Kachel aufklappt.
      */
     public static function render(
         string $name,
@@ -67,7 +72,9 @@ class lernenden_kachel {
         ?string $bildhtml = null,
         ?string $einsatzname = null,
         int $anzahlueberfaellig = 0,
-        bool $istextern = false
+        bool $istextern = false,
+        int $lernendeid = 0,
+        array $schnellaktionen = []
     ): string {
         global $OUTPUT;
 
@@ -92,6 +99,21 @@ class lernenden_kachel {
             'hasextern' => $istextern,
             'anzahltaetigkeiten' => $anzahltaetigkeiten,
             'detailhtml' => $detailhtml,
+            'hasschnellaktionen' => !empty($schnellaktionen),
+            'schnellaktionen' => array_map(static fn (schnellaktion $aktion): array => [
+                'quellekey' => $aktion->quellekey,
+                'label' => $aktion->label,
+                // Ausserhalb der Kachel gelesen ("Notiz") fehlt der Bezug,
+                // wem sie gilt - Screenreader hoeren die Schaltflaeche
+                // nach der Kopfzeile, nicht in ihr.
+                'arialabel' => get_string('meine_lernenden:schnellaktion_fuer', 'local_berufsbildung', (object) [
+                    'aktion' => $aktion->label,
+                    'name' => $name,
+                ]),
+                'url' => $aktion->url,
+                'icon' => $aktion->icon,
+                'lernendeid' => $lernendeid,
+            ], array_values($schnellaktionen)),
         ]);
     }
 

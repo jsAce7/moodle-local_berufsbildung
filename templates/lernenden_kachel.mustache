@@ -21,6 +21,12 @@
     Details erst bei Bedarf ausgeklappt - natives <details>-Element,
     kein JavaScript noetig.
 
+    Schnellaktionen stehen ausserhalb von <details>, nicht im <summary>:
+    ein Bedienelement im Umschalter waere verschachtelt (WCAG 4.1.2) und
+    wuerde von Screenreadern als Teil des Umschalters gelesen. Die Karte
+    liegt deshalb auf dem umschliessenden Element; per CSS stehen die
+    Schaltflaechen rechts in der Kopfzeile.
+
     Context variables required for this template:
     * name - string
     * hasbild - bool, Profilbild hinterlegt
@@ -38,6 +44,8 @@
     * hasextern - bool
     * anzahltaetigkeiten - int
     * detailhtml - string, bereits gerendertes HTML fuer den ausgeklappten Bereich
+    * hasschnellaktionen - bool
+    * schnellaktionen - array: quellekey, label, arialabel, url, icon, lernendeid
 
     Example context (json):
     {
@@ -56,10 +64,22 @@
         "anzahlueberfaellig": 1,
         "hasextern": false,
         "anzahltaetigkeiten": 9,
-        "detailhtml": "<p>...</p>"
+        "detailhtml": "<p>...</p>",
+        "hasschnellaktionen": true,
+        "schnellaktionen": [
+            {
+                "quellekey": "bildungsbericht",
+                "label": "Notiz (3)",
+                "arialabel": "Notiz (3): Elena Furrer",
+                "url": "/local/bildungsbericht/notiz.php?userid=5",
+                "icon": "fa-sticky-note",
+                "lernendeid": 5
+            }
+        ]
     }
 }}
-<details class="local-berufsbildung-kachel card mb-3">
+<div class="local-berufsbildung-kachel-rahmen card mb-3{{#hasschnellaktionen}} local-berufsbildung-kachel-mit-schnellaktionen{{/hasschnellaktionen}}">
+<details class="local-berufsbildung-kachel">
     <summary class="local-berufsbildung-kachel-summary card-body">
         {{#hasbild}}{{{bildhtml}}}{{/hasbild}}
         {{^hasbild}}
@@ -120,3 +140,16 @@
         {{{detailhtml}}}
     </div>
 </details>
+{{! Nach <details> im Quelltext: bei geschlossener Kachel folgt die
+    Schaltflaeche im Tab-Ablauf direkt auf den Umschalter derselben Person. }}
+{{#hasschnellaktionen}}
+    <div class="local-berufsbildung-kachel-schnellaktionen card-body">
+        {{#schnellaktionen}}
+            <a href="{{url}}" class="btn btn-outline-secondary btn-sm" aria-label="{{arialabel}}"
+                data-local-berufsbildung-schnellaktion="{{quellekey}}" data-lernendeid="{{lernendeid}}">
+                <i class="icon fa {{icon}} fa-fw" aria-hidden="true"></i><span class="local-berufsbildung-schnellaktion-label">{{label}}</span>
+            </a>
+        {{/schnellaktionen}}
+    </div>
+{{/hasschnellaktionen}}
+</div>

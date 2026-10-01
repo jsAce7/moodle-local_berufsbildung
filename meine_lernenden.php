@@ -193,6 +193,10 @@ if (empty($eintraege)) {
     // derselben Abteilung.
     $blocknamen = [];
 
+    // AMD-Module der Schnellaktionen einmal je Seite, nicht je Person -
+    // sie binden sich ueber das data-Attribut an alle ihre Schaltflaechen.
+    $schnellaktionsmodule = [];
+
     $gefiltert = lernenden_roster::filtere($eintraege, $suchbegriff, $berufsfilter);
 
     if (empty($gefiltert)) {
@@ -293,6 +297,16 @@ if (empty($eintraege)) {
             $einsatzname = $blocknamen[$blockid];
         }
 
+        // Was nebenbei jederzeit fuer die Person zu tun ist, etwa eine
+        // Notiz - in der Kopfzeile, ohne Aufklappen. Siehe
+        // classes/nachweis/quelle_mit_schnellaktion.php.
+        $schnellaktionen = $collector->get_schnellaktionen($berufsbildnerid, $lernendeid);
+        foreach ($schnellaktionen as $schnellaktion) {
+            if ($schnellaktion->amdmodul !== null) {
+                $schnellaktionsmodule[$schnellaktion->amdmodul] = true;
+            }
+        }
+
         echo lernenden_kachel::render(
             $eintrag['name'],
             // Externe Personen haben keinen Ausbildungsstand in diesem
@@ -307,11 +321,17 @@ if (empty($eintraege)) {
             bildhtml: $bildhtml,
             einsatzname: $einsatzname,
             anzahlueberfaellig: $anzahlueberfaellig[$lernendeid] ?? 0,
-            istextern: $eintrag['istextern']
+            istextern: $eintrag['istextern'],
+            lernendeid: $lernendeid,
+            schnellaktionen: $schnellaktionen
         );
     }
 
     echo html_writer::end_tag('div');
+
+    foreach (array_keys($schnellaktionsmodule) as $amdmodul) {
+        $PAGE->requires->js_call_amd($amdmodul, 'init');
+    }
 }
 
 echo $OUTPUT->footer();

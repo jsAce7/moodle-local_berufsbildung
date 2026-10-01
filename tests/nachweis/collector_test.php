@@ -40,6 +40,7 @@ require_once(__DIR__ . '/../fixtures/collector_test_hinweis_provider.php');
 require_once(__DIR__ . '/../fixtures/collector_test_zusammenfassung_provider.php');
 require_once(__DIR__ . '/../fixtures/collector_test_ausstehend_provider.php');
 require_once(__DIR__ . '/../fixtures/collector_test_zustaendigen_provider.php');
+require_once(__DIR__ . '/../fixtures/collector_test_schnellaktion_provider.php');
 
 /**
  * Tests fuer collector.
@@ -477,5 +478,89 @@ final class collector_test extends advanced_testcase {
         $this->expectException(moodle_exception::class);
         (new collector([new collector_test_zustaendigen_provider()]))
             ->get_zustaendigen_aktionen((int) $berufsbildner->id, (int) $lernende->id);
+    }
+
+    public function test_get_schnellaktionen_liefert_aktion_mit_schluessel_der_quelle(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $lernende->id);
+
+        $provider = new collector_test_schnellaktion_provider(
+            new schnellaktion('fremd', 'Notiz (2)', '/local/test/notiz.php', 'fa-sticky-note', 'local_test/notiz')
+        );
+        $aktionen = (new collector([$provider, new collector_test_provider()]))
+            ->get_schnellaktionen((int) $berufsbildner->id, (int) $lernende->id);
+
+        $this->assertCount(1, $aktionen);
+        $this->assertSame('testschnell', $aktionen[0]->quellekey);
+        $this->assertSame('Notiz (2)', $aktionen[0]->label);
+        $this->assertSame('/local/test/notiz.php', $aktionen[0]->url);
+        $this->assertSame('fa-sticky-note', $aktionen[0]->icon);
+        $this->assertSame('local_test/notiz', $aktionen[0]->amdmodul);
+    }
+
+    public function test_get_schnellaktionen_ohne_aktion_bleibt_leer(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $lernende->id);
+
+        $provider = new collector_test_schnellaktion_provider(null);
+        $aktionen = (new collector([$provider]))->get_schnellaktionen((int) $berufsbildner->id, (int) $lernende->id);
+
+        $this->assertSame([], $aktionen);
+        $this->assertTrue($provider->wurdeaufgerufen);
+    }
+
+    public function test_get_schnellaktionen_fuer_sich_selbst_bleibt_leer(): void {
+        $this->resetAfterTest();
+
+        $lernende = $this->getDataGenerator()->create_user();
+        $provider = new collector_test_schnellaktion_provider(new schnellaktion('x', 'X', '/x.php', 'fa-x'));
+
+        $aktionen = (new collector([$provider]))->get_schnellaktionen((int) $lernende->id, (int) $lernende->id);
+
+        $this->assertSame([], $aktionen);
+        $this->assertFalse($provider->wurdeaufgerufen);
+    }
+
+    public function test_get_schnellaktionen_fuer_fremde_person_fragt_die_quelle_nicht(): void {
+        $this->resetAfterTest();
+
+        $fremder = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $provider = new collector_test_schnellaktion_provider(new schnellaktion('x', 'X', '/x.php', 'fa-x'));
+
+        $this->expectException(moodle_exception::class);
+
+        try {
+            (new collector([$provider]))->get_schnellaktionen((int) $fremder->id, (int) $lernende->id);
+        } finally {
+            $this->assertFalse($provider->wurdeaufgerufen);
+        }
+    }
+
+    /**
+     * Wie bei den Erfassen-Aktionen zaehlt heute: eine Zuordnung, die
+     * gestern geendet hat, gibt keine Schnellaktion mehr.
+     */
+    public function test_get_schnellaktionen_nach_beendeter_zuordnung_verweigert(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_zuordnung([
+            'berufsbildnerid' => (int) $berufsbildner->id,
+            'lernendeid' => (int) $lernende->id,
+            'gueltig_von' => time() - YEARSECS,
+            'gueltig_bis' => time() - DAYSECS,
+        ]);
+
+        $this->expectException(moodle_exception::class);
+        (new collector([new collector_test_schnellaktion_provider()]))
+            ->get_schnellaktionen((int) $berufsbildner->id, (int) $lernende->id);
     }
 }

@@ -290,6 +290,52 @@ class collector {
     }
 
     /**
+     * Schnellaktionen aller Quellen, die `quelle_mit_schnellaktion`
+     * implementieren - fuer die geschlossene Kachel auf "Meine Lernenden".
+     *
+     * Dieselbe Grenze wie get_zustaendigen_aktionen(): nichts fuer sich
+     * selbst, und nur fuer eine Person, fuer die die abrufende Person heute
+     * zustaendig ist.
+     *
+     * @param int $abrufendeid Wer fragt ab
+     * @param int $lernendeid Fuer wen
+     * @return schnellaktion[]
+     */
+    public function get_schnellaktionen(int $abrufendeid, int $lernendeid): array {
+        if ($abrufendeid === $lernendeid) {
+            return [];
+        }
+        if (!api::is_zustaendig($abrufendeid, $lernendeid)) {
+            throw new moodle_exception('error:keinezustaendigkeit', 'local_berufsbildung');
+        }
+
+        $aktionen = [];
+        foreach ($this->providers as $einzelprovider) {
+            if (!$einzelprovider instanceof quelle_mit_schnellaktion) {
+                continue;
+            }
+
+            $aktion = $einzelprovider->get_schnellaktion($abrufendeid, $lernendeid);
+            if ($aktion === null) {
+                continue;
+            }
+
+            // Der Schluessel kommt von der registrierten Quelle, nicht aus
+            // der Aktion - sonst koennte eine Quelle die Schaltflaechen
+            // einer anderen an ihr AMD-Modul binden.
+            $aktionen[] = new schnellaktion(
+                $einzelprovider->get_quelle_key(),
+                $aktion->label,
+                $aktion->url,
+                $aktion->icon,
+                $aktion->amdmodul
+            );
+        }
+
+        return $aktionen;
+    }
+
+    /**
      * Fälligkeiten einer Person aus allen Quellen. Die gleiche
      * Zuständigkeitsgrenze wie bei Leistungsnachweisen gilt auch für
      * Planungsdaten.

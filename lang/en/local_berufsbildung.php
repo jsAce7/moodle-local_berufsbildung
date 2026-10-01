@@ -96,6 +96,7 @@ $string['meine_lernenden:beruf_alle'] = 'All professions';
 $string['meine_lernenden:filtern'] = 'Filter';
 $string['meine_lernenden:zusammenfassung'] = '{$a->anzahl} trainees · {$a->luecken} with open gaps';
 $string['meine_lernenden:bloecke'] = 'Manage training blocks';
+$string['meine_lernenden:schnellaktion_fuer'] = '{$a->aktion}: {$a->name}';
 $string['meine_lehre:kein_ausbildungsstand'] = 'No occupation or cohort year is set on your profile.';
 $string['meine_lehre:uek_extern'] = 'You participate externally in inter-company courses only. This site does not manage an apprenticeship or learning journal for you.';
 $string['meine_lehre:vor_beginn'] = 'Your apprenticeship starts on {$a}.';
