@@ -25,7 +25,7 @@ namespace local_berufsbildung\pdf;
  * competence record cannot be issued.
  *
  * @package    local_berufsbildung
- * @copyright  2026 onwards, üK-Trägerschaft
+ * @copyright  2026 jsAce7
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \local_berufsbildung\pdf\gestaltung
  */

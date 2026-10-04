@@ -322,7 +322,7 @@ $string['settings:versetzungsplan_schwelle_prozent_desc'] = 'If a delivery conta
 
 $string['stepper:lehrjahr'] = 'Year {$a}';
 $string['task:sync_kohorten'] = 'Synchronise cohort assignments';
-$string['task:sync_role_assignments'] = 'Synchronise trainer role assignments';
+$string['task:sync_role_assignments'] = 'Synchronise trainer and training planning role assignments';
 $string['task:zuordnung_retention'] = 'Delete assignments after the retention period expires';
 $string['teilnahmeart:gespeichert'] = 'Participation type saved.';
 $string['teilnahmeart:lehre'] = 'Apprenticeship';

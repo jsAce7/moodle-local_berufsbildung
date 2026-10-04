@@ -140,7 +140,7 @@ Ist der Rückgang beabsichtigt, etwa nach einem Lehrabschluss-Jahrgang, wird der
 1. Webservices aktivieren, Protokoll REST einschalten
 2. Dienstkonto anlegen — ein eigener Nutzer, nicht ein persönliches Konto. Bricht sonst beim nächsten Personalwechsel.
 3. Rolle mit `local/berufsbildung:importplan` im Systemkontext, dem Dienstkonto zuweisen
-4. Externen Dienst anlegen, die Funktion `local_berufsbildung_import_versetzungsplan` hinzufügen, Dienstkonto berechtigen
+4. Den mitgelieferten externen Dienst *Berufsbildung: Versetzungsplan-Import* (`local_berufsbildung_versetzungsplan`, aus `db/services.php`) aktivieren — er enthält die Funktion `local_berufsbildung_import_versetzungsplan` bereits — und das Dienstkonto bei *Autorisierte Nutzer/innen* eintragen
 5. Token erzeugen
 6. IP-Einschränkung setzen, falls das Skript von einer festen Adresse läuft
 

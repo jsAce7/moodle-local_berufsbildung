@@ -322,7 +322,7 @@ $string['settings:versetzungsplan_schwelle_prozent_desc'] = 'Enthält eine Liefe
 
 $string['stepper:lehrjahr'] = '{$a}. Lehrjahr';
 $string['task:sync_kohorten'] = 'Zuordnungen globaler Gruppen abgleichen';
-$string['task:sync_role_assignments'] = 'Rolle Berufsbildner/in abgleichen';
+$string['task:sync_role_assignments'] = 'Rollen Berufsbildner/in und Ausbildungsplanung abgleichen';
 $string['task:zuordnung_retention'] = 'Zuordnungen nach Ablauf der Aufbewahrungsfrist löschen';
 $string['teilnahmeart:gespeichert'] = 'Teilnahmeart gespeichert.';
 $string['teilnahmeart:lehre'] = 'Lehre';
