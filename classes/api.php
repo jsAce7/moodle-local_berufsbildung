@@ -596,15 +596,34 @@ class api {
      */
     public static function aufbewahrungsfrist_abgelaufen(int $lernendeid, ?int $stichtag = null): bool {
         $stichtag ??= time();
-        $ende = self::get_ausbildungsende($lernendeid);
-        if ($ende === null) {
+        $ablauf = self::get_aufbewahrungsende($lernendeid);
+        if ($ablauf === null) {
             return false;
         }
 
-        $retentionmonate = min(120, max(1, (int) (get_config('local_berufsbildung', 'retention_monate') ?: 12)));
-        $ablauf = strtotime("+{$retentionmonate} months", $ende);
-
         return $stichtag >= $ablauf && !self::hat_aufbewahrungspflicht($lernendeid, $stichtag);
+    }
+
+    /**
+     * Zeitpunkt, ab dem die automatische Retention-Loeschung greift:
+     * Ausbildungsende plus die konfigurierte Aufbewahrungsfrist. Eine
+     * dokumentierte Aufbewahrungspflicht schiebt die Loeschung auf, aendert
+     * diesen Zeitpunkt aber nicht - dafuer hat_aufbewahrungspflicht() bzw.
+     * aufbewahrungsfrist_abgelaufen() fragen. Null, wenn Beruf oder Jahrgang
+     * nicht aufloesbar sind.
+     *
+     * @param int $lernendeid
+     * @return int|null
+     */
+    public static function get_aufbewahrungsende(int $lernendeid): ?int {
+        $ende = self::get_ausbildungsende($lernendeid);
+        if ($ende === null) {
+            return null;
+        }
+
+        $retentionmonate = min(120, max(1, (int) (get_config('local_berufsbildung', 'retention_monate') ?: 12)));
+
+        return strtotime("+{$retentionmonate} months", $ende);
     }
 
     /**

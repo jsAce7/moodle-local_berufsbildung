@@ -871,6 +871,22 @@ final class api_test extends advanced_testcase {
         $this->assertFalse(api::darf_personendaten_geloescht_werden((int) $lernende->id, $nachabschluss));
     }
 
+    public function test_get_aufbewahrungsende(): void {
+        $this->resetAfterTest();
+        set_config('retention_monate', '6', 'local_berufsbildung');
+        $lernende = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_lernende([
+            'beruf' => 'AU_EFZ',
+            'jahrgang' => '2020',
+        ]);
+        $ohneprofil = $this->getDataGenerator()->create_user();
+
+        $this->assertSame(
+            strtotime('+6 months', api::get_ausbildungsende((int) $lernende->id)),
+            api::get_aufbewahrungsende((int) $lernende->id)
+        );
+        $this->assertNull(api::get_aufbewahrungsende((int) $ohneprofil->id));
+    }
+
     /**
      * Randfall: die Frist ist inklusiv - genau am Ablauftag bereits
      * abgelaufen, einen Tag davor noch nicht.
