@@ -8,7 +8,7 @@ Basis-Plugin für die betriebliche Berufsbildung in Moodle. Besitzt die Zuordnun
 
 Der vollständige Architekturplan liegt in `docs/plan.md`. Bei Widersprüchen zwischen dieser Datei und dem Plan gilt der Plan. Für Schnitt 1 gilt zusätzlich `docs/schnitt1.md` (liegt im Repo von `local_lerndokumentation`, das darauf aufsetzt) — dort steht die aktuelle Reihenfolge und der reduzierte Umfang.
 
-Aufsetzende Plugins: `local_lerndokumentation` (in Arbeit), später `local_bildungsbericht`. Beide greifen ausschliesslich über `\local_berufsbildung\api` zu — nie direkt auf die Tabellen dieses Plugins.
+Aufsetzende Plugins: `local_lerndokumentation`, `local_bildungsbericht` und `local_uekkn`. Sie greifen nie direkt auf die Tabellen dieses Plugins zu, sondern über dessen öffentliche Schnittstellen: `\local_berufsbildung\api`, den Nachweis-Collector (`nachweis\…`), die PDF-Grundlage (`pdf\…`) und einzelne Darstellungs- und Hilfsklassen (`output\nachweis_liste`, `service\kompetenz_baum`).
 
 ## Zielumgebung
 
@@ -41,7 +41,8 @@ Aufsetzende Plugins: `local_lerndokumentation` (in Arbeit), später `local_bildu
 - Namespace `local_berufsbildung\...`, PSR-4-konform zur Verzeichnisstruktur unter `classes/`
 - Moodle Coding Style (`phpcs` mit `moodle-cs`)
 - Modelle: `\core\persistent` mit vollständigem `define_properties()` inkl. Validierung
-- Wertobjekte (`ausbildungsstand`, `nachweis`) als `readonly class`, nicht als Persistent — sie werden nicht gespeichert, sondern berechnet
+- Wertobjekte (`ausbildungsstand`, `nachweis`) mit `readonly`-Properties, nicht als Persistent — sie werden nicht gespeichert, sondern berechnet. Keine `readonly class`: die gibt es erst ab PHP 8.2, Moodle 4.5 läuft ab PHP 8.1.
+- Den Nachweis-Collector nie als Standardwert eines Parameters bauen (`= new collector()`): er bindet die `lib.php` aller Plugins ein, und ab PHP 8.3 löst ein relatives `require_once` darin gegen das Verzeichnis der deklarierenden Datei auf (so brach `local_bildungsbericht` unter Moodle 5.2). Stattdessen `?collector $collector = null` und im Rumpf `$collector ?? new collector()`.
 - Deutsche Bezeichner in Datenbankfeldern sind gewollt (`gueltig_von`, `beruf`) — Fachdomäne ist deutschsprachig. Klassen- und Methodennamen bleiben englisch.
 
 ## Befehle
@@ -62,7 +63,8 @@ Nach jeder Aufgabe: Abnahmekriterien aus `docs/schnitt1.md` mit diesen Befehlen 
 
 - **Neue Tabelle oder Feld**: `db/install.xml` über den XMLDB-Editor ändern, `version.php` hochzählen, `db/upgrade.php` mit Savepoint ergänzen. Beides, nie nur eines.
 - **Neue Capability**: `db/access.php` + Sprachstring `berufsbildung:<name>` + `version.php` hochzählen.
-- **Neuer Sprachstring**: immer in `de` *und* `en`.
+- **Neuer Sprachstring**: immer in `de` *und* `en`, alphabetisch nach Schlüssel einsortiert, keine Kommentare zwischen den Strings (sonst meldet der Code-Checker die Reihenfolge).
+- **JavaScript**: nur in `amd/src` ändern, danach `amd/build` neu bauen (README, Abschnitt Entwicklung); die CI prüft das mit `moodle-plugin-ci grunt`.
 - **Neue API-Methode**: Unit-Test für den Normalfall *und* für den Stichtag-Randfall (Zuordnung endet genau am Stichtag, beginnt genau danach).
 
 ## Testanforderungen (Schnitt 1)
