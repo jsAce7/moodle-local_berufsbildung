@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace local_berufsbildung\service;
 
+use local_berufsbildung\persistent\kohorten_link;
 use local_berufsbildung\persistent\zuordnung;
 
 /**
@@ -140,5 +141,50 @@ class zuordnung_service {
         $lernendeid = (int) $zuordnung->get('lernendeid');
         $zuordnung->delete();
         (new role_sync_service())->synchronisiere_paar($berufsbildnerid, $lernendeid);
+    }
+
+    /**
+     * Beendet die Zustaendigkeit einer Berufsbildner/in, deren Konto geloescht
+     * wurde: laufende Zuordnungen enden jetzt, noch nicht begonnene werden
+     * geloescht (sie waren nie wirksam), Kohorten-Links werden deaktiviert,
+     * damit der Kohorten-Abgleich keine neuen Zuordnungen anlegt.
+     *
+     * Beendet statt geloescht, weil eine vergangene Zustaendigkeit Teil der
+     * Ausbildungshistorie der lernenden Person ist (Architekturregel 2); sie
+     * verschwindet mit deren Aufbewahrungsfrist.
+     *
+     * Bewusst ohne beenden()/loeschen() und deren Rollenabgleich: delete_user()
+     * hat die Rollen des Kontos bereits entfernt, und role_assign() lehnt ein
+     * geloeschtes Konto ab. Das Ende liegt eine Sekunde vor jetzt, weil
+     * gueltig_bis den letzten gueltigen Zeitpunkt nennt.
+     *
+     * @param int $berufsbildnerid
+     * @return int Anzahl beendeter oder geloeschter Zuordnungen
+     */
+    public function beende_fuer_geloeschtes_konto(int $berufsbildnerid): int {
+        $jetzt = time();
+        $anzahl = 0;
+
+        $offen = zuordnung::get_records_select(
+            'berufsbildnerid = :berufsbildnerid AND (gueltig_bis IS NULL OR gueltig_bis >= :jetzt)',
+            ['berufsbildnerid' => $berufsbildnerid, 'jetzt' => $jetzt]
+        );
+        foreach ($offen as $zuordnung) {
+            $beginn = (int) $zuordnung->get('gueltig_von');
+            if ($beginn > $jetzt) {
+                $zuordnung->delete();
+            } else {
+                $zuordnung->set('gueltig_bis', max($beginn, $jetzt - 1));
+                $zuordnung->update();
+            }
+            $anzahl++;
+        }
+
+        foreach (kohorten_link::get_records(['berufsbildnerid' => $berufsbildnerid, 'aktiv' => true]) as $link) {
+            $link->set('aktiv', false);
+            $link->update();
+        }
+
+        return $anzahl;
     }
 }

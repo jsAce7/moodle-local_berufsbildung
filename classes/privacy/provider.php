@@ -37,6 +37,7 @@ use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 use local_berufsbildung\api;
 use local_berufsbildung\service\zuordnung_retention_service;
+use local_berufsbildung\service\zuordnung_service;
 
 /**
  * Alle personenbezogenen Daten dieses Plugins haengen an context_user, nie
@@ -391,9 +392,14 @@ class provider implements
 
     /**
      * Ist der Moodle-Account bereits geloescht, verschwinden alle
-     * Zuordnungen dieser Person sofort und unbedingt - unabhaengig von
-     * Ausbildungsstand oder Aufbewahrungspflicht. Ohne Ausnahme, analog zum
-     * bereits bestehenden Verhalten in local_lerndokumentation.
+     * Zuordnungen dieser Person als lernende Person sofort und unbedingt -
+     * unabhaengig von Ausbildungsstand oder Aufbewahrungspflicht. Ohne
+     * Ausnahme, analog zum bereits bestehenden Verhalten in
+     * local_lerndokumentation.
+     *
+     * Als Berufsbildner/in endet ihre Zustaendigkeit dagegen nur: die
+     * Zuordnungen gehoeren zur Ausbildungshistorie anderer Personen
+     * (zuordnung_service::beende_fuer_geloeschtes_konto()).
      *
      * @param int $userid
      */
@@ -403,6 +409,7 @@ class provider implements
             return;
         }
         (new zuordnung_retention_service())->loesche_fuer_lernende($userid);
+        (new zuordnung_service())->beende_fuer_geloeschtes_konto($userid);
     }
 
     /**

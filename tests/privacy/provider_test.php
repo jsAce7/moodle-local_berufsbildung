@@ -319,4 +319,47 @@ final class provider_test extends \core_privacy\tests\provider_testcase {
 
         $this->assertCount(0, zuordnung::get_records(['lernendeid' => (int) $lernende->id]));
     }
+
+    /**
+     * Wird das Konto einer Berufsbildner/in geloescht, endet ihre laufende
+     * Zuordnung, eine noch nicht begonnene verschwindet, eine bereits beendete
+     * bleibt unveraendert, und ihr Kohorten-Link legt keine neuen Zuordnungen
+     * mehr an.
+     */
+    public function test_account_loeschung_beendet_zustaendigkeit_der_berufsbildnerin(): void {
+        $this->resetAfterTest();
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung');
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $jetzt = time();
+        $laufend = $generator->create_zuordnung([
+            'berufsbildnerid' => (int) $berufsbildner->id,
+            'lernendeid' => (int) $this->getDataGenerator()->create_user()->id,
+        ]);
+        $kuenftig = $generator->create_zuordnung([
+            'berufsbildnerid' => (int) $berufsbildner->id,
+            'lernendeid' => (int) $this->getDataGenerator()->create_user()->id,
+            'gueltig_von' => $jetzt + WEEKSECS,
+        ]);
+        $beendet = $generator->create_zuordnung([
+            'berufsbildnerid' => (int) $berufsbildner->id,
+            'lernendeid' => (int) $this->getDataGenerator()->create_user()->id,
+            'gueltig_bis' => $jetzt - WEEKSECS,
+        ]);
+        $link = new kohorten_link(0, (object) [
+            'cohortid' => 1, 'berufsbildnerid' => (int) $berufsbildner->id,
+            'rolle' => 'hauptverantwortlich', 'beruf' => '', 'aktiv' => true,
+        ]);
+        $link->create();
+
+        delete_user($berufsbildner);
+        provider::delete_data_for_user($this->loeschanfrage_fuer($berufsbildner));
+
+        $laufendnachher = new zuordnung((int) $laufend->get('id'));
+        $this->assertNotNull($laufendnachher->get('gueltig_bis'));
+        $this->assertLessThanOrEqual(time(), (int) $laufendnachher->get('gueltig_bis'));
+        $this->assertFalse(zuordnung::record_exists((int) $kuenftig->get('id')));
+        $this->assertSame($jetzt - WEEKSECS, (int) (new zuordnung((int) $beendet->get('id')))->get('gueltig_bis'));
+        $this->assertFalse((bool) (new kohorten_link((int) $link->get('id')))->get('aktiv'));
+    }
 }

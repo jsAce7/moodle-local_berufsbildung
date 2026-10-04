@@ -14,6 +14,7 @@
 
 ### Geändert
 
+- **Konto einer Berufsbildner/in gelöscht: Zuständigkeit endet** (`zuordnung_service::beende_fuer_geloeschtes_konto()`, aufgerufen aus `privacy\provider`): Bisher blieben ihre Zuordnungen und Kohorten-Links unverändert bestehen, nur die einer gelöschten lernenden Person wurden entfernt. Jetzt enden laufende Zuordnungen, noch nicht begonnene werden gelöscht und Kohorten-Links deaktiviert, damit der Kohorten-Abgleich keine neuen Zuordnungen für das gelöschte Konto anlegt. Beendete Zuordnungen bleiben als Ausbildungshistorie der lernenden Person, bis deren Aufbewahrungsfrist abläuft.
 - **Repository nach den Moodle-Vorgaben**: Lizenztext in `COPYING.txt`, `$plugin->supported = [405, 502]` passend zur CI-Matrix, `.gitignore` für die von Moodle erzeugten `phpunit.xml`, `CLAUDE.md` und `.claude/` per `export-ignore` nicht mehr im Release-ZIP. Neu `pix/icon.svg` (Moodle-Icon, erscheint in der Plugin-Übersicht) und `pix/logo.svg` (README).
 
 ## [0.6.5] — 2026-10-01
