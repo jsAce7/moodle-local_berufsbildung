@@ -64,7 +64,10 @@ class hook_callbacks {
         // Reihenfolge in der Leiste.
         $eintraege = [];
 
-        if (!api::ist_uek_extern($userid) && api::get_ausbildungsstand($userid) !== null) {
+        // Vor Lehrbeginn und nach dem Abschluss ebenfalls: die Seite zeigt dann
+        // "Lehre beginnt erst" bzw. den Rueckblick. Ohne Beruf und Jahrgang
+        // (PHASE_UNBEKANNT, etwa bei Berufsbildner/innen) gibt es nichts zu zeigen.
+        if (!api::ist_uek_extern($userid) && api::get_ausbildungsphase($userid) !== api::PHASE_UNBEKANNT) {
             $eintraege['local_berufsbildung_meine_lehre'] = ['nav:meine_lehre', 'meine_lehre.php'];
         }
 
