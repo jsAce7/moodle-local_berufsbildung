@@ -1,6 +1,9 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   test:
@@ -101,12 +104,13 @@ jobs:
         run: moodle-plugin-ci behat --profile chrome
 
   # Veroeffentlicht nach gruener CI auf main ein GitHub-Release mit dem
-  # installierbaren ZIP, sobald $plugin->release in version.php eine Version
-  # nennt, fuer die es noch kein Release gibt. Ein gewoehnlicher Push genuegt,
-  # der Tag v<release> entsteht dabei auf dem gepushten Stand.
+  # installierbaren ZIP, wenn ein Push $plugin->release in version.php
+  # aendert. Ein gewoehnlicher Push genuegt, der Tag v<release> entsteht
+  # dabei auf dem gepushten Stand. Von Hand gestartet (workflow_dispatch auf
+  # main) holt der Job ein fehlendes Release zur aktuellen Version nach.
   release:
     needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -114,24 +118,38 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Fuer den Vergleich mit version.php vor dem Push.
+          fetch-depth: 0
 
       - name: Version aus version.php lesen
         id: version
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EREIGNIS: ${{ github.event_name }}
+          VORHER: ${{ github.event.before }}
         run: |
           set -euo pipefail
-          release=$(sed -n "s/^\$plugin->release *= *'\(.*\)';.*/\1/p" version.php)
+          lies_release() { sed -n "s/^\$plugin->release *= *'\(.*\)';.*/\1/p"; }
+          kein_release() { echo "$1"; echo "neu=false" >> "$GITHUB_OUTPUT"; exit 0; }
+          release=$(lies_release < version.php)
           maturity=$(sed -n "s/^\$plugin->maturity *= *\(MATURITY_[A-Z]*\);.*/\1/p" version.php)
           if [ -z "$release" ] || [ -z "$maturity" ]; then
             echo "::error::\$plugin->release oder \$plugin->maturity nicht gefunden."
             exit 1
           fi
+          if [ "$EREIGNIS" = "push" ]; then
+            vorher=$( (git show "$VORHER:version.php" 2>/dev/null || true) | lies_release)
+            if [ -z "$vorher" ]; then
+              kein_release "::notice::Stand vor dem Push unbekannt, kein Release. Bei Bedarf den Workflow von Hand starten."
+            fi
+            if [ "$vorher" = "$release" ]; then
+              kein_release "Release $release unveraendert, nichts zu tun."
+            fi
+          fi
           tag="v$release"
           if gh release view "$tag" > /dev/null 2>&1; then
-            echo "Release $tag gibt es schon, nichts zu tun."
-            echo "neu=false" >> "$GITHUB_OUTPUT"
-            exit 0
+            kein_release "Release $tag gibt es schon, nichts zu tun."
           fi
           echo "neu=true" >> "$GITHUB_OUTPUT"
           echo "release=$release" >> "$GITHUB_OUTPUT"

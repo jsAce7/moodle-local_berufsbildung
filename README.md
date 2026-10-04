@@ -217,7 +217,7 @@ Die CI prüft mit `moodle-plugin-ci grunt`, dass `amd/build` zu `amd/src` passt.
 
 Projektkonventionen und Architekturregeln liegen in [CLAUDE.md](CLAUDE.md), das Konzept mit den Begründungen in [docs/konzept.md](https://github.com/jsAce7/moodle-local_berufsbildung/blob/main/docs/konzept.md), die Änderungsgeschichte in [CHANGELOG.md](CHANGELOG.md).
 
-**Release veröffentlichen**: `$plugin->release` und `$plugin->version` in `version.php` hochzählen, im CHANGELOG den Abschnitt `## [<release>] — <datum>` anlegen und auf `main` pushen. Nach grüner CI legt der Job `release` in [ci.yml](.github/workflows/ci.yml) den Tag `v<release>` und ein GitHub-Release mit dem ZIP an; die Notizen sind der CHANGELOG-Abschnitt. Alpha-, Beta- und RC-Versionen erscheinen als Vorabversion. Gibt es das Release zur Version schon, tut der Job nichts. Fehlt der CHANGELOG-Abschnitt, schlägt er fehl.
+**Release veröffentlichen**: `$plugin->release` und `$plugin->version` in `version.php` hochzählen, im CHANGELOG den Abschnitt `## [<release>] — <datum>` anlegen und auf `main` pushen. Ändert der Push `$plugin->release`, legt der Job `release` in der CI nach grüner Prüfung den Tag `v<release>` und ein GitHub-Release mit dem ZIP `local_berufsbildung-v<release>.zip` an; die Notizen sind der CHANGELOG-Abschnitt. Alpha-, Beta- und RC-Versionen erscheinen als Vorabversion. Fehlt der CHANGELOG-Abschnitt, schlägt der Job fehl. Ist ein Release ausgeblieben, etwa weil ein späterer Push den Lauf abgelöst hat, holt ein Start von Hand (*Actions ▸ CI ▸ Run workflow* auf `main`) es nach.
 
 **ZIP von Hand erstellen** (ohne CI-Dateien, CLAUDE.md, `docs/`, `beispiele/` und `cli/testdaten.php`, alles über `export-ignore` in [.gitattributes](.gitattributes)):
 
