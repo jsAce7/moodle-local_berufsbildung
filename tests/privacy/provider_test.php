@@ -161,7 +161,7 @@ final class provider_test extends \core_privacy\tests\provider_testcase {
      * Zentraler Architektur-Test: eine Loeschanfrage anonymisiert nur den
      * ausfuehrenden Account eines Versetzungsplan-Imports, laesst aber
      * Zuordnung und Einsatz unangetastet (Architekturregel 2 und 5 -
-     * siehe provider::anonymisiere_planimporte()).
+     * siehe provider::anonymisiere_bearbeitungsspuren()).
      */
     public function test_delete_data_for_user_anonymisiert_nur_planimport(): void {
         $this->resetAfterTest();

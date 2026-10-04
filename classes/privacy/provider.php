@@ -40,9 +40,11 @@ use local_berufsbildung\service\zuordnung_retention_service;
 
 /**
  * Alle personenbezogenen Daten dieses Plugins haengen an context_user, nie
- * an einem Kurskontext (Architekturregel 1). block/block_lk enthalten
- * bewusst keine personenbezogenen Daten - reine Ausbildungsstruktur, wie
- * core_competency\competency_framework selbst.
+ * an einem Kurskontext (Architekturregel 1). block/block_lk sind reine
+ * Ausbildungsstruktur ohne Bezug zu Lernenden, wie
+ * core_competency\competency_framework selbst. Personenbezogen ist dort nur
+ * usermodified: wer einen Block oder eine Kompetenzzuordnung zuletzt
+ * geaendert hat.
  */
 class provider implements
     \core_privacy\local\metadata\provider,
@@ -89,6 +91,19 @@ class provider implements
             'gueltig_bis' => 'privacy:metadata:aufbewahrung:gueltig_bis',
         ], 'privacy:metadata:aufbewahrung');
 
+        $collection->add_database_table('local_berufsbildung_teilnahmeprofil', [
+            'userid' => 'privacy:metadata:teilnahmeprofil:userid',
+            'art' => 'privacy:metadata:teilnahmeprofil:art',
+        ], 'privacy:metadata:teilnahmeprofil');
+
+        $collection->add_database_table('local_berufsbildung_block', [
+            'usermodified' => 'privacy:metadata:block:usermodified',
+        ], 'privacy:metadata:block');
+
+        $collection->add_database_table('local_berufsbildung_block_lk', [
+            'usermodified' => 'privacy:metadata:block_lk:usermodified',
+        ], 'privacy:metadata:block_lk');
+
         return $collection;
     }
 
@@ -112,13 +127,16 @@ class provider implements
                      OR EXISTS (SELECT 1 FROM {local_berufsbildung_einsatz} e WHERE e.userid = :uid4)
                      OR EXISTS (SELECT 1 FROM {local_berufsbildung_plan_import} p WHERE p.ausgefuehrt_von = :uid5)
                      OR EXISTS (SELECT 1 FROM {local_berufsbildung_aufbewahrung} a WHERE a.lernendeid = :uid6)
+                     OR EXISTS (SELECT 1 FROM {local_berufsbildung_teilnahmeprofil} t WHERE t.userid = :uid7)
+                     OR EXISTS (SELECT 1 FROM {local_berufsbildung_block} b WHERE b.usermodified = :uid8)
+                     OR EXISTS (SELECT 1 FROM {local_berufsbildung_block_lk} bl WHERE bl.usermodified = :uid9)
                    )";
 
         $contextlist->add_from_sql($sql, [
             'userlevel' => CONTEXT_USER,
             'userid' => $userid,
             'uid1' => $userid, 'uid2' => $userid, 'uid3' => $userid, 'uid4' => $userid, 'uid5' => $userid,
-            'uid6' => $userid,
+            'uid6' => $userid, 'uid7' => $userid, 'uid8' => $userid, 'uid9' => $userid,
         ]);
 
         return $contextlist;
@@ -147,7 +165,10 @@ class provider implements
             || $DB->record_exists('local_berufsbildung_kohorten_link', ['berufsbildnerid' => $userid])
             || $DB->record_exists('local_berufsbildung_einsatz', ['userid' => $userid])
             || $DB->record_exists('local_berufsbildung_plan_import', ['ausgefuehrt_von' => $userid])
-            || $DB->record_exists('local_berufsbildung_aufbewahrung', ['lernendeid' => $userid]);
+            || $DB->record_exists('local_berufsbildung_aufbewahrung', ['lernendeid' => $userid])
+            || $DB->record_exists('local_berufsbildung_teilnahmeprofil', ['userid' => $userid])
+            || $DB->record_exists('local_berufsbildung_block', ['usermodified' => $userid])
+            || $DB->record_exists('local_berufsbildung_block_lk', ['usermodified' => $userid]);
 
         if ($hasdata) {
             $userlist->add_user($userid);
@@ -255,6 +276,41 @@ class provider implements
                 ], $aufbewahrungen)]
             );
         }
+
+        $profil = $DB->get_record('local_berufsbildung_teilnahmeprofil', ['userid' => $userid]);
+        if ($profil) {
+            writer::with_context($context)->export_data(
+                [get_string('privacy:pfad_teilnahmeart', 'local_berufsbildung')],
+                (object) [
+                    'teilnahmeart' => $profil->art,
+                    'geaendert_am' => transform::datetime((int) $profil->timemodified),
+                ]
+            );
+        }
+
+        $bloecke = array_values(
+            $DB->get_records('local_berufsbildung_block', ['usermodified' => $userid], 'beruf ASC, nummer ASC')
+        );
+        $kompetenzen = array_values($DB->get_records('local_berufsbildung_block_lk', ['usermodified' => $userid], 'blockid ASC'));
+        if (!empty($bloecke) || !empty($kompetenzen)) {
+            writer::with_context($context)->export_data(
+                [get_string('privacy:pfad_bloecke', 'local_berufsbildung')],
+                (object) [
+                    'bloecke' => array_map(static fn ($b): array => [
+                        'beruf' => $b->beruf,
+                        'nummer' => $b->nummer,
+                        'name' => $b->name,
+                        'geaendert_am' => transform::datetime((int) $b->timemodified),
+                    ], $bloecke),
+                    'kompetenzzuordnungen' => array_map(static fn ($k): array => [
+                        'blockid' => (int) $k->blockid,
+                        'competencyid' => (int) $k->competencyid,
+                        'intensitaet' => $k->intensitaet,
+                        'geaendert_am' => transform::datetime((int) $k->timemodified),
+                    ], $kompetenzen),
+                ]
+            );
+        }
     }
 
     /**
@@ -267,7 +323,7 @@ class provider implements
             return;
         }
         $userid = (int) $context->instanceid;
-        static::anonymisiere_planimporte($userid);
+        static::anonymisiere_bearbeitungsspuren($userid);
         static::zuordnung_loeschen_falls_account_geloescht($userid);
         static::zuordnung_loeschen_falls_ausbildung_beendet($userid);
     }
@@ -281,7 +337,7 @@ class provider implements
         $userid = (int) $contextlist->get_user()->id;
         foreach ($contextlist->get_contexts() as $context) {
             if ($context instanceof context_user && (int) $context->instanceid === $userid) {
-                static::anonymisiere_planimporte($userid);
+                static::anonymisiere_bearbeitungsspuren($userid);
                 static::zuordnung_loeschen_falls_account_geloescht($userid);
                 static::zuordnung_loeschen_falls_ausbildung_beendet($userid);
                 break;
@@ -300,7 +356,7 @@ class provider implements
         }
         foreach ($userlist->get_userids() as $userid) {
             $userid = (int) $userid;
-            static::anonymisiere_planimporte($userid);
+            static::anonymisiere_bearbeitungsspuren($userid);
             static::zuordnung_loeschen_falls_account_geloescht($userid);
             static::zuordnung_loeschen_falls_ausbildung_beendet($userid);
         }
@@ -320,12 +376,17 @@ class provider implements
      * Nur der ausfuehrende Account eines Versetzungsplan-Imports laesst
      * sich ohne Verlust des Protokollwerts anonymisieren - wer den Import
      * ausgeloest hat, ist fuer die Aussagekraft des Protokolls unerheblich.
+     * Dasselbe gilt fuer die letzte Aenderung an Ausbildungsbloecken und
+     * deren Kompetenzzuordnungen: die Struktur bleibt, nur die Spur der
+     * bearbeitenden Person verschwindet.
      *
      * @param int $userid
      */
-    protected static function anonymisiere_planimporte(int $userid): void {
+    protected static function anonymisiere_bearbeitungsspuren(int $userid): void {
         global $DB;
         $DB->set_field('local_berufsbildung_plan_import', 'ausgefuehrt_von', 0, ['ausgefuehrt_von' => $userid]);
+        $DB->set_field('local_berufsbildung_block', 'usermodified', 0, ['usermodified' => $userid]);
+        $DB->set_field('local_berufsbildung_block_lk', 'usermodified', 0, ['usermodified' => $userid]);
     }
 
     /**
