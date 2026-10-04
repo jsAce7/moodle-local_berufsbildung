@@ -90,6 +90,10 @@ jobs:
       - name: Mustache Lint
         run: moodle-plugin-ci mustache
 
+      # Prueft, dass amd/build zu amd/src passt, und lintet das JavaScript.
+      - name: Grunt
+        run: moodle-plugin-ci grunt --max-lint-warnings 0
+
       - name: PHPUnit tests
         run: moodle-plugin-ci phpunit --fail-on-warning
 
