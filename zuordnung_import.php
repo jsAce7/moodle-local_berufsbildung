@@ -29,6 +29,7 @@ require_once($CFG->libdir . '/csvlib.class.php');
 use local_berufsbildung\form\zuordnung_import_form;
 
 admin_externalpage_setup('local_berufsbildung_zuordnung');
+require_capability('local/berufsbildung:managezuordnung', context_system::instance());
 
 $PAGE->set_url(new moodle_url('/local/berufsbildung/zuordnung_import.php'));
 $titel = get_string('import:titel', 'local_berufsbildung');

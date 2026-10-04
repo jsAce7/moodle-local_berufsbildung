@@ -32,6 +32,7 @@ use local_berufsbildung\form\zuordnung_form;
 use local_berufsbildung\service\kohorten_resolver;
 
 admin_externalpage_setup('local_berufsbildung_zuordnung');
+require_capability('local/berufsbildung:managezuordnung', context_system::instance());
 
 $PAGE->set_url(new moodle_url('/local/berufsbildung/zuordnung_anlegen.php'));
 $titel = get_string('zuordnung:anlegen', 'local_berufsbildung');

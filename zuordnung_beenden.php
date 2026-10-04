@@ -31,6 +31,7 @@ use local_berufsbildung\form\zuordnung_beenden_form;
 use local_berufsbildung\persistent\zuordnung;
 
 admin_externalpage_setup('local_berufsbildung_zuordnung');
+require_capability('local/berufsbildung:managezuordnung', context_system::instance());
 
 $id = required_param('id', PARAM_INT);
 $zuordnung = new zuordnung($id);

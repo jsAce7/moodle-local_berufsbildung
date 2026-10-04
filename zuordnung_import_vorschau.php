@@ -31,6 +31,7 @@ require_once($CFG->libdir . '/csvlib.class.php');
 use local_berufsbildung\import\zuordnung_csv_importer;
 
 admin_externalpage_setup('local_berufsbildung_zuordnung');
+require_capability('local/berufsbildung:managezuordnung', context_system::instance());
 
 $iid = required_param('iid', PARAM_INT);
 $bestaetigt = optional_param('bestaetigt', 0, PARAM_BOOL);

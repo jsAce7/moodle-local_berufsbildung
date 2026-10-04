@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unveröffentlicht]
+
+### Sicherheit
+
+- **Zuordnungen ändern verlangt `:managezuordnung`** (`zuordnung_anlegen.php`, `zuordnung_beenden.php`, `zuordnung_import.php`, `zuordnung_import_vorschau.php`): Die vier Seiten prüften über `admin_externalpage_setup()` nur `:viewzuordnung`. Die Übersicht blendete die Schaltflächen zwar ohne `:managezuordnung` aus, über die direkte URL konnte aber auch eine Person mit reinem Leserecht Zuordnungen anlegen, beenden oder importieren. Jetzt prüfen die Seiten wie bereits `zuordnung_loeschen.php` zusätzlich `:managezuordnung`. Mit den Standardrollen ändert sich nichts, weil beide Rechte nur die Rolle Manager/in hat.
+
 ## [0.6.5] — 2026-10-01
 
 ### Hinzugefügt
