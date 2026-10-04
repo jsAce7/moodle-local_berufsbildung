@@ -99,3 +99,91 @@ jobs:
 
       - name: Behat features
         run: moodle-plugin-ci behat --profile chrome
+
+  # Veroeffentlicht nach gruener CI auf main ein GitHub-Release mit dem
+  # installierbaren ZIP, sobald $plugin->release in version.php eine Version
+  # nennt, fuer die es noch kein Release gibt. Ein gewoehnlicher Push genuegt,
+  # der Tag v<release> entsteht dabei auf dem gepushten Stand.
+  release:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Version aus version.php lesen
+        id: version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          release=$(sed -n "s/^\$plugin->release *= *'\(.*\)';.*/\1/p" version.php)
+          maturity=$(sed -n "s/^\$plugin->maturity *= *\(MATURITY_[A-Z]*\);.*/\1/p" version.php)
+          if [ -z "$release" ] || [ -z "$maturity" ]; then
+            echo "::error::\$plugin->release oder \$plugin->maturity nicht gefunden."
+            exit 1
+          fi
+          tag="v$release"
+          if gh release view "$tag" > /dev/null 2>&1; then
+            echo "Release $tag gibt es schon, nichts zu tun."
+            echo "neu=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "neu=true" >> "$GITHUB_OUTPUT"
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "maturity=$maturity" >> "$GITHUB_OUTPUT"
+
+      - name: Release-Notizen aus dem CHANGELOG
+        if: steps.version.outputs.neu == 'true'
+        env:
+          RELEASE: ${{ steps.version.outputs.release }}
+        run: |
+          set -euo pipefail
+          # Abschnitt "## [<release>] — <datum>" bis zur naechsten Version.
+          awk -v kopf="## [$RELEASE]" '
+            index($0, kopf) == 1 { drin = 1; next }
+            drin && /^## \[/ { exit }
+            drin { print }
+          ' CHANGELOG.md > notizen.md
+          if ! grep -q '[^[:space:]]' notizen.md; then
+            echo "::error::CHANGELOG.md hat keinen Abschnitt fuer $RELEASE."
+            exit 1
+          fi
+
+      - name: ZIP bauen
+        if: steps.version.outputs.neu == 'true'
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+          # Der Ordner im Archiv heisst wie das Plugin unterhalb von local/,
+          # damit sich das ZIP direkt ueber die Moodle-Plugin-Installation
+          # einspielen laesst. export-ignore aus .gitattributes greift hier.
+          git archive --format=zip --prefix=berufsbildung/ \
+            -o "local_berufsbildung-${TAG}.zip" HEAD
+          unzip -l "local_berufsbildung-${TAG}.zip"
+
+      - name: Release veroeffentlichen
+        if: steps.version.outputs.neu == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+          MATURITY: ${{ steps.version.outputs.maturity }}
+        run: |
+          set -euo pipefail
+          # Alpha, Beta und RC erscheinen als Vorabversion.
+          releaseargs=()
+          if [ "$MATURITY" != "MATURITY_STABLE" ]; then
+            releaseargs+=(--prerelease)
+          fi
+          gh release create "$TAG" \
+            --target "$GITHUB_SHA" \
+            --title "local_berufsbildung $TAG" \
+            --notes-file notizen.md \
+            "${releaseargs[@]}" \
+            "local_berufsbildung-${TAG}.zip"

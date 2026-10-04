@@ -6,7 +6,7 @@ Basis-Plugin für die betriebliche Berufsbildung in Moodle. Beantwortet zwei Fra
 
 Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentation (`local_lerndokumentation`), üK-Kompetenznachweise (`local_uekkn`) und Bildungsbericht (`local_bildungsbericht`) — baut über `\local_berufsbildung\api` darauf auf.
 
-> **Status:** Version 0.6.5, `MATURITY_ALPHA`. Funktional weit entwickelt und automatisiert getestet, aber noch nicht für den produktiven Einsatz mit echten Personendaten freigegeben, siehe [CHANGELOG.md](CHANGELOG.md).
+> **Status:** Version 0.7.0, `MATURITY_BETA`. Funktional vollständig und automatisiert getestet. Freigegeben für einen begleiteten Pilotbetrieb mit echten Personendaten, noch nicht für den allgemeinen Betrieb, siehe [CHANGELOG.md](CHANGELOG.md).
 
 ## Inhalt
 
@@ -31,7 +31,7 @@ Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentati
 - **Nachweis-Sammlung**: aufsetzende Plugins registrieren sich als Nachweisquelle; „Meine Lernenden" (Berufsbildner/in) und „Meine Lehre" (Lernende) zeigen die eingesammelten Tätigkeiten über Plugin-Grenzen hinweg, gruppiert nach Quelle und mit dem Semester in jeder Zeile. Dazu kommen, was eine Quelle meldet: Fälligkeiten, noch Ausstehendes, Erfassen-Aktionen und Schnellaktionen.
 - **Übersicht für Berufsbildner/innen**: „Meine Lernenden" zeigt je betreute Person eine Zeile mit Semesterleiste, laufendem Ausbildungsblock und überfälligen Aufgaben, durchsuchbar nach Namen und filterbar nach Beruf. Aufgeklappt stehen Kompetenzraster, Lückenliste und Tätigkeiten.
 - **Eigene Übersicht für Lernende**: „Meine Lehre" zeigt Semesterstand, den laufenden Einsatz aus dem Versetzungsplan, die eigenen Fälligkeiten, das Kompetenzraster, den Versetzungsplan nach Semestern und die eigenen Tätigkeiten. Die Seite trägt die vier Phasen der Ausbildung (`api::get_ausbildungsphase()`): Profil unvollständig, Lehre beginnt erst, laufend, abgeschlossen — nach dem Lehrabschluss wird sie zum Rückblick, statt leer zu werden.
-- **PDF-Grundlage**: `local_berufsbildung\pdf` liefert Schrift, Logo, Akzentfarbe, Laufkopf, Fusszeile und Zeichenbausteine für die PDFs von `local_uekkn` und `local_bildungsbericht`, damit alle Dokumente gleich aussehen.
+- **PDF-Grundlage**: `local_berufsbildung\pdf` liefert Schrift, Logo, Akzentfarbe, Laufkopf, Fusszeile und Zeichenbausteine für die PDFs von `local_uekkn`, `local_bildungsbericht` und `local_lerndokumentation`, damit alle Dokumente gleich aussehen.
 
 ## Installation
 
@@ -44,7 +44,7 @@ Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentati
 **Schritte**
 
 1. Das Plugin installieren:
-   - **per ZIP**: *Website-Administration ▸ Plugins ▸ Plugin installieren*; die ZIP-Datei enthält den Ordner `berufsbildung/` (Erstellen siehe [Entwicklung](#entwicklung)),
+   - **per ZIP**: *Website-Administration ▸ Plugins ▸ Plugin installieren*; die ZIP-Datei enthält den Ordner `berufsbildung/` und liegt jedem [GitHub-Release](https://github.com/jsAce7/moodle-local_berufsbildung/releases) bei (selbst erstellen siehe [Entwicklung](#entwicklung)),
    - **oder von Hand**: nach `local/berufsbildung` des Moodle-Codes kopieren oder verlinken.
 2. Das Upgrade ausführen, über *Website-Administration ▸ Mitteilungen* oder per CLI:
    `php admin/cli/upgrade.php --non-interactive`
@@ -217,7 +217,9 @@ Die CI prüft mit `moodle-plugin-ci grunt`, dass `amd/build` zu `amd/src` passt.
 
 Projektkonventionen und Architekturregeln liegen in [CLAUDE.md](CLAUDE.md), das Konzept mit den Begründungen in [docs/konzept.md](https://github.com/jsAce7/moodle-local_berufsbildung/blob/main/docs/konzept.md), die Änderungsgeschichte in [CHANGELOG.md](CHANGELOG.md).
 
-**ZIP für die Installation erstellen** (ohne CI-Dateien, CLAUDE.md, `docs/`, `beispiele/` und `cli/testdaten.php`, alles über `export-ignore` in [.gitattributes](.gitattributes)):
+**Release veröffentlichen**: `$plugin->release` und `$plugin->version` in `version.php` hochzählen, im CHANGELOG den Abschnitt `## [<release>] — <datum>` anlegen und auf `main` pushen. Nach grüner CI legt der Job `release` in [ci.yml](.github/workflows/ci.yml) den Tag `v<release>` und ein GitHub-Release mit dem ZIP an; die Notizen sind der CHANGELOG-Abschnitt. Alpha-, Beta- und RC-Versionen erscheinen als Vorabversion. Gibt es das Release zur Version schon, tut der Job nichts. Fehlt der CHANGELOG-Abschnitt, schlägt er fehl.
+
+**ZIP von Hand erstellen** (ohne CI-Dateien, CLAUDE.md, `docs/`, `beispiele/` und `cli/testdaten.php`, alles über `export-ignore` in [.gitattributes](.gitattributes)):
 
 ```bash
 git archive --format=zip --prefix=berufsbildung/ -o ../local_berufsbildung-<version>.zip HEAD
