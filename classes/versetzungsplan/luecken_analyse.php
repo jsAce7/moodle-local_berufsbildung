@@ -16,7 +16,7 @@
 
 /**
  * Handlungskompetenzen, die bis zu einem Stichtag in keinem betrieblichen
- * Einsatz vorkamen - siehe docs/plan.md §5.7.
+ * Einsatz vorkamen - siehe docs/konzept.md §5.7.
  *
  * @package    local_berufsbildung
  * @copyright  2026 jsAce7

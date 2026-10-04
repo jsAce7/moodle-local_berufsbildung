@@ -75,7 +75,7 @@ final class plan_service_test extends advanced_testcase {
     /**
      * Randfall: ein Einsatz, der sich nur teilweise mit dem Zeitraum
      * ueberschneidet, zaehlt trotzdem mit - explizites Abnahmekriterium
-     * aus docs/plan.md §5.6.
+     * aus docs/konzept.md §5.6.
      */
     public function test_get_einsaetze_teilweise_ueberschneidung_zaehlt_randfall(): void {
         $this->resetAfterTest();

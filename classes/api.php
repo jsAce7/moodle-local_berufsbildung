@@ -862,7 +862,7 @@ class api {
     /**
      * Bezeichnung eines Ausbildungsblocks, z.B. fuer die automatische
      * Abteilungs-Anzeige in aufsetzenden Plugins - siehe
-     * versetzungsplan\einsatz und docs/plan.md §5.7.
+     * versetzungsplan\einsatz und docs/konzept.md §5.7.
      *
      * @param int $blockid
      * @return string|null null, wenn der Block nicht existiert

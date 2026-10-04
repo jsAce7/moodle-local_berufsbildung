@@ -16,7 +16,7 @@
 
 /**
  * Webservice-Funktion fuer den Versetzungsplan-Import - der Regelweg aus
- * docs/plan.md §5.4. Der manuelle Upload unter import_plan.php nutzt
+ * docs/konzept.md §5.4. Der manuelle Upload unter import_plan.php nutzt
  * denselben import_service und kennt den Weg nicht.
  *
  * @package    local_berufsbildung

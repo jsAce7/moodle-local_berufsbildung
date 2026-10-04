@@ -6,7 +6,7 @@ Basis-Plugin für die betriebliche Berufsbildung in Moodle. Beantwortet zwei Fra
 
 Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentation (`local_lerndokumentation`), üK-Kompetenznachweise (`local_uekkn`) und Bildungsbericht (`local_bildungsbericht`) — baut über `\local_berufsbildung\api` darauf auf.
 
-> **Status:** Version 0.6.5, `MATURITY_ALPHA`. Funktional weit entwickelt und automatisiert getestet, aber noch nicht für den produktiven Einsatz mit echten Personendaten freigegeben, siehe [CHANGELOG.md](CHANGELOG.md) und [Was noch fehlt](#was-noch-fehlt).
+> **Status:** Version 0.6.5, `MATURITY_ALPHA`. Funktional weit entwickelt und automatisiert getestet, aber noch nicht für den produktiven Einsatz mit echten Personendaten freigegeben, siehe [CHANGELOG.md](CHANGELOG.md).
 
 ## Inhalt
 
@@ -18,7 +18,6 @@ Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentati
 - [Öffentliche API](#öffentliche-api)
 - [Datenschutz und Aufbewahrung](#datenschutz-und-aufbewahrung)
 - [Entwicklung](#entwicklung)
-- [Was noch fehlt](#was-noch-fehlt)
 - [Lizenz](#lizenz)
 
 ## Was dieses Plugin macht
@@ -27,7 +26,7 @@ Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentati
 - **Teilnahmeart**: Je Person entweder reguläre Lehre oder extern nur in überbetrieblichen Kursen (üK). Externe erscheinen weiterhin bei ihren Berufsbildner/innen und mit ihren üK-Nachweisen, sehen aber keinen Einstieg „Meine Lehre" (`api::ist_uek_extern()`). Gepflegt wird die Teilnahmeart in der Zuordnungsübersicht.
 - **Aufbewahrung**: eine konfigurierbare Frist (Standard 12 Monate) nach dem berechneten Lehrabschluss löscht Zuordnungen automatisch endgültig, ausser eine Aufbewahrungspflicht ist dokumentiert. Dieselbe Regel steuert über `api::aufbewahrungsfrist_abgelaufen()` auch die Löschung in `local_lerndokumentation`, `local_bildungsbericht` und `local_uekkn`.
 - **Ausbildungsstand**: Beruf, Lehrjahr und Semester werden aus zwei Profilfeldern (Beruf, Jahrgang) berechnet, mit konfigurierbarer Lehrdauer je Beruf.
-- **Versetzungsplan**: wöchentlicher CSV-Import (Webservice oder manueller Upload) der betrieblichen Einsätze, mit Kompetenzabdeckung je Ausbildungsblock. Ein Block kann auf einen bestehenden Moodle-Kurs verweisen, der während des Einsatzes in „Meine Lehre" verlinkt wird; Einschreibungen und Rechte bleiben dabei unberührt. Die Schnittstelle steht in [docs/schnittstelle_versetzungsplan.md](docs/schnittstelle_versetzungsplan.md), Beispieldaten und ein PowerShell-Importskript in [beispiele/](beispiele/README.md).
+- **Versetzungsplan**: wöchentlicher CSV-Import (Webservice oder manueller Upload) der betrieblichen Einsätze, mit Kompetenzabdeckung je Ausbildungsblock. Ein Block kann auf einen bestehenden Moodle-Kurs verweisen, der während des Einsatzes in „Meine Lehre" verlinkt wird; Einschreibungen und Rechte bleiben dabei unberührt. Die Schnittstelle steht in [docs/schnittstelle_versetzungsplan.md](https://github.com/jsAce7/moodle-local_berufsbildung/blob/main/docs/schnittstelle_versetzungsplan.md), Beispieldaten und ein PowerShell-Importskript in [beispiele/](https://github.com/jsAce7/moodle-local_berufsbildung/tree/main/beispiele).
 - **Kompetenzraster und Lücken**: Ist dem Beruf ein Kompetenzrahmen zugeordnet, zeigt das Kompetenzraster alle Handlungskompetenzen wie im Bildungsplan, jede mit einem von drei Ständen: bis zum Stichtag abgedeckt, im Plan später eingeplant oder gar nicht im Plan (`api::get_kompetenzraster()`). Die Lückenliste nennt die noch nicht abgedeckten Pflicht-Handlungskompetenzen, nach Bereich gruppiert und mit Bezugsgrösse (`api::get_luecken_nach_bereich()`).
 - **Nachweis-Sammlung**: aufsetzende Plugins registrieren sich als Nachweisquelle; „Meine Lernenden" (Berufsbildner/in) und „Meine Lehre" (Lernende) zeigen die eingesammelten Tätigkeiten über Plugin-Grenzen hinweg, gruppiert nach Quelle und mit dem Semester in jeder Zeile. Dazu kommen, was eine Quelle meldet: Fälligkeiten, noch Ausstehendes, Erfassen-Aktionen und Schnellaktionen.
 - **Übersicht für Berufsbildner/innen**: „Meine Lernenden" zeigt je betreute Person eine Zeile mit Semesterleiste, laufendem Ausbildungsblock und überfälligen Aufgaben, durchsuchbar nach Namen und filterbar nach Beruf. Aufgeklappt stehen Kompetenzraster, Lückenliste und Tätigkeiten.
@@ -52,7 +51,7 @@ Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentati
    Dabei entstehen die Rollen `berufsbildner` und `berufsbildung_planung`, siehe [Rollen und Zugang](#rollen-und-zugang).
 3. Zwei benutzerdefinierte Profilfelder anlegen (Beruf, Jahrgang) und unter *Website-Administration ▸ Berufsbildung ▸ Einstellungen und Datenschutz ▸ Einstellungen* zuordnen. Die Auswahl bietet nur bereits vorhandene Profilfelder an; voreingestellt sind die Kurznamen `beruf` und `jahrgang`. Optional ein drittes Feld für einen abweichenden Lehrbeginn, am besten vom Typ Datum.
 4. Optional: unter *Website-Administration ▸ Berufsbildung ▸ Ausbildungsplanung ▸ Kompetenzrahmen je Beruf* jedem Beruf seinen Kompetenzrahmen zuordnen, siehe [Einstellungen](#einstellungen).
-5. Optional, für den Versetzungsplan-Webservice: Dienst *Berufsbildung: Versetzungsplan-Import* unter *Website-Administration ▸ Server ▸ Webservices ▸ Externe Webservices* aktivieren, Dienstkonto mit der Capability `local/berufsbildung:importplan` anlegen, als autorisierte Person beim Dienst eintragen und Token ausstellen. Der Dienst ist standardmässig deaktiviert und auf autorisierte Personen beschränkt. Details in [docs/schnittstelle_versetzungsplan.md](docs/schnittstelle_versetzungsplan.md), Abschnitt 4.
+5. Optional, für den Versetzungsplan-Webservice: Dienst *Berufsbildung: Versetzungsplan-Import* unter *Website-Administration ▸ Server ▸ Webservices ▸ Externe Webservices* aktivieren, Dienstkonto mit der Capability `local/berufsbildung:importplan` anlegen, als autorisierte Person beim Dienst eintragen und Token ausstellen. Der Dienst ist standardmässig deaktiviert und auf autorisierte Personen beschränkt. Details in [docs/schnittstelle_versetzungsplan.md](https://github.com/jsAce7/moodle-local_berufsbildung/blob/main/docs/schnittstelle_versetzungsplan.md), Abschnitt 4.
 
 ## Einstellungen
 
@@ -72,6 +71,8 @@ Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentati
 | Aufbewahrungsfrist nach Ausbildungsabschluss (Monate) | 12 | Frist bis zur automatischen Löschung von Zuordnungen (und, über die aufsetzenden Plugins, ihrer Inhalte) nach Lehrabschluss. Wirksam sind Werte von 1 bis 120. |
 | Logo für den Kopf der PDF-Dokumente | keines | PNG oder JPEG, gilt für alle PDF-Dokumente der Berufsbildung |
 | Akzentfarbe der PDF-Dokumente | `#1F4A6D` | Farbe für Abschnittstitel, Tabellenköpfe und Gruppenbänder |
+
+**Lehrverlängerung und Wiederholung** haben kein eigenes Korrekturfeld: Die Ausbildungsadministration passt den Jahrgang im Profil an und setzt den Lehrbeginn auf das tatsächliche Startdatum, damit die Probezeit am ursprünglichen Beginn bleibt. Der Jahrgang verschiebt nur um ganze Jahre, eine Verlängerung um ein Semester lässt sich so nicht abbilden ([docs/konzept.md](https://github.com/jsAce7/moodle-local_berufsbildung/blob/main/docs/konzept.md) §13.2).
 
 Logo und Akzentfarbe werden bei Installation und Upgrade aus `local_uekkn`, ersatzweise aus `local_bildungsbericht` übernommen, solange hier noch nichts eingestellt ist. Eine eigene Einstellung wird dabei nicht überschrieben.
 
@@ -181,7 +182,7 @@ Alle Stichtag-Parameter akzeptieren `null` für "jetzt" — nie stillschweigend 
 
 Einsatz gilt als offizieller Ausbildungsnachweis und wird bei einer Löschanfrage **nicht** gelöscht (Architekturregel 5), ebenso wenig die Verknüpfungen mit globalen Gruppen — nur der ausführende Account eines Versetzungsplan-Imports und die bearbeitende Person eines Ausbildungsblocks werden anonymisiert.
 
-Zuordnung folgt einer feineren Regel (Architekturregel 2): **während laufender Ausbildung** bleibt sie immer unangetastet, auch bei einer eigenen Löschanfrage. **Nach Lehrabschluss** wird eine Löschanfrage sofort honoriert, und unabhängig von jeder Anfrage löscht der wöchentliche Task `task\zuordnung_retention` automatisch, sobald die konfigurierte Frist (Standard 12 Monate) verstrichen ist — beides ausser bei dokumentierter Aufbewahrungspflicht. **Eine Löschung des Kontos der lernenden Person** entfernt ihre Zuordnungen immer sofort und unbedingt, auch mitten in einer laufenden Ausbildung. Mit den Zuordnungen verschwinden jeweils auch die Aufbewahrungsvermerke und die Teilnahmeart der Person. **Eine Löschung des Kontos einer Berufsbildner/in** beendet deren laufende Zuordnungen, löscht noch nicht begonnene und deaktiviert ihre Verknüpfungen mit globalen Gruppen; die beendeten Zuordnungen bleiben als Ausbildungshistorie der Lernenden bis zu deren Aufbewahrungsfrist. Details und Begründung stehen als Kommentar direkt im Provider.
+Zuordnung folgt einer feineren Regel (Architekturregel 2): **während laufender Ausbildung** bleibt sie immer unangetastet, auch bei einer eigenen Löschanfrage. Der Lehrabschluss selbst beendet eine laufende Zuordnung bewusst nicht, `gueltig_bis` bleibt `NULL` ([docs/konzept.md](https://github.com/jsAce7/moodle-local_berufsbildung/blob/main/docs/konzept.md) §13.4). **Nach Lehrabschluss** wird eine Löschanfrage sofort honoriert, und unabhängig von jeder Anfrage löscht der wöchentliche Task `task\zuordnung_retention` automatisch, sobald die konfigurierte Frist (Standard 12 Monate) verstrichen ist — beides ausser bei dokumentierter Aufbewahrungspflicht. **Eine Löschung des Kontos der lernenden Person** entfernt ihre Zuordnungen immer sofort und unbedingt, auch mitten in einer laufenden Ausbildung. Mit den Zuordnungen verschwinden jeweils auch die Aufbewahrungsvermerke und die Teilnahmeart der Person. **Eine Löschung des Kontos einer Berufsbildner/in** beendet deren laufende Zuordnungen, löscht noch nicht begonnene und deaktiviert ihre Verknüpfungen mit globalen Gruppen; die beendeten Zuordnungen bleiben als Ausbildungshistorie der Lernenden bis zu deren Aufbewahrungsfrist. Details und Begründung stehen als Kommentar direkt im Provider.
 
 ## Entwicklung
 
@@ -196,7 +197,7 @@ Aus der Entwicklungsumgebung `~/moodle-dev/`:
 ./scripts/lint.sh local/berufsbildung    # phpcs (moodle-cs)
 ```
 
-Es gibt 295 PHPUnit-Tests in 30 Dateien und 2 Behat-Szenarien. Die CI ([.github/workflows/ci.yml](.github/workflows/ci.yml), `moodle-plugin-ci`) läuft bei jedem Push und Pull Request auf GitHub Actions, mit Moodle 4.5 / PHP 8.1 / PostgreSQL und Moodle 5.2 / PHP 8.4 / MariaDB.
+Es gibt 313 PHPUnit-Tests in 30 Dateien. Behat deckt mit 2 Szenarien nur das Anlegen und Beenden einer Zuordnung ab, nicht jede Seite. Die CI ([.github/workflows/ci.yml](.github/workflows/ci.yml), `moodle-plugin-ci`) läuft bei jedem Push und Pull Request auf GitHub Actions, mit Moodle 4.5 / PHP 8.1 / PostgreSQL und Moodle 5.2 / PHP 8.4 / MariaDB; Moodle 5.0 und 5.1 laufen nicht eigens mit.
 
 **JavaScript** liegt als AMD-Modul in `amd/src`, das gebaute `amd/build` gehört mit ins Repository. Nach einer Änderung neu bauen. Weil das Plugin ausserhalb des Moodle-Baums liegt und dort nur im Container eingehängt ist, wird es für Grunt vorübergehend eingebunden (Node und `node_modules` im Moodle-Verzeichnis vorausgesetzt):
 
@@ -214,20 +215,13 @@ Die CI prüft mit `moodle-plugin-ci grunt`, dass `amd/build` zu `amd/src` passt.
 ./scripts/cli.sh php local/berufsbildung/cli/testdaten.php
 ```
 
-Projektkonventionen, Architekturregeln und der vollständige Plan liegen in [CLAUDE.md](CLAUDE.md) und [docs/plan.md](docs/plan.md), die Änderungsgeschichte in [CHANGELOG.md](CHANGELOG.md).
+Projektkonventionen und Architekturregeln liegen in [CLAUDE.md](CLAUDE.md), das Konzept mit den Begründungen in [docs/konzept.md](https://github.com/jsAce7/moodle-local_berufsbildung/blob/main/docs/konzept.md), die Änderungsgeschichte in [CHANGELOG.md](CHANGELOG.md).
 
-**ZIP für die Installation erstellen** (ohne CI-Dateien, CLAUDE.md und `cli/testdaten.php`, alles über `export-ignore` in [.gitattributes](.gitattributes)):
+**ZIP für die Installation erstellen** (ohne CI-Dateien, CLAUDE.md, `docs/`, `beispiele/` und `cli/testdaten.php`, alles über `export-ignore` in [.gitattributes](.gitattributes)):
 
 ```bash
 git archive --format=zip --prefix=berufsbildung/ -o ../local_berufsbildung-<version>.zip HEAD
 ```
-
-## Was noch fehlt
-
-- **Behat**: Es gibt ein Feature mit 2 Szenarien (`tests/behat/`, Zuordnung anlegen und beenden), aber nicht für jede Seite.
-- **CI-Matrix**: Geprüft werden nur Moodle 4.5 und 5.2; Moodle 5.0 und 5.1 laufen nicht eigens in der CI.
-- Mehrere offene Fachfragen (Lehrverlängerung/Wiederholung, Stellvertretung) sind bewusst zurückgestellt, siehe `docs/plan.md` §13.
-- Der Lehrabschluss beendet eine laufende Zuordnung nicht automatisch (`gueltig_bis` bleibt `NULL`), siehe `docs/plan.md` §13.4. Gelöscht wird sie trotzdem, sobald danach die Aufbewahrungsfrist verstrichen ist.
 
 ## Lizenz
 

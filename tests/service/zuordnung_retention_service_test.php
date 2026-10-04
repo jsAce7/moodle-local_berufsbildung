@@ -99,7 +99,7 @@ final class zuordnung_retention_service_test extends advanced_testcase {
             'jahrgang' => '2010',
         ]);
         // Eine noch laufende Zuordnung - die Loeschung darf sich nicht nur
-        // auf bereits beendete Zeilen beschraenken (docs/plan.md §13.4).
+        // auf bereits beendete Zeilen beschraenken (docs/konzept.md §13.4).
         $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $lernende->id, null);
 
         $ergebnis = (new zuordnung_retention_service())->bereinige_abgelaufene();

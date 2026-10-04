@@ -36,7 +36,7 @@ use local_berufsbildung\api;
  *
  * Eine fehlerhafte Zeile wirft nie - der Fehler kommt im Rueckgabewert
  * zurueck, damit sie den restlichen Import nicht abbricht (siehe
- * docs/plan.md Abschnitt 8: "Zeilen mit Fehlern werden einzeln gemeldet
+ * docs/konzept.md Abschnitt 8: "Zeilen mit Fehlern werden einzeln gemeldet
  * statt den ganzen Import abzubrechen").
  */
 class zuordnung_csv_importer {

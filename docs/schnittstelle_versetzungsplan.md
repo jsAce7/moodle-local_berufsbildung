@@ -101,6 +101,7 @@ Parameter:
 | `csvdaten` | Inhalt der CSV-Datei, Base64-kodiert |
 | `quelle` | Freitext zur Herkunft, etwa `versetzungsplan-skript` |
 | `testlauf` | `1` = nur prüfen und Protokoll zurückgeben, nichts schreiben. `0` = übernehmen |
+| `rueckgang_bestaetigt` | optional. `1` = ein deutlicher Rückgang der Personenzahl ist beabsichtigt, siehe *Schutz vor unvollständigen Lieferungen*. Standard `0` |
 
 Base64 statt Rohtext, damit Zeilenumbrüche und Sonderzeichen die Formularkodierung nicht stören.
 
@@ -133,6 +134,8 @@ Gezählt wird der verarbeitete Bestand, nicht die Zeilenzahl der Lieferung. Sons
 
 Ist der Rückgang beabsichtigt, etwa nach einem Lehrabschluss-Jahrgang, wird der Parameter `rueckgang_bestaetigt=1` mitgeliefert.
 
+Der Versetzungsplan enthält nur laufende Lehrverhältnisse. Wer die Lehre abschliesst, fällt also aus der Lieferung. Bei einer dreijährigen Lehre ist das rund ein Drittel der Lernenden auf einmal, und damit mehr als die Standardschwelle. Die erste Lieferung nach dem Lehrabschluss wird deshalb voraussichtlich abgewiesen, wenn bis dahin nicht genügend neue Lernende mit Zuordnung hinzugekommen sind. Ihre bisherigen Einsätze bleiben in Moodle erhalten, weil nur die Einsätze der gelieferten Personen ersetzt werden.
+
 ---
 
 ## 4. Einrichtung in Moodle
@@ -157,11 +160,3 @@ Das Token gehört auf der Skript-Seite in eine Umgebungsvariable oder einen Anme
 **HTTP-Status prüfen, nicht nur den Antworttext.** Moodle antwortet auf Webservice-Fehler mitunter mit Status 200 und einem `exception`-Feld im JSON.
 
 **Zeitpunkt.** Wenn möglich ausserhalb der Arbeitszeit, damit die Excel nicht gerade in Bearbeitung ist. Kritisch ist es nicht — gelesen wird der zuletzt gespeicherte Stand.
-
----
-
-## 6. Noch zu klären
-
-1. **Mailadresse in der Excel**: Steht sie dort bereits, oder muss das Skript sie aus einer anderen Kennung auflösen?
-2. **Blockbezeichnungen**: Liste aller vorkommenden Werte in der Excel — inklusive der nicht betrieblichen wie Schule oder üK. Sie werden in Moodle einmal angelegt und mit Handlungskompetenzen verknüpft.
-3. **Umfang**: Enthält der Plan nur laufende Lehrverhältnisse oder auch abgeschlossene? Beeinflusst die Schwelle zur Erkennung unvollständiger Lieferungen.

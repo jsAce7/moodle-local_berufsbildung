@@ -16,7 +16,7 @@
 
 /**
  * Manueller Versetzungsplan-Upload - Rueckfallweg zum Webservice, mit
- * derselben Verarbeitungslogik (siehe docs/plan.md §5.4).
+ * derselben Verarbeitungslogik (siehe docs/konzept.md §5.4).
  *
  * @package    local_berufsbildung
  * @copyright  2026 jsAce7

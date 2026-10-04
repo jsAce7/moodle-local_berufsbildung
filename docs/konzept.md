@@ -49,7 +49,7 @@ local_berufsbildung_zuordnung
   berufsbildnerid    int(10)        -- FK -> user.id
   lernendeid         int(10)        -- FK -> user.id
   beruf              varchar(255)   -- Freitext: Kurzcode ('AU_EFZ') oder ausgeschriebene Bezeichnung ('Automatiker/in EFZ'), je nach Profilfeld
-  rolle              varchar(20)    -- v1: immer 'hauptverantwortlich'
+  rolle              varchar(20)    -- 'hauptverantwortlich' oder 'stellvertretung'
   gueltig_von        int(10)
   gueltig_bis        int(10)        -- NULL = laufend
   bemerkung          varchar(255)
@@ -64,7 +64,7 @@ local_berufsbildung_zuordnung
 
 *Ausnahme seit dem Retention-Feature*: `retention_monate` (Standard 12) nach dem berechneten Ausbildungsabschluss werden alle Zuordnungen einer Person automatisch endgültig gelöscht, ausser eine Aufbewahrungspflicht ist dokumentiert — siehe Abschnitt 13 Punkt 4 und `CLAUDE.md` Architekturregel 2.
 
-**Feld `rolle`**: in v1 hat es immer den Wert `hauptverantwortlich`. Es existiert, damit die spätere Erweiterung um Fachvorgesetzte (Arbeitsplatzberichte) keine Schema-Migration braucht. Aufrufende Plugins müssen den Wert abfragen, nicht annehmen.
+**Feld `rolle`**: `hauptverantwortlich` ist der Normalfall, `stellvertretung` eine zusätzliche Zuständigkeit, etwa während einer Ferienabwesenheit. Je Lernende/r und Rolle läuft höchstens eine Zuordnung, verschiedene Rollen dürfen gleichzeitig laufen. Weitere Werte, etwa für Fachvorgesetzte (Arbeitsplatzberichte), brauchen keine Schema-Migration. Aufrufende Plugins müssen den Wert abfragen, nicht annehmen.
 
 ---
 
@@ -452,72 +452,7 @@ Mehr nicht. Alles Fachliche gehört in die aufsetzenden Plugins. Die Nachweis-Ei
 
 ## 10. Verzeichnisstruktur
 
-```
-local/berufsbildung/
-├── classes/
-│   ├── api.php
-│   ├── ausbildungsstand.php
-│   ├── nachweis/
-│   │   ├── provider.php             -- Interface für liefernde Plugins
-│   │   ├── nachweis.php             -- Wertobjekt
-│   │   └── collector.php            -- sammelt Provider ein, prüft Zuständigkeit
-│   ├── versetzungsplan/
-│   │   ├── plan_service.php         -- Abfrage der Einsätze und Kompetenzabdeckung
-│   │   ├── csv_parser.php           -- beide Formate, Validierung
-│   │   ├── import_service.php       -- Verarbeitung, Ersetzung, Protokoll
-│   │   ├── kw_converter.php         -- ISO-Kalenderwoche -> Zeitraum
-│   │   └── luecken_analyse.php
-│   ├── persistent/
-│   │   ├── zuordnung.php
-│   │   ├── block.php
-│   │   ├── block_lk.php
-│   │   ├── einsatz.php
-│   │   └── plan_import.php
-│   ├── form/
-│   │   ├── zuordnung_form.php
-│   │   └── import_form.php
-│   ├── reportbuilder/
-│   │   ├── local/entities/zuordnung_entity.php
-│   │   └── datasource/zuordnungen.php
-│   ├── external/
-│   │   └── import_versetzungsplan.php
-│   ├── task/
-│   │   └── sync_role_assignments.php
-│   ├── event/
-│   │   ├── zuordnung_created.php
-│   │   └── zuordnung_ended.php
-│   ├── privacy/provider.php
-│   └── import/zuordnung_csv_importer.php
-├── db/
-│   ├── access.php
-│   ├── install.xml
-│   ├── install.php          -- legt die Rolle berufsbildner an
-│   ├── upgrade.php
-│   └── tasks.php
-├── lang/
-│   ├── de/local_berufsbildung.php
-│   └── en/local_berufsbildung.php
-├── tests/
-│   ├── api_test.php
-│   ├── sync_role_assignments_test.php
-│   ├── csv_importer_test.php
-│   ├── nachweis_collector_test.php
-│   ├── plan_service_test.php
-│   ├── csv_parser_test.php
-│   ├── kw_converter_test.php
-│   ├── privacy_provider_test.php
-│   ├── generator/lib.php
-│   └── behat/zuordnung_verwalten.feature
-├── zuordnung.php
-├── nachweise.php
-├── bloecke.php
-├── einsaetze.php
-├── import_plan.php      -- manueller Upload als Rückfallweg
-├── import.php
-├── settings.php
-├── lib.php
-└── version.php
-```
+Steht im Repo selbst und wird hier nicht nachgeführt. Die Klassen unter `classes/` folgen PSR-4 im Namensraum `local_berufsbildung\…`.
 
 ---
 
@@ -546,39 +481,20 @@ public static function can_manage(int $lernendeid, ?int $stichtag = null): bool 
 
 ## 12. Umsetzung
 
-**Phase 1 — Kern**
-Datenmodell, Persistent-Klasse, `api` mit allen Methoden, Capabilities, Rollenanlage bei Installation.
-*Abnahme*: Installation auf 4.5 und 5.2 sauber, `check_database_schema.php` grün, Unit-Tests für alle API-Methoden inklusive Stichtagslogik.
-
-**Phase 2 — Sync und Verwaltung**
-`sync_role_assignments`, Übersichtsseite über Report Builder, Einzelbearbeitung, CSV-Import mit Vorschau.
-*Abnahme*: Zuordnung anlegen führt nach Task-Lauf zur Rollenzuweisung; `gueltig_bis` setzen entzieht sie; manuell vergebene Rollen bleiben unangetastet; Import von 30 Zeilen mit zwei Fehlern meldet genau diese zwei und importiert die übrigen 28.
-
-**Phase 3 — Nachweis-Provider**
-Interface, Wertobjekt, Collector mit Zuständigkeitsprüfung, Übersichtsseite `nachweise.php`.
-*Abnahme*: Ein Test-Provider wird eingesammelt; ein Berufsbildner sieht die Nachweise seiner Lernenden und bekommt bei fremden Lernenden eine Exception; die Prüfung greift auch dann, wenn der Provider selbst keine Berechtigung prüft.
-
-**Phase 4 — Versetzungsplan**
-Ausbildungsblöcke mit Kompetenzabdeckung, `kw_converter`, `csv_parser` für beide Formate, Webservice-Funktion mit Testlauf, manueller Upload als Rückfallweg, `get_ausgebildete_kompetenzen()`, Lückenanalyse.
-*Abnahme*: Zwölf Zeilen im Wochenformat mit demselben Block ergeben einen Einsatz, nicht zwölf; eine unbekannte Personalnummer landet im Protokoll, ohne den Lauf abzubrechen; eine unveränderte Lieferung wird beim zweiten Aufruf ohne Schreibvorgang beendet; eine Lieferung mit deutlich weniger Personen wird abgewiesen und löscht nichts; `2027-W03` wird korrekt auf den 18. bis 24. Januar 2027 abgebildet; der Testlauf schreibt nachweislich nichts; ein Einsatz, der nur teilweise in den Semesterzeitraum fällt, zählt mit.
-
-**Phase 5 — Ausbildungsstand und Datenschutz**
-Profilfeld-Auflösung mit konfigurierbaren Feldnamen, `ausbildungsstand`, Privacy-Provider.
-*Abnahme*: Semester wird für eine Testperson korrekt berechnet; Datenschutz-Export enthält die Zuordnungen; Löschung einer Person entfernt ihre Zuordnungen in beiden Rollen.
-
-**Phase 6 — Härtung**
-GitHub Actions mit `moodle-plugin-ci`, Matrix über Moodle 4.5 / 5.1 / 5.2 und PHP 8.1–8.4, README, CHANGELOG.
+Die ursprünglichen Phasen 1–6 sind umgesetzt. Ihre Abnahmekriterien stecken in den Tests unter `tests/`, die Änderungsgeschichte steht in `CHANGELOG.md`.
 
 ---
 
-## 13. Offene Punkte
+## 13. Geklärte Fragen
 
-1. **Profilfelder**: Welche Felder halten heute Beruf und Lehrjahr, und wie werden sie gepflegt? Beeinflusst die Auflösung des Ausbildungsstands.
-2. **Lehrverlängerung und Wiederholung**: Die Semesterberechnung aus dem Jahrgang stimmt nicht mehr, wenn eine Lehre verlängert wird. Braucht es ein Korrekturfeld pro Person, oder wird das über eine angepasste Jahrgangsangabe gelöst?
-3. **Stellvertretung**: Braucht es eine Vertretungsregelung für Ferienabwesenheiten, oder reicht die Ausbildungsleitung mit `:viewall` im jeweiligen Feature-Plugin?
-4. **Lehrabschluss** *(teilweise gelöst)*: Der Abschluss wird über `api::get_ausbildungsende()` erkannt (Lehrdauer-Semestergrenze aus Beruf/Jahrgang). Zwölf Monate danach werden Zuordnungen automatisch endgültig **gelöscht** (nicht nur beendet), ausser eine Aufbewahrungspflicht ist dokumentiert — siehe `zuordnung_retention_service`. Weiterhin offen: Wird die einzelne laufende Zuordnung (`gueltig_bis IS NULL`) beim Abschluss selbst automatisch beendet, oder bleibt das von Hand? Heute bleibt sie unverändert laufend bis zur automatischen Löschung zwölf Monate später.
-5. **Mailadresse in der Excel**: Steht sie dort schon, oder muss das Skript sie aus einer anderen Kennung auflösen?
-6. **Kompetenzabdeckung der Ausbildungsblöcke**: Liegt irgendwo dokumentiert vor, welche Handlungskompetenzen in welchem Block vermittelt werden? Das ist der Datenbestand, den Moodle beisteuern muss und ohne den die Vorbelegung nicht funktioniert.
-7. **Erinnerungsfrist**: Nach wie vielen Wochen ohne Import soll der Hinweis erscheinen, dass der Versetzungsplan veraltet sein könnte?
-8. **Bewertbarkeit früher ausgebildeter Kompetenzen**: Das Formular formuliert „in diesem Semester nicht ausgebildet". Soll eine Kompetenz, die im zweiten Semester ausgebildet wurde, im vierten weiterhin bewertbar sein? Beeinflusst, ob die Vorbelegung nur den Semesterzeitraum oder die ganze bisherige Lehrzeit betrachtet.
-9. **üK-Provider**: Welche Felder liefert das bestehende üK-Plugin sinnvoll als `ergebnis` — Note, bestanden/nicht bestanden, oder Kompetenzstand? Und kennt es Kompetenz-IDs aus `core_competency`, sodass `competencyid` gefüllt werden kann?
+Ursprünglich offene Punkte, alle geklärt (Stand 2026-10-04). Die Nummern bleiben, weil Code und Changelog darauf verweisen.
+
+1. **Profilfelder** *(gelöst)*: Welche Profilfelder Beruf, Jahrgang und optional den Lehrbeginn halten, wird in den Plugin-Einstellungen gewählt.
+2. **Lehrverlängerung und Wiederholung** *(entschieden: kein Korrekturfeld)*: Bei einer verlängerten oder wiederholten Lehre passt die Ausbildungsadministration den Jahrgang im Profil an. Semester, Lehrjahr, Ausbildungsende und Aufbewahrungsfrist verschieben sich damit mit. Damit die Probezeit am ursprünglichen Beginn bleibt, wird zusätzlich das Profilfeld Lehrbeginn auf das tatsächliche Startdatum gesetzt. Grenze: Der Jahrgang verschiebt nur um ganze Jahre; eine Verlängerung um ein Semester lässt sich so nicht abbilden.
+3. **Stellvertretung** *(gelöst)*: Eine Zuordnung mit der Rolle `stellvertretung` läuft neben der hauptverantwortlichen und gibt dieselbe Zuständigkeit (siehe Abschnitt 3).
+4. **Lehrabschluss** *(entschieden)*: Der Abschluss wird über `api::get_ausbildungsende()` erkannt (Lehrdauer-Semestergrenze aus Beruf/Jahrgang). Eine laufende Zuordnung (`gueltig_bis IS NULL`) wird beim Abschluss bewusst nicht automatisch beendet. Sie bleibt laufend, bis `zuordnung_retention_service` sie nach Ablauf von `retention_monate` (Standard 12) endgültig **löscht**, ausser eine Aufbewahrungspflicht ist dokumentiert.
+5. **Mailadresse in der Excel** *(gelöst)*: Die Geschäftsmailadresse steht in der Versetzungsplan-Excel und dient als Kennung (siehe `docs/schnittstelle_versetzungsplan.md`).
+6. **Kompetenzabdeckung der Ausbildungsblöcke** *(gelöst)*: Wird in Moodle je Block gepflegt (`block_kompetenzen.php`).
+7. **Erinnerungsfrist** *(gelöst)*: Einstellung `versetzungsplan_alterung_tage`, Standard 10 Tage.
+8. **Bewertbarkeit früher ausgebildeter Kompetenzen** *(entschieden)*: Die Vorbelegung im Bildungsbericht betrachtet nur den Berichtszeitraum. Früher ausgebildete Kompetenzen lassen sich im Bericht von Hand ergänzen.
+9. **üK-Provider** *(gelöst)*: `local_uekkn` liefert die üK-Note als `ergebnis`. `competencyid` bleibt `null`, weil üK-Kriterien eigene Codes tragen und nicht auf `core_competency` abgebildet sind.

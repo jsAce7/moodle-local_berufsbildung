@@ -41,7 +41,7 @@ class zuordnung_retention_service {
     /**
      * Prueft alle je zugeordneten lernenden Personen - nicht nur solche mit
      * bereits beendeter Zeile, da eine Zuordnung bei Abschluss durchaus
-     * weiterhin laufend sein kann (siehe docs/plan.md §13.4).
+     * weiterhin laufend sein kann (siehe docs/konzept.md §13.4).
      *
      * @return array{geprueft: int, geloescht: int, uebersprungen_aufbewahrung: int}
      */

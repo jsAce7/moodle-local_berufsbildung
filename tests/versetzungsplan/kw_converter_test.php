@@ -36,7 +36,7 @@ use coding_exception;
  */
 final class kw_converter_test extends advanced_testcase {
     /**
-     * Abnahmekriterium aus docs/plan.md: 2027-W03 -> 18. bis 24. Januar 2027.
+     * Regel aus docs/konzept.md §5.3: 2027-W03 -> 18. bis 24. Januar 2027.
      */
     public function test_2027_w03_wird_korrekt_abgebildet(): void {
         $converter = new kw_converter();

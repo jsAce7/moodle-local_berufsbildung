@@ -29,7 +29,7 @@ namespace local_berufsbildung\nachweis;
 /**
  * Registrierung ueber den Standard-Plugin-Callback
  * "<component>_berufsbildung_nachweis_provider()" in lib.php - siehe
- * docs/plan.md Abschnitt 6. Wird ueber get_plugins_with_function()
+ * docs/konzept.md Abschnitt 6. Wird ueber get_plugins_with_function()
  * eingesammelt, das Basis-Plugin kennt keine einzelne Quelle namentlich.
  */
 interface provider {

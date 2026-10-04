@@ -212,7 +212,7 @@ $string['pdf:seite'] = 'Page {$a->nr} of {$a->gesamt}';
 $string['planimport:abgewiesen_hinweis'] = 'This delivery was rejected because significantly fewer people were processed than in the last successful import. If intended, confirm below and upload again.';
 $string['planimport:alterung_hinweis'] = 'The last successful rotation-plan import was more than {$a} days ago. The pre-filled data in the education report may be based on a stale plan.';
 $string['planimport:ausserhalb_geltungsbereich'] = 'Without an active assignment (skipped, not logged)';
-$string['planimport:beschreibung'] = 'Fallback if the weekly webservice import is not running, or if something needs to be applied outside the schedule. Expects the same CSV as the webservice (see docs/schnittstelle_versetzungsplan.md).';
+$string['planimport:beschreibung'] = 'Fallback if the weekly webservice import is not running, or if something needs to be applied outside the schedule. Expects the same CSV as the webservice (see the <a href="https://github.com/jsAce7/moodle-local_berufsbildung/blob/main/docs/schnittstelle_versetzungsplan.md">interface description in the repository</a>).';
 $string['planimport:datei'] = 'CSV file';
 $string['planimport:einsaetze_erzeugt'] = 'Placements created';
 $string['planimport:ergebnis'] = 'Result';
@@ -334,7 +334,7 @@ $string['teilnahmeart:uek_extern_bestaetigung'] = '{$a} will be managed as an ex
 $string['teilnahmeart:uek_extern_setzen'] = 'Mark as external (inter-company courses only)';
 
 $string['ws:import_versetzungsplan'] = 'Import rotation plan';
-$string['ws:import_versetzungsplan_desc'] = 'Accepts a rotation-plan CSV and processes it per docs/schnittstelle_versetzungsplan.md.';
+$string['ws:import_versetzungsplan_desc'] = 'Accepts a rotation-plan CSV and processes it per the interface description in the repository: https://github.com/jsAce7/moodle-local_berufsbildung/blob/main/docs/schnittstelle_versetzungsplan.md';
 $string['zuordnung:angelegt'] = '{$a} assignment(s) created.';
 $string['zuordnung:anlegen'] = 'Create assignment';
 $string['zuordnung:bearbeiten'] = 'Edit end date';

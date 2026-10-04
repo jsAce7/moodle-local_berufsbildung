@@ -28,7 +28,8 @@ $functions = [
     'local_berufsbildung_import_versetzungsplan' => [
         'classname' => 'local_berufsbildung\external\import_versetzungsplan',
         'methodname' => 'execute',
-        'description' => 'Importiert eine Versetzungsplan-Lieferung. Siehe docs/schnittstelle_versetzungsplan.md.',
+        'description' => 'Importiert eine Versetzungsplan-Lieferung. Schnittstelle: '
+            . 'https://github.com/jsAce7/moodle-local_berufsbildung/blob/main/docs/schnittstelle_versetzungsplan.md',
         'type' => 'write',
         'capabilities' => 'local/berufsbildung:importplan',
         'ajax' => false,

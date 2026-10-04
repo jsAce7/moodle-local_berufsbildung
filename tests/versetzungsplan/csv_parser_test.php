@@ -48,7 +48,7 @@ final class csv_parser_test extends advanced_testcase {
     }
 
     /**
-     * Abnahmekriterium aus docs/plan.md: zwoelf Zeilen im Wochenformat mit
+     * Regel aus docs/konzept.md §5.2: zwoelf Zeilen im Wochenformat mit
      * demselben Block ergeben einen Einsatz, nicht zwoelf.
      */
     public function test_wochenformat_fasst_zwoelf_aufeinanderfolgende_wochen_zu_einem_eintrag_zusammen(): void {

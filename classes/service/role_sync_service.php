@@ -39,7 +39,7 @@ use local_berufsbildung\persistent\zuordnung;
  * Setzt component = 'local_berufsbildung' bei jeder selbst vergebenen
  * Zuweisung und erkennt daran seine eigenen wieder - manuell (component =
  * '') vergebene Rollen werden nie angefasst, auch nicht entzogen, wenn
- * keine Zuordnung (mehr) dahintersteht (siehe docs/plan.md Abschnitt 7).
+ * keine Zuordnung (mehr) dahintersteht (siehe docs/konzept.md Abschnitt 7).
  */
 class role_sync_service {
     /**

@@ -212,7 +212,7 @@ $string['pdf:seite'] = 'Seite {$a->nr} von {$a->gesamt}';
 $string['planimport:abgewiesen_hinweis'] = 'Diese Lieferung wurde abgewiesen, weil deutlich weniger Personen verarbeitet wurden als beim letzten erfolgreichen Import. Falls beabsichtigt, unten bestätigen und erneut hochladen.';
 $string['planimport:alterung_hinweis'] = 'Der letzte erfolgreiche Versetzungsplan-Import liegt mehr als {$a} Tage zurück. Die Vorbelegung im Bildungsbericht könnte auf einem veralteten Plan beruhen.';
 $string['planimport:ausserhalb_geltungsbereich'] = 'Ohne aktive Zuordnung (übersprungen, nicht protokolliert)';
-$string['planimport:beschreibung'] = 'Rückfallweg, falls der wöchentliche Webservice-Import nicht läuft oder ausserplanmässig etwas nachgezogen werden muss. Erwartet dieselbe CSV wie der Webservice (siehe docs/schnittstelle_versetzungsplan.md).';
+$string['planimport:beschreibung'] = 'Rückfallweg, falls der wöchentliche Webservice-Import nicht läuft oder ausserplanmässig etwas nachgezogen werden muss. Erwartet dieselbe CSV wie der Webservice (siehe <a href="https://github.com/jsAce7/moodle-local_berufsbildung/blob/main/docs/schnittstelle_versetzungsplan.md">Schnittstellenbeschreibung im Repository</a>).';
 $string['planimport:datei'] = 'CSV-Datei';
 $string['planimport:einsaetze_erzeugt'] = 'Einsätze erzeugt';
 $string['planimport:ergebnis'] = 'Ergebnis';
@@ -334,7 +334,7 @@ $string['teilnahmeart:uek_extern_bestaetigung'] = '{$a} wird als externe Person 
 $string['teilnahmeart:uek_extern_setzen'] = 'Als extern (nur üK) markieren';
 
 $string['ws:import_versetzungsplan'] = 'Versetzungsplan importieren';
-$string['ws:import_versetzungsplan_desc'] = 'Nimmt eine Versetzungsplan-CSV entgegen und verarbeitet sie gemäss docs/schnittstelle_versetzungsplan.md.';
+$string['ws:import_versetzungsplan_desc'] = 'Nimmt eine Versetzungsplan-CSV entgegen und verarbeitet sie gemäss der Schnittstellenbeschreibung im Repository: https://github.com/jsAce7/moodle-local_berufsbildung/blob/main/docs/schnittstelle_versetzungsplan.md';
 $string['zuordnung:angelegt'] = '{$a} Zuordnung(en) angelegt.';
 $string['zuordnung:anlegen'] = 'Zuordnung anlegen';
 $string['zuordnung:bearbeiten'] = 'Gültig bis bearbeiten';

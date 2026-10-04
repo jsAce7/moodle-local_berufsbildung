@@ -33,7 +33,7 @@ use local_berufsbildung\persistent\einsatz;
  * Beantwortet "wo war ich, wo bin ich, wo komme ich hin" auf einen Blick.
  *
  * Der Versetzungsplan ist eine Verbesserung, keine Voraussetzung (siehe
- * docs/plan.md): ohne importierte Einsaetze rendert diese Klasse bewusst
+ * docs/konzept.md): ohne importierte Einsaetze rendert diese Klasse bewusst
  * gar nichts, statt eine leere Ueberschrift stehen zu lassen.
  */
 class einsatz_timeline {
