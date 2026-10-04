@@ -189,6 +189,8 @@
 }
 
 .local-berufsbildung-nachweis:last-child {
+    /* Hebt border-bottom aus dem Markup auf, das Bootstrap mit !important setzt. */
+    /* stylelint-disable-next-line declaration-no-important */
     border-bottom: 0 !important;
 }
 
@@ -234,6 +236,8 @@
 }
 
 .local-berufsbildung-timeline-gruppe:first-of-type {
+    /* Hebt border-top aus dem Markup auf, das Bootstrap mit !important setzt. */
+    /* stylelint-disable-next-line declaration-no-important */
     border-top: 0 !important;
     padding-top: 0;
 }
@@ -368,6 +372,8 @@
 /* .border ist 1px - als Ring um einen leeren Punkt zu duenn, um ihn
    neben den gefuellten ueberhaupt zu sehen. */
 .local-berufsbildung-timeline-kommend .local-berufsbildung-timeline-punkt {
+    /* .border aus dem Markup setzt die Breite mit !important. */
+    /* stylelint-disable-next-line declaration-no-important */
     border-width: 2px !important;
 }
 
@@ -558,6 +564,8 @@
 
 .local-berufsbildung-raster-bereich {
     width: 11rem;
+    /* Gegen das Padding von .table-sm, das als Klasse plus Element spezifischer ist. */
+    /* stylelint-disable-next-line declaration-no-important */
     padding: 0.4rem 0.5rem !important;
     font-weight: 600;
 }
@@ -575,6 +583,8 @@
  */
 .local-berufsbildung-raster-zelle {
     position: relative;
+    /* Gegen das Padding von .table-sm, siehe .local-berufsbildung-raster-bereich. */
+    /* stylelint-disable-next-line declaration-no-important */
     padding: 0.4rem 0.5rem !important;
 }
 
