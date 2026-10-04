@@ -6,6 +6,10 @@
 
 - **Zuordnungen ändern verlangt `:managezuordnung`** (`zuordnung_anlegen.php`, `zuordnung_beenden.php`, `zuordnung_import.php`, `zuordnung_import_vorschau.php`): Die vier Seiten prüften über `admin_externalpage_setup()` nur `:viewzuordnung`. Die Übersicht blendete die Schaltflächen zwar ohne `:managezuordnung` aus, über die direkte URL konnte aber auch eine Person mit reinem Leserecht Zuordnungen anlegen, beenden oder importieren. Jetzt prüfen die Seiten wie bereits `zuordnung_loeschen.php` zusätzlich `:managezuordnung`. Mit den Standardrollen ändert sich nichts, weil beide Rechte nur die Rolle Manager/in hat.
 
+### Geändert
+
+- **Repository nach den Moodle-Vorgaben**: Lizenztext in `COPYING.txt`, `$plugin->supported = [405, 502]` passend zur CI-Matrix, `.gitignore` für die von Moodle erzeugten `phpunit.xml`, `CLAUDE.md` und `.claude/` per `export-ignore` nicht mehr im Release-ZIP. Neu `pix/icon.svg` (Moodle-Icon, erscheint in der Plugin-Übersicht) und `pix/logo.svg` (README).
+
 ## [0.6.5] — 2026-10-01
 
 ### Hinzugefügt

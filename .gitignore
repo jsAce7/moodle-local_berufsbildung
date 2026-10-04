@@ -1,0 +1,32 @@
+# Nicht in die Versionsverwaltung gehoerende Dateien.
+#
+# amd/build/ ist bewusst NICHT ausgenommen: Moodle laedt die Minifikate zur
+# Laufzeit, sie gehoeren nach Konvention mit ins Repository.
+
+# Pack-Ergebnisse
+*.zip
+
+# Von Moodle beim Initialisieren von PHPUnit erzeugt
+/phpunit.xml
+/tests/phpunit.xml
+/.phpunit.result.cache
+
+# Abhaengigkeiten und Werkzeuge
+/vendor/
+/node_modules/
+/.grunt/
+/moodle-plugin-ci.log
+
+# Lokaler Zustand von Claude Code; gemeinsame Einstellungen bleiben versioniert
+/.claude/scheduled_tasks.lock
+/.claude/settings.local.json
+
+# Editoren und Betriebssysteme
+/.idea/
+/.vscode/
+*.code-workspace
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,10 @@
+# Nicht ins Release-Archiv. "git archive --prefix=berufsbildung/" erzeugt damit
+# direkt ein installierbares Plugin-ZIP ohne Dateien der Versionsverwaltung.
+.gitattributes export-ignore
+.gitignore export-ignore
+
+# Nicht ins Release-Archiv: CI und Arbeitsanweisungen fuer Claude Code gehoeren
+# zum Repository, nicht zum Plugin.
+.github export-ignore
+.claude export-ignore
+CLAUDE.md export-ignore
