@@ -30,7 +30,7 @@ anna.muster@firma.ch;BFS;2027-W34;2027-W34;Blockwoche
 beat.beispiel@firma.ch;4;2027-W15;2027-W20;
 ```
 
-**Warum die Mailadresse als Kennung**: Sie wird von Entra ID nach Moodle synchronisiert. Ändert sie sich — etwa bei einer Namensänderung —, zieht Moodle automatisch nach, ohne dass jemand eine Zuordnungstabelle pflegen muss. Das Moodle-Feld `idnumber` scheidet aus, weil es bei uns mit dem Entra-Objektbezeichner belegt ist, der in der Excel nicht vorkommt.
+**Warum die Mailadresse als Kennung**: Sie wird aus dem zentralen Benutzerverzeichnis nach Moodle synchronisiert. Ändert sie sich — etwa bei einer Namensänderung —, zieht Moodle automatisch nach, ohne dass jemand eine Zuordnungstabelle pflegen muss. Das Moodle-Feld `idnumber` scheidet aus, weil es typischerweise schon von dieser Synchronisation mit einer Verzeichniskennung belegt ist, die in der Excel nicht vorkommt.
 
 ### Alternative: eine Zeile je Woche
 

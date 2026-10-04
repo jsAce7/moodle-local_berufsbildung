@@ -154,11 +154,11 @@ Die Berechnung liegt in `\local_berufsbildung\service\semester_calculator`, getr
 
 ## 5. Versetzungsplan (Import über Webservice)
 
-Der Versetzungsplan wird **ausserhalb von Moodle gepflegt** — als Excel auf SharePoint, die der ganzen Firma zur Verfügung steht: Kalenderwochen als Spalten, eine Zeile pro lernender Person, in den Zellen die Nummern der Ausbildungsblöcke.
+Der Versetzungsplan wird **ausserhalb von Moodle gepflegt** — als gemeinsam genutzte Excel-Datei, auf die alle Beteiligten im Betrieb zugreifen: Kalenderwochen als Spalten, eine Zeile pro lernender Person, in den Zellen die Nummern der Ausbildungsblöcke.
 
 Moodle besitzt diesen Plan nicht, sondern spiegelt ihn. Er wird importiert und ist in Moodle **nicht editierbar** — sonst entstehen zwei Wahrheiten, und die Frage „welche gilt" beantwortet niemand zuverlässig.
 
-Moodle liest die Excel auch nicht selbst. Ein Skript auf Firmenseite wertet sie aus und liefert die normalisierten Daten über einen Webservice. Damit hängt die Schnittstelle nicht am Layout der Tabelle.
+Moodle liest die Excel auch nicht selbst. Ein Skript im Betrieb wertet sie aus und liefert die normalisierten Daten über einen Webservice. Damit hängt die Schnittstelle nicht am Layout der Tabelle.
 
 ### 5.1 Die Trennlinie
 
@@ -239,7 +239,7 @@ local_berufsbildung_import
 
 ### 5.3 Import
 
-Der Plan wird **nicht als Excel gelesen**. Ein Skript auf Firmenseite wertet die Excel aus und liefert wöchentlich eine normalisierte CSV über einen Webservice. Damit ist das Layout der Excel von der Schnittstelle entkoppelt: Verschiebt jemand eine Spalte, ändert sich das Skript, nicht Moodle.
+Der Plan wird **nicht als Excel gelesen**. Ein Skript im Betrieb wertet die Excel aus und liefert wöchentlich eine normalisierte CSV über einen Webservice. Damit ist das Layout der Excel von der Schnittstelle entkoppelt: Verschiebt jemand eine Spalte, ändert sich das Skript, nicht Moodle.
 
 Die vollständige Spezifikation liegt in `schnittstelle_versetzungsplan.md`. Kurzfassung:
 
@@ -253,7 +253,7 @@ Alternativ eine Zeile je Woche (`email;block;kw`) — dann fasst Moodle aufeinan
 
 **Kalenderwochen** in ISO 8601 mit explizitem Jahresbezug. `2027-W03` wird auf Montag, 18. Januar bis Sonntag, 24. Januar 2027 abgebildet. Ein Format ohne Jahr wäre bei einem Plan über vier Lehrjahre nicht eindeutig.
 
-**Zuordnung der Personen** über `user.email`. Die Mailadresse wird von Entra ID nach Moodle synchronisiert, sodass Änderungen automatisch nachziehen — anders als bei einer separat gepflegten Kennungstabelle. Das Feld `idnumber` scheidet aus, weil es mit dem Entra-Objektbezeichner belegt ist, der in der Excel nicht vorkommt.
+**Zuordnung der Personen** über `user.email`. Die Mailadresse wird aus dem zentralen Benutzerverzeichnis nach Moodle synchronisiert, sodass Änderungen automatisch nachziehen — anders als bei einer separat gepflegten Kennungstabelle. Das Feld `idnumber` scheidet aus, weil es typischerweise schon von dieser Synchronisation mit einer Verzeichniskennung belegt ist, die in der Excel nicht vorkommt.
 
 **Verarbeitet wird nur, wer eine aktive Zuordnung hat.** Das Skript liefert immer alle Lernenden; welche davon in Moodle ankommen, entscheidet der Zuordnungsbestand. Damit steuerst du die Einführungsphase über die normale Zuordnungsverwaltung: zwei Zuordnungen für den Pilot, die übrigen Zeilen laufen ins Leere, und beim Ausweiten ändert sich am Skript nichts.
 
@@ -275,7 +275,7 @@ Nicht zuordenbare Mailadressen von Personen, die eine Zuordnung haben sollten, l
 
 ### 5.4 Auslösung
 
-**Regelweg: Webservice.** Ein Skript auf Firmenseite liefert wöchentlich. Einrichtung in Moodle: Dienstkonto (kein persönliches Konto), Rolle mit `local/berufsbildung:importplan` im Systemkontext, externer Dienst mit der Funktion `local_berufsbildung_import_versetzungsplan`, Token, nach Möglichkeit IP-Einschränkung.
+**Regelweg: Webservice.** Ein Skript im Betrieb liefert wöchentlich. Einrichtung in Moodle: Dienstkonto (kein persönliches Konto), Rolle mit `local/berufsbildung:importplan` im Systemkontext, externer Dienst mit der Funktion `local_berufsbildung_import_versetzungsplan`, Token, nach Möglichkeit IP-Einschränkung.
 
 **Rückfallweg: manueller Upload** unter `local/berufsbildung/import_plan.php`, mit derselben Vorschau und demselben Protokoll. Nimmt dieselbe CSV entgegen. Wird gebraucht, solange das Skript noch nicht steht, und wenn ausserplanmässig etwas nachgezogen werden muss.
 
