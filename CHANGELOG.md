@@ -5,6 +5,7 @@
 ### Sicherheit
 
 - **Zuordnungen ändern verlangt `:managezuordnung`** (`zuordnung_anlegen.php`, `zuordnung_beenden.php`, `zuordnung_import.php`, `zuordnung_import_vorschau.php`): Die vier Seiten prüften über `admin_externalpage_setup()` nur `:viewzuordnung`. Die Übersicht blendete die Schaltflächen zwar ohne `:managezuordnung` aus, über die direkte URL konnte aber auch eine Person mit reinem Leserecht Zuordnungen anlegen, beenden oder importieren. Jetzt prüfen die Seiten wie bereits `zuordnung_loeschen.php` zusätzlich `:managezuordnung`. Mit den Standardrollen ändert sich nichts, weil beide Rechte nur die Rolle Manager/in hat.
+- **`cli/testdaten.php` nur noch auf Entwicklungssystemen**: Das Skript legt Testkonten mit dem bekannten Passwort `Test1234!` an und wurde mit dem Plugin ausgeliefert. Es bricht jetzt ab, wenn die Debug-Meldungen nicht auf DEVELOPER stehen, und ist über `export-ignore` in der neuen `.gitattributes` nicht mehr Teil der Release-ZIP. Dasselbe gilt für `.github/`, sodass `git archive` ohne Ausschlussliste ein installierbares Paket erzeugt.
 
 ### Geändert
 

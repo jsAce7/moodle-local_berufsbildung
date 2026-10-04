@@ -8,3 +8,7 @@
 .github export-ignore
 .claude export-ignore
 CLAUDE.md export-ignore
+
+# Nicht ins Release-Archiv: legt Testkonten mit bekanntem Passwort an und ist
+# nur fuer Entwicklungssysteme gedacht.
+cli/testdaten.php export-ignore

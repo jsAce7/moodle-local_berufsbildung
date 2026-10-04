@@ -128,6 +128,14 @@ function local_berufsbildung_testdaten_nutzer(string $username, string $vorname,
 
 cli_heading('local_berufsbildung: Testdaten');
 
+// Die Testkonten haben ein bekanntes Passwort. Auf einem Produktivsystem waeren
+// sie eine offene Tuer, deshalb nur mit Debug-Stufe DEVELOPER, wie sie die
+// Entwicklungsumgebung setzt.
+if (empty($CFG->debugdeveloper)) {
+    cli_error('Nur auf Entwicklungssystemen: legt Konten mit bekanntem Passwort an. '
+        . 'Abbruch, weil die Debug-Meldungen nicht auf DEVELOPER stehen.');
+}
+
 local_berufsbildung_testdaten_profilfeld('beruf', 'Beruf', 'Berufsbildung');
 local_berufsbildung_testdaten_profilfeld('jahrgang', 'Jahrgang', 'Berufsbildung');
 
