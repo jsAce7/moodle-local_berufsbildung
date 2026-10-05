@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details.
+ * Event-Observer.
  *
  * @package    local_berufsbildung
  * @copyright  2026 jsAce7
@@ -24,9 +24,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_berufsbildung';
-$plugin->version   = 2026100501;
-$plugin->requires  = 2024100700; // Moodle 4.5.
-$plugin->supported = [405, 502]; // Wie die CI-Matrix.
-$plugin->maturity  = MATURITY_BETA;
-$plugin->release   = '0.7.0';
+$observers = [
+    [
+        // Auch "Rolle zuruecksetzen" entzieht jede Capability einzeln.
+        'eventname' => '\core\event\capability_unassigned',
+        'callback' => '\local_berufsbildung\observer::capability_unassigned',
+    ],
+];

@@ -1,5 +1,16 @@
 # Changelog
 
+## [Unveröffentlicht]
+
+### Hinzugefügt
+
+- **Rolle „Leitung Berufsbildung“** (`berufsbildung_leitung`, `db/install.php`, Upgrade-Schritt `2026100500`): Systemrolle für die Leitung Berufsbildung, die ohne eigene Zuordnung über alle Lernenden hinweg liest. Sie trägt selbst keine Capabilities, die vergeben die aufsetzenden Plugins; als Erstes erhält sie `local/uekkn:viewjahrgaenge` (üK-Noten je Jahrgang). Sie wird nie automatisch zugewiesen. Die Rolle Manager/in darf sie global vergeben (`role_matrix_service`). Bewusst getrennt von `berufsbildung_planung`, die jede Person mit laufender Zuordnung automatisch erhält.
+- **Leitungsrolle übersteht „Rolle zurücksetzen“** (`service\leitungsrolle_service`, `observer`, `db/events.php`): Ohne Archetyp setzte Moodle die Rolle auf nichts zurück, mit allen Rechten und dem Kontextlevel. Die Leitung verlor ihre Seiten, und die Rolle war global nicht mehr zuweisbar. Jetzt werden Kontextlevel und Rechte wiederhergestellt, sobald der Rolle eine Capability entzogen wird, zusätzlich stündlich im Task `sync_role_assignments`. Die Rechte melden die aufsetzenden Plugins über den Callback `<plugin>_berufsbildung_leitung_capabilities()`. Ein auf „Verhindern“ oder „Verbieten“ gesetztes Recht bleibt entzogen.
+
+### Geändert
+
+- **`role_matrix_service::synchronisiere()` nimmt optional die nachzutragenden Rollen**: Ein Upgrade-Schritt für eine neue Rolle trägt nur diese in die Allow-Matrizen ein, damit eine von Hand entfernte Erlaubnis der übrigen Rollen nicht zurückkommt.
+
 ## [0.7.0] — 2026-10-04
 
 Erste Beta (`MATURITY_BETA`): funktional vollständig und für einen begleiteten Pilotbetrieb mit echten Daten freigegeben, noch nicht für den allgemeinen Betrieb.

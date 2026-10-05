@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Tests fuer die Allow-Matrizen der beiden Plugin-Rollen.
+ * Tests fuer die Allow-Matrizen der Plugin-Rollen.
  *
  * @package    local_berufsbildung
  * @copyright  2026 jsAce7
@@ -45,7 +45,7 @@ final class role_matrix_service_test extends advanced_testcase {
      * steht die Matrix also schon. Ohne Reset waeren die Zaehler davon
      * abhaengig, wann die Testdatenbank entstanden ist.
      *
-     * @return array{verwaltung: int, planung: int, berufsbildner: int}
+     * @return array{verwaltung: int, planung: int, leitung: int, berufsbildner: int}
      */
     private function stelle_rollen_sicher(): array {
         global $DB;
@@ -54,6 +54,12 @@ final class role_matrix_service_test extends advanced_testcase {
         if (!$planung) {
             $planung = create_role('Ausbildungsplanung', 'berufsbildung_planung', '');
             set_role_contextlevels($planung, [CONTEXT_SYSTEM]);
+        }
+
+        $leitung = $DB->get_field('role', 'id', ['shortname' => 'berufsbildung_leitung']);
+        if (!$leitung) {
+            $leitung = create_role('Leitung Berufsbildung', 'berufsbildung_leitung', '');
+            set_role_contextlevels($leitung, [CONTEXT_SYSTEM]);
         }
 
         $berufsbildner = $DB->get_field('role', 'id', ['shortname' => 'berufsbildner']);
@@ -65,13 +71,14 @@ final class role_matrix_service_test extends advanced_testcase {
         $rollen = [
             'verwaltung' => (int) $DB->get_field('role', 'id', ['shortname' => 'manager'], MUST_EXIST),
             'planung' => (int) $planung,
+            'leitung' => (int) $leitung,
             'berufsbildner' => (int) $berufsbildner,
         ];
 
-        $DB->delete_records('role_allow_assign', ['allowassign' => $rollen['planung']]);
-        $DB->delete_records('role_allow_assign', ['allowassign' => $rollen['berufsbildner']]);
-        $DB->delete_records('role_allow_view', ['allowview' => $rollen['planung']]);
-        $DB->delete_records('role_allow_view', ['allowview' => $rollen['berufsbildner']]);
+        foreach (['planung', 'leitung', 'berufsbildner'] as $rolle) {
+            $DB->delete_records('role_allow_assign', ['allowassign' => $rollen[$rolle]]);
+            $DB->delete_records('role_allow_view', ['allowview' => $rollen[$rolle]]);
+        }
 
         return $rollen;
     }
@@ -83,7 +90,7 @@ final class role_matrix_service_test extends advanced_testcase {
 
         $ergebnis = (new role_matrix_service())->synchronisiere();
 
-        $this->assertSame(1, $ergebnis['assign']);
+        $this->assertSame(2, $ergebnis['assign']);
         $this->assertTrue($DB->record_exists('role_allow_assign', [
             'roleid' => $rollen['verwaltung'],
             'allowassign' => $rollen['planung'],
@@ -127,7 +134,7 @@ final class role_matrix_service_test extends advanced_testcase {
         $erster = $service->synchronisiere();
         $zweiter = $service->synchronisiere();
 
-        $this->assertSame(['assign' => 1, 'view' => 2], $erster);
+        $this->assertSame(['assign' => 2, 'view' => 3], $erster);
         $this->assertSame(['assign' => 0, 'view' => 0], $zweiter);
         $this->assertSame(1, $DB->count_records('role_allow_assign', [
             'roleid' => $rollen['verwaltung'],
@@ -153,7 +160,46 @@ final class role_matrix_service_test extends advanced_testcase {
 
         $ergebnis = (new role_matrix_service())->synchronisiere();
 
-        $this->assertSame(['assign' => 0, 'view' => 1], $ergebnis);
+        $this->assertSame(['assign' => 1, 'view' => 2], $ergebnis);
+    }
+
+    /**
+     * Die Leitungsrolle vergibt die Verwaltung von Hand, automatisch weist
+     * sie niemand zu.
+     */
+    public function test_leitungsrolle_wird_fuer_die_verwaltung_zuweisbar(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $rollen = $this->stelle_rollen_sicher();
+
+        (new role_matrix_service())->synchronisiere();
+
+        $this->assertTrue($DB->record_exists('role_allow_assign', [
+            'roleid' => $rollen['verwaltung'],
+            'allowassign' => $rollen['leitung'],
+        ]));
+        $this->assertTrue($DB->record_exists('role_allow_view', [
+            'roleid' => $rollen['verwaltung'],
+            'allowview' => $rollen['leitung'],
+        ]));
+    }
+
+    /**
+     * Der Upgrade-Schritt, der die Leitungsrolle anlegt, traegt nur sie
+     * nach: eine von Hand entfernte Erlaubnis fuer die Planungsrolle kommt
+     * dadurch nicht zurueck.
+     */
+    public function test_nachtrag_einer_rolle_laesst_die_anderen_unberuehrt(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $rollen = $this->stelle_rollen_sicher();
+
+        $ergebnis = (new role_matrix_service())->synchronisiere(['berufsbildung_leitung']);
+
+        $this->assertSame(['assign' => 1, 'view' => 1], $ergebnis);
+        $this->assertFalse($DB->record_exists('role_allow_assign', ['allowassign' => $rollen['planung']]));
+        $this->assertFalse($DB->record_exists('role_allow_view', ['allowview' => $rollen['planung']]));
+        $this->assertFalse($DB->record_exists('role_allow_view', ['allowview' => $rollen['berufsbildner']]));
     }
 
     /**

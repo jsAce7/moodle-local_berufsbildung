@@ -25,11 +25,12 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Legt die beiden Rollen des Plugins an, sofern sie nicht existieren:
+ * Legt die drei Rollen des Plugins an, sofern sie nicht existieren:
  *
  * - 'berufsbildner' im User-Kontext einer lernenden Person, ohne eigene
  *   Capabilities - die vergeben die aufsetzenden Plugins.
  * - 'berufsbildung_planung' im Systemkontext, traegt die Blockverwaltung.
+ * - 'berufsbildung_leitung' im Systemkontext, ohne eigene Capabilities.
  *
  * und macht sie anschliessend fuer die Rollenverwaltung sichtbar bzw.
  * vergebbar - siehe role_matrix_service.
@@ -74,6 +75,8 @@ function xmldb_local_berufsbildung_install() {
         );
     }
 
+    xmldb_local_berufsbildung_lege_leitungsrolle_an();
+
     // create_role() traegt in role_allow_assign und role_allow_view nichts
     // ein. Ohne diesen Schritt bekommt nur eine Administratorin die Rollen
     // ueberhaupt zur Auswahl, weil get_assignable_roles() fuer alle
@@ -83,4 +86,33 @@ function xmldb_local_berufsbildung_install() {
     // Kommt das Plugin zu einer bestehenden üK- oder Bildungsbericht-
     // Installation dazu, bringt es deren PDF-Gestaltung mit.
     \local_berufsbildung\pdf\gestaltung::uebernehme_bisherige_einstellungen();
+}
+
+/**
+ * Legt die Rolle 'berufsbildung_leitung' an, sofern sie nicht existiert.
+ *
+ * Fuer die Leitung Berufsbildung, die ueber alle Lernenden hinweg liest -
+ * etwa die Noten eines ganzen Jahrgangs. Die aufsetzenden Plugins vergeben
+ * ihr ihre Capabilities selbst, wie bei 'berufsbildner'.
+ *
+ * Getrennt von 'berufsbildung_planung', weil der role_sync_service jene
+ * jeder Person mit laufender Zuordnung zuweist: ein Leserecht ohne
+ * Zustaendigkeitspruefung darf dort nie haengen. Diese Rolle weist niemand
+ * automatisch zu, sie wird von Hand global vergeben.
+ *
+ * Auch aus db/upgrade.php aufgerufen.
+ */
+function xmldb_local_berufsbildung_lege_leitungsrolle_an(): void {
+    global $DB;
+
+    if ($DB->record_exists('role', ['shortname' => 'berufsbildung_leitung'])) {
+        return;
+    }
+
+    $roleid = create_role(
+        get_string('role:leitung', 'local_berufsbildung'),
+        'berufsbildung_leitung',
+        get_string('role:leitung_desc', 'local_berufsbildung')
+    );
+    set_role_contextlevels($roleid, [CONTEXT_SYSTEM]);
 }

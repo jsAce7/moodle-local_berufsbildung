@@ -15,18 +15,36 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details.
+ * Event-Observer.
  *
  * @package    local_berufsbildung
  * @copyright  2026 jsAce7
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+declare(strict_types=1);
 
-$plugin->component = 'local_berufsbildung';
-$plugin->version   = 2026100501;
-$plugin->requires  = 2024100700; // Moodle 4.5.
-$plugin->supported = [405, 502]; // Wie die CI-Matrix.
-$plugin->maturity  = MATURITY_BETA;
-$plugin->release   = '0.7.0';
+namespace local_berufsbildung;
+
+use core\event\capability_unassigned;
+use local_berufsbildung\service\leitungsrolle_service;
+
+/**
+ * Reagiert auf Aenderungen ausserhalb des Plugins, die seine Rollen betreffen.
+ */
+class observer {
+    /**
+     * Stellt die Rechte der Leitungsrolle wieder her, sobald ihr eine
+     * Capability entzogen wurde - siehe leitungsrolle_service.
+     *
+     * @param capability_unassigned $event
+     */
+    public static function capability_unassigned(capability_unassigned $event): void {
+        $service = new leitungsrolle_service();
+        if ((int) $event->objectid !== $service->rolle_id()) {
+            return;
+        }
+
+        $service->stelle_sicher();
+    }
+}

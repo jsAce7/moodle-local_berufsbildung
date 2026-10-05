@@ -411,5 +411,17 @@ function xmldb_local_berufsbildung_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026092702, 'local', 'berufsbildung');
     }
 
+    if ($oldversion < 2026100500) {
+        // Rolle fuer die Leitung Berufsbildung - siehe
+        // xmldb_local_berufsbildung_lege_leitungsrolle_an(). Die Matrix nur
+        // fuer sie nachtragen: eine von Hand entfernte Erlaubnis der beiden
+        // anderen Rollen soll nicht zurueckkommen.
+        require_once(__DIR__ . '/install.php');
+        xmldb_local_berufsbildung_lege_leitungsrolle_an();
+        (new \local_berufsbildung\service\role_matrix_service())->synchronisiere(['berufsbildung_leitung']);
+
+        upgrade_plugin_savepoint(true, 2026100500, 'local', 'berufsbildung');
+    }
+
     return true;
 }

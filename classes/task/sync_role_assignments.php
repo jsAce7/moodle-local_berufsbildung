@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace local_berufsbildung\task;
 
 use core\task\scheduled_task;
+use local_berufsbildung\service\leitungsrolle_service;
 use local_berufsbildung\service\role_sync_service;
 
 /**
@@ -57,5 +58,15 @@ class sync_role_assignments extends scheduled_task {
             $ergebnis['planung_zugewiesen'],
             $ergebnis['planung_entzogen']
         ));
+
+        // Sicherheitsnetz fuer die Leitungsrolle: ein Zuruecksetzen nur des
+        // Kontextlevels loest kein Event aus, das der Observer sehen koennte.
+        $wiederhergestellt = (new leitungsrolle_service())->stelle_sicher();
+        if ($wiederhergestellt > 0) {
+            mtrace(sprintf(
+                'local_berufsbildung: Leitungsrolle, %d fehlende Einstellung(en) wiederhergestellt.',
+                $wiederhergestellt
+            ));
+        }
     }
 }

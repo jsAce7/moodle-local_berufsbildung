@@ -34,21 +34,28 @@ namespace local_berufsbildung\service;
  * Plugins von Hand vergeben - obwohl die README das Vergeben der
  * Planungsrolle der Ausbildungsleitung zuschreibt.
  *
- * Zuweisbar wird bewusst nur 'berufsbildung_planung'. Die personenbezogene
+ * Zuweisbar werden bewusst nur die beiden Systemrollen 'berufsbildung_planung'
+ * und 'berufsbildung_leitung'. Die personenbezogene
  * Rolle 'berufsbildner' pflegt der role_sync_service aus der
  * Zuordnungstabelle; von Hand vergeben oeffnet sie ohnehin nichts, weil
  * die aufsetzenden Plugins neben ihrer Capability immer auch
  * api::is_zustaendig() pruefen (Architekturregel 2: die Zuordnungstabelle
- * ist die einzige Wahrheit). Sichtbar sind beide, damit ihre Namen in
+ * ist die einzige Wahrheit). Sichtbar sind alle drei, damit ihre Namen in
  * Rollenuebersichten nicht leer bleiben.
  */
 class role_matrix_service {
     /**
-     * Rolle, die die Planungsrolle vergeben darf. Die Capabilities des
+     * Rolle, die die beiden Systemrollen vergeben darf. Die Capabilities des
      * Plugins tragen in db/access.php denselben Archetyp - 'manager' ist
      * hier also die "berechtigte Verwaltung" aus Architekturregel 2.
      */
     private const VERWALTUNG = 'manager';
+
+    /** Rollen, die die Verwaltung vergeben darf. */
+    private const ZUWEISBAR = ['berufsbildung_planung', 'berufsbildung_leitung'];
+
+    /** Rollen, deren Namen die Verwaltung sehen darf. */
+    private const SICHTBAR = ['berufsbildung_planung', 'berufsbildung_leitung', 'berufsbildner'];
 
     /**
      * Laeuft aus db/install.php und db/upgrade.php.
@@ -60,34 +67,59 @@ class role_matrix_service {
      * komplett neu schreibt.
      *
      * Eine von Hand entfernte Erlaubnis wird nicht wieder gesetzt: der
-     * Schritt laeuft je Installation nur einmal (Savepoint im Upgrade).
+     * Schritt laeuft je Installation und Rolle nur einmal (Savepoint im
+     * Upgrade). Kommt eine Rolle spaeter dazu, traegt ihr Upgrade-Schritt
+     * deshalb nur sie nach und gibt sie in $nur an.
      *
+     * @param string[]|null $nur Kurznamen der Rollen, die nachgetragen werden;
+     *  null fuer alle
      * @return array{assign: int, view: int} Anzahl neu eingetragener Zeilen
      */
-    public function synchronisiere(): array {
+    public function synchronisiere(?array $nur = null): array {
         $verwaltung = $this->rolle_id(self::VERWALTUNG);
         if ($verwaltung === null) {
             return ['assign' => 0, 'view' => 0];
         }
 
-        $planung = $this->rolle_id('berufsbildung_planung');
-        $berufsbildner = $this->rolle_id('berufsbildner');
-
         $assign = 0;
-        if ($planung !== null && $this->fehlt('role_allow_assign', 'allowassign', $verwaltung, $planung)) {
-            core_role_set_assign_allowed($verwaltung, $planung);
-            $assign++;
+        foreach ($this->rollen(self::ZUWEISBAR, $nur) as $zielrolle) {
+            if ($this->fehlt('role_allow_assign', 'allowassign', $verwaltung, $zielrolle)) {
+                core_role_set_assign_allowed($verwaltung, $zielrolle);
+                $assign++;
+            }
         }
 
         $view = 0;
-        foreach ([$planung, $berufsbildner] as $zielrolle) {
-            if ($zielrolle !== null && $this->fehlt('role_allow_view', 'allowview', $verwaltung, $zielrolle)) {
+        foreach ($this->rollen(self::SICHTBAR, $nur) as $zielrolle) {
+            if ($this->fehlt('role_allow_view', 'allowview', $verwaltung, $zielrolle)) {
                 core_role_set_view_allowed($verwaltung, $zielrolle);
                 $view++;
             }
         }
 
         return ['assign' => $assign, 'view' => $view];
+    }
+
+    /**
+     * Die IDs der existierenden Rollen aus einer Liste von Kurznamen.
+     *
+     * @param string[] $shortnames
+     * @param string[]|null $nur nur diese Kurznamen beruecksichtigen; null fuer alle
+     * @return int[]
+     */
+    private function rollen(array $shortnames, ?array $nur): array {
+        $ids = [];
+        foreach ($shortnames as $shortname) {
+            if ($nur !== null && !in_array($shortname, $nur, true)) {
+                continue;
+            }
+            $roleid = $this->rolle_id($shortname);
+            if ($roleid !== null) {
+                $ids[] = $roleid;
+            }
+        }
+
+        return $ids;
     }
 
     /**

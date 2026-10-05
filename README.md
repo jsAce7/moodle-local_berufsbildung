@@ -48,7 +48,7 @@ Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentati
    - **oder von Hand**: nach `local/berufsbildung` des Moodle-Codes kopieren oder verlinken.
 2. Das Upgrade ausführen, über *Website-Administration ▸ Mitteilungen* oder per CLI:
    `php admin/cli/upgrade.php --non-interactive`
-   Dabei entstehen die Rollen `berufsbildner` und `berufsbildung_planung`, siehe [Rollen und Zugang](#rollen-und-zugang).
+   Dabei entstehen die Rollen `berufsbildner`, `berufsbildung_planung` und `berufsbildung_leitung`, siehe [Rollen und Zugang](#rollen-und-zugang).
 3. Zwei benutzerdefinierte Profilfelder anlegen (Beruf, Jahrgang) und unter *Website-Administration ▸ Berufsbildung ▸ Einstellungen und Datenschutz ▸ Einstellungen* zuordnen. Die Auswahl bietet nur bereits vorhandene Profilfelder an; voreingestellt sind die Kurznamen `beruf` und `jahrgang`. Optional ein drittes Feld für einen abweichenden Lehrbeginn, am besten vom Typ Datum.
 4. Optional: unter *Website-Administration ▸ Berufsbildung ▸ Ausbildungsplanung ▸ Kompetenzrahmen je Beruf* jedem Beruf seinen Kompetenzrahmen zuordnen, siehe [Einstellungen](#einstellungen).
 5. Optional, für den Versetzungsplan-Webservice: Dienst *Berufsbildung: Versetzungsplan-Import* unter *Website-Administration ▸ Server ▸ Webservices ▸ Externe Webservices* aktivieren, Dienstkonto mit der Capability `local/berufsbildung:importplan` anlegen, als autorisierte Person beim Dienst eintragen und Token ausstellen. Der Dienst ist standardmässig deaktiviert und auf autorisierte Personen beschränkt. Details in [docs/schnittstelle_versetzungsplan.md](https://github.com/jsAce7/moodle-local_berufsbildung/blob/main/docs/schnittstelle_versetzungsplan.md), Abschnitt 4.
@@ -86,16 +86,21 @@ Dokumentierte Aufbewahrungspflichten (Ausnahmen von der automatischen Löschung)
 
 ## Rollen und Zugang
 
-Das Plugin legt zwei Rollen an:
+Das Plugin legt drei Rollen an:
 
 | Rolle | Kontext | Zweck |
 |---|---|---|
 | `berufsbildner` (Berufsbildner/in) | Nutzerkontext der lernenden Person | Trägt selbst keine Capabilities — die vergeben die aufsetzenden Plugins. Wird je bestehender Zuordnung zugewiesen und bleibt nach deren Ende bestehen, damit eine frühere Zuständigkeit zum damaligen Stichtag noch auflösbar ist. Entzogen erst mit der Datenbereinigung (Aufbewahrungsfrist, Löschung der Zuordnung, Account-Löschung). |
 | `berufsbildung_planung` (Ausbildungsplanung) | Systemkontext | Trägt `local/berufsbildung:manageblocks` und öffnet damit die Ausbildungsblöcke samt Kompetenzabdeckung und die Seite *Kompetenzrahmen je Beruf*. Wird jeder Person zugewiesen, die mindestens eine **laufende** Zuordnung hat, und wieder entzogen, sobald die letzte davon beendet ist. |
+| `berufsbildung_leitung` (Leitung Berufsbildung) | Systemkontext | Für die Leitung Berufsbildung, die ohne eigene Zuordnung über alle Lernenden hinweg liest, etwa die üK-Noten eines Jahrgangs. Trägt selbst keine Capabilities — die vergeben die aufsetzenden Plugins (siehe deren README). Wird **nie automatisch** zugewiesen, sondern von Hand als globale Rolle. |
 
 Der Unterschied im Entzug ist beabsichtigt: die personenbezogene Rolle ist stichtagsgeprüfter Lesezugriff und muss für einen Bericht aus einem früheren Semester noch greifen; die Planungsrolle ist systemweites Schreibrecht auf Stammdaten und endet deshalb mit der Betreuung.
 
-Beide werden vom stündlichen Task `sync_role_assignments` gepflegt, zusätzlich sofort beim Anlegen, Beenden und Löschen einer Zuordnung. Die selbst vergebenen Zuweisungen sind mit `component = 'local_berufsbildung'` markiert; von Hand vergebene bleiben unangetastet und werden nie entzogen. Eine Ausbildungsleitung, die selbst keine Lernenden betreut, wird deshalb einfach von Hand global der Rolle *Ausbildungsplanung* zugewiesen.
+Die Leitungsrolle ist bewusst von der Planungsrolle getrennt: Diese bekommt jede Person mit laufender Zuordnung automatisch, ein Leserecht ohne Zuständigkeitsprüfung darf deshalb nie an ihr hängen.
+
+**Die Leitungsrolle hält sich selbst intakt.** Sie hat keinen Archetyp, „Rolle zurücksetzen“ würde ihr deshalb alle Rechte und das Kontextlevel nehmen; danach liesse sie sich nicht einmal mehr global zuweisen. `leitungsrolle_service` stellt beides wieder her: sofort, sobald der Rolle eine Capability entzogen wird (Observer auf `capability_unassigned`), und zusätzlich stündlich im Task `sync_role_assignments`. Welche Capabilities die Rolle braucht, meldet jedes aufsetzende Plugin über den Callback `<plugin>_berufsbildung_leitung_capabilities()` in seiner `lib.php`. Wiederhergestellt wird nur, was gar nicht gesetzt ist: Wer der Leitung ein Recht **bewusst entziehen** will, setzt es unter *Rollen verwalten ▸ Leitung Berufsbildung ▸ Bearbeiten ▸ Erweitert* auf **Verhindern** oder **Verbieten**. „Nicht gesetzt“ kommt zurück.
+
+`berufsbildner` und `berufsbildung_planung` werden vom stündlichen Task `sync_role_assignments` gepflegt, zusätzlich sofort beim Anlegen, Beenden und Löschen einer Zuordnung. Die selbst vergebenen Zuweisungen sind mit `component = 'local_berufsbildung'` markiert; von Hand vergebene bleiben unangetastet und werden nie entzogen. Eine Ausbildungsleitung, die selbst keine Lernenden betreut, wird deshalb einfach von Hand global der Rolle *Ausbildungsplanung* zugewiesen.
 
 ### Capabilities
 
@@ -117,12 +122,12 @@ Die Systemeinstellungen bleiben Sache von `moodle/site:config`.
 
 | Rolle | Einzige Stelle, an der sie angeboten wird |
 |---|---|
-| `berufsbildung_planung` | *Website-Administration ▸ Nutzer/innen ▸ Rechte ändern ▸ **Globale Rollen zuweisen*** |
+| `berufsbildung_planung`, `berufsbildung_leitung` | *Website-Administration ▸ Nutzer/innen ▸ Rechte ändern ▸ **Globale Rollen zuweisen*** |
 | `berufsbildner` | Profil der **lernenden** Person ▸ *Einstellungen* ▸ „Rollen relativ zu diesem Nutzer zuweisen" |
 
-In einem Kurs ist keine der beiden zuweisbar — dort erscheinen nur Rollen mit `CONTEXT_COURSE`. Das ist Absicht (Architekturregel 1: kein Kurskontext).
+In einem Kurs ist keine der drei zuweisbar — dort erscheinen nur Rollen mit `CONTEXT_COURSE`. Das ist Absicht (Architekturregel 1: kein Kurskontext).
 
-`create_role()` trägt in `role_allow_assign` und `role_allow_view` nichts ein, und genau daran filtert `get_assignable_roles()` für alle, die nicht Administrator/in sind. `role_matrix_service` trägt deshalb bei Installation und Upgrade nach, dass die Rolle *Manager* die Rolle *Ausbildungsplanung* vergeben darf und beide Rollennamen sehen kann. Wer das einer anderen Rolle erlauben will, setzt das Häkchen unter *Rollen verwalten ▸ Rollenzuweisungen erlauben*.
+`create_role()` trägt in `role_allow_assign` und `role_allow_view` nichts ein, und genau daran filtert `get_assignable_roles()` für alle, die nicht Administrator/in sind. `role_matrix_service` trägt deshalb bei Installation und Upgrade nach, dass die Rolle *Manager* die Rollen *Ausbildungsplanung* und *Leitung Berufsbildung* vergeben darf und alle drei Rollennamen sehen kann. Wer das einer anderen Rolle erlauben will, setzt das Häkchen unter *Rollen verwalten ▸ Rollenzuweisungen erlauben*.
 
 `berufsbildner` bleibt bewusst **nicht** von Hand vergebbar, nur sichtbar: die Rolle allein öffnet nichts, weil die aufsetzenden Plugins neben ihrer Capability immer auch `api::is_zustaendig()` prüfen. Zuständigkeit entsteht über eine Zuordnung, nicht über eine Rollenzuweisung (Architekturregel 2).
 
