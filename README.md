@@ -6,7 +6,7 @@ Basis-Plugin für die betriebliche Berufsbildung in Moodle. Beantwortet zwei Fra
 
 Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentation (`local_lerndokumentation`), üK-Kompetenznachweise (`local_uekkn`) und Bildungsbericht (`local_bildungsbericht`) — baut über `\local_berufsbildung\api` darauf auf.
 
-> **Status:** Version 0.7.0, `MATURITY_BETA`. Funktional vollständig und automatisiert getestet. Freigegeben für einen begleiteten Pilotbetrieb mit echten Personendaten, noch nicht für den allgemeinen Betrieb, siehe [CHANGELOG.md](CHANGELOG.md).
+> **Status:** Version 0.8.0, `MATURITY_BETA`. Funktional vollständig und automatisiert getestet. Freigegeben für einen begleiteten Pilotbetrieb mit echten Personendaten, noch nicht für den allgemeinen Betrieb, siehe [CHANGELOG.md](CHANGELOG.md).
 
 ## Inhalt
 

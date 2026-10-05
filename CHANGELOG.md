@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unveröffentlicht]
+## [0.8.0] — 2026-10-05
 
 ### Hinzugefügt
 

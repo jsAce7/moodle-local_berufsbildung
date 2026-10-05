@@ -25,8 +25,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_berufsbildung';
-$plugin->version   = 2026100501;
+$plugin->version   = 2026100502;
 $plugin->requires  = 2024100700; // Moodle 4.5.
 $plugin->supported = [405, 502]; // Wie die CI-Matrix.
 $plugin->maturity  = MATURITY_BETA;
-$plugin->release   = '0.7.0';
+$plugin->release   = '0.8.0';
