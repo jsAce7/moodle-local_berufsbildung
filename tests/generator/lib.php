@@ -98,4 +98,42 @@ class local_berufsbildung_generator extends component_generator_base {
 
         return $this->datagenerator->create_user($record);
     }
+
+    /**
+     * Legt einen Ausbildungsblock an.
+     *
+     * @param array $record Muss nummer enthalten; die uebrigen Felder haben
+     *                       die Defaults des Persistent.
+     * @return \local_berufsbildung\persistent\block
+     */
+    public function create_block(array $record): \local_berufsbildung\persistent\block {
+        if (empty($record['nummer'])) {
+            throw new coding_exception('create_block() benoetigt nummer');
+        }
+
+        $block = new \local_berufsbildung\persistent\block(0, (object) $record);
+        $block->create();
+
+        return $block;
+    }
+
+    /**
+     * Ordnet einem Ausbildungsblock eine Kompetenz zu.
+     *
+     * @param array $record Muss blockid und competencyid enthalten.
+     * @return \local_berufsbildung\persistent\block_lk
+     */
+    public function create_block_competency(array $record): \local_berufsbildung\persistent\block_lk {
+        if (empty($record['blockid']) || empty($record['competencyid'])) {
+            throw new coding_exception('create_block_competency() benoetigt blockid und competencyid');
+        }
+
+        $abdeckung = new \local_berufsbildung\persistent\block_lk(0, (object) [
+            'blockid' => $record['blockid'],
+            'competencyid' => $record['competencyid'],
+        ]);
+        $abdeckung->create();
+
+        return $abdeckung;
+    }
 }
