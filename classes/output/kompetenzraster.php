@@ -58,7 +58,7 @@ class kompetenzraster {
      *                      fuer die Roster-Karten in meine_lernenden.php
      */
     public static function render(array $raster, ?int $horizont = null, bool $kompakt = false): string {
-        global $OUTPUT;
+        global $OUTPUT, $PAGE;
 
         if (empty($raster)) {
             return '';
@@ -142,6 +142,12 @@ class kompetenzraster {
         $bloeckelink = $hinweis !== '' && $horizont !== null
             && has_capability('local/berufsbildung:manageblocks', \context_system::instance());
 
+        // Die LK-Liste einer Zelle oeffnet sich in einem Dialog statt in der
+        // Zelle: bei zehn und mehr LK wuerde die Zeile sonst unuebersichtlich.
+        if (!$kompakt) {
+            $PAGE->requires->js_call_amd('local_berufsbildung/kompetenzraster', 'init');
+        }
+
         return $OUTPUT->render_from_template('local_berufsbildung/kompetenzraster', [
             'titel' => get_string('raster:titel', 'local_berufsbildung'),
             'bereiche' => $bereiche,
@@ -218,6 +224,7 @@ class kompetenzraster {
             // Im kompakten Raster steht nur das Kuerzel in der Zelle; der
             // Titel traegt dort die ganze Information nach.
             'titel' => $name . ' · ' . $art . ' · ' . $darstellung['text'],
+            'dialogtitel' => trim($idnumber . ' ' . $name),
         ] + self::leistungskriterien($kompetenz, $kompetenzen, $kompakt);
     }
 
@@ -225,17 +232,19 @@ class kompetenzraster {
      * Zahl und Liste der Leistungskriterien einer Zelle: eine HK gilt schon
      * als vorgekommen, sobald eines ihrer LK in einem Einsatz vorkommt -
      * abgeschlossen ist sie meist erst am Ende der Lehre. Die Zahl zeigt,
-     * wie weit sie ist, die aufklappbare Liste, welche LK noch fehlen.
+     * wie weit sie ist; ein Klick darauf zeigt in einem Dialog, welche LK
+     * noch fehlen (amd/src/kompetenzraster.js). Ohne JavaScript klappt die
+     * Liste in der Zelle auf.
      *
      * @param raster_kompetenz $kompetenz
      * @param array $kompetenzen Bezeichnungen aus lade_kompetenzen(), nach competencyid
      * @param bool $kompakt
-     * @return array Template-Kontext: haslk, lktext, leistungskriterien
+     * @return array Template-Kontext: haslk, lktext, lkgruppen
      */
     private static function leistungskriterien(raster_kompetenz $kompetenz, array $kompetenzen, bool $kompakt): array {
         $anzahl = count($kompetenz->leistungskriterien);
         if ($kompakt || $anzahl === 0) {
-            return ['haslk' => false, 'lktext' => '', 'leistungskriterien' => []];
+            return ['haslk' => false, 'lktext' => '', 'lkgruppen' => []];
         }
 
         $eingeplant = $kompetenz->anzahl_lk(raster_kompetenz::STATUS_EINGEPLANT);
@@ -249,28 +258,47 @@ class kompetenzraster {
             ]
         );
 
-        $liste = [];
-        foreach ($kompetenz->leistungskriterien as $lkid => $status) {
-            $darstellung = self::darstellung($status);
-            $liste[] = [
-                'name' => $kompetenzen[$lkid]['shortname'] ?? ('#' . $lkid),
-                'beschreibung' => $kompetenzen[$lkid]['beschreibung'] ?? '',
+        // Nach Stand gruppiert, das Fehlende zuerst: dafuer oeffnet man die
+        // Liste. Innerhalb einer Gruppe natuerlich sortiert wie in der
+        // Kompetenzauswahl - die sortorder der LK folgt dem Rahmenimport,
+        // nicht der Nummerierung.
+        $zeichen = [
+            raster_kompetenz::STATUS_OFFEN => 'fa-times',
+            raster_kompetenz::STATUS_EINGEPLANT => 'fa-calendar',
+            raster_kompetenz::STATUS_ABGEDECKT => 'fa-check',
+        ];
+        $gruppen = [];
+        foreach ($zeichen as $status => $icon) {
+            $eintraege = [];
+            foreach ($kompetenz->leistungskriterien as $lkid => $lkstatus) {
+                if ($lkstatus !== $status) {
+                    continue;
+                }
+                $beschreibung = $kompetenzen[$lkid]['beschreibung'] ?? '';
+                $eintraege[] = [
+                    'name' => $kompetenzen[$lkid]['shortname'] ?? ('#' . $lkid),
+                    'beschreibung' => $beschreibung,
+                    'hatbeschreibung' => $beschreibung !== '',
+                ];
+            }
+            if (empty($eintraege)) {
+                continue;
+            }
+
+            usort(
+                $eintraege,
+                static fn (array $links, array $rechts): int => strnatcasecmp($links['name'], $rechts['name'])
+            );
+
+            $gruppen[] = [
+                'titel' => get_string('raster:lk_gruppe_' . $status, 'local_berufsbildung', count($eintraege)),
                 'statusklasse' => 'local-berufsbildung-raster-lk-' . $status,
-                // Hier braucht auch "nicht im Plan" ein Zeichen: die Liste
-                // ist genau dafuer da, das Fehlende zu finden.
-                'icon' => $status === raster_kompetenz::STATUS_OFFEN ? 'fa-times' : $darstellung['icon'],
-                'statustext' => $darstellung['text'],
+                'icon' => $icon,
+                'leistungskriterien' => $eintraege,
             ];
         }
 
-        // Natuerlich sortiert wie in der Kompetenzauswahl: die sortorder der
-        // LK folgt dem Rahmenimport, nicht der Nummerierung.
-        usort(
-            $liste,
-            static fn (array $links, array $rechts): int => strnatcasecmp($links['name'], $rechts['name'])
-        );
-
-        return ['haslk' => true, 'lktext' => $lktext, 'leistungskriterien' => $liste];
+        return ['haslk' => true, 'lktext' => $lktext, 'lkgruppen' => $gruppen];
     }
 
     /**

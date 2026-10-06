@@ -282,11 +282,16 @@ final class kompetenzraster_test extends advanced_testcase {
             $html
         );
         $this->assertStringContainsString('AU a1 03', $html);
+        // Das Fehlende steht zuerst.
+        $this->assertLessThan(
+            strpos($html, get_string('raster:lk_gruppe_abgedeckt', 'local_berufsbildung', 1)),
+            strpos($html, get_string('raster:lk_gruppe_offen', 'local_berufsbildung', 1))
+        );
         $this->assertStringContainsString('local-berufsbildung-raster-lk-offen', $html);
         $this->assertStringContainsString('fa-times', $html);
 
         $kompakt = kompetenzraster::render($raster, time(), kompakt: true);
-        $this->assertStringNotContainsString('local-berufsbildung-raster-lkliste', $kompakt);
+        $this->assertStringNotContainsString('raster-lk-inhalt', $kompakt);
     }
 
     /**

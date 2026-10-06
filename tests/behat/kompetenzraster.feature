@@ -50,3 +50,15 @@ Feature: Kompetenzraster auf Meine Lehre
     And I should see "1 of 1 criteria encountered"
     And I should see "0 of 1 criteria encountered, 1 scheduled"
     And I should not see "No competency area occurs in the rotation plan on file yet."
+
+  @javascript
+  Scenario: Die Leistungskriterien einer Zelle oeffnen sich in einem Dialog
+    Given the following "local_berufsbildung > block competencies" exist:
+      | block | competency |
+      | B1    | lk-a1-01   |
+    When I log in as "lea"
+    And I visit "/local/berufsbildung/meine_lehre.php"
+    And I click on "1 of 1 criteria encountered" "text"
+    Then "a.01 Fertigungsunterlagen erstellen" "dialogue" should be visible
+    And I should see "Already encountered (1)" in the "a.01 Fertigungsunterlagen erstellen" "dialogue"
+    And I should see "AU a1 01" in the "a.01 Fertigungsunterlagen erstellen" "dialogue"

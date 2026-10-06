@@ -710,30 +710,53 @@
 }
 
 /*
- * Die Leistungskriterien einer Zelle: zugeklappt nur die Zahl, aufgeklappt
- * die Liste. Was schon vorkam oder eingeplant ist, tritt zurueck - die
- * Liste ist dafuer da, das Fehlende zu finden.
+ * Die Leistungskriterien einer Zelle: in der Zelle nur die Zahl. Ein Klick
+ * darauf oeffnet einen Dialog (amd/src/kompetenzraster.js); ohne
+ * JavaScript klappt die Liste in der Zelle auf. Nach Stand gruppiert, das
+ * Fehlende zuerst; was schon vorkam oder eingeplant ist, tritt zurueck.
  */
 .local-berufsbildung-raster-lk {
     margin-top: 0.2rem;
 }
 
 .local-berufsbildung-raster-lkkopf {
+    display: inline;
+    list-style: none;
     cursor: pointer;
+    text-decoration: underline dotted;
 }
 
-.local-berufsbildung-raster-lkliste {
-    margin-top: 0.15rem;
-    line-height: 1.3;
+/* Ohne Dreieck: mit JavaScript oeffnet der Kopf einen Dialog. */
+.local-berufsbildung-raster-lkkopf::-webkit-details-marker {
+    display: none;
 }
 
-.local-berufsbildung-raster-lk-abgedeckt,
-.local-berufsbildung-raster-lk-eingeplant {
-    opacity: 0.7;
+.local-berufsbildung-raster-lkgruppe + .local-berufsbildung-raster-lkgruppe {
+    margin-top: 0.75rem;
 }
 
-.local-berufsbildung-raster-lk-offen {
+.local-berufsbildung-raster-lkgruppentitel {
+    margin: 0.3rem 0 0.25rem;
+    font-size: inherit;
     font-weight: 600;
+}
+
+.local-berufsbildung-raster-lkgruppe li {
+    padding: 0.1rem 0;
+}
+
+.local-berufsbildung-raster-lk-abgedeckt li,
+.local-berufsbildung-raster-lk-eingeplant li {
+    opacity: 0.75;
+}
+
+.local-berufsbildung-raster-lkcode {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.local-berufsbildung-raster-lktext {
+    margin-left: 0.35rem;
 }
 
 .local-berufsbildung-raster-status {

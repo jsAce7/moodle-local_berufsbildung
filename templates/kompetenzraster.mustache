@@ -35,8 +35,9 @@
     * bereiche - array of {name, abdeckung, hatsoll, zellen}
     * zellen - array of {istleer} oder
                {istleer, name, hascode, code, farbklasse, statusklasse, hatzeichen, icon, statustext, titel,
-                haslk, lktext, leistungskriterien}
-    * leistungskriterien - array of {name, beschreibung, statusklasse, icon, statustext}
+                dialogtitel, haslk, lktext, lkgruppen}
+    * lkgruppen - array of {titel, statusklasse, icon, leistungskriterien}, das Fehlende zuerst
+    * leistungskriterien - array of {name, beschreibung, hatbeschreibung}
     * kompakt - bool, nur Kuerzel und Symbol statt der vollen Bezeichnung
     * haszusammenfassung - bool
     * zusammenfassung - string, Pflicht-HK je Stand ueber alle Bereiche
@@ -78,15 +79,18 @@
                         "icon": "fa-check",
                         "statustext": "abgedeckt",
                         "titel": "Fertigungsunterlagen erstellen · Pflicht · abgedeckt",
+                        "dialogtitel": "a1 Fertigungsunterlagen erstellen",
                         "haslk": true,
                         "lktext": "1 von 2 LK vorgekommen",
-                        "leistungskriterien": [
-                            {"name": "AU a1 01", "beschreibung": "Sie erstellen Stücklisten.",
-                             "statusklasse": "local-berufsbildung-raster-lk-abgedeckt", "icon": "fa-check",
-                             "statustext": "bereits vorgekommen"},
-                            {"name": "AU a1 02", "beschreibung": "Sie zeichnen Skizzen.",
-                             "statusklasse": "local-berufsbildung-raster-lk-offen", "icon": "fa-times",
-                             "statustext": "nicht im Plan"}
+                        "lkgruppen": [
+                            {"titel": "Fehlt noch (1)", "statusklasse": "local-berufsbildung-raster-lk-offen",
+                             "icon": "fa-times",
+                             "leistungskriterien": [{"name": "AU a1 02", "beschreibung": "Sie zeichnen Skizzen.",
+                                                     "hatbeschreibung": true}]},
+                            {"titel": "Bereits vorgekommen (1)", "statusklasse": "local-berufsbildung-raster-lk-abgedeckt",
+                             "icon": "fa-check",
+                             "leistungskriterien": [{"name": "AU a1 01", "beschreibung": "Sie erstellen Stücklisten.",
+                                                     "hatbeschreibung": true}]}
                         ]
                     },
                     {
@@ -175,19 +179,34 @@
                                             den Namen wechselt. }}
                                         <span class="local-berufsbildung-raster-status small{{^hatzeichen}} local-berufsbildung-nurtext{{/hatzeichen}}">{{statustext}}</span>
                                         {{#haslk}}
-                                            {{! Natives <details>: kein JavaScript, und die Zelle bleibt
-                                                kurz, bis man wissen will, welche LK noch fehlen. }}
-                                            <details class="local-berufsbildung-raster-lk">
-                                                <summary class="local-berufsbildung-raster-lkkopf small">{{lktext}}</summary>
-                                                <ul class="local-berufsbildung-raster-lkliste list-unstyled small mb-0">
-                                                    {{#leistungskriterien}}
-                                                        <li class="{{statusklasse}}" title="{{beschreibung}}">
-                                                            <i class="icon fa {{icon}} fa-fw m-0" aria-hidden="true"></i>
-                                                            <span class="local-berufsbildung-nurtext">{{statustext}}:</span>
-                                                            {{name}}
-                                                        </li>
-                                                    {{/leistungskriterien}}
-                                                </ul>
+                                            {{! Mit JavaScript oeffnet der Kopf einen Dialog mit dem Inhalt
+                                                (amd/src/kompetenzraster.js) - bei zehn und mehr LK waere die
+                                                Liste in der Zelle unuebersichtlich. Ohne JavaScript klappt
+                                                das native <details> in der Zelle auf. }}
+                                            <details class="local-berufsbildung-raster-lk" data-region="raster-lk"
+                                                     data-titel="{{dialogtitel}}">
+                                                <summary class="local-berufsbildung-raster-lkkopf small"
+                                                         data-region="raster-lk-kopf">{{lktext}}</summary>
+                                                <div class="local-berufsbildung-raster-lkinhalt small" data-region="raster-lk-inhalt">
+                                                    {{#lkgruppen}}
+                                                        <div class="local-berufsbildung-raster-lkgruppe {{statusklasse}}">
+                                                            <h4 class="local-berufsbildung-raster-lkgruppentitel">
+                                                                <i class="icon fa {{icon}} fa-fw m-0" aria-hidden="true"></i>
+                                                                {{titel}}
+                                                            </h4>
+                                                            <ul class="list-unstyled mb-0">
+                                                                {{#leistungskriterien}}
+                                                                    <li>
+                                                                        <span class="local-berufsbildung-raster-lkcode">{{name}}</span>
+                                                                        {{#hatbeschreibung}}
+                                                                            <span class="local-berufsbildung-raster-lktext text-muted">{{beschreibung}}</span>
+                                                                        {{/hatbeschreibung}}
+                                                                    </li>
+                                                                {{/leistungskriterien}}
+                                                            </ul>
+                                                        </div>
+                                                    {{/lkgruppen}}
+                                                </div>
                                             </details>
                                         {{/haslk}}
                                     </div>
