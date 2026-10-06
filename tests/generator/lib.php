@@ -22,8 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Erzeugt Testdaten fuer local_berufsbildung, aufrufbar ueber
  * $this->getDataGenerator()->get_plugin_generator('local_berufsbildung').

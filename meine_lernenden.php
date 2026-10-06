@@ -142,7 +142,9 @@ if (empty($eintraege)) {
     $anzahlluecken = [];
     foreach ($eintraege as $eintrag) {
         $stand = $eintrag['stand'];
-        $raster[$eintrag['id']] = (!$eintrag['istextern'] && $stand !== null && api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null)
+        $mitraster = !$eintrag['istextern'] && $stand !== null
+            && api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null;
+        $raster[$eintrag['id']] = $mitraster
             ? api::get_kompetenzraster($eintrag['id'])
             : [];
 
@@ -294,8 +296,8 @@ if (empty($eintraege)) {
             ])
             : null;
 
-        // "Wo steht die Person gerade" - beim Blick auf den Roster die
-        // erste Frage. Der Plan ist ein Spiegel (Architekturregel 5):
+        // Wo steht die Person gerade? Beim Blick auf den Roster die erste
+        // Frage. Der Plan ist ein Spiegel (Architekturregel 5):
         // gezeigt wird, was zuletzt importiert wurde. Laeuft zum Stichtag
         // kein Einsatz, bleibt die Spalte leer.
         $einsatz = api::get_aktueller_einsatz($lernendeid);

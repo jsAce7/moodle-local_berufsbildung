@@ -46,7 +46,7 @@ $PAGE->navbar->add($titel);
 $returnurl = new moodle_url('/local/berufsbildung/zuordnung.php');
 
 $form = new zuordnung_beenden_form(null, ['gueltig_von' => (int) $zuordnung->get('gueltig_von')]);
-// date_selector mit optional => true erwartet 0 statt null fuer "kein Datum".
+// Ein date_selector mit optional => true erwartet 0 statt null fuer "kein Datum".
 $form->set_data((object) [
     'id' => $id,
     'gueltig_bis' => $zuordnung->get('gueltig_bis') ?? 0,

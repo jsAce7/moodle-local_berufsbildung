@@ -372,7 +372,7 @@ class kompetenzraster {
                 // Das Feld der Legende sieht aus wie eine Zelle mit diesem
                 // Stand: gleiche Flaeche, gleiches Zeichen.
                 'statusklasse' => 'local-berufsbildung-raster-' . $status,
-                // "nicht im Plan" zeigt sich in der Zelle durch das Fehlen
+                // Der Stand "nicht im Plan" zeigt sich in der Zelle durch das Fehlen
                 // eines Zeichens - die Legende zeigt deshalb auch hier
                 // keins, sonst erklaert sie ein Symbol, das im Raster
                 // nirgends steht.

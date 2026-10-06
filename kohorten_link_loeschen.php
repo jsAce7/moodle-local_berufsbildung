@@ -40,7 +40,12 @@ $PAGE->set_heading($title);
 
 if (optional_param('bestaetigt', 0, PARAM_BOOL) && confirm_sesskey()) {
     api::loesche_kohorten_link($id);
-    redirect($returnurl, get_string('kohortenlink:geloescht', 'local_berufsbildung'), null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect(
+        $returnurl,
+        get_string('kohortenlink:geloescht', 'local_berufsbildung'),
+        null,
+        \core\output\notification::NOTIFY_SUCCESS
+    );
 }
 
 echo $OUTPUT->header();

@@ -22,8 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Upgrade function.
  *
@@ -130,7 +128,13 @@ function xmldb_local_berufsbildung_upgrade($oldversion) {
             $dbman->add_field($table, $field);
         }
 
-        $key = new xmldb_key('kohortenlinkid', XMLDB_KEY_FOREIGN, ['kohorten_link_id'], 'local_berufsbildung_kohorten_link', ['id']);
+        $key = new xmldb_key(
+            'kohortenlinkid',
+            XMLDB_KEY_FOREIGN,
+            ['kohorten_link_id'],
+            'local_berufsbildung_kohorten_link',
+            ['id']
+        );
         $dbman->add_key($table, $key);
 
         // Berufsbildung savepoint reached.
@@ -314,7 +318,7 @@ function xmldb_local_berufsbildung_upgrade($oldversion) {
     }
 
     if ($oldversion < 2026083116) {
-        // local_berufsbildung_block_hk speichert eigentlich die einzelnen
+        // Die Tabelle local_berufsbildung_block_hk speichert eigentlich die einzelnen
         // Leistungskriterien (LK) je Block - unterste Ebene des Rahmens
         // (Handlungskompetenzbereich -> Handlungskompetenz ->
         // Leistungskriterium), nicht die Handlungskompetenzen selbst. Siehe

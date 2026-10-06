@@ -95,7 +95,17 @@ class import_service {
             // Kopfzeilenfehler oder eine komplett unlesbare Datei - nichts
             // liess sich extrahieren, damit ist der ganze Lauf gescheitert.
             if (!$testlauf) {
-                $this->schreibe_protokoll($quelle, $hash, $ausgefuehrtvon, $geparst['zeilen_gelesen'], 0, 0, 0, 'fehlgeschlagen', $geparst['fehler']);
+                $this->schreibe_protokoll(
+                    $quelle,
+                    $hash,
+                    $ausgefuehrtvon,
+                    $geparst['zeilen_gelesen'],
+                    0,
+                    0,
+                    0,
+                    'fehlgeschlagen',
+                    $geparst['fehler']
+                );
             }
 
             return $this->ergebnis('fehlgeschlagen', false, $geparst['zeilen_gelesen'], 0, 0, 0, $geparst['fehler']);

@@ -37,6 +37,13 @@ use local_berufsbildung\persistent\einsatz;
  * @covers \local_berufsbildung\versetzungsplan\plan_service
  */
 final class plan_service_test extends advanced_testcase {
+    /**
+     * Legt einen Ausbildungsblock an.
+     *
+     * @param string $nummer
+     * @param bool $istbetrieb
+     * @return block
+     */
     private function lege_block_an(string $nummer, bool $istbetrieb = true): block {
         $block = new block(0, (object) ['nummer' => $nummer, 'name' => $nummer, 'ist_betrieb' => $istbetrieb, 'aktiv' => true]);
         $block->create();
@@ -44,6 +51,15 @@ final class plan_service_test extends advanced_testcase {
         return $block;
     }
 
+    /**
+     * Legt einen Einsatz im Versetzungsplan an.
+     *
+     * @param int $userid
+     * @param int $blockid
+     * @param int $von
+     * @param int $bis
+     * @return einsatz
+     */
     private function lege_einsatz_an(int $userid, int $blockid, int $von, int $bis): einsatz {
         $einsatz = new einsatz(0, (object) [
             'userid' => $userid, 'blockid' => $blockid, 'von' => $von, 'bis' => $bis,

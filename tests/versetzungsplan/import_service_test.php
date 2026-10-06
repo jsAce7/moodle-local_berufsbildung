@@ -38,6 +38,11 @@ use stdClass;
  * @covers \local_berufsbildung\versetzungsplan\import_service
  */
 final class import_service_test extends advanced_testcase {
+    /**
+     * Gibt der lernenden Person eine laufende Zuordnung, damit der Import sie kennt.
+     *
+     * @param stdClass $lernende
+     */
     private function lege_aktive_zuordnung_an(stdClass $lernende): void {
         $berufsbildner = $this->getDataGenerator()->create_user();
         $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_zuordnung([
@@ -58,7 +63,8 @@ final class import_service_test extends advanced_testcase {
 
         $ergebnis = (new import_service())->verarbeiten($csv, 'upload', (int) $admin->id);
 
-        $this->assertSame('mit_warnungen', $ergebnis['status']); // unbekannter Block wird protokolliert
+        // Der unbekannte Block wird protokolliert.
+        $this->assertSame('mit_warnungen', $ergebnis['status']);
         $this->assertSame(1, $ergebnis['personen_verarbeitet']);
         $this->assertSame(1, $ergebnis['einsaetze_erzeugt']);
         $this->assertCount(1, einsatz::get_records(['userid' => (int) $lernende->id]));
@@ -97,7 +103,8 @@ final class import_service_test extends advanced_testcase {
         $this->resetAfterTest();
 
         $admin = $this->getDataGenerator()->create_user();
-        $this->getDataGenerator()->create_user(['email' => 'fremd@firma.ch']); // keine Zuordnung
+        // Ohne Zuordnung.
+        $this->getDataGenerator()->create_user(['email' => 'fremd@firma.ch']);
 
         $csv = "email;block;kw_von;kw_bis\nfremd@firma.ch;4;2027-W15;2027-W16\n";
 
@@ -245,7 +252,8 @@ final class import_service_test extends advanced_testcase {
         $ergebnis = (new import_service())->verarbeiten($csv, 'upload', (int) $admin->id, true);
 
         $this->assertSame(1, $ergebnis['personen_verarbeitet']);
-        $this->assertSame(1, $ergebnis['einsaetze_erzeugt']); // im Ergebnis vorhergesagt ...
+        // Im Ergebnis vorhergesagt ...
+        $this->assertSame(1, $ergebnis['einsaetze_erzeugt']);
         $this->assertCount(0, einsatz::get_records([])); // ... aber nicht geschrieben.
         $this->assertCount(0, plan_import::get_records([]));
         $this->assertEmpty(block::get_record(['nummer' => '4']));

@@ -113,7 +113,7 @@ if ($stand !== null) {
     echo semester_stepper::render($stand->semester, $stand->gesamtsemester);
 
     if (!$istbeendet) {
-        // "Wo bin ich gerade" - die unmittelbarste Information des Plans,
+        // Wo bin ich gerade? Die unmittelbarste Information des Plans,
         // und nur solange die Lehre laeuft ueberhaupt eine Frage.
         $einsatz = api::get_aktueller_einsatz($lernendeid);
         if ($einsatz !== null) {

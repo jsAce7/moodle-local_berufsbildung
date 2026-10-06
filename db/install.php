@@ -22,8 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Legt die drei Rollen des Plugins an, sofern sie nicht existieren:
  *
@@ -59,7 +57,7 @@ function xmldb_local_berufsbildung_install() {
         );
         set_role_contextlevels($roleid, [CONTEXT_SYSTEM]);
 
-        // upgrade_plugins() ruft update_capabilities() erst nach dieser
+        // Moodles upgrade_plugins() ruft update_capabilities() erst nach dieser
         // Funktion auf. Bei einer Neuinstallation kennt die Datenbank
         // 'manageblocks' deshalb noch nicht und assign_capability() bricht
         // mit einer coding_exception ab. Der vorgezogene Aufruf ist
@@ -77,7 +75,7 @@ function xmldb_local_berufsbildung_install() {
 
     xmldb_local_berufsbildung_lege_leitungsrolle_an();
 
-    // create_role() traegt in role_allow_assign und role_allow_view nichts
+    // Moodles create_role() traegt in role_allow_assign und role_allow_view nichts
     // ein. Ohne diesen Schritt bekommt nur eine Administratorin die Rollen
     // ueberhaupt zur Auswahl, weil get_assignable_roles() fuer alle
     // anderen genau an dieser Matrix filtert.

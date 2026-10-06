@@ -48,7 +48,12 @@ class import_versetzungsplan extends external_api {
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'csvdaten' => new external_value(PARAM_RAW, 'CSV-Inhalt, Base64-kodiert'),
-            'quelle' => new external_value(PARAM_TEXT, 'Freitext zur Herkunft, z.B. Name des liefernden Skripts', VALUE_DEFAULT, 'webservice'),
+            'quelle' => new external_value(
+                PARAM_TEXT,
+                'Freitext zur Herkunft, z.B. Name des liefernden Skripts',
+                VALUE_DEFAULT,
+                'webservice'
+            ),
             'testlauf' => new external_value(PARAM_BOOL, 'true = nur pruefen, nichts schreiben', VALUE_DEFAULT, false),
             'rueckgang_bestaetigt' => new external_value(
                 PARAM_BOOL,
@@ -108,7 +113,10 @@ class import_versetzungsplan extends external_api {
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'status' => new external_value(PARAM_ALPHAEXT, "'ok' | 'mit_warnungen' | 'abgewiesen' | 'fehlgeschlagen'"),
-            'unveraendert' => new external_value(PARAM_BOOL, 'true = identisch zum letzten erfolgreichen Import, nichts geschrieben'),
+            'unveraendert' => new external_value(
+                PARAM_BOOL,
+                'true = identisch zum letzten erfolgreichen Import, nichts geschrieben'
+            ),
             'zeilen_gelesen' => new external_value(PARAM_INT, 'Anzahl gelesener Datenzeilen'),
             'personen_verarbeitet' => new external_value(PARAM_INT, 'Anzahl Personen mit aktiver Zuordnung'),
             'zeilen_ausserhalb_geltungsbereich' => new external_value(PARAM_INT, 'Anzahl Zeilen ohne aktive Zuordnung'),

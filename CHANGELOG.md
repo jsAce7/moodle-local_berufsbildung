@@ -15,6 +15,10 @@
 - **„Meine Lernenden“ ohne Lückenliste**: Je Person steht nur noch das Raster. Was fehlt, zeigen die weissen Zellen und je Zelle der Dialog; die Zahl der fehlenden Pflicht-Handlungskompetenzen trägt weiterhin das Badge der Kachel.
 - **Kompetenzraster mit wenigen Datenbankabfragen** (`plan_service`, `raster_analyse`): Für eine Person mit acht Einsätzen und 90 zugeordneten Leistungskriterien brauchte das Raster 548 Lesezugriffe, auf „Meine Lernenden“ mit zehn Personen über 5000. Jetzt sind es 11 je Person, unabhängig von der Zahl der Leistungskriterien.
 
+### Code
+
+- **Keine Warnungen des Code-Checkers mehr**: 49 Warnungen behoben (zu lange Zeilen, Kommentare in Kleinschreibung, fehlende Docblocks an Test-Hilfsmethoden, überflüssige `MOODLE_INTERNAL`-Prüfungen). Die CI läuft den Code-Checker jetzt mit `--max-warnings 0`, damit es so bleibt.
+
 ### Tests
 
 - Behat-Szenarien für das Raster auf „Meine Lehre“ und für das Abwählen in der Kompetenzauswahl. Der Behat-Generator legt dafür auch Lernende mit Beruf und Jahrgang sowie Einsätze an.

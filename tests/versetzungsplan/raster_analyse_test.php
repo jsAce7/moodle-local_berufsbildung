@@ -41,6 +41,9 @@ use stdClass;
  * @covers \local_berufsbildung\versetzungsplan\raster_analyse
  */
 final class raster_analyse_test extends advanced_testcase {
+    /**
+     * Legt die Profilfelder Beruf und Jahrgang an.
+     */
     private function lege_profilfelder_an(): void {
         $this->getDataGenerator()->create_custom_profile_field([
             'datatype' => 'text', 'shortname' => 'beruf', 'name' => 'Beruf',
@@ -60,6 +63,11 @@ final class raster_analyse_test extends advanced_testcase {
         return (int) date('n', $jetzt) >= 8 ? (int) date('Y', $jetzt) : (int) date('Y', $jetzt) - 1;
     }
 
+    /**
+     * Legt eine lernende Person mit laufender Lehre und konfiguriertem Rahmen an.
+     *
+     * @return stdClass
+     */
     private function lege_lernende_an(): stdClass {
         $this->lege_profilfelder_an();
         set_config('beruf_rahmen_mapping', 'AU_EFZ=au-2022', 'local_berufsbildung');
