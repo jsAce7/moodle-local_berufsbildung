@@ -161,9 +161,9 @@
                             deckt sie oft als Ganzes ab. Die Checkbox steht bewusst ausserhalb des
                             <details> darunter: in einem <summary> wuerde jeder Klick darauf zugleich
                             auf- oder zuklappen, und das liesse sich nur mit JavaScript trennen. }}
-                        <div class="local-berufsbildung-auswahl-eintrag local-berufsbildung-auswahl-hkzeile">
+                        <div class="local-berufsbildung-auswahl-eintrag local-berufsbildung-auswahl-hkzeile{{#istzugeordnet}} local-berufsbildung-auswahl-ist-zugeordnet{{/istzugeordnet}}">
                             {{#istzugeordnet}}
-                                <span class="badge bg-light text-dark border">{{zugeordnettext}}</span>
+                                <span class="local-berufsbildung-auswahl-zugeordnet badge bg-success text-white">{{#pix}}i/checked, core{{/pix}}{{zugeordnettext}}</span>
                                 {{#hatcode}}
                                     <span class="local-berufsbildung-auswahl-code badge bg-light text-dark border">{{code}}</span>
                                 {{/hatcode}}
@@ -188,10 +188,10 @@
                                         Beschreibung aus dem Rahmen steht gekuerzt daneben, der volle
                                         Text im Titel. }}
                                     {{#leistungskriterien}}
-                                        <div class="local-berufsbildung-auswahl-eintrag"
+                                        <div class="local-berufsbildung-auswahl-eintrag{{#istzugeordnet}} local-berufsbildung-auswahl-ist-zugeordnet{{/istzugeordnet}}"
                                              data-region="lk" data-suchtext="{{suchtext}}">
                                             {{#istzugeordnet}}
-                                                <span class="badge bg-light text-dark border">{{zugeordnettext}}</span>
+                                                <span class="local-berufsbildung-auswahl-zugeordnet badge bg-success text-white">{{#pix}}i/checked, core{{/pix}}{{zugeordnettext}}</span>
                                                 <span title="{{beschreibung}}">
                                                     <span class="local-berufsbildung-auswahl-lkcode">{{name}}</span>
                                                     {{#hatbeschreibung}}

@@ -530,6 +530,27 @@
     margin: 0.3rem 0 0;
 }
 
+/*
+ * Bereits zugeordnete Eintraege muessen sich von den waehlbaren abheben:
+ * ein hellgrauer Badge ging zwischen den Code-Badges unter. Gruener Badge
+ * mit Haken an der Stelle der Checkbox, dazu ein leicht getoenter Hintergrund
+ * ueber die ganze Zeile.
+ */
+.local-berufsbildung-auswahl-ist-zugeordnet {
+    background-color: rgba(25, 135, 84, 0.08);
+    border-radius: 0.25rem;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+}
+
+.local-berufsbildung-auswahl-zugeordnet .icon {
+    margin-right: 0.2rem;
+    font-size: inherit;
+    width: auto;
+    height: auto;
+    color: inherit;
+}
+
 .local-berufsbildung-auswahl-fuss {
     display: flex;
     align-items: center;
