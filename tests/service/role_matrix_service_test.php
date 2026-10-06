@@ -34,6 +34,7 @@ use context_system;
  *
  * @covers \local_berufsbildung\service\role_matrix_service
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\role_matrix_service::class)]
 final class role_matrix_service_test extends advanced_testcase {
     /**
      * Legt die Rollen an, falls sie (wie im normalen Installationsablauf

@@ -36,6 +36,7 @@ use local_berufsbildung\wahlpflicht_gruppe;
  *
  * @covers \local_berufsbildung\output\kompetenzraster
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\kompetenzraster::class)]
 final class kompetenzraster_test extends advanced_testcase {
     /**
      * Ein Bereich mit den uebergebenen Staenden. Die Kompetenzen entstehen

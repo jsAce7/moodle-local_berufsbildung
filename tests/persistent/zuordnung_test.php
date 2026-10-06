@@ -33,6 +33,7 @@ use advanced_testcase;
  *
  * @covers \local_berufsbildung\persistent\zuordnung
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\persistent\zuordnung::class)]
 final class zuordnung_test extends advanced_testcase {
     /**
      * Eine Zuordnung anlegen und unveraendert zurueckgelesen bekommen.

@@ -38,6 +38,8 @@ use context_system;
  * @covers \local_berufsbildung\service\leitungsrolle_service
  * @covers \local_berufsbildung\observer
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\leitungsrolle_service::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\observer::class)]
 final class leitungsrolle_service_test extends advanced_testcase {
     /** @var string Beispiel-Capability. */
     private const CAPABILITY = 'local/berufsbildung:viewzuordnung';

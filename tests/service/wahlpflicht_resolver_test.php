@@ -33,6 +33,7 @@ use advanced_testcase;
  *
  * @covers \local_berufsbildung\service\wahlpflicht_resolver
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\wahlpflicht_resolver::class)]
 final class wahlpflicht_resolver_test extends advanced_testcase {
     /**
      * Die Wahlpflicht-HK des Berufs, nicht die eines anderen.
@@ -82,6 +83,7 @@ final class wahlpflicht_resolver_test extends advanced_testcase {
      * @param string $konfiguration
      * @param int $erwartet Anzahl gueltiger Gruppen
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('ungueltige_gruppen')]
     public function test_ungueltige_gruppen_fallen_weg(string $konfiguration, int $erwartet): void {
         $this->assertCount($erwartet, (new wahlpflicht_resolver())->gruppen('AU_EFZ', $konfiguration));
     }

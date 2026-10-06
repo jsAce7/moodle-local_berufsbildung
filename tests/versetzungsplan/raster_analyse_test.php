@@ -40,6 +40,7 @@ use stdClass;
  *
  * @covers \local_berufsbildung\versetzungsplan\raster_analyse
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\versetzungsplan\raster_analyse::class)]
 final class raster_analyse_test extends advanced_testcase {
     /**
      * Legt die Profilfelder Beruf und Jahrgang an.
@@ -337,6 +338,7 @@ final class raster_analyse_test extends advanced_testcase {
      * @dataProvider wahlpflicht_schreibweisen
      * @param string $konfiguriert Schreibweise in der Einstellung
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('wahlpflicht_schreibweisen')]
     public function test_wahlpflicht_trifft_unabhaengig_vom_rahmenpraefix(string $konfiguriert): void {
         $this->resetAfterTest();
         set_config('beruf_wahlpflicht_hk', 'AU_EFZ=' . $konfiguriert, 'local_berufsbildung');

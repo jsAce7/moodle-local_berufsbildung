@@ -38,6 +38,7 @@ use local_berufsbildung\service\semester_calculator;
  *
  * @covers \local_berufsbildung\api
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\api::class)]
 final class api_test extends advanced_testcase {
     /**
      * Legt eine Zuordnung an, ohne Umwege ueber die noch nicht existierende

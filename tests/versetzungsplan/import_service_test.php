@@ -37,6 +37,7 @@ use stdClass;
  *
  * @covers \local_berufsbildung\versetzungsplan\import_service
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\versetzungsplan\import_service::class)]
 final class import_service_test extends advanced_testcase {
     /**
      * Gibt der lernenden Person eine laufende Zuordnung, damit der Import sie kennt.

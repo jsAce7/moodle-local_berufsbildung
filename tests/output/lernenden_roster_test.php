@@ -34,6 +34,7 @@ use local_berufsbildung\ausbildungsstand;
  *
  * @covers \local_berufsbildung\output\lernenden_roster
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\lernenden_roster::class)]
 final class lernenden_roster_test extends advanced_testcase {
     /**
      * Baut einen Ausbildungsstand fuer den Roster.

@@ -41,6 +41,7 @@ require_once($CFG->dirroot . '/cohort/lib.php');
  *
  * @covers \local_berufsbildung\service\kohorten_sync_service
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\kohorten_sync_service::class)]
 final class kohorten_sync_service_test extends advanced_testcase {
     /**
      * Verknuepft eine Kohorte mit einer Berufsbildnerin oder einem Berufsbildner.

@@ -47,6 +47,7 @@ require_once(__DIR__ . '/../fixtures/collector_test_schnellaktion_provider.php')
  *
  * @covers \local_berufsbildung\nachweis\collector
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\nachweis\collector::class)]
 final class collector_test extends advanced_testcase {
     /**
      * Legt eine Zuordnung zwischen Berufsbildner/in und Lernender an.

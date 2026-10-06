@@ -33,6 +33,7 @@ use advanced_testcase;
  *
  * @covers \local_berufsbildung\service\semester_calculator
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\semester_calculator::class)]
 final class semester_calculator_test extends advanced_testcase {
     /**
      * Pruefbeispiele fuer Jahrgang 2026 aus docs/schnitt1.md.
@@ -63,6 +64,7 @@ final class semester_calculator_test extends advanced_testcase {
      * @param int $stichtagtag
      * @param int|null $erwartet
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('berechne_semester_provider')]
     public function test_berechne_semester(int $stichtagjahr, int $stichtagmonat, int $stichtagtag, ?int $erwartet): void {
         $calculator = new semester_calculator();
         $jahrgang = 2026;

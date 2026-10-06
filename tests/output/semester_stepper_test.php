@@ -33,6 +33,7 @@ use advanced_testcase;
  *
  * @covers \local_berufsbildung\output\semester_stepper
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\semester_stepper::class)]
 final class semester_stepper_test extends advanced_testcase {
     /**
      * Zaehlt die Segmente je Zustand. Das laufende traegt dieselbe

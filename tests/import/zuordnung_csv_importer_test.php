@@ -35,6 +35,7 @@ use local_berufsbildung\persistent\zuordnung;
  *
  * @covers \local_berufsbildung\import\zuordnung_csv_importer
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\import\zuordnung_csv_importer::class)]
 final class zuordnung_csv_importer_test extends advanced_testcase {
     public function test_zeile_zuordnen_liest_spalten_unabhaengig_von_reihenfolge(): void {
         $importer = new zuordnung_csv_importer();

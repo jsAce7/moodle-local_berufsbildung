@@ -38,6 +38,7 @@ require_once($CFG->dirroot . '/cohort/lib.php');
  *
  * @covers \local_berufsbildung\service\kohorten_resolver
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\kohorten_resolver::class)]
 final class kohorten_resolver_test extends advanced_testcase {
     public function test_liefert_eindeutige_mitglieder_ueber_mehrere_kohorten(): void {
         $this->resetAfterTest();

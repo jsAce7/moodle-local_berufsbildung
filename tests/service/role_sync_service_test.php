@@ -35,6 +35,7 @@ use context_user;
  *
  * @covers \local_berufsbildung\service\role_sync_service
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\role_sync_service::class)]
 final class role_sync_service_test extends advanced_testcase {
     /**
      * Legt die Rolle 'berufsbildner' an, falls sie (wie im normalen

@@ -34,6 +34,7 @@ use local_berufsbildung\persistent\einsatz;
  *
  * @covers \local_berufsbildung\output\einsatz_karte
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\einsatz_karte::class)]
 final class einsatz_karte_test extends advanced_testcase {
     /**
      * Baut einen Einsatz, den die Karte ohne Datenbankzugriff rendern kann.

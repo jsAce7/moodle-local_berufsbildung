@@ -34,6 +34,7 @@ use local_berufsbildung\nachweis\schnellaktion;
  *
  * @covers \local_berufsbildung\output\lernenden_kachel
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\lernenden_kachel::class)]
 final class lernenden_kachel_test extends advanced_testcase {
     /**
      * Die Schaltflaeche steht ausserhalb von <details> - im <summary> waere

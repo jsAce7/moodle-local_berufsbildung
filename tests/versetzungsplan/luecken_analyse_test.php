@@ -36,6 +36,7 @@ use local_berufsbildung\persistent\einsatz;
  *
  * @covers \local_berufsbildung\versetzungsplan\luecken_analyse
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\versetzungsplan\luecken_analyse::class)]
 final class luecken_analyse_test extends advanced_testcase {
     /**
      * Legt die Profilfelder Beruf und Jahrgang an.

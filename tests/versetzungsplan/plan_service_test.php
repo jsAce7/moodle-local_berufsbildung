@@ -36,6 +36,7 @@ use local_berufsbildung\persistent\einsatz;
  *
  * @covers \local_berufsbildung\versetzungsplan\plan_service
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\versetzungsplan\plan_service::class)]
 final class plan_service_test extends advanced_testcase {
     /**
      * Legt einen Ausbildungsblock an.

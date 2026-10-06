@@ -34,6 +34,7 @@ use local_berufsbildung\persistent\einsatz;
  *
  * @covers \local_berufsbildung\output\einsatz_timeline
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\einsatz_timeline::class)]
 final class einsatz_timeline_test extends advanced_testcase {
     /**
      * Baut einen Einsatz fuer die Timeline.
