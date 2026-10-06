@@ -188,6 +188,7 @@ $string['luecken:bereich_abdeckung'] = '{$a->abgedeckt} von {$a->soll}';
 $string['luecken:keine'] = 'Alle Pflicht-Handlungskompetenzen des Rahmens sind bereits abgedeckt.';
 $string['luecken:titel'] = 'Noch nicht ausgebildete Pflicht-Handlungskompetenzen';
 $string['luecken:titel_anzahl'] = '{$a} noch offen';
+$string['luecken:wahlpflicht_offen'] = '{$a} Wahlpflicht offen';
 $string['luecken:zusammenfassung'] = '{$a->abgedeckt} von {$a->soll} abgedeckt';
 $string['meine_lehre:abgeschlossen'] = '{$a->beruf} — Ausbildung abgeschlossen am {$a->datum}.';
 $string['meine_lehre:kein_ausbildungsstand'] = 'Für Ihr Profil ist kein Beruf oder Jahrgang hinterlegt.';

@@ -95,4 +95,22 @@ final class lernenden_kachel_test extends advanced_testcase {
             $mehrere
         );
     }
+
+    /**
+     * Offene Wahlpflicht-HK stehen als eigenes Badge in der Kopfzeile,
+     * ohne Zahl kein Badge.
+     */
+    public function test_wahlpflicht_offen_als_badge(): void {
+        $this->resetAfterTest();
+        $text = get_string('luecken:wahlpflicht_offen', 'local_berufsbildung', 2);
+
+        $mit = lernenden_kachel::render('Elena Furrer', null, 0, 0, '', anzahlwahlpflichtoffen: 2);
+        $ohne = lernenden_kachel::render('Elena Furrer', null, 0, 0, '');
+
+        $this->assertStringContainsString($text, $mit);
+        $this->assertStringNotContainsString(
+            get_string('luecken:wahlpflicht_offen', 'local_berufsbildung', 0),
+            $ohne
+        );
+    }
 }

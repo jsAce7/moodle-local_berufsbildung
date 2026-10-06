@@ -330,6 +330,26 @@ final class raster_analyse_test extends advanced_testcase {
     }
 
     /**
+     * Jeder Bereich traegt sein Kuerzel aus der ID-Nummer - darueber finden
+     * die Wahlpflicht-Gruppen ("a,b,c:1") ihre Bereiche.
+     */
+    public function test_bereich_traegt_sein_kuerzel(): void {
+        $this->resetAfterTest();
+        $lernende = $this->lege_lernende_an();
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework(['idnumber' => 'au-2022']);
+        $hkb = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'), 'idnumber' => '7777BE c',
+        ]);
+        $generator->create_competency(['competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hkb->get('id')]);
+
+        $raster = (new raster_analyse())->get_raster((int) $lernende->id);
+
+        $this->assertSame('c', $raster[0]->kuerzel);
+    }
+
+    /**
      * Die Einstellung beschreibt den Bildungsplan, die ID-Nummer im Rahmen
      * traegt zusaetzlich einen Rahmen-Praefix. Beides muss zusammenfinden,
      * sonst laeuft die Kennzeichnung stillschweigend ins Leere und alles

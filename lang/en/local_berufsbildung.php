@@ -188,6 +188,7 @@ $string['luecken:bereich_abdeckung'] = '{$a->abgedeckt} of {$a->soll}';
 $string['luecken:keine'] = 'All required competency areas in the framework are already covered.';
 $string['luecken:titel'] = 'Required competency areas not yet trained';
 $string['luecken:titel_anzahl'] = '{$a} still open';
+$string['luecken:wahlpflicht_offen'] = '{$a} electives open';
 $string['luecken:zusammenfassung'] = '{$a->abgedeckt} of {$a->soll} covered';
 $string['meine_lehre:abgeschlossen'] = '{$a->beruf} — training completed on {$a->datum}.';
 $string['meine_lehre:kein_ausbildungsstand'] = 'No occupation or cohort year is set on your profile.';

@@ -99,27 +99,16 @@ class kompetenzraster {
             raster_kompetenz::STATUS_EINGEPLANT => 0,
             raster_kompetenz::STATUS_OFFEN => 0,
         ];
-        // Dasselbe fuer die Wahlpflicht-HK, je Gruppe von Bereichen: sie
-        // zaehlen nicht in die Pflicht-Bezugsgroesse, aber der Bildungsplan
-        // verlangt eine Anzahl davon - etwa eine aus a, b und c zusammen.
-        $wahlpflichtstaende = array_fill(0, count($wahlpflichtgruppen), $pflichtstaende);
 
         $bereiche = [];
         foreach ($raster as $bereich) {
             $soll += $bereich->soll();
-            $bereichkuerzel = $kompetenzen[$bereich->bereichid]['idnumber'] ?? '';
 
             $zellen = [];
             foreach ($bereich->kompetenzen as $kompetenz) {
                 $vorhandenestaende[$kompetenz->status] = true;
                 $vorhandenearten[$kompetenz->istwahlpflicht ? 'wahlpflicht' : 'pflicht'] = true;
-                if ($kompetenz->istwahlpflicht) {
-                    foreach (array_values($wahlpflichtgruppen) as $nummer => $gruppe) {
-                        if ($gruppe->umfasst($bereichkuerzel)) {
-                            $wahlpflichtstaende[$nummer][$kompetenz->status]++;
-                        }
-                    }
-                } else {
+                if (!$kompetenz->istwahlpflicht) {
                     $pflichtstaende[$kompetenz->status]++;
                 }
                 $zellen[] = self::zelle($kompetenz, $kompetenzen, $kompakt);
@@ -185,7 +174,7 @@ class kompetenzraster {
                 'offen' => $pflichtstaende[raster_kompetenz::STATUS_OFFEN],
             ]),
             'wahlpflichtstaende' => (!$kompakt && $hinweis === '')
-                ? self::wahlpflichtstaende(array_values($wahlpflichtgruppen), $wahlpflichtstaende)
+                ? self::wahlpflichtstaende($wahlpflichtgruppen, self::mit_kuerzeln($raster, $kompetenzen))
                 : [],
             'hathinweis' => $hinweis !== '',
             'hinweis' => $hinweis,
@@ -208,20 +197,23 @@ class kompetenzraster {
 
     /**
      * Je Gruppe von Bereichen eine Zeile: verlangt, bereits vorgekommen,
-     * spaeter eingeplant - und ob das Verlangte schon vorkam.
+     * spaeter eingeplant - und ob das Verlangte schon vorkam. Gezaehlt wird
+     * mit wahlpflicht_gruppe::stand(), wie auf der Kachel in
+     * meine_lernenden.php.
      *
      * @param wahlpflicht_gruppe[] $gruppen
-     * @param array $staende Je Gruppe (gleicher Schluessel) STATUS_* => Anzahl Wahlpflicht-HK
+     * @param raster_bereich[] $raster Mit Kuerzeln, siehe mit_kuerzeln()
      * @return array Template-Kontext: je Zeile text, erfuellt
      */
-    private static function wahlpflichtstaende(array $gruppen, array $staende): array {
+    private static function wahlpflichtstaende(array $gruppen, array $raster): array {
         $zeilen = [];
-        foreach ($gruppen as $nummer => $gruppe) {
+        foreach ($gruppen as $gruppe) {
+            $stand = $gruppe->stand($raster);
             $daten = (object) [
                 'bereiche' => implode(', ', $gruppe->bereiche),
                 'soll' => $gruppe->anzahl,
-                'abgedeckt' => $staende[$nummer][raster_kompetenz::STATUS_ABGEDECKT],
-                'eingeplant' => $staende[$nummer][raster_kompetenz::STATUS_EINGEPLANT],
+                'abgedeckt' => $stand['abgedeckt'],
+                'eingeplant' => $stand['eingeplant'],
             ];
             $zeilen[] = [
                 'text' => get_string(
@@ -234,6 +226,28 @@ class kompetenzraster {
         }
 
         return $zeilen;
+    }
+
+    /**
+     * Das Raster mit dem Kuerzel je Bereich. api::get_kompetenzraster()
+     * liefert es bereits mit; ein von aussen gebautes Raster bekommt es aus
+     * der ID-Nummer des Bereichs.
+     *
+     * @param raster_bereich[] $raster
+     * @param array $kompetenzen Bezeichnungen aus lade_kompetenzen(), nach competencyid
+     * @return raster_bereich[]
+     */
+    private static function mit_kuerzeln(array $raster, array $kompetenzen): array {
+        return array_map(
+            static fn (raster_bereich $bereich): raster_bereich => $bereich->kuerzel !== ''
+                ? $bereich
+                : new raster_bereich(
+                    $bereich->bereichid,
+                    $bereich->kompetenzen,
+                    (string) ($kompetenzen[$bereich->bereichid]['idnumber'] ?? '')
+                ),
+            $raster
+        );
     }
 
     /**

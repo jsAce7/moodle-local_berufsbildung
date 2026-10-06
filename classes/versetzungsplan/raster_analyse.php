@@ -138,9 +138,11 @@ class raster_analyse {
         // Ausgabe der Gliederung des Rahmens folgt und nicht der
         // Reihenfolge, in der die einzelnen HK auftauchen.
         $bereiche = [];
+        $bereichkompetenzen = [];
         foreach ($rahmenkompetenzen as $kompetenz) {
             if ((int) $kompetenz->get('parentid') === 0) {
                 $bereiche[(int) $kompetenz->get('id')] = [];
+                $bereichkompetenzen[(int) $kompetenz->get('id')] = $kompetenz;
             }
         }
 
@@ -172,7 +174,11 @@ class raster_analyse {
                 continue;
             }
 
-            $raster[] = new raster_bereich(bereichid: $bereichid, kompetenzen: $kompetenzen);
+            $raster[] = new raster_bereich(
+                bereichid: $bereichid,
+                kompetenzen: $kompetenzen,
+                kuerzel: kompetenz_baum::kuerzel($bereichkompetenzen[$bereichid]),
+            );
         }
 
         return $raster;

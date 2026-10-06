@@ -58,4 +58,45 @@ class wahlpflicht_gruppe {
     public function umfasst(string $kuerzel): bool {
         return $this->bereiche === [] || in_array(\core_text::strtolower(trim($kuerzel)), $this->bereiche, true);
     }
+
+    /**
+     * Wie viele Wahlpflicht-HK aus den Bereichen dieser Gruppe bereits
+     * vorkamen und wie viele erst eingeplant sind.
+     *
+     * Raster und Kachel auf "Meine Lernenden" zaehlen beide hiermit, damit
+     * sie nie auseinanderlaufen.
+     *
+     * @param raster_bereich[] $raster Ergebnis von api::get_kompetenzraster()
+     * @return array{abgedeckt: int, eingeplant: int}
+     */
+    public function stand(array $raster): array {
+        $stand = ['abgedeckt' => 0, 'eingeplant' => 0];
+        foreach ($raster as $bereich) {
+            if (!$this->umfasst($bereich->kuerzel)) {
+                continue;
+            }
+            foreach ($bereich->kompetenzen as $kompetenz) {
+                if (!$kompetenz->istwahlpflicht) {
+                    continue;
+                }
+                if ($kompetenz->status === raster_kompetenz::STATUS_ABGEDECKT) {
+                    $stand['abgedeckt']++;
+                } else if ($kompetenz->status === raster_kompetenz::STATUS_EINGEPLANT) {
+                    $stand['eingeplant']++;
+                }
+            }
+        }
+
+        return $stand;
+    }
+
+    /**
+     * Wie viele der verlangten Wahlpflicht-HK noch nicht vorkamen. Wie bei
+     * den Pflicht-HK zaehlt eine erst eingeplante noch als offen.
+     *
+     * @param raster_bereich[] $raster Ergebnis von api::get_kompetenzraster()
+     */
+    public function offen(array $raster): int {
+        return max(0, $this->anzahl - $this->stand($raster)['abgedeckt']);
+    }
 }
