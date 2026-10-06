@@ -202,12 +202,12 @@ foreach ($auswaehlbar as $kompetenzid => $eintrag) {
     $handlungskompetenz = $eintrag['handlungskompetenz'];
     $code = kompetenz_baum::kuerzel($handlungskompetenz);
     $codebadge = $code !== ''
-        ? html_writer::span(format_string($code), 'badge bg-light text-dark border mr-1') . ' '
+        ? html_writer::span(format_string($code), 'badge bg-light text-dark border local-berufsbildung-abstand-rechts') . ' '
         : '';
 
     if ($eintrag['isthk']) {
         $zeilen[$kompetenzid] = $codebadge
-            . html_writer::span(format_string($handlungskompetenz->get('shortname')), 'font-weight-bold')
+            . html_writer::span(format_string($handlungskompetenz->get('shortname')), 'local-berufsbildung-fett')
             . html_writer::div(
                 get_string('blocklk:ganze_hk', 'local_berufsbildung'),
                 'small text-muted'

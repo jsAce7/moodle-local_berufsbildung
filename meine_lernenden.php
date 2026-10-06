@@ -177,7 +177,9 @@ if (empty($eintraege)) {
     foreach (lernenden_roster::berufe($eintraege) as $beruf) {
         $berufoptions[$beruf] = $beruf;
     }
-    echo html_writer::select($berufoptions, 'beruf', $berufsfilter, false, ['class' => 'custom-select form-select']);
+    // Ohne eigene Klasse: html_writer::select() setzt je nach Moodle-Version
+    // custom-select (Bootstrap 4) oder form-select (Bootstrap 5) selbst.
+    echo html_writer::select($berufoptions, 'beruf', $berufsfilter, false);
     // Primaerfarbe: hellgrau gefuellt wirkte die Schaltflaeche deaktiviert.
     echo html_writer::tag('button', get_string('meine_lernenden:filtern', 'local_berufsbildung'), [
         'type' => 'submit',

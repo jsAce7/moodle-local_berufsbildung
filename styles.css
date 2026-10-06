@@ -168,6 +168,28 @@
 }
 
 /*
+ * Abstaende und Fettschrift als eigene Regeln statt mr-1/ml-1/ml-2 und
+ * font-weight-bold: Bootstrap 5 (Moodle 5.x) nennt sie me-1/ms-1/fw-bold,
+ * Bootstrap 4 (Moodle 4.5) kennt diese Namen noch nicht, und Moodle 5.x
+ * markiert die alten als veraltet.
+ */
+.local-berufsbildung-abstand-rechts {
+    margin-right: 0.25rem;
+}
+
+.local-berufsbildung-abstand-links {
+    margin-left: 0.25rem;
+}
+
+.local-berufsbildung-abstand-links-2 {
+    margin-left: 0.5rem;
+}
+
+.local-berufsbildung-fett {
+    font-weight: bold;
+}
+
+/*
  * Taetigkeiten: Gruppenkopf in derselben Form wie die Semesterkoepfe des
  * Versetzungsplans, je Zeile Bezeichnung und Ergebnis oben, Datum und
  * Quelle darunter.
