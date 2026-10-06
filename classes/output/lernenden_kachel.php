@@ -97,7 +97,12 @@ class lernenden_kachel {
             'hasueberfaellig' => $anzahlueberfaellig > 0,
             'anzahlueberfaellig' => $anzahlueberfaellig,
             'hasextern' => $istextern,
-            'anzahltaetigkeiten' => $anzahltaetigkeiten,
+            'hastaetigkeiten' => $anzahltaetigkeiten > 0,
+            // Moodle-Strings kennen keine Mehrzahl - "1 Tätigkeiten" steht
+            // in jeder Zeile einer neuen Person.
+            'taetigkeitentext' => $anzahltaetigkeiten === 1
+                ? get_string('meine_lernenden:taetigkeiten_eine', 'local_berufsbildung')
+                : get_string('meine_lernenden:taetigkeiten_anzahl', 'local_berufsbildung', $anzahltaetigkeiten),
             'detailhtml' => $detailhtml,
             'hasschnellaktionen' => !empty($schnellaktionen),
             'schnellaktionen' => array_map(static fn (schnellaktion $aktion): array => [

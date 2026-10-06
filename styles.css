@@ -116,6 +116,15 @@
     text-align: right;
 }
 
+/* Schmal steht die Schaltflaeche links unter der Einordnung - der Hinweis
+   folgt ihr dorthin, statt rechtsbuendig darunter zu haengen. */
+@media (max-width: 767.98px) {
+    .local-berufsbildung-herokarte-aktion {
+        align-items: flex-start;
+        text-align: left;
+    }
+}
+
 /*
  * Erfassen-Aktionen im Detail einer Person auf "Meine Lernenden": wie auf
  * der Herokarte nebeneinander, aber linksbuendig im Lesefluss des Details.
@@ -716,25 +725,39 @@
     gap: 0.35rem;
 }
 
+/*
+ * Kopfbereich auf "Meine Lernenden": Filter links, Blockverwaltung rechts
+ * in derselben Zeile. Auf schmalen Fenstern rutscht die Verwaltung unter
+ * die Filter, statt sie zu quetschen.
+ */
+.local-berufsbildung-roster-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.6rem 1rem;
+}
+
 .local-berufsbildung-roster-aktionen {
     display: flex;
     flex-wrap: wrap;
     gap: 0.35rem;
-    margin-bottom: 1rem;
+    margin-left: auto;
 }
 
-.local-berufsbildung-roster-toolbar {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.6rem;
-}
-
+/*
+ * Waechst in den freien Platz: in einem Flex-Container mit Umbruch
+ * bemisst der Browser die Filterzeile sonst nach der natuerlichen Breite
+ * ihres Inhalts, und Suchfeld und Beruf-Auswahl stehen untereinander,
+ * obwohl daneben die halbe Seite frei ist.
+ */
 .local-berufsbildung-roster-toolbar-filter {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
+    flex: 1 1 auto;
     gap: 0.5rem;
+    margin: 0;
 }
 
 /*
@@ -749,7 +772,7 @@
 }
 
 .local-berufsbildung-roster-toolbar-summary {
-    margin: 0;
+    margin: 0.5rem 0 0;
 }
 
 /*
@@ -780,11 +803,15 @@
  * Name noch Kennzahlen. Bietet eine weitere Quelle eine Schnellaktion an,
  * muss dieser Platz mitwachsen.
  */
-.local-berufsbildung-kachel-mit-schnellaktionen .local-berufsbildung-kachel-summary {
+/* Drei Klassen: Boost setzt auf schmalen Fenstern .card .card-body { padding }
+   und laedt das nach dem Plugin-CSS - der freigehaltene Platz waere weg. */
+.local-berufsbildung-kachel-rahmen.local-berufsbildung-kachel-mit-schnellaktionen .local-berufsbildung-kachel-summary {
     padding-right: 8.5rem;
 }
 
-.local-berufsbildung-kachel-schnellaktionen {
+/* Mit dem Rahmen davor: Boost laedt Plugin-CSS vor dem Theme, und dessen
+   .card-body { min-height: 1px } wuerde die Mindesthoehe sonst aufheben. */
+.local-berufsbildung-kachel-rahmen .local-berufsbildung-kachel-schnellaktionen {
     position: absolute;
     top: 0;
     right: 0;
@@ -849,9 +876,17 @@
  * Chevron nach rechts. Die Grundbreite verhindert, dass der Name auf
  * schmalen Fenstern zusammenfaellt, statt dass die Zeile umbricht.
  */
+/*
+ * Die enge Zeilenhoehe haelt Name und Ausbildungsstand zusammen niedriger
+ * als den Avatar: so ist die Kopfzeile genau so hoch wie er, und die
+ * Schnellaktionen - die sich ausserhalb des Umschalters nach der
+ * Avatarhoehe richten - stehen auf derselben Mittellinie wie Kennzahlen
+ * und Chevron.
+ */
 .local-berufsbildung-kachel-info {
     flex: 1 1 14rem;
     min-width: 0;
+    line-height: 1.25;
 }
 
 .local-berufsbildung-kachel-name {
@@ -862,12 +897,19 @@
     text-overflow: ellipsis;
 }
 
+/*
+ * Die Kennzahlen halten eine Mindestbreite und stehen rechtsbuendig darin:
+ * ob eine Person gerade etwas Ueberfaelliges hat, verschiebt sonst
+ * Semesterleiste und Einsatz ihrer Zeile gegenueber allen anderen.
+ */
 .local-berufsbildung-kachel-badges {
     display: flex;
     flex-wrap: wrap;
-    align-content: flex-start;
+    align-items: center;
+    justify-content: flex-end;
     gap: 0.35rem;
-    flex-shrink: 0;
+    flex: 0 0 auto;
+    min-width: 19rem;
 }
 
 /*
@@ -887,11 +929,37 @@
 
 /*
  * Die Semesterleiste steht zwischen Name und Kennzahlen, nicht unter dem
- * Namen: dort ist sie der Fortschrittsbalken der Zeile.
+ * Namen: dort ist sie der Fortschrittsbalken der Zeile. Feste Breite fuer
+ * die laengste Lehre (vier Lehrjahre), damit kuerzere Lehren, externe
+ * Teilnahmen und Personen ohne Ausbildungsstand die Spalte nicht
+ * verschieben.
  */
+.local-berufsbildung-kachel-fortschritt {
+    display: flex;
+    align-items: center;
+    flex: 0 0 10rem;
+}
+
 .local-berufsbildung-kachel-summary .local-berufsbildung-stepper {
     margin: 0;
     flex-shrink: 0;
+}
+
+/*
+ * Schmale Fenster: die Zeile bricht ohnehin um, feste Spalten wuerden dort
+ * nur Leerraum erzeugen. Kennzahlen stehen dann linksbuendig unter dem
+ * Namen.
+ */
+@media (max-width: 767.98px) {
+    .local-berufsbildung-kachel-einsatz,
+    .local-berufsbildung-kachel-fortschritt {
+        flex-basis: auto;
+    }
+
+    .local-berufsbildung-kachel-badges {
+        min-width: 0;
+        justify-content: flex-start;
+    }
 }
 
 .local-berufsbildung-kachel-chevron {

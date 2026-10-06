@@ -42,7 +42,8 @@
     * hasueberfaellig - bool
     * anzahlueberfaellig - int
     * hasextern - bool
-    * anzahltaetigkeiten - int
+    * hastaetigkeiten - bool
+    * taetigkeitentext - string, z.B. "1 Tätigkeit" oder "9 Tätigkeiten"
     * detailhtml - string, bereits gerendertes HTML fuer den ausgeklappten Bereich
     * hasschnellaktionen - bool
     * schnellaktionen - array: quellekey, label, arialabel, url, icon, lernendeid
@@ -63,7 +64,8 @@
         "hasueberfaellig": true,
         "anzahlueberfaellig": 1,
         "hasextern": false,
-        "anzahltaetigkeiten": 9,
+        "hastaetigkeiten": true,
+        "taetigkeitentext": "9 Tätigkeiten",
         "detailhtml": "<p>...</p>",
         "hasschnellaktionen": true,
         "schnellaktionen": [
@@ -103,9 +105,33 @@
         </span>
         {{! Die Semesterleiste steht zwischen Name und Kennzahlen, nicht unter
             dem Namen: in einer Zeile ueber die volle Breite ist sie dort der
-            Fortschrittsbalken der Person. }}
-        {{#hatstand}}{{{stepper}}}{{/hatstand}}
+            Fortschrittsbalken der Person. Die Spalte hat eine feste Breite
+            und steht auch ohne Leiste, damit sie ueber alle Zeilen buendig
+            bleibt; bei externer Teilnahme steht die Teilnahmeart an ihrer
+            Stelle - dort gibt es keine Lehre, deren Fortschritt man zeigt. }}
+        <span class="local-berufsbildung-kachel-fortschritt">
+            {{#hatstand}}{{{stepper}}}{{/hatstand}}
+            {{#hasextern}}
+                <span class="badge bg-light text-dark border">
+                    {{#str}} teilnahmeart:uek_extern, local_berufsbildung {{/str}}
+                </span>
+            {{/hasextern}}
+        </span>
+        {{! Rechtsbuendig, Ueberfaelliges zuvorderst: es kommt und geht, und
+            so verschiebt es weder die anderen Kennzahlen noch die Spalten
+            davor. }}
         <span class="local-berufsbildung-kachel-badges">
+            {{! Nur Überfälliges muss schon vor dem Aufklappen sichtbar sein;
+                künftige Fälligkeiten gehören in den Detailkontext. }}
+            {{#hasueberfaellig}}
+                {{! text-white ausdruecklich: in Bootstrap 4 (Moodle 4.5)
+                    setzt bg-danger nur den Hintergrund, die Schrift bliebe
+                    dunkel auf Rot. }}
+                <span class="badge bg-danger text-white">
+                    <i class="icon fa fa-exclamation-circle fa-fw" aria-hidden="true"></i>
+                    {{#str}} faelligkeiten:ueberfaellig_anzahl, local_berufsbildung, {{anzahlueberfaellig}} {{/str}}
+                </span>
+            {{/hasueberfaellig}}
             {{! Mit Beschriftung statt nur einer Zahl - "14" neben einer
                 Gluehbirne sagt nicht, wovon 14. }}
             {{#hasluecken}}
@@ -114,22 +140,11 @@
                     {{#str}} luecken:titel_anzahl, local_berufsbildung, {{anzahlluecken}} {{/str}}
                 </span>
             {{/hasluecken}}
-            {{#hasextern}}
-                <span class="badge bg-light text-dark border">
-                    {{#str}} teilnahmeart:uek_extern, local_berufsbildung {{/str}}
-                </span>
-            {{/hasextern}}
-            {{! Nur Überfälliges muss schon vor dem Aufklappen sichtbar sein;
-                künftige Fälligkeiten gehören in den Detailkontext. }}
-            {{#hasueberfaellig}}
-                <span class="badge bg-danger">
-                    <i class="icon fa fa-exclamation-circle fa-fw" aria-hidden="true"></i>
-                    {{#str}} faelligkeiten:ueberfaellig_anzahl, local_berufsbildung, {{anzahlueberfaellig}} {{/str}}
-                </span>
-            {{/hasueberfaellig}}
-            <span class="badge bg-light text-dark border">
+            {{! Ohne Taetigkeiten zurueckgenommen statt gleich laut wie eine
+                Zahl, die etwas aussagt. }}
+            <span class="badge bg-light border {{#hastaetigkeiten}}text-dark{{/hastaetigkeiten}}{{^hastaetigkeiten}}text-muted{{/hastaetigkeiten}}">
                 <i class="icon fa fa-tasks fa-fw" aria-hidden="true"></i>
-                {{#str}} meine_lernenden:taetigkeiten_anzahl, local_berufsbildung, {{anzahltaetigkeiten}} {{/str}}
+                {{taetigkeitentext}}
             </span>
         </span>
         <span class="local-berufsbildung-kachel-chevron" aria-hidden="true">
@@ -145,7 +160,9 @@
 {{#hasschnellaktionen}}
     <div class="local-berufsbildung-kachel-schnellaktionen card-body">
         {{#schnellaktionen}}
-            <a href="{{url}}" class="btn btn-outline-secondary btn-sm" aria-label="{{arialabel}}"
+            {{! In der Primaerfarbe: grau umrandet wirkte die Schaltflaeche
+                neben den grauen Kennzahlen wie deaktiviert. }}
+            <a href="{{url}}" class="btn btn-outline-primary btn-sm" aria-label="{{arialabel}}"
                 data-local-berufsbildung-schnellaktion="{{quellekey}}" data-lernendeid="{{lernendeid}}">
                 <i class="icon fa {{icon}} fa-fw" aria-hidden="true"></i><span class="local-berufsbildung-schnellaktion-label">{{label}}</span>
             </a>

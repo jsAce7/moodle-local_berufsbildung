@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.8.2] — 2026-10-06
+
+### Geändert
+
+- **Kopfbereich auf „Meine Lernenden“ in einer Zeile** (`meine_lernenden.php`, `styles.css`): Suche, Beruf und „Filtern“ stehen links nebeneinander, „Ausbildungsblöcke verwalten“ steht zurückhaltend rechts in derselben Zeile. Die Zusammenfassung folgt direkt darunter. Bisher brach die Filterzeile um, obwohl daneben Platz frei war. „Filtern“ hat jetzt die Primärfarbe, hellgrau gefüllt wirkte die Schaltfläche deaktiviert. Ohne zugeordnete Lernende erscheint die Karte nur noch, wenn die Person Ausbildungsblöcke verwalten darf.
+- **Kacheln auf „Meine Lernenden“ bündig** (`templates/lernenden_kachel.mustache`, `styles.css`): Die Semesterleiste hat eine eigene Spalte mit fester Breite, die Kennzahlen stehen rechtsbündig, „überfällig“ zuvorderst. Damit verschiebt sich keine Spalte, wenn das Badge auftaucht oder wegfällt. Bei externer Teilnahme steht „Extern · nur üK“ an der Stelle der Leiste. „Notiz“ liegt auf einer Mittellinie mit Badges und Chevron und hat die Primärfarbe statt grau. Schmal rutscht die Leiste in eine zweite Zeile, statt den Button zu überdecken.
+- **„0 Tätigkeiten“ zurückgenommen** (grau statt schwarz), damit eine Null nicht gleich laut wirkt wie eine Zahl, die etwas aussagt.
+
+### Behoben
+
+- **„1 Tätigkeiten“** heisst jetzt „1 Tätigkeit“ (neuer String `meine_lernenden:taetigkeiten_eine`).
+- **„überfällig“ schlecht lesbar**: In Bootstrap 4 (Moodle 4.5) setzt `bg-danger` nur den Hintergrund, die Schrift blieb dunkel auf Rot. Das Badge hat jetzt `text-white`.
+- **„Meine Lehre“ schmal**: Der Hinweis „Nächster Eintrag fällig bis …“ steht linksbündig unter der Schaltfläche, statt rechtsbündig darunter zu hängen.
+
 ## [0.8.1] — 2026-10-06
 
 ### Hinzugefügt

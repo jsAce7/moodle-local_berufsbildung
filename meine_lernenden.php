@@ -80,29 +80,32 @@ $eintraege = lernenden_roster::sortiere($eintraege);
 
 echo $OUTPUT->header();
 
-echo html_writer::start_tag('div', ['class' => 'card mb-3 local-berufsbildung-roster-steuerung']);
-echo html_writer::start_tag('div', ['class' => 'card-body']);
-
 // Nebeneingang zur Blockverwaltung statt eines eigenen
 // Navigationseintrags: wer Lernende betreut, pflegt die Ausbildungsbloecke
 // im selben Arbeitsgang, und die Leiste bleibt bei den zwei fachlichen
 // Einstiegen (siehe hook_callbacks). Wer die Capability ohne eigene
 // Lernende hat - eine von Hand zugewiesene Ausbildungsplanung -, erreicht
 // die Seite weiterhin ueber den Admin-Baum unter Ausbildungsverwaltung.
-if (has_capability('local/berufsbildung:manageblocks', context_system::instance())) {
-    echo html_writer::div(
+// Rechts in der Filterzeile und zurueckhaltend gestaltet: eine
+// Nebenaktion, nicht das Erste, was man auf der Seite sieht.
+$bloeckehtml = has_capability('local/berufsbildung:manageblocks', context_system::instance())
+    ? html_writer::div(
         html_writer::link(
             new moodle_url('/local/berufsbildung/bloecke.php'),
             get_string('meine_lernenden:bloecke', 'local_berufsbildung'),
             ['class' => 'btn btn-outline-secondary btn-sm']
         ),
         'local-berufsbildung-roster-aktionen'
-    );
-}
+    )
+    : '';
 
 if (empty($eintraege)) {
-    echo html_writer::end_tag('div');
-    echo html_writer::end_tag('div');
+    if ($bloeckehtml !== '') {
+        echo html_writer::div(
+            html_writer::div(html_writer::div($bloeckehtml, 'local-berufsbildung-roster-toolbar'), 'card-body'),
+            'card mb-3 local-berufsbildung-roster-steuerung'
+        );
+    }
     echo $OUTPUT->notification(get_string('meine_lernenden:keine_lernenden', 'local_berufsbildung'), 'info');
 } else {
     $collector = new collector();
@@ -152,13 +155,16 @@ if (empty($eintraege)) {
     }
     $anzahlmitluecken = count(array_filter($anzahlluecken, static fn (int $anzahl): bool => $anzahl > 0));
 
+    echo html_writer::start_tag('div', ['class' => 'card mb-3 local-berufsbildung-roster-steuerung']);
+    echo html_writer::start_tag('div', ['class' => 'card-body']);
+    echo html_writer::start_tag('div', ['class' => 'local-berufsbildung-roster-toolbar']);
+
     $formurl = new moodle_url('/local/berufsbildung/meine_lernenden.php');
     echo html_writer::start_tag('form', [
         'method' => 'get',
         'action' => $formurl->out_omit_querystring(),
-        'class' => 'local-berufsbildung-roster-toolbar',
+        'class' => 'local-berufsbildung-roster-toolbar-filter',
     ]);
-    echo html_writer::start_tag('div', ['class' => 'local-berufsbildung-roster-toolbar-filter']);
     echo html_writer::empty_tag('input', [
         'type' => 'text',
         'name' => 'suche',
@@ -172,10 +178,13 @@ if (empty($eintraege)) {
         $berufoptions[$beruf] = $beruf;
     }
     echo html_writer::select($berufoptions, 'beruf', $berufsfilter, false, ['class' => 'custom-select form-select']);
+    // Primaerfarbe: hellgrau gefuellt wirkte die Schaltflaeche deaktiviert.
     echo html_writer::tag('button', get_string('meine_lernenden:filtern', 'local_berufsbildung'), [
         'type' => 'submit',
-        'class' => 'btn btn-secondary',
+        'class' => 'btn btn-primary',
     ]);
+    echo html_writer::end_tag('form');
+    echo $bloeckehtml;
     echo html_writer::end_tag('div');
     echo html_writer::div(
         get_string('meine_lernenden:zusammenfassung', 'local_berufsbildung', (object) [
@@ -184,7 +193,6 @@ if (empty($eintraege)) {
         ]),
         'text-muted small local-berufsbildung-roster-toolbar-summary'
     );
-    echo html_writer::end_tag('form');
     echo html_writer::end_tag('div');
     echo html_writer::end_tag('div');
 

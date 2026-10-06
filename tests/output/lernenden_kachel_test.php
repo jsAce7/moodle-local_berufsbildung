@@ -73,4 +73,25 @@ final class lernenden_kachel_test extends advanced_testcase {
         $this->assertStringNotContainsString('data-local-berufsbildung-schnellaktion', $html);
         $this->assertStringNotContainsString('local-berufsbildung-kachel-mit-schnellaktionen', $html);
     }
+
+    /**
+     * Moodle-Strings kennen keine Mehrzahl - eine einzelne Taetigkeit
+     * braucht einen eigenen String.
+     */
+    public function test_taetigkeiten_in_einzahl_und_mehrzahl(): void {
+        $this->resetAfterTest();
+
+        $eine = lernenden_kachel::render('Elena Furrer', null, 0, 1, '');
+        $mehrere = lernenden_kachel::render('Elena Furrer', null, 0, 9, '');
+
+        $this->assertStringContainsString(get_string('meine_lernenden:taetigkeiten_eine', 'local_berufsbildung'), $eine);
+        $this->assertStringNotContainsString(
+            get_string('meine_lernenden:taetigkeiten_anzahl', 'local_berufsbildung', 1),
+            $eine
+        );
+        $this->assertStringContainsString(
+            get_string('meine_lernenden:taetigkeiten_anzahl', 'local_berufsbildung', 9),
+            $mehrere
+        );
+    }
 }
