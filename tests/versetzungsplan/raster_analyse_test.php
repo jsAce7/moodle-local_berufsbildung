@@ -95,7 +95,7 @@ final class raster_analyse_test extends advanced_testcase {
         ]);
         $block->create();
         (new block_lk(0, (object) [
-            'blockid' => $block->get('id'), 'competencyid' => $lk->get('id'), 'intensitaet' => 'schwerpunkt',
+            'blockid' => $block->get('id'), 'competencyid' => $lk->get('id'),
         ]))->create();
         (new einsatz(0, (object) [
             'userid' => $lernendeid, 'blockid' => $block->get('id'),

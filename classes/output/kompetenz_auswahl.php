@@ -63,7 +63,11 @@ class kompetenz_auswahl {
     /**
      * Baut die Daten fuer das Template zusammen.
      *
-     * @param array $baum Ergebnis von service\kompetenz_baum::baum(), bereits durch filtere() gegangen
+     * Der Stand (was ist schon zugeordnet, was teilweise) wird am ganzen
+     * Baum ermittelt und erst danach gefiltert: "2 von 5 LK" soll bei einer
+     * Suche nicht zu "1 von 1 LK" werden, nur weil vier ausgeblendet sind.
+     *
+     * @param array $baum Ergebnis von service\kompetenz_baum::baum(), ungefiltert
      * @param array $zugeordnet competencyid => beliebiger Wert, geprueft wird nur der Schluessel
      * @param moodle_url $actionurl Ziel des Formulars
      * @param int $blockid
@@ -78,20 +82,41 @@ class kompetenz_auswahl {
     ): string {
         global $OUTPUT;
 
-        $suchaktiv = trim($suchbegriff) !== '';
+        $suchaktiv = self::suchbegriffe($suchbegriff) !== [];
+        $stand = self::stand($baum, $zugeordnet);
+        $nichtgefunden = $suchaktiv ? self::nicht_gefunden($baum, $suchbegriff) : [];
 
         $bereiche = [];
-        foreach ($baum as $zweig) {
+        foreach (self::filtere($baum, $suchbegriff) as $zweig) {
             $handlungskompetenzen = [];
 
             foreach ($zweig['handlungskompetenzen'] as $eintrag) {
+                $hk = self::eintrag($eintrag['kompetenz'], $zugeordnet, true);
+                $hkstand = $stand['handlungskompetenzen'][$hk['id']];
+
+                // Ist die Handlungskompetenz als Ganzes zugeordnet, sind
+                // ihre Leistungskriterien damit abgedeckt - eine Checkbox
+                // daneben wuerde nur eine doppelte Zeile anlegen.
+                $abgedecktdurch = $hk['hatcode']
+                    ? get_string('blocklk:abgedeckt_durch_hk', 'local_berufsbildung', $hk['code'])
+                    : get_string('blocklk:abgedeckt_durch_hk_allgemein', 'local_berufsbildung');
+
                 $leistungskriterien = [];
+                $sichtbarzugeordnet = 0;
                 foreach ($eintrag['leistungskriterien'] as $lk) {
                     // Ohne Kuerzel: die ID-Nummer eines LK ist eine
                     // generierte Eindeutigkeitsnummer ("7777BE_AU b1 01
                     // 1-2#4") und sagt nichts, was nicht schon im
                     // shortname ("AU b1 01 1-2") steht.
-                    $leistungskriterien[] = self::eintrag($lk, $zugeordnet, false);
+                    $lkeintrag = self::eintrag($lk, $zugeordnet, false);
+                    $lkeintrag['istabgedeckt'] = !$lkeintrag['istzugeordnet'] && $hkstand['direkt'];
+                    $lkeintrag['waehlbar'] = !$lkeintrag['istzugeordnet'] && !$lkeintrag['istabgedeckt'];
+                    $lkeintrag['erledigt'] = !$lkeintrag['waehlbar'];
+                    $lkeintrag['abgedeckttext'] = $abgedecktdurch;
+                    $leistungskriterien[] = $lkeintrag;
+                    if ($lkeintrag['istzugeordnet']) {
+                        $sichtbarzugeordnet++;
+                    }
                 }
 
                 // Nach Bezeichnung sortiert statt in Rahmenreihenfolge: die
@@ -104,7 +129,20 @@ class kompetenz_auswahl {
                     static fn (array $links, array $rechts): int => strnatcasecmp($links['name'], $rechts['name'])
                 );
 
-                $handlungskompetenzen[] = self::eintrag($eintrag['kompetenz'], $zugeordnet, true) + [
+                // Teilweise heisst: nicht als Ganzes zugeordnet, aber schon
+                // einzelne Leistungskriterien. Fuer Lueckenanalyse und Raster
+                // gilt die HK damit bereits als abgedeckt - die Auswahl zeigt
+                // trotzdem ehrlich, wie viel davon tatsaechlich gewaehlt ist.
+                $teilstand = !$hkstand['direkt'] && $hkstand['lkzugeordnet'] > 0;
+
+                $handlungskompetenzen[] = $hk + [
+                    'waehlbar' => !$hkstand['ganz'],
+                    'erledigt' => $hkstand['ganz'],
+                    'hatteilstand' => $teilstand,
+                    'teilstandtext' => $teilstand ? get_string('blocklk:lk_stand', 'local_berufsbildung', (object) [
+                        'zugeordnet' => $hkstand['lkzugeordnet'],
+                        'anzahl' => $hkstand['lkanzahl'],
+                    ]) : '',
                     'leistungskriterien' => $leistungskriterien,
                     'hatlk' => !empty($leistungskriterien),
                     // Bei aktiver Suche aufgeklappt: der Treffer kann in
@@ -112,30 +150,30 @@ class kompetenz_auswahl {
                     // zugeklappten Aufklapper zu verstecken waere das
                     // Gegenteil dessen, wofuer man sucht.
                     'lkoffen' => $suchaktiv,
-                    'lktext' => get_string(
-                        'blocklk:lk_aufklappen',
-                        'local_berufsbildung',
-                        count($leistungskriterien)
-                    ),
+                    'lktext' => self::lktext(count($leistungskriterien), $sichtbarzugeordnet, $hkstand['direkt']),
                 ];
             }
 
-            // Aufgeklappt starten, wo noch etwas zu tun ist. Der Bereich
-            // zeigt dann seine Handlungskompetenzen als kurze Liste; die
-            // Leistungskriterien darunter bleiben zugeklappt, sonst waeren
-            // es ueber alle Bereiche mehrere hundert Zeilen und die
-            // HK-Namen gingen darin unter.
-            $alle = [];
-            foreach ($zweig['handlungskompetenzen'] as $eintrag) {
-                $alle[] = $eintrag['kompetenz'];
-                $alle = array_merge($alle, $eintrag['leistungskriterien']);
-            }
+            $bereichstand = $stand['bereiche'][(int) $zweig['bereich']->get('id')];
 
             $bereiche[] = [
                 'code' => format_string(kompetenz_baum::kuerzel($zweig['bereich'])),
                 'name' => format_string($zweig['bereich']->get('shortname')),
+                'suchtext' => self::suchtext($zweig['bereich']),
                 'handlungskompetenzen' => $handlungskompetenzen,
-                'offen' => $suchaktiv || self::hat_offene($alle, $zugeordnet),
+                'hatstand' => $bereichstand['anzahl'] > 0,
+                'standtext' => get_string(
+                    $bereichstand['teilweise'] > 0 ? 'blocklk:bereich_stand_teilweise' : 'blocklk:bereich_stand',
+                    'local_berufsbildung',
+                    (object) $bereichstand
+                ),
+                'standvollstaendig' => $bereichstand['anzahl'] > 0 && $bereichstand['ganz'] === $bereichstand['anzahl'],
+                // Aufgeklappt starten, wo noch etwas zu tun ist. Der Bereich
+                // zeigt dann seine Handlungskompetenzen als kurze Liste; die
+                // Leistungskriterien darunter bleiben zugeklappt, sonst waeren
+                // es ueber alle Bereiche mehrere hundert Zeilen und die
+                // HK-Namen gingen darin unter.
+                'offen' => $suchaktiv || $bereichstand['ganz'] < $bereichstand['anzahl'],
             ];
         }
 
@@ -159,23 +197,110 @@ class kompetenz_auswahl {
             // Meldung ein, ohne die Seite neu zu laden, und wuerde sonst
             // den Begriff des letzten Seitenaufbaus nennen.
             'keinetreffer' => get_string('blocklk:suche_keine_treffer', 'local_berufsbildung'),
-            'intensitaeten' => [
-                [
-                    'wert' => 'schwerpunkt',
-                    'text' => get_string('blocklk:intensitaet_schwerpunkt', 'local_berufsbildung'),
-                    'gewaehlt' => true,
-                ],
-                [
-                    'wert' => 'teilweise',
-                    'text' => get_string('blocklk:intensitaet_teilweise', 'local_berufsbildung'),
-                    'gewaehlt' => false,
-                ],
-            ],
-            'intensitaetlabel' => get_string('blocklk:intensitaet', 'local_berufsbildung'),
-            'intensitaethilfe' => get_string('blocklk:intensitaet_hinweis', 'local_berufsbildung'),
+            // Nur neben anderen Treffern - findet gar nichts, sagt das
+            // bereits keinetreffer.
+            'hatnichtgefunden' => !empty($nichtgefunden) && !empty($bereiche),
+            'nichtgefunden' => implode(', ', $nichtgefunden),
+            'nichtgefundenlabel' => get_string('blocklk:suche_nicht_gefunden', 'local_berufsbildung'),
             'absenden' => get_string('blocklk:hinzufuegen', 'local_berufsbildung'),
             'zugeordnettext' => get_string('blocklk:bereits_zugeordnet', 'local_berufsbildung'),
         ]);
+    }
+
+    /**
+     * Zuordnungsstand des ganzen Baums, ohne Datenbankzugriff.
+     *
+     * Eine Handlungskompetenz ist "ganz" zugeordnet, wenn sie selbst
+     * zugeordnet ist oder alle ihre Leistungskriterien einzeln. Sind nur
+     * einige ihrer Leistungskriterien zugeordnet, zaehlt sie im Bereich als
+     * "teilweise".
+     *
+     * Waehlbar ist, was eine neue Zuordnung noch etwas aendern wuerde: keine
+     * bereits zugeordnete Kompetenz, kein Leistungskriterium unter einer
+     * ganz zugeordneten Handlungskompetenz und keine Handlungskompetenz,
+     * deren Leistungskriterien schon alle zugeordnet sind. Dieselbe Menge
+     * prueft block_kompetenzen.php beim Speichern.
+     *
+     * @param array $baum Ergebnis von service\kompetenz_baum::baum(), ungefiltert
+     * @param array $zugeordnet competencyid => beliebiger Wert, geprueft wird nur der Schluessel
+     * @return array{handlungskompetenzen: array<int, array{direkt: bool, ganz: bool, lkanzahl: int,
+     *               lkzugeordnet: int}>, bereiche: array<int, array{anzahl: int, ganz: int, teilweise: int}>,
+     *               waehlbar: array<int, true>}
+     */
+    public static function stand(array $baum, array $zugeordnet): array {
+        $handlungskompetenzen = [];
+        $bereiche = [];
+        $waehlbar = [];
+
+        foreach ($baum as $zweig) {
+            $bereich = ['anzahl' => 0, 'ganz' => 0, 'teilweise' => 0];
+
+            foreach ($zweig['handlungskompetenzen'] as $eintrag) {
+                $hkid = (int) $eintrag['kompetenz']->get('id');
+                $direkt = isset($zugeordnet[$hkid]);
+
+                $lkanzahl = count($eintrag['leistungskriterien']);
+                $lkzugeordnet = 0;
+                foreach ($eintrag['leistungskriterien'] as $lk) {
+                    $lkid = (int) $lk->get('id');
+                    if (isset($zugeordnet[$lkid])) {
+                        $lkzugeordnet++;
+                    } else if (!$direkt) {
+                        $waehlbar[$lkid] = true;
+                    }
+                }
+
+                $ganz = $direkt || ($lkanzahl > 0 && $lkzugeordnet === $lkanzahl);
+                if (!$ganz) {
+                    $waehlbar[$hkid] = true;
+                }
+
+                $handlungskompetenzen[$hkid] = [
+                    'direkt' => $direkt,
+                    'ganz' => $ganz,
+                    'lkanzahl' => $lkanzahl,
+                    'lkzugeordnet' => $lkzugeordnet,
+                ];
+
+                $bereich['anzahl']++;
+                if ($ganz) {
+                    $bereich['ganz']++;
+                } else if ($lkzugeordnet > 0) {
+                    $bereich['teilweise']++;
+                }
+            }
+
+            $bereiche[(int) $zweig['bereich']->get('id')] = $bereich;
+        }
+
+        return [
+            'handlungskompetenzen' => $handlungskompetenzen,
+            'bereiche' => $bereiche,
+            'waehlbar' => $waehlbar,
+        ];
+    }
+
+    /**
+     * Beschriftung des zugeklappten Aufklappers der Leistungskriterien -
+     * sie verraet den Stand, ohne dass man jede HK aufklappen muss.
+     *
+     * @param int $anzahl Angezeigte Leistungskriterien
+     * @param int $zugeordnet Davon einzeln zugeordnet
+     * @param bool $hkdirekt Die Handlungskompetenz ist als Ganzes zugeordnet
+     */
+    private static function lktext(int $anzahl, int $zugeordnet, bool $hkdirekt): string {
+        if ($hkdirekt) {
+            return get_string('blocklk:lk_aufklappen_abgedeckt', 'local_berufsbildung', $anzahl);
+        }
+
+        if ($zugeordnet > 0) {
+            return get_string('blocklk:lk_aufklappen_teilweise', 'local_berufsbildung', (object) [
+                'anzahl' => $anzahl,
+                'zugeordnet' => $zugeordnet,
+            ]);
+        }
+
+        return get_string('blocklk:lk_aufklappen', 'local_berufsbildung', $anzahl);
     }
 
     /**
@@ -192,6 +317,11 @@ class kompetenz_auswahl {
      * Trifft nur ein Leistungskriterium, bleibt von seiner
      * Handlungskompetenz nur dieses uebrig.
      *
+     * Mehrere Begriffe, durch Komma, Semikolon oder Zeilenumbruch getrennt,
+     * gelten als "oder" (siehe suchbegriffe()): so laesst sich die
+     * LK-Liste eines Arbeitsplatzes aus einer Tabelle einfuegen und dann
+     * von Hand ankreuzen.
+     *
      * Rein lesend und ohne Datenbankzugriff - die Kompetenzen sind bereits
      * geladen, und ein Volltextindex waere fuer einige hundert Zeilen
      * unverhaeltnismaessig.
@@ -201,8 +331,8 @@ class kompetenz_auswahl {
      * @return array Baum in derselben Struktur
      */
     public static function filtere(array $baum, string $suchbegriff): array {
-        $nadel = \core_text::strtolower(trim($suchbegriff));
-        if ($nadel === '') {
+        $nadel = self::nadeln($suchbegriff);
+        if ($nadel === []) {
             return $baum;
         }
 
@@ -245,13 +375,96 @@ class kompetenz_auswahl {
     }
 
     /**
-     * Passt eine Kompetenz auf den Suchbegriff?
+     * Zerlegt die Eingabe des Suchfelds in einzelne Begriffe.
+     *
+     * Getrennt wird an Komma, Semikolon, Tabulator und Zeilenumbruch, nicht
+     * am Leerzeichen: ein LK-Code wie "MEM 11 05 1-2" enthaelt selbst
+     * welche. Doppelte Begriffe zaehlen einmal, ohne Ruecksicht auf
+     * Gross- und Kleinschreibung.
+     *
+     * Dieselbe Regel wendet amd/src/kompetenz_suche.js im Browser an.
+     *
+     * @param string $suchbegriff
+     * @return string[] Begriffe in der eingegebenen Schreibweise
+     */
+    public static function suchbegriffe(string $suchbegriff): array {
+        $begriffe = [];
+        foreach (preg_split('/[,;\t\r\n]+/u', $suchbegriff) as $teil) {
+            $teil = trim($teil);
+            $schluessel = \core_text::strtolower($teil);
+            if ($teil !== '' && !isset($begriffe[$schluessel])) {
+                $begriffe[$schluessel] = $teil;
+            }
+        }
+
+        return array_values($begriffe);
+    }
+
+    /**
+     * Die Begriffe der Eingabe, die nirgends im Baum vorkommen - etwa ein
+     * vertippter Code oder ein LK, das zum Rahmen eines anderen Berufs
+     * gehoert. Bei einer eingefuegten Liste faellt sonst nicht auf, dass
+     * einer von sieben Codes nichts gefunden hat.
+     *
+     * @param array $baum Ergebnis von service\kompetenz_baum::baum(), ungefiltert
+     * @param string $suchbegriff
+     * @return string[] Begriffe in der eingegebenen Schreibweise
+     */
+    public static function nicht_gefunden(array $baum, string $suchbegriff): array {
+        $suchtexte = [];
+        foreach ($baum as $zweig) {
+            $suchtexte[] = self::suchtext($zweig['bereich']);
+            foreach ($zweig['handlungskompetenzen'] as $eintrag) {
+                $suchtexte[] = self::suchtext($eintrag['kompetenz']);
+                foreach ($eintrag['leistungskriterien'] as $lk) {
+                    $suchtexte[] = self::suchtext($lk);
+                }
+            }
+        }
+
+        return array_values(array_filter(
+            self::suchbegriffe($suchbegriff),
+            static function (string $begriff) use ($suchtexte): bool {
+                $nadel = \core_text::strtolower($begriff);
+                foreach ($suchtexte as $suchtext) {
+                    if (str_contains($suchtext, $nadel)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        ));
+    }
+
+    /**
+     * Die Suchbegriffe klein geschrieben, wie sie verglichen werden.
+     *
+     * @param string $suchbegriff
+     * @return string[]
+     */
+    private static function nadeln(string $suchbegriff): array {
+        return array_map(
+            static fn (string $begriff): string => \core_text::strtolower($begriff),
+            self::suchbegriffe($suchbegriff)
+        );
+    }
+
+    /**
+     * Passt eine Kompetenz auf einen der Suchbegriffe?
      *
      * @param competency $kompetenz
-     * @param string $nadel Bereits klein geschriebener Suchbegriff
+     * @param string[] $nadeln Bereits klein geschriebene Suchbegriffe
      */
-    private static function trifft(competency $kompetenz, string $nadel): bool {
-        return str_contains(self::suchtext($kompetenz), $nadel);
+    private static function trifft(competency $kompetenz, array $nadeln): bool {
+        $suchtext = self::suchtext($kompetenz);
+        foreach ($nadeln as $nadel) {
+            if (str_contains($suchtext, $nadel)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -310,21 +523,5 @@ class kompetenz_auswahl {
             'beschreibung' => shorten_text($beschreibung, self::TITEL_ZEICHEN),
             'istzugeordnet' => isset($zugeordnet[$id]),
         ];
-    }
-
-    /**
-     * Gibt es unter den uebergebenen Kompetenzen noch nicht zugeordnete?
-     *
-     * @param competency[] $kompetenzen
-     * @param array $zugeordnet competencyid => beliebiger Wert, geprueft wird nur der Schluessel
-     */
-    private static function hat_offene(array $kompetenzen, array $zugeordnet): bool {
-        foreach ($kompetenzen as $kompetenz) {
-            if (!isset($zugeordnet[(int) $kompetenz->get('id')])) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

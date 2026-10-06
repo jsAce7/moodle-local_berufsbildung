@@ -168,6 +168,28 @@
 }
 
 /*
+ * Abstaende und Fettschrift als eigene Regeln statt mr-1/ml-1/ml-2 und
+ * font-weight-bold: Bootstrap 5 (Moodle 5.x) nennt sie me-1/ms-1/fw-bold,
+ * Bootstrap 4 (Moodle 4.5) kennt diese Namen noch nicht, und Moodle 5.x
+ * markiert die alten als veraltet.
+ */
+.local-berufsbildung-abstand-rechts {
+    margin-right: 0.25rem;
+}
+
+.local-berufsbildung-abstand-links {
+    margin-left: 0.25rem;
+}
+
+.local-berufsbildung-abstand-links-2 {
+    margin-left: 0.5rem;
+}
+
+.local-berufsbildung-fett {
+    font-weight: bold;
+}
+
+/*
  * Taetigkeiten: Gruppenkopf in derselben Form wie die Semesterkoepfe des
  * Versetzungsplans, je Zeile Bezeichnung und Ergebnis oben, Datum und
  * Quelle darunter.
@@ -470,11 +492,12 @@
 
 /*
  * Ein .form-control ist in Bootstrap 100 % breit und draengte die
- * Schaltflaeche sonst in eine zweite Zeile - dieselbe Begrenzung wie in
- * der Filterleiste von "Meine Lernenden".
+ * Schaltflaeche sonst in eine zweite Zeile. Breiter als die Filterleiste
+ * von "Meine Lernenden": hier wird auch eine ganze Liste von LK-Codes
+ * eingefuegt.
  */
 .local-berufsbildung-auswahl-suche .form-control {
-    flex: 0 1 22rem;
+    flex: 0 1 36rem;
     width: auto;
 }
 
@@ -528,6 +551,38 @@
 .local-berufsbildung-auswahl-eintrag .form-check-input {
     position: static;
     margin: 0.3rem 0 0;
+}
+
+/*
+ * Bereits zugeordnete Eintraege muessen sich von den waehlbaren abheben:
+ * ein hellgrauer Badge ging zwischen den Code-Badges unter. Gruener Badge
+ * mit Haken an der Stelle der Checkbox, dazu ein leicht getoenter Hintergrund
+ * ueber die ganze Zeile.
+ */
+.local-berufsbildung-auswahl-ist-zugeordnet {
+    background-color: rgba(25, 135, 84, 0.08);
+    border-radius: 0.25rem;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+}
+
+/*
+ * Stand im Bereichskopf ("3 von 6 HK") und bei einer nur teilweise
+ * zugeordneten Handlungskompetenz ("2 von 5 LK") - etwas abgesetzt vom
+ * Namen davor.
+ */
+.local-berufsbildung-auswahl-stand,
+.local-berufsbildung-auswahl-teilstand {
+    margin-left: 0.5rem;
+    font-weight: normal;
+}
+
+.local-berufsbildung-auswahl-zugeordnet .icon {
+    margin-right: 0.2rem;
+    font-size: inherit;
+    width: auto;
+    height: auto;
+    color: inherit;
 }
 
 .local-berufsbildung-auswahl-fuss {

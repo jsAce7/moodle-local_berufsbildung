@@ -306,7 +306,6 @@ class provider implements
                     'kompetenzzuordnungen' => array_map(static fn ($k): array => [
                         'blockid' => (int) $k->blockid,
                         'competencyid' => (int) $k->competencyid,
-                        'intensitaet' => $k->intensitaet,
                         'geaendert_am' => transform::datetime((int) $k->timemodified),
                     ], $kompetenzen),
                 ]

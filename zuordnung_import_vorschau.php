@@ -188,7 +188,7 @@ if ($bestaetigt) {
         ]);
         echo html_writer::div(
             $OUTPUT->single_button($bestaetigenurl, get_string('import:bestaetigen', 'local_berufsbildung'))
-            . html_writer::link($uploadurl, get_string('import:abbrechen', 'local_berufsbildung'), ['class' => 'ml-2']),
+            . html_writer::link($uploadurl, get_string('import:abbrechen', 'local_berufsbildung'), ['class' => 'local-berufsbildung-abstand-links-2']),
             'mt-3'
         );
     }

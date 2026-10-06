@@ -26,6 +26,11 @@
  * Beschreibung auf 120 Zeichen gekuerzt. Das Attribut traegt denselben
  * Text, den auch der Serverfilter durchsucht.
  *
+ * Mehrere Begriffe, durch Komma, Semikolon oder Zeilenumbruch getrennt,
+ * gelten als "oder" - wie kompetenz_auswahl::suchbegriffe(). Eine aus
+ * Excel eingefuegte Spalte kommt mit Zeilenumbruechen, die ein einzeiliges
+ * Feld sonst verschluckt; beim Einfuegen werden sie zu Kommas.
+ *
  * amd/build entsteht mit "npx grunt amd --root=local/berufsbildung" aus dem
  * Moodle-Verzeichnis; die CI prueft mit "moodle-plugin-ci grunt", dass er
  * zu amd/src passt.
@@ -49,6 +54,41 @@ const TIPPPAUSE = 120;
  */
 const umschalten = (element, zeigen) => {
     element.classList.toggle('d-none', !zeigen);
+};
+
+/**
+ * Zerlegt die Eingabe in klein geschriebene Suchbegriffe - getrennt an
+ * Komma, Semikolon, Tabulator und Zeilenumbruch, nicht am Leerzeichen:
+ * ein LK-Code wie "MEM 11 05 1-2" enthaelt selbst welche.
+ *
+ * @param {string} eingabe
+ * @returns {Array<{text: string, nadel: string}>} Begriff wie eingegeben und klein geschrieben, ohne Doppelte
+ */
+const suchbegriffe = (eingabe) => {
+    const gesehen = new Set();
+    const begriffe = [];
+    eingabe.split(/[,;\t\r\n]+/).forEach((teil) => {
+        const text = teil.trim();
+        const nadel = text.toLowerCase();
+        if (nadel !== '' && !gesehen.has(nadel)) {
+            gesehen.add(nadel);
+            begriffe.push({text, nadel});
+        }
+    });
+
+    return begriffe;
+};
+
+/**
+ * Passt ein Element mit data-suchtext auf einen der Begriffe?
+ *
+ * @param {Element} element
+ * @param {string[]} nadeln
+ * @returns {boolean}
+ */
+const trifft = (element, nadeln) => {
+    const suchtext = element.dataset.suchtext || '';
+    return nadeln.some((nadel) => suchtext.indexOf(nadel) !== -1);
 };
 
 /**
@@ -80,6 +120,11 @@ export const init = () => {
 
     const absenden = suchformular.querySelector('[data-region="suche-absenden"]');
     const keinetreffer = document.querySelector('[data-region="berufsbildung-auswahl-keine-treffer"]');
+    const nichtgefunden = document.querySelector('[data-region="berufsbildung-auswahl-nicht-gefunden"]');
+    const nichtgefundenliste = nichtgefunden
+        ? nichtgefunden.querySelector('[data-region="nicht-gefunden-liste"]')
+        : null;
+    const durchsuchbar = Array.from(auswahl.querySelectorAll('[data-suchtext]'));
     const bereiche = Array.from(auswahl.querySelectorAll('[data-region="bereich"]'));
 
     bereiche.forEach((bereich) => {
@@ -92,23 +137,26 @@ export const init = () => {
      * dem Suchtext ein oder aus.
      */
     const filtern = () => {
-        const nadel = feld.value.trim().toLowerCase();
-        const suchaktiv = nadel !== '';
+        const begriffe = suchbegriffe(feld.value);
+        const nadeln = begriffe.map((begriff) => begriff.nadel);
+        const suchaktiv = nadeln.length > 0;
         let sichtbar = 0;
 
         bereiche.forEach((bereich) => {
             let imBereich = 0;
 
+            // Trifft der Bereich oder die Handlungskompetenz selbst, gehoert
+            // alles darunter dazu - dieselbe Regel wie im Serverfilter.
+            const bereichtrifft = !suchaktiv || trifft(bereich, nadeln);
+
             bereich.querySelectorAll('[data-region="hk"]').forEach((hk) => {
-                // Trifft die Handlungskompetenz selbst, gehoeren alle ihre
-                // Leistungskriterien dazu - dieselbe Regel wie im Serverfilter.
-                const hktrifft = !suchaktiv || (hk.dataset.suchtext || '').indexOf(nadel) !== -1;
+                const hktrifft = bereichtrifft || trifft(hk, nadeln);
                 let lktreffer = 0;
 
                 hk.querySelectorAll('[data-region="lk"]').forEach((lk) => {
-                    const trifft = hktrifft || (lk.dataset.suchtext || '').indexOf(nadel) !== -1;
-                    umschalten(lk, trifft);
-                    if (trifft && !hktrifft) {
+                    const lktrifft = hktrifft || trifft(lk, nadeln);
+                    umschalten(lk, lktrifft);
+                    if (lktrifft && !hktrifft) {
                         lktreffer++;
                     }
                 });
@@ -138,6 +186,16 @@ export const init = () => {
         if (keinetreffer) {
             umschalten(keinetreffer, sichtbar === 0);
         }
+
+        // Begriffe ohne jeden Treffer, nur neben anderen Treffern - findet
+        // gar nichts, sagt das bereits keinetreffer.
+        if (nichtgefunden && nichtgefundenliste) {
+            const fehlend = begriffe
+                .filter((begriff) => !durchsuchbar.some((element) => trifft(element, [begriff.nadel])))
+                .map((begriff) => begriff.text);
+            nichtgefundenliste.textContent = fehlend.join(', ');
+            umschalten(nichtgefunden, fehlend.length > 0 && sichtbar > 0);
+        }
     };
 
     // Ohne Skript ist die Schaltflaeche der einzige Weg zum Filtern, mit
@@ -148,6 +206,21 @@ export const init = () => {
 
     suchformular.addEventListener('submit', (ereignis) => {
         ereignis.preventDefault();
+        filtern();
+    });
+
+    feld.addEventListener('paste', (ereignis) => {
+        const text = ereignis.clipboardData ? ereignis.clipboardData.getData('text') : '';
+        if (!/[\t\r\n]/.test(text)) {
+            return;
+        }
+
+        ereignis.preventDefault();
+        const liste = text.split(/[\t\r\n]+/)
+            .map((teil) => teil.trim())
+            .filter((teil) => teil !== '')
+            .join(', ');
+        feld.setRangeText(liste, feld.selectionStart, feld.selectionEnd, 'end');
         filtern();
     });
 

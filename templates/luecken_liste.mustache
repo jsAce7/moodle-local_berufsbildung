@@ -59,14 +59,14 @@
                 <i class="icon fa fa-lightbulb fa-fw" aria-hidden="true"></i>
                 {{#str}} luecken:titel_anzahl, local_berufsbildung, {{anzahl}} {{/str}}
             </span>
-            <span class="small text-muted ml-1">{{zusammenfassung}}</span>
+            <span class="small text-muted local-berufsbildung-abstand-links">{{zusammenfassung}}</span>
         </p>
         {{^kompakt}}
             <ul class="local-berufsbildung-luecken-bereiche list-unstyled small mb-2" aria-label="{{titel}}">
                 {{#bereiche}}
                     <li class="local-berufsbildung-luecken-bereich mb-1">
                         <span class="local-berufsbildung-luecken-bereichname">{{name}}</span>
-                        <span class="text-muted ml-1">{{abdeckung}}</span>
+                        <span class="text-muted local-berufsbildung-abstand-links">{{abdeckung}}</span>
                         {{#hasluecken}}
                             <ul class="local-berufsbildung-luecken-liste text-muted mb-0">
                                 {{#kompetenzen}}
