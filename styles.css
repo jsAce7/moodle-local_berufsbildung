@@ -470,11 +470,12 @@
 
 /*
  * Ein .form-control ist in Bootstrap 100 % breit und draengte die
- * Schaltflaeche sonst in eine zweite Zeile - dieselbe Begrenzung wie in
- * der Filterleiste von "Meine Lernenden".
+ * Schaltflaeche sonst in eine zweite Zeile. Breiter als die Filterleiste
+ * von "Meine Lernenden": hier wird auch eine ganze Liste von LK-Codes
+ * eingefuegt.
  */
 .local-berufsbildung-auswahl-suche .form-control {
-    flex: 0 1 22rem;
+    flex: 0 1 36rem;
     width: auto;
 }
 

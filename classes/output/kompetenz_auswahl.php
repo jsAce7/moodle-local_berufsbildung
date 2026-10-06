@@ -82,8 +82,9 @@ class kompetenz_auswahl {
     ): string {
         global $OUTPUT;
 
-        $suchaktiv = trim($suchbegriff) !== '';
+        $suchaktiv = self::suchbegriffe($suchbegriff) !== [];
         $stand = self::stand($baum, $zugeordnet);
+        $nichtgefunden = $suchaktiv ? self::nicht_gefunden($baum, $suchbegriff) : [];
 
         $bereiche = [];
         foreach (self::filtere($baum, $suchbegriff) as $zweig) {
@@ -158,6 +159,7 @@ class kompetenz_auswahl {
             $bereiche[] = [
                 'code' => format_string(kompetenz_baum::kuerzel($zweig['bereich'])),
                 'name' => format_string($zweig['bereich']->get('shortname')),
+                'suchtext' => self::suchtext($zweig['bereich']),
                 'handlungskompetenzen' => $handlungskompetenzen,
                 'hatstand' => $bereichstand['anzahl'] > 0,
                 'standtext' => get_string(
@@ -195,6 +197,11 @@ class kompetenz_auswahl {
             // Meldung ein, ohne die Seite neu zu laden, und wuerde sonst
             // den Begriff des letzten Seitenaufbaus nennen.
             'keinetreffer' => get_string('blocklk:suche_keine_treffer', 'local_berufsbildung'),
+            // Nur neben anderen Treffern - findet gar nichts, sagt das
+            // bereits keinetreffer.
+            'hatnichtgefunden' => !empty($nichtgefunden) && !empty($bereiche),
+            'nichtgefunden' => implode(', ', $nichtgefunden),
+            'nichtgefundenlabel' => get_string('blocklk:suche_nicht_gefunden', 'local_berufsbildung'),
             'absenden' => get_string('blocklk:hinzufuegen', 'local_berufsbildung'),
             'zugeordnettext' => get_string('blocklk:bereits_zugeordnet', 'local_berufsbildung'),
         ]);
@@ -310,6 +317,11 @@ class kompetenz_auswahl {
      * Trifft nur ein Leistungskriterium, bleibt von seiner
      * Handlungskompetenz nur dieses uebrig.
      *
+     * Mehrere Begriffe, durch Komma, Semikolon oder Zeilenumbruch getrennt,
+     * gelten als "oder" (siehe suchbegriffe()): so laesst sich die
+     * LK-Liste eines Arbeitsplatzes aus einer Tabelle einfuegen und dann
+     * von Hand ankreuzen.
+     *
      * Rein lesend und ohne Datenbankzugriff - die Kompetenzen sind bereits
      * geladen, und ein Volltextindex waere fuer einige hundert Zeilen
      * unverhaeltnismaessig.
@@ -319,8 +331,8 @@ class kompetenz_auswahl {
      * @return array Baum in derselben Struktur
      */
     public static function filtere(array $baum, string $suchbegriff): array {
-        $nadel = \core_text::strtolower(trim($suchbegriff));
-        if ($nadel === '') {
+        $nadel = self::nadeln($suchbegriff);
+        if ($nadel === []) {
             return $baum;
         }
 
@@ -363,13 +375,96 @@ class kompetenz_auswahl {
     }
 
     /**
-     * Passt eine Kompetenz auf den Suchbegriff?
+     * Zerlegt die Eingabe des Suchfelds in einzelne Begriffe.
+     *
+     * Getrennt wird an Komma, Semikolon, Tabulator und Zeilenumbruch, nicht
+     * am Leerzeichen: ein LK-Code wie "MEM 11 05 1-2" enthaelt selbst
+     * welche. Doppelte Begriffe zaehlen einmal, ohne Ruecksicht auf
+     * Gross- und Kleinschreibung.
+     *
+     * Dieselbe Regel wendet amd/src/kompetenz_suche.js im Browser an.
+     *
+     * @param string $suchbegriff
+     * @return string[] Begriffe in der eingegebenen Schreibweise
+     */
+    public static function suchbegriffe(string $suchbegriff): array {
+        $begriffe = [];
+        foreach (preg_split('/[,;\t\r\n]+/u', $suchbegriff) as $teil) {
+            $teil = trim($teil);
+            $schluessel = \core_text::strtolower($teil);
+            if ($teil !== '' && !isset($begriffe[$schluessel])) {
+                $begriffe[$schluessel] = $teil;
+            }
+        }
+
+        return array_values($begriffe);
+    }
+
+    /**
+     * Die Begriffe der Eingabe, die nirgends im Baum vorkommen - etwa ein
+     * vertippter Code oder ein LK, das zum Rahmen eines anderen Berufs
+     * gehoert. Bei einer eingefuegten Liste faellt sonst nicht auf, dass
+     * einer von sieben Codes nichts gefunden hat.
+     *
+     * @param array $baum Ergebnis von service\kompetenz_baum::baum(), ungefiltert
+     * @param string $suchbegriff
+     * @return string[] Begriffe in der eingegebenen Schreibweise
+     */
+    public static function nicht_gefunden(array $baum, string $suchbegriff): array {
+        $suchtexte = [];
+        foreach ($baum as $zweig) {
+            $suchtexte[] = self::suchtext($zweig['bereich']);
+            foreach ($zweig['handlungskompetenzen'] as $eintrag) {
+                $suchtexte[] = self::suchtext($eintrag['kompetenz']);
+                foreach ($eintrag['leistungskriterien'] as $lk) {
+                    $suchtexte[] = self::suchtext($lk);
+                }
+            }
+        }
+
+        return array_values(array_filter(
+            self::suchbegriffe($suchbegriff),
+            static function (string $begriff) use ($suchtexte): bool {
+                $nadel = \core_text::strtolower($begriff);
+                foreach ($suchtexte as $suchtext) {
+                    if (str_contains($suchtext, $nadel)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        ));
+    }
+
+    /**
+     * Die Suchbegriffe klein geschrieben, wie sie verglichen werden.
+     *
+     * @param string $suchbegriff
+     * @return string[]
+     */
+    private static function nadeln(string $suchbegriff): array {
+        return array_map(
+            static fn (string $begriff): string => \core_text::strtolower($begriff),
+            self::suchbegriffe($suchbegriff)
+        );
+    }
+
+    /**
+     * Passt eine Kompetenz auf einen der Suchbegriffe?
      *
      * @param competency $kompetenz
-     * @param string $nadel Bereits klein geschriebener Suchbegriff
+     * @param string[] $nadeln Bereits klein geschriebene Suchbegriffe
      */
-    private static function trifft(competency $kompetenz, string $nadel): bool {
-        return str_contains(self::suchtext($kompetenz), $nadel);
+    private static function trifft(competency $kompetenz, array $nadeln): bool {
+        $suchtext = self::suchtext($kompetenz);
+        foreach ($nadeln as $nadel) {
+            if (str_contains($suchtext, $nadel)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

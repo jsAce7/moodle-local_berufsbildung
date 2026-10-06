@@ -39,7 +39,7 @@
     * action - string, Ziel des Formulars
     * sesskey - string
     * blockid - int
-    * bereiche - array of {code, name, offen, hatstand, standtext, standvollstaendig,
+    * bereiche - array of {code, name, suchtext, offen, hatstand, standtext, standvollstaendig,
                            handlungskompetenzen}
     * hatbereiche - bool, false wenn der Filter nichts uebrig laesst
     * sucheaction - string, Ziel des Suchformulars
@@ -47,6 +47,9 @@
     * suchbegriff - string, aktiver Filter
     * suchaktiv - bool
     * suchelabel, sucheplaceholder, suchen, suchezuruecksetzen, keinetreffer - string
+    * hatnichtgefunden - bool, einzelne Suchbegriffe ohne Treffer neben anderen Treffern
+    * nichtgefunden - string, diese Begriffe mit Komma getrennt
+    * nichtgefundenlabel - string
     * handlungskompetenzen - array of {id, code, hatcode, name, beschreibung, hatbeschreibung,
                                        kurzbeschreibung, suchtext, istzugeordnet, waehlbar, erledigt,
                                        hatteilstand, teilstandtext, hatlk, lkoffen, lktext,
@@ -79,10 +82,14 @@
         "suchen": "Suchen",
         "suchezuruecksetzen": "Filter zurücksetzen",
         "keinetreffer": "Keine Kompetenz gefunden.",
+        "hatnichtgefunden": false,
+        "nichtgefunden": "",
+        "nichtgefundenlabel": "Nicht gefunden:",
         "bereiche": [
             {
                 "code": "b",
                 "name": "Erstellen und Inbetriebnehmen von automatisierten Anlagen",
+                "suchtext": "erstellen und inbetriebnehmen von automatisierten anlagen 7777be b",
                 "offen": true,
                 "hatstand": true,
                 "standtext": "0 von 1 HK, 1 teilweise",
@@ -145,6 +152,12 @@
     ohne Skript entscheidet der Server ueber hatbereiche. }}
 <p class="text-muted{{#hatbereiche}} d-none{{/hatbereiche}}" aria-live="polite"
    data-region="berufsbildung-auswahl-keine-treffer">{{keinetreffer}}</p>
+{{! Ebenso immer im Dokument: bei einer eingefuegten Liste von Codes soll
+    auffallen, wenn einer davon nichts gefunden hat. }}
+<p class="text-warning{{^hatnichtgefunden}} d-none{{/hatnichtgefunden}}" aria-live="polite"
+   data-region="berufsbildung-auswahl-nicht-gefunden">
+    {{nichtgefundenlabel}} <span data-region="nicht-gefunden-liste">{{nichtgefunden}}</span>
+</p>
 
 <form method="post" action="{{action}}" class="local-berufsbildung-auswahl"
       data-region="berufsbildung-auswahl">
@@ -157,7 +170,7 @@
 
     {{#bereiche}}
         <details class="local-berufsbildung-auswahl-bereich card mb-2" {{#offen}}open{{/offen}}
-                 data-region="bereich">
+                 data-region="bereich" data-suchtext="{{suchtext}}">
             <summary class="local-berufsbildung-auswahl-bereichkopf card-header">
                 <span class="local-berufsbildung-auswahl-code badge bg-light text-dark border">{{code}}</span>
                 <span class="local-berufsbildung-auswahl-bereichname">{{name}}</span>

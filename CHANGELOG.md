@@ -6,6 +6,8 @@
 
 - **Kompetenzauswahl zeigt den Zuordnungsstand** (`classes/output/kompetenz_auswahl.php`, `templates/kompetenz_auswahl.mustache`, `styles.css`): „zugeordnet“ ist ein grünes Badge mit Haken, die Zeile ist leicht grün hinterlegt. Bisher ging das hellgraue Badge zwischen den Code-Badges unter. Ist eine Handlungskompetenz als Ganzes zugeordnet, tragen ihre Leistungskriterien „über c.02 abgedeckt“ statt einer Checkbox. Sind nur einzelne Leistungskriterien zugeordnet, zeigt die Handlungskompetenz „2 von 5 LK“, und der zugeklappte Aufklapper nennt die Zahl der zugeordneten. Der Bereichskopf zählt die ganz und teilweise zugeordneten Handlungskompetenzen („3 von 6 HK, 2 teilweise“). Was eine neue Zuordnung nicht mehr ändern würde, ist auch beim Speichern nicht mehr wählbar (`kompetenz_auswahl::stand()`).
 
+- **Suche in der Kompetenzauswahl versteht Listen** (`kompetenz_auswahl::suchbegriffe()`, `amd/src/kompetenz_suche.js`): Mehrere Begriffe, durch Komma, Semikolon oder Zeilenumbruch getrennt, gelten als „oder“. So lässt sich die LK-Liste eines Arbeitsplatzes aus einer Tabelle einfügen (z. B. „AU b4 01, AU b4 02 1-2, MEM 02 01“) und dann von Hand ankreuzen. Eine aus Excel kopierte Spalte wird beim Einfügen zu einer Kommaliste. Codes ohne Treffer stehen unter „Nicht gefunden:“. Die Suche trifft jetzt auch im Browser den Bereich selbst, wie bisher schon der Serverfilter.
+
 ### Entfernt
 
 - **Intensität einer Kompetenzabdeckung** („Schwerpunkt“ / „teilweise“): Sie wurde gespeichert, aber nirgends ausgewertet, weder in Lückenanalyse und Raster noch über die API. Auswahl, Tabellenspalte und Sprachstrings fallen weg, das Feld `local_berufsbildung_block_lk.intensitaet` wird beim Upgrade gelöscht.

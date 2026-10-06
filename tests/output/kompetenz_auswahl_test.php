@@ -270,10 +270,11 @@ final class kompetenz_auswahl_test extends advanced_testcase {
 
         $this->assertTrue($stand['handlungskompetenzen'][$hk]['direkt']);
         $this->assertTrue($stand['handlungskompetenzen'][$hk]['ganz']);
-        $this->assertSame(
-            $this->zugeordnet('Netze planen und parametrieren', 'MEM 07 01', 'AU a3 03'),
-            $stand['waehlbar']
-        );
+        $erwartet = array_keys($this->zugeordnet('Netze planen und parametrieren', 'MEM 07 01', 'AU a3 03'));
+        $waehlbar = array_keys($stand['waehlbar']);
+        sort($erwartet);
+        sort($waehlbar);
+        $this->assertSame($erwartet, $waehlbar);
         $this->assertSame(
             ['anzahl' => 2, 'ganz' => 1, 'teilweise' => 0],
             $stand['bereiche'][(int) $this->kompetenzen['a Entwickeln von automatisierten Anlagen']->get('id')]
@@ -387,5 +388,78 @@ final class kompetenz_auswahl_test extends advanced_testcase {
             'zugeordnet' => $zugeordnet,
             'anzahl' => $anzahl,
         ]));
+    }
+
+    /**
+     * Begriffe werden an Komma, Semikolon und Zeilenumbruch getrennt, nicht
+     * am Leerzeichen - ein LK-Code enthaelt selbst welche. Doppelte zaehlen
+     * einmal.
+     */
+    public function test_suchbegriffe_trennt_listen(): void {
+        $this->assertSame(
+            ['AU b4 01', 'MEM 11 05 1-2', 'MEM 02 01'],
+            kompetenz_auswahl::suchbegriffe(" AU b4 01, MEM 11 05 1-2;\r\nMEM 02 01,, au B4 01 ")
+        );
+        $this->assertSame([], kompetenz_auswahl::suchbegriffe(' , ; '));
+    }
+
+    /**
+     * Eine Liste von LK-Codes, wie sie aus einer Tabelle eingefuegt wird:
+     * jedes Leistungskriterium, das einen der Codes traegt, bleibt stehen,
+     * unter seiner eigenen Handlungskompetenz.
+     */
+    public function test_liste_von_codes_findet_jeden(): void {
+        $this->resetAfterTest();
+        $baum = $this->lege_rahmen_an();
+
+        $struktur = $this->struktur(kompetenz_auswahl::filtere($baum, 'MEM 02 02, AU a3 03'));
+
+        $this->assertSame([
+            'Fertigungsunterlagen erstellen oder überarbeiten' => ['MEM 02 02'],
+            'Netze planen und parametrieren' => ['AU a3 03'],
+        ], $struktur);
+    }
+
+    /**
+     * Randfall: ein Code der Liste trifft nichts. Er wird gemeldet, die
+     * anderen bleiben unbeeinflusst; Gross- und Kleinschreibung spielt
+     * keine Rolle.
+     */
+    public function test_nicht_gefundene_codes_werden_gemeldet(): void {
+        $this->resetAfterTest();
+        $baum = $this->lege_rahmen_an();
+
+        $this->assertSame(
+            ['XY 99 01'],
+            kompetenz_auswahl::nicht_gefunden($baum, 'mem 02 02, XY 99 01, AU a3 03')
+        );
+        $this->assertSame([], kompetenz_auswahl::nicht_gefunden($baum, ''));
+        $this->assertSame(
+            ['Fertigungsunterlagen erstellen oder überarbeiten' => ['MEM 02 02']],
+            $this->struktur(kompetenz_auswahl::filtere($baum, 'XY 99 01, MEM 02 02'))
+        );
+    }
+
+    /**
+     * Die Ausgabe nennt nicht gefundene Codes nur neben anderen Treffern -
+     * trifft gar nichts, sagt das bereits die Meldung "keine Treffer".
+     */
+    public function test_render_meldet_nicht_gefundene_codes(): void {
+        $this->resetAfterTest();
+        $baum = $this->lege_rahmen_an();
+        $url = new \moodle_url('/local/berufsbildung/block_kompetenzen.php', ['id' => 7]);
+
+        $html = kompetenz_auswahl::render($baum, [], $url, 7, 'MEM 02 02, XY 99 01');
+        $this->assertMatchesRegularExpression(
+            '/<p class="text-warning" [^>]*data-region="berufsbildung-auswahl-nicht-gefunden"/',
+            $html
+        );
+        $this->assertStringContainsString('XY 99 01', $html);
+
+        $html = kompetenz_auswahl::render($baum, [], $url, 7, 'XY 99 01');
+        $this->assertMatchesRegularExpression(
+            '/<p class="text-warning d-none" [^>]*data-region="berufsbildung-auswahl-nicht-gefunden"/',
+            $html
+        );
     }
 }
