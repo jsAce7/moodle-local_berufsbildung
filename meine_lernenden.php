@@ -40,7 +40,6 @@ use local_berufsbildung\output\faelligkeiten_liste;
 use local_berufsbildung\output\kompetenzraster;
 use local_berufsbildung\output\lernenden_kachel;
 use local_berufsbildung\output\lernenden_roster;
-use local_berufsbildung\output\luecken_liste;
 use local_berufsbildung\output\nachweis_liste;
 
 require_login();
@@ -137,8 +136,8 @@ if (empty($eintraege)) {
     // in der Toolbar unabhaengig von Suche/Filter bleibt.
     //
     // Einmal das Raster, daraus beides: die Zahl fuer die Kachel und
-    // weiter unten Lueckenliste wie Raster. Sonst liefe dieselbe
-    // Auswertung je Person mehrfach.
+    // weiter unten das Raster selbst. Sonst liefe dieselbe Auswertung je
+    // Person mehrfach.
     $raster = [];
     $anzahlluecken = [];
     foreach ($eintraege as $eintrag) {
@@ -241,12 +240,10 @@ if (empty($eintraege)) {
         }
 
         if (!empty($raster[$lernendeid])) {
-            // Beides, anders als auf meine_lehre.php: die Lueckenliste
-            // beantwortet die Planungsfrage "was muss ich noch einplanen"
-            // als kurze Aufzaehlung, das Raster zeigt daneben die ganze
-            // Karte. Fuer die lernende Person waere das doppelt - sie
-            // plant nicht, sie schaut nach, wo sie steht.
-            echo luecken_liste::render(api::abdeckung_aus_raster($raster[$lernendeid]), kompakt: false);
+            // Nur das Raster, ohne Lueckenliste daneben - wie auf
+            // meine_lehre.php. Was fehlt, zeigt es selbst: die weissen
+            // Zellen, und je Zelle die fehlenden LK im Dialog. Die Zahl
+            // der fehlenden Pflicht-HK traegt das Badge der Kachel.
             echo html_writer::div(
                 kompetenzraster::render(
                     $raster[$lernendeid],

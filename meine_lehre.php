@@ -198,9 +198,7 @@ if ($stand !== null) {
     // Stand, die Liste nur ohne die Kuerzel, ueber die man sie im Raster
     // wiederfinden wuerde. Die Bezugsgroesse ("x von y abgedeckt") bringt
     // das Raster selbst mit, welche Kompetenzen offen sind, steht in seinen
-    // Zellen. Fuer die Berufsbildner/innen bleibt die Liste in
-    // meine_lernenden.php - dort ist das Raster kompakt und zeigt nur
-    // Kuerzel.
+    // Zellen. Ebenso auf meine_lernenden.php.
     if (!$istbeendet && api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null) {
         echo $abschnitt(kompetenzraster::render(
             api::get_kompetenzraster($lernendeid),

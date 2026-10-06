@@ -11,6 +11,10 @@
 - **Kompetenzauswahl: Zugeordnetes lässt sich abwählen** (`block_kompetenzen.php`, `templates/kompetenz_auswahl.mustache`): Bereits zugeordnete Kompetenzen stehen angekreuzt in der Auswahl; abwählen und „Auswahl speichern“ entfernt sie. Ein Suchfilter entfernt dabei nichts, was er ausgeblendet hat. Die Auswahl bleibt auch stehen, wenn alles zugeordnet ist.
 - **Kompetenzauswahl zählt Leistungskriterien** (`kompetenz_auswahl::stand()`): Der Bereichskopf zeigt „12 von 40 LK“ statt „1 von 7 HK“. Eine Handlungskompetenz ist kaum je ganz in einem Block, die LK zeigen den Fortschritt. Unter einer als Ganzes zugeordneten HK zählen alle ihre LK.
 
+- **Wahlpflicht-Soll** (Einstellung „Anzahl Wahlpflicht-Handlungskompetenzen je Beruf“, `api::get_wahlpflicht_anzahl_for_beruf()`): Ist für einen Beruf hinterlegt, wie viele Wahlpflicht-Handlungskompetenzen der Bildungsplan verlangt, zeigt das Raster „3 Wahlpflicht-Handlungskompetenzen verlangt: 1 bereits vorgekommen, 1 später eingeplant“. Ohne Eintrag bleibt die Zeile weg.
+- **„Meine Lernenden“ ohne Lückenliste**: Je Person steht nur noch das Raster. Was fehlt, zeigen die weissen Zellen und je Zelle der Dialog; die Zahl der fehlenden Pflicht-Handlungskompetenzen trägt weiterhin das Badge der Kachel.
+- **Kompetenzraster mit wenigen Datenbankabfragen** (`plan_service`, `raster_analyse`): Für eine Person mit acht Einsätzen und 90 zugeordneten Leistungskriterien brauchte das Raster 548 Lesezugriffe, auf „Meine Lernenden“ mit zehn Personen über 5000. Jetzt sind es 11 je Person, unabhängig von der Zahl der Leistungskriterien.
+
 ### Tests
 
 - Behat-Szenarien für das Raster auf „Meine Lehre“ und für das Abwählen in der Kompetenzauswahl. Der Behat-Generator legt dafür auch Lernende mit Beruf und Jahrgang sowie Einsätze an.
