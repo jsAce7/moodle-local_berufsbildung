@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.8.1] — 2026-10-06
+
+### Hinzugefügt
+
+- **Kohorte „ohne Lerndokumentation“** (Einstellung `kohorte_ohne_lerndokumentation`, `api::ist_lerndokumentation_erforderlich()`): Mitglieder der gewählten Kohorte führen keine Lerndokumentation, etwa höhere Lehrjahre, die nur mit dem Bildungsbericht einsteigen. Weil `local_lerndokumentation` Rechte, Tab, Erinnerungen, Fälligkeiten, Export und Abschluss über diese Methode prüft, gilt das dort ohne eigene Änderung. Bildungsbericht und üK-Noten fragen sie nicht ab und laufen unverändert. Massgebend ist die Mitgliedschaft heute, ohne Stichtag: Kohorten kennen keine Historie. Erfasste Einträge bleiben gespeichert, sind aber nicht sichtbar, solange die Person Mitglied ist. Ohne Auswahl (Standard) ändert sich nichts.
+
+### Geändert
+
+- Die Beschreibung des Profilfelds Lehrbeginn nennt jetzt alle Wirkungen: Beginn der Probezeit sowie ab wann Bildungsbericht und Lerndokumentation für die Person gelten (`local_bildungsbericht` 0.11.1, `local_lerndokumentation` 0.2.1). Sie warnt davor, das Feld als Starttag im System zu verwenden, weil das Datum eine Probezeit eröffnet.
+
 ## [0.8.0] — 2026-10-05
 
 ### Hinzugefügt

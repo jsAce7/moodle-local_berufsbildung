@@ -78,13 +78,30 @@ class api {
     }
 
     /**
-     * Prüft, ob eine Lerndokumentation für die Person erforderlich ist.
+     * Prüft, ob eine Lerndokumentation für die Person erforderlich ist:
+     * nicht für externe üK-Teilnehmende und nicht für Mitglieder der
+     * Kohorte aus der Einstellung kohorte_ohne_lerndokumentation (etwa
+     * höhere Lehrjahre, die nur mit dem Bildungsbericht einsteigen). Die
+     * Kohorte gilt, wie sie heute ist - sie kennt keine Historie, deshalb
+     * ohne Stichtag.
      *
      * @param int $userid
      * @return bool
      */
     public static function ist_lerndokumentation_erforderlich(int $userid): bool {
-        return !self::ist_uek_extern($userid);
+        global $CFG;
+
+        if (self::ist_uek_extern($userid)) {
+            return false;
+        }
+
+        $kohorte = (int) get_config('local_berufsbildung', 'kohorte_ohne_lerndokumentation');
+        if ($kohorte <= 0) {
+            return true;
+        }
+        require_once($CFG->dirroot . '/cohort/lib.php');
+
+        return !cohort_is_member($kohorte, $userid);
     }
 
     /**
