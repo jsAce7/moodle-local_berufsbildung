@@ -18,6 +18,8 @@
 
 ### Code
 
+- **Konzept nachgeführt** (`docs/konzept.md`, neuer Abschnitt 5.9): Kompetenzraster, Stand je HK und LK, Pflicht und Wahlpflicht mit Wahlpflicht-Gruppen, die zugehörigen API-Methoden und Wertobjekte. Abschnitt 4 verweist für die vollständige API auf `classes/api.php`.
+- **PHPUnit-Attribute** (`#[CoversClass]`, `#[DataProvider]`) neben den Docblock-Angaben: PHPUnit 12 liest die Docblocks nicht mehr. Die Docblocks bleiben für PHPUnit 9 unter Moodle 4.5.
 - **Keine Warnungen des Code-Checkers mehr**: 49 Warnungen behoben (zu lange Zeilen, Kommentare in Kleinschreibung, fehlende Docblocks an Test-Hilfsmethoden, überflüssige `MOODLE_INTERNAL`-Prüfungen). Die CI läuft den Code-Checker jetzt mit `--max-warnings 0`, damit es so bleibt.
 
 ### Tests

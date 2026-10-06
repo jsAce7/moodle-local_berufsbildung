@@ -114,6 +114,8 @@ class api {
 }
 ```
 
+Die Liste oben zeigt den Kern. Vollständig und verbindlich dokumentiert ist die API in `classes/api.php`. Versetzungsplan, Kompetenzraster und Wahlpflicht stehen in den Abschnitten 5.6 und 5.9.
+
 `$stichtag = null` bedeutet „jetzt". Der Parameter ist wichtig, weil ein abgeschlossener Bericht auch dann noch korrekt angezeigt werden muss, wenn die Zuordnung inzwischen beendet wurde.
 
 **Wertobjekt `ausbildungsstand`**
@@ -312,6 +314,87 @@ Einsätze, die sich nur teilweise mit dem Zeitraum überschneiden, zählen mit. 
 ### 5.8 Wenn kein Import vorliegt
 
 Alles funktioniert unverändert, nur ohne Vorbelegung, ohne automatische Abteilung und ohne Lückenanalyse. Der Versetzungsplan ist eine Verbesserung, keine Voraussetzung.
+
+### 5.9 Kompetenzraster, Lückenanalyse und Wahlpflicht
+
+Das Kompetenzraster zeigt den Kompetenzrahmen eines Berufs so, wie er im Bildungsplan steht: Handlungskompetenzbereiche als Zeilen, Handlungskompetenzen (HK) als Spalten. Es ist ein Spiegel des Versetzungsplans (Architekturregel 5) und ein Vorschlag für die Ausbildungsplanung (Architekturregel 6), kein Beurteilungsstatus. Ob eine Kompetenz erreicht wurde, entscheiden die aufsetzenden Plugins.
+
+**Grundlage: Kompetenzen der Ausbildungsblöcke.** Ein Ausbildungsblock wird auf Ebene der Leistungskriterien (LK) gepflegt (`block_kompetenzen.php`). Eine als Ganzes zugeordnete HK deckt alle ihre LK ab. Nur Blöcke mit `ist_betrieb` zählen.
+
+**Stand je HK**, zum Stichtag:
+
+| Stand | Bedeutung |
+|---|---|
+| `abgedeckt` | Mindestens ein LK der HK kam bis zum Stichtag in einem Einsatz vor. Ein Einsatz, der genau am Stichtag beginnt, zählt bereits. |
+| `eingeplant` | Ein LK der HK kommt erst in einem späteren Einsatz des vorliegenden Plans vor. |
+| `offen` | Kein Einsatz des vorliegenden Plans enthält ein LK der HK. |
+
+Eine HK ist selten ganz in einem Block; abgeschlossen ist sie meist erst am Ende der Lehre. Deshalb trägt jede HK zusätzlich den Stand **je LK** (`raster_kompetenz::$leistungskriterien`). Die Darstellung zeigt daraus „4 von 12 LK vorgekommen, 2 eingeplant" und auf Klick die fehlenden LK.
+
+**Pflicht und Wahlpflicht.** Welche HK eines Berufs Wahlpflicht sind, steht in der Einstellung `beruf_wahlpflicht_hk` (`AU_EFZ=a.04,a.05,…`). Wahlpflicht-HK zählen nicht in die Pflicht-Bezugsgrösse („x von 14 Pflicht-HK"). Wie viele davon der Bildungsplan verlangt, steht in `beruf_wahlpflicht_anzahl`, je Gruppe von Bereichen:
+
+```
+AU_EFZ=a,b,c:1; d:1     eine aus a, b und c zusammen, eine aus d
+AU_EFZ=3                drei aus dem ganzen Beruf
+```
+
+Ohne Eintrag zeigt das Raster keine Wahlpflicht-Angabe. Eine Gruppe gilt als erfüllt, wenn genügend ihrer Wahlpflicht-HK bereits vorkamen; eingeplante zählen dafür noch nicht.
+
+**API**
+
+```php
+/** Raster zum Stichtag, Bereiche in Rahmenreihenfolge. Leer ohne Ausbildungsstand oder Rahmen. */
+public static function get_kompetenzraster(int $lernendeid, ?int $stichtag = null): array; // raster_bereich[]
+
+/** Nur die Lücken (nicht abgedeckte Pflicht-HK) je Bereich. */
+public static function get_luecken_nach_bereich(int $lernendeid, ?int $stichtag = null): array; // bereich_abdeckung[]
+
+/** Dieselbe Lückensicht aus einem bereits berechneten Raster, ohne erneuten Datenbankzugriff. */
+public static function abdeckung_aus_raster(array $raster): array; // bereich_abdeckung[]
+
+/** Ende des letzten Einsatzes - bis wohin der vorliegende Plan reicht. */
+public static function get_planungshorizont(int $lernendeid): ?int;
+
+/** ID-Nummern der Wahlpflicht-HK eines Berufs. */
+public static function get_wahlpflicht_hk_for_beruf(string $beruf): array; // string[]
+
+/** Verlangte Wahlpflicht-HK je Gruppe von Bereichen. Leer, wenn nichts hinterlegt ist. */
+public static function get_wahlpflicht_gruppen_for_beruf(string $beruf): array; // wahlpflicht_gruppe[]
+
+/** ID-Nummer des Kompetenzrahmens eines Berufs, aus beruf_rahmen_mapping. */
+public static function get_kompetenzrahmen_for_beruf(string $beruf): ?string;
+
+/** Kürzel aus einer ID-Nummer, wie das Raster es zeigt: aus "7777BE b.07" wird "b.07". */
+public static function get_kompetenz_kuerzel(string $idnumber): string;
+```
+
+**Wertobjekte** (berechnet, nicht gespeichert, `readonly`-Properties):
+
+```php
+class raster_bereich {
+    public int $bereichid;        // competencyid des Bereichs
+    public array $kompetenzen;    // raster_kompetenz[], Rahmenreihenfolge
+    public string $kuerzel;       // "a" - für die Wahlpflicht-Gruppen
+    // soll(), luecken(), anzahl_abgedeckt() - nur Pflicht-HK
+}
+
+class raster_kompetenz {
+    public int $competencyid;     // die HK
+    public string $status;        // STATUS_ABGEDECKT | STATUS_EINGEPLANT | STATUS_OFFEN
+    public bool $istwahlpflicht;
+    public array $leistungskriterien; // competencyid => Status je LK
+}
+
+class wahlpflicht_gruppe {
+    public array $bereiche;       // Kürzel, leer = ganzer Beruf
+    public int $anzahl;           // verlangt
+    // stand(raster) => [abgedeckt, eingeplant]; offen(raster) => noch nicht vorgekommen
+}
+```
+
+**Darstellung.** `output\kompetenzraster::render($raster, $horizont, $kompakt, $wahlpflichtgruppen)` zeichnet das Raster. Die Fläche einer Zelle zeigt den Stand, ein Streifen oben Pflicht (gelb) oder Wahlpflicht (grün) wie im Bildungsplan. Verwendet auf „Meine Lehre" und „Meine Lernenden"; auf der Kachel einer lernenden Person stehen die fehlenden Pflicht-HK und die noch offenen Wahlpflicht-HK als Badges.
+
+**Aufwand.** Das Raster lädt Einsätze, Blöcke und Zuordnungen je in einer Abfrage und leitet übergeordnete Kompetenzen aus dem bereits geladenen Rahmen ab. Die Zahl der Datenbankabfragen hängt nicht von der Zahl der LK ab (Test `raster_analyse_test::test_abfragen_wachsen_nicht_mit_den_leistungskriterien`); „Meine Lernenden" rechnet es für jede Person.
 
 ---
 
