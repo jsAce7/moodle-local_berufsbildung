@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.8.3] — 2026-10-06
+
+### Geändert
+
+- **Kompetenzauswahl zeigt den Zuordnungsstand** (`classes/output/kompetenz_auswahl.php`, `templates/kompetenz_auswahl.mustache`, `styles.css`): „zugeordnet“ ist ein grünes Badge mit Haken, die Zeile ist leicht grün hinterlegt. Bisher ging das hellgraue Badge zwischen den Code-Badges unter. Ist eine Handlungskompetenz als Ganzes zugeordnet, tragen ihre Leistungskriterien „über c.02 abgedeckt“ statt einer Checkbox. Sind nur einzelne Leistungskriterien zugeordnet, zeigt die Handlungskompetenz „2 von 5 LK“, und der zugeklappte Aufklapper nennt die Zahl der zugeordneten. Der Bereichskopf zählt die ganz und teilweise zugeordneten Handlungskompetenzen („3 von 6 HK, 2 teilweise“). Was eine neue Zuordnung nicht mehr ändern würde, ist auch beim Speichern nicht mehr wählbar (`kompetenz_auswahl::stand()`).
+
+### Entfernt
+
+- **Intensität einer Kompetenzabdeckung** („Schwerpunkt“ / „teilweise“): Sie wurde gespeichert, aber nirgends ausgewertet, weder in Lückenanalyse und Raster noch über die API. Auswahl, Tabellenspalte und Sprachstrings fallen weg, das Feld `local_berufsbildung_block_lk.intensitaet` wird beim Upgrade gelöscht.
+
 ## [0.8.2] — 2026-10-06
 
 ### Geändert

@@ -24,6 +24,10 @@
     Auswaehlbar sind beide Ebenen - die Handlungskompetenz als Ganzes oder
     einzelne Leistungskriterien. Bereits zugeordnete Eintraege tragen statt
     der Checkbox einen Hinweis; entfernt werden sie in der Tabelle darueber.
+    Leistungskriterien unter einer als Ganzes zugeordneten Handlungskompetenz
+    sind damit abgedeckt und nicht mehr waehlbar. Ist eine Handlungskompetenz
+    nur ueber einzelne Leistungskriterien zugeordnet, zeigt sie "2 von 5 LK";
+    der Bereichskopf zaehlt die ganz und teilweise zugeordneten HK.
 
     Der Bereich startet aufgeklappt, wo noch etwas offen ist, und zeigt
     dann seine Handlungskompetenzen als kurze Liste. Die Leistungskriterien
@@ -35,7 +39,8 @@
     * action - string, Ziel des Formulars
     * sesskey - string
     * blockid - int
-    * bereiche - array of {code, name, offen, handlungskompetenzen}
+    * bereiche - array of {code, name, offen, hatstand, standtext, standvollstaendig,
+                           handlungskompetenzen}
     * hatbereiche - bool, false wenn der Filter nichts uebrig laesst
     * sucheaction - string, Ziel des Suchformulars
     * zuruecksetzenurl - string, Seite ohne Filter
@@ -43,18 +48,17 @@
     * suchaktiv - bool
     * suchelabel, sucheplaceholder, suchen, suchezuruecksetzen, keinetreffer - string
     * handlungskompetenzen - array of {id, code, hatcode, name, beschreibung, hatbeschreibung,
-                                       kurzbeschreibung, suchtext, istzugeordnet, hatlk, lkoffen,
-                                       lktext, leistungskriterien}
+                                       kurzbeschreibung, suchtext, istzugeordnet, waehlbar, erledigt,
+                                       hatteilstand, teilstandtext, hatlk, lkoffen, lktext,
+                                       leistungskriterien}
     * leistungskriterien - array of {id, code, hatcode, name, beschreibung, hatbeschreibung,
-                                     kurzbeschreibung, suchtext, istzugeordnet}
+                                     kurzbeschreibung, suchtext, istzugeordnet, istabgedeckt,
+                                     waehlbar, erledigt, abgedeckttext}
 
     suchtext traegt Bezeichnung, ID-Nummer und volle Beschreibung klein
     geschrieben - die Grundlage der Live-Suche in amd/src/kompetenz_suche.js.
     Aus dem sichtbaren Text liesse sich das nicht gewinnen, dort ist die
     Beschreibung gekuerzt.
-    * intensitaeten - array of {wert, text, gewaehlt}
-    * intensitaetlabel - string
-    * intensitaethilfe - string
     * absenden - string, Beschriftung des Buttons
     * zugeordnettext - string, Hinweis bei bereits zugeordneten Eintraegen
 
@@ -63,8 +67,6 @@
         "action": "/local/berufsbildung/block_kompetenzen.php",
         "sesskey": "abc123",
         "blockid": 7,
-        "intensitaetlabel": "Intensität",
-        "intensitaethilfe": "Gilt für alle jetzt ausgewählten Kompetenzen.",
         "absenden": "Kompetenzen hinzufügen",
         "zugeordnettext": "zugeordnet",
         "hatbereiche": true,
@@ -77,15 +79,14 @@
         "suchen": "Suchen",
         "suchezuruecksetzen": "Filter zurücksetzen",
         "keinetreffer": "Keine Kompetenz gefunden.",
-        "intensitaeten": [
-            {"wert": "schwerpunkt", "text": "Schwerpunkt", "gewaehlt": true},
-            {"wert": "teilweise", "text": "teilweise", "gewaehlt": false}
-        ],
         "bereiche": [
             {
                 "code": "b",
                 "name": "Erstellen und Inbetriebnehmen von automatisierten Anlagen",
                 "offen": true,
+                "hatstand": true,
+                "standtext": "0 von 1 HK, 1 teilweise",
+                "standvollstaendig": false,
                 "handlungskompetenzen": [
                     {
                         "id": 42,
@@ -97,19 +98,26 @@
                         "kurzbeschreibung": "Automatiker und Automatikerinnen ergänzen automatisierte Anlagen...",
                         "suchtext": "automatisierte anlagen mit robotern ergänzen 7777be b.07",
                         "istzugeordnet": false,
+                        "waehlbar": true,
+                        "erledigt": false,
+                        "hatteilstand": true,
+                        "teilstandtext": "1 von 2 LK",
                         "hatlk": true,
                         "lkoffen": false,
-                        "lktext": "2 Leistungskriterien einzeln wählen",
+                        "lktext": "2 Leistungskriterien einzeln wählen – 1 zugeordnet",
                         "leistungskriterien": [
                             {"id": 43, "code": "", "hatcode": false, "name": "AU b1 01 1-2",
                              "beschreibung": "Sie dokumentieren und archivieren ihre Arbeit nachvollziehbar.",
                              "hatbeschreibung": true,
                              "kurzbeschreibung": "Sie dokumentieren und archivieren ihre Arbeit...",
                              "suchtext": "au b1 01 1-2 sie dokumentieren und archivieren ihre arbeit.",
-                             "istzugeordnet": false},
+                             "istzugeordnet": false, "istabgedeckt": false, "waehlbar": true,
+                             "erledigt": false, "abgedeckttext": "über b.07 abgedeckt"},
                             {"id": 44, "code": "", "hatcode": false, "name": "AU b8 01 1-2",
                              "beschreibung": "", "hatbeschreibung": false,
-                             "kurzbeschreibung": "", "suchtext": "au b8 01 1-2", "istzugeordnet": true}
+                             "kurzbeschreibung": "", "suchtext": "au b8 01 1-2", "istzugeordnet": true,
+                             "istabgedeckt": false, "waehlbar": false, "erledigt": true,
+                             "abgedeckttext": "über b.07 abgedeckt"}
                         ]
                     }
                 ]
@@ -153,6 +161,9 @@
             <summary class="local-berufsbildung-auswahl-bereichkopf card-header">
                 <span class="local-berufsbildung-auswahl-code badge bg-light text-dark border">{{code}}</span>
                 <span class="local-berufsbildung-auswahl-bereichname">{{name}}</span>
+                {{#hatstand}}
+                    <span class="local-berufsbildung-auswahl-stand badge {{#standvollstaendig}}bg-success text-white{{/standvollstaendig}}{{^standvollstaendig}}bg-light text-dark border{{/standvollstaendig}}">{{standtext}}</span>
+                {{/hatstand}}
             </summary>
             <div class="card-body py-2">
                 {{#handlungskompetenzen}}
@@ -161,23 +172,27 @@
                             deckt sie oft als Ganzes ab. Die Checkbox steht bewusst ausserhalb des
                             <details> darunter: in einem <summary> wuerde jeder Klick darauf zugleich
                             auf- oder zuklappen, und das liesse sich nur mit JavaScript trennen. }}
-                        <div class="local-berufsbildung-auswahl-eintrag local-berufsbildung-auswahl-hkzeile{{#istzugeordnet}} local-berufsbildung-auswahl-ist-zugeordnet{{/istzugeordnet}}">
+                        <div class="local-berufsbildung-auswahl-eintrag local-berufsbildung-auswahl-hkzeile{{#erledigt}} local-berufsbildung-auswahl-ist-zugeordnet{{/erledigt}}">
                             {{#istzugeordnet}}
                                 <span class="local-berufsbildung-auswahl-zugeordnet badge bg-success text-white">{{#pix}}i/checked, core{{/pix}}{{zugeordnettext}}</span>
-                                {{#hatcode}}
-                                    <span class="local-berufsbildung-auswahl-code badge bg-light text-dark border">{{code}}</span>
-                                {{/hatcode}}
-                                <span class="local-berufsbildung-auswahl-hkname" title="{{beschreibung}}">{{name}}</span>
                             {{/istzugeordnet}}
-                            {{^istzugeordnet}}
+                            {{#waehlbar}}
                                 <input class="form-check-input" type="checkbox" name="competencyids[]"
                                        value="{{id}}" id="lbk-{{id}}">
-                                {{#hatcode}}
-                                    <span class="local-berufsbildung-auswahl-code badge bg-light text-dark border">{{code}}</span>
-                                {{/hatcode}}
+                            {{/waehlbar}}
+                            {{#hatcode}}
+                                <span class="local-berufsbildung-auswahl-code badge bg-light text-dark border">{{code}}</span>
+                            {{/hatcode}}
+                            {{#waehlbar}}
                                 <label class="form-check-label local-berufsbildung-auswahl-hkname"
                                        for="lbk-{{id}}" title="{{beschreibung}}">{{name}}</label>
-                            {{/istzugeordnet}}
+                            {{/waehlbar}}
+                            {{^waehlbar}}
+                                <span class="local-berufsbildung-auswahl-hkname" title="{{beschreibung}}">{{name}}</span>
+                            {{/waehlbar}}
+                            {{#hatteilstand}}
+                                <span class="local-berufsbildung-auswahl-teilstand badge border border-success text-success">{{teilstandtext}}</span>
+                            {{/hatteilstand}}
                         </div>
                         {{#hatlk}}
                             <details class="local-berufsbildung-auswahl-lk" {{#lkoffen}}open{{/lkoffen}}
@@ -188,18 +203,15 @@
                                         Beschreibung aus dem Rahmen steht gekuerzt daneben, der volle
                                         Text im Titel. }}
                                     {{#leistungskriterien}}
-                                        <div class="local-berufsbildung-auswahl-eintrag{{#istzugeordnet}} local-berufsbildung-auswahl-ist-zugeordnet{{/istzugeordnet}}"
+                                        <div class="local-berufsbildung-auswahl-eintrag{{#erledigt}} local-berufsbildung-auswahl-ist-zugeordnet{{/erledigt}}"
                                              data-region="lk" data-suchtext="{{suchtext}}">
                                             {{#istzugeordnet}}
                                                 <span class="local-berufsbildung-auswahl-zugeordnet badge bg-success text-white">{{#pix}}i/checked, core{{/pix}}{{zugeordnettext}}</span>
-                                                <span title="{{beschreibung}}">
-                                                    <span class="local-berufsbildung-auswahl-lkcode">{{name}}</span>
-                                                    {{#hatbeschreibung}}
-                                                        <span class="local-berufsbildung-auswahl-lktext text-muted">{{kurzbeschreibung}}</span>
-                                                    {{/hatbeschreibung}}
-                                                </span>
                                             {{/istzugeordnet}}
-                                            {{^istzugeordnet}}
+                                            {{#istabgedeckt}}
+                                                <span class="local-berufsbildung-auswahl-abgedeckt badge bg-light text-success border border-success">{{abgedeckttext}}</span>
+                                            {{/istabgedeckt}}
+                                            {{#waehlbar}}
                                                 <input class="form-check-input" type="checkbox" name="competencyids[]"
                                                        value="{{id}}" id="lbk-{{id}}">
                                                 <label class="form-check-label" for="lbk-{{id}}" title="{{beschreibung}}">
@@ -208,7 +220,15 @@
                                                         <span class="local-berufsbildung-auswahl-lktext text-muted">{{kurzbeschreibung}}</span>
                                                     {{/hatbeschreibung}}
                                                 </label>
-                                            {{/istzugeordnet}}
+                                            {{/waehlbar}}
+                                            {{^waehlbar}}
+                                                <span title="{{beschreibung}}">
+                                                    <span class="local-berufsbildung-auswahl-lkcode">{{name}}</span>
+                                                    {{#hatbeschreibung}}
+                                                        <span class="local-berufsbildung-auswahl-lktext text-muted">{{kurzbeschreibung}}</span>
+                                                    {{/hatbeschreibung}}
+                                                </span>
+                                            {{/waehlbar}}
                                         </div>
                                     {{/leistungskriterien}}
                                 </div>
@@ -221,13 +241,6 @@
     {{/bereiche}}
 
     <div class="local-berufsbildung-auswahl-fuss">
-        <label class="mb-0" for="lbk-intensitaet">{{intensitaetlabel}}</label>
-        <select class="custom-select form-select" name="intensitaet" id="lbk-intensitaet">
-            {{#intensitaeten}}
-                <option value="{{wert}}" {{#gewaehlt}}selected{{/gewaehlt}}>{{text}}</option>
-            {{/intensitaeten}}
-        </select>
         <button type="submit" class="btn btn-primary">{{absenden}}</button>
     </div>
-    <p class="small text-muted mt-1 mb-0">{{intensitaethilfe}}</p>
 </form>

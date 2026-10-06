@@ -543,6 +543,17 @@
     padding-right: 0.25rem;
 }
 
+/*
+ * Stand im Bereichskopf ("3 von 6 HK") und bei einer nur teilweise
+ * zugeordneten Handlungskompetenz ("2 von 5 LK") - etwas abgesetzt vom
+ * Namen davor.
+ */
+.local-berufsbildung-auswahl-stand,
+.local-berufsbildung-auswahl-teilstand {
+    margin-left: 0.5rem;
+    font-weight: normal;
+}
+
 .local-berufsbildung-auswahl-zugeordnet .icon {
     margin-right: 0.2rem;
     font-size: inherit;

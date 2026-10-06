@@ -118,8 +118,10 @@ foreach (block_lk::get_records(['blockid' => $id], 'id', 'ASC') as $abdeckung) {
 }
 
 // Bereits Zugeordnetes steht nicht mehr zur Auswahl - besser gar nicht
-// anbieten, als hinterher die Duplikat-Fehlermeldung zu zeigen.
-$offen = array_diff_key($auswaehlbar, $zugeordnet);
+// anbieten, als hinterher die Duplikat-Fehlermeldung zu zeigen. Dasselbe
+// gilt fuer alles, was ueber eine Zuordnung darueber oder darunter schon
+// abgedeckt ist (siehe kompetenz_auswahl::stand()).
+$offen = array_intersect_key($auswaehlbar, kompetenz_auswahl::stand($baum, $zugeordnet)['waehlbar']);
 
 if (optional_param('speichern', 0, PARAM_BOOL)) {
     require_sesskey();
@@ -132,11 +134,6 @@ if (optional_param('speichern', 0, PARAM_BOOL)) {
         optional_param_array('competencyids', [], PARAM_INT),
         array_keys($offen)
     );
-
-    $intensitaet = optional_param('intensitaet', 'schwerpunkt', PARAM_ALPHA);
-    if (!in_array($intensitaet, ['schwerpunkt', 'teilweise'], true)) {
-        $intensitaet = 'schwerpunkt';
-    }
 
     if (empty($auswahl)) {
         redirect(
@@ -151,7 +148,6 @@ if (optional_param('speichern', 0, PARAM_BOOL)) {
         (new block_lk(0, (object) [
             'blockid' => $id,
             'competencyid' => $competencyid,
-            'intensitaet' => $intensitaet,
         ]))->create();
     }
 
@@ -243,21 +239,11 @@ if (empty($zeilen)) {
     $table = new html_table();
     $table->head = [
         get_string('blocklk:kompetenz', 'local_berufsbildung'),
-        get_string('blocklk:intensitaet', 'local_berufsbildung'),
         get_string('block:aktionen', 'local_berufsbildung'),
     ];
 
     foreach ($zeilen as $kompetenzid => $beschriftung) {
         $abdeckung = $zugeordnet[$kompetenzid];
-        $istteilweise = $abdeckung->get('intensitaet') === 'teilweise';
-
-        $intensitaet = html_writer::span(
-            $istteilweise
-                ? get_string('blocklk:intensitaet_teilweise', 'local_berufsbildung')
-                : get_string('blocklk:intensitaet_schwerpunkt', 'local_berufsbildung'),
-            'badge ' . ($istteilweise ? 'bg-light text-dark border' : 'bg-primary text-white')
-        );
-
         $entfernenurl = new moodle_url('/local/berufsbildung/block_lk_entfernen.php', [
             'id' => $abdeckung->get('id'),
             'blockid' => $id,
@@ -266,7 +252,6 @@ if (empty($zeilen)) {
 
         $table->data[] = [
             $beschriftung,
-            $intensitaet,
             html_writer::link($entfernenurl, get_string('blocklk:entfernen', 'local_berufsbildung')),
         ];
     }
@@ -312,7 +297,7 @@ if (empty($auswaehlbar)) {
     echo html_writer::tag('h3', get_string('blocklk:hinzufuegen', 'local_berufsbildung'));
     echo html_writer::tag('p', get_string('blocklk:auswahl_hinweis', 'local_berufsbildung'), ['class' => 'text-muted']);
     echo kompetenz_auswahl::render(
-        kompetenz_auswahl::filtere($baum, $suchbegriff),
+        $baum,
         $zugeordnet,
         $returnurl,
         $id,

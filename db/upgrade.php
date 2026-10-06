@@ -423,5 +423,19 @@ function xmldb_local_berufsbildung_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026100500, 'local', 'berufsbildung');
     }
 
+    if ($oldversion < 2026100602) {
+        // Die Intensitaet einer Kompetenzabdeckung ("Schwerpunkt" /
+        // "teilweise") wurde gespeichert, aber nirgends ausgewertet - weder
+        // in Lueckenanalyse und Raster noch ueber die API. Ohne Wirkung war
+        // sie nur eine Entscheidung mehr bei jeder Zuordnung.
+        $table = new xmldb_table('local_berufsbildung_block_lk');
+        $field = new xmldb_field('intensitaet');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        upgrade_plugin_savepoint(true, 2026100602, 'local', 'berufsbildung');
+    }
+
     return true;
 }

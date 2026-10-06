@@ -223,4 +223,169 @@ final class kompetenz_auswahl_test extends advanced_testcase {
 
         $this->assertSame([], kompetenz_auswahl::filtere($baum, 'Hydraulik'));
     }
+
+    /**
+     * IDs zu Kurznamen, als Zuordnung wie in block_kompetenzen.php.
+     *
+     * @param string ...$kurznamen
+     * @return array<int, true>
+     */
+    private function zugeordnet(string ...$kurznamen): array {
+        $zugeordnet = [];
+        foreach ($kurznamen as $kurzname) {
+            $zugeordnet[(int) $this->kompetenzen[$kurzname]->get('id')] = true;
+        }
+
+        return $zugeordnet;
+    }
+
+    /**
+     * Ohne Zuordnung ist alles waehlbar und nichts ganz oder teilweise.
+     */
+    public function test_stand_ohne_zuordnung(): void {
+        $this->resetAfterTest();
+        $baum = $this->lege_rahmen_an();
+
+        $stand = kompetenz_auswahl::stand($baum, []);
+
+        // Zwei HK und vier LK - der Bereich selbst ist nie waehlbar.
+        $this->assertCount(6, $stand['waehlbar']);
+        $this->assertSame(
+            ['anzahl' => 2, 'ganz' => 0, 'teilweise' => 0],
+            $stand['bereiche'][(int) $this->kompetenzen['a Entwickeln von automatisierten Anlagen']->get('id')]
+        );
+    }
+
+    /**
+     * Eine als Ganzes zugeordnete Handlungskompetenz deckt ihre
+     * Leistungskriterien ab: keines davon ist mehr waehlbar, die andere HK
+     * bleibt es.
+     */
+    public function test_stand_ganze_hk_deckt_leistungskriterien_ab(): void {
+        $this->resetAfterTest();
+        $baum = $this->lege_rahmen_an();
+        $hk = (int) $this->kompetenzen['Fertigungsunterlagen erstellen oder überarbeiten']->get('id');
+
+        $stand = kompetenz_auswahl::stand($baum, $this->zugeordnet('Fertigungsunterlagen erstellen oder überarbeiten'));
+
+        $this->assertTrue($stand['handlungskompetenzen'][$hk]['direkt']);
+        $this->assertTrue($stand['handlungskompetenzen'][$hk]['ganz']);
+        $this->assertSame(
+            $this->zugeordnet('Netze planen und parametrieren', 'MEM 07 01', 'AU a3 03'),
+            $stand['waehlbar']
+        );
+        $this->assertSame(
+            ['anzahl' => 2, 'ganz' => 1, 'teilweise' => 0],
+            $stand['bereiche'][(int) $this->kompetenzen['a Entwickeln von automatisierten Anlagen']->get('id')]
+        );
+    }
+
+    /**
+     * Randfall: nur ein Teil der Leistungskriterien ist zugeordnet. Die HK
+     * zaehlt als teilweise und bleibt als Ganzes waehlbar, ebenso das
+     * noch offene Leistungskriterium.
+     */
+    public function test_stand_einzelne_leistungskriterien_sind_teilweise(): void {
+        $this->resetAfterTest();
+        $baum = $this->lege_rahmen_an();
+        $hk = (int) $this->kompetenzen['Fertigungsunterlagen erstellen oder überarbeiten']->get('id');
+
+        $stand = kompetenz_auswahl::stand($baum, $this->zugeordnet('MEM 02 02'));
+
+        $this->assertSame(
+            ['direkt' => false, 'ganz' => false, 'lkanzahl' => 2, 'lkzugeordnet' => 1],
+            $stand['handlungskompetenzen'][$hk]
+        );
+        $this->assertArrayHasKey($hk, $stand['waehlbar']);
+        $this->assertArrayHasKey((int) $this->kompetenzen['AU a1 01 1-2']->get('id'), $stand['waehlbar']);
+        $this->assertArrayNotHasKey((int) $this->kompetenzen['MEM 02 02']->get('id'), $stand['waehlbar']);
+        $this->assertSame(
+            ['anzahl' => 2, 'ganz' => 0, 'teilweise' => 1],
+            $stand['bereiche'][(int) $this->kompetenzen['a Entwickeln von automatisierten Anlagen']->get('id')]
+        );
+    }
+
+    /**
+     * Randfall: sind alle Leistungskriterien einzeln zugeordnet, ist die HK
+     * ganz zugeordnet - sie noch als Ganzes zu waehlen, legte nur eine
+     * doppelte Zeile an.
+     */
+    public function test_stand_alle_leistungskriterien_einzeln_sind_ganz(): void {
+        $this->resetAfterTest();
+        $baum = $this->lege_rahmen_an();
+        $hk = (int) $this->kompetenzen['Fertigungsunterlagen erstellen oder überarbeiten']->get('id');
+
+        $stand = kompetenz_auswahl::stand($baum, $this->zugeordnet('MEM 02 02', 'AU a1 01 1-2'));
+
+        $this->assertFalse($stand['handlungskompetenzen'][$hk]['direkt']);
+        $this->assertTrue($stand['handlungskompetenzen'][$hk]['ganz']);
+        $this->assertArrayNotHasKey($hk, $stand['waehlbar']);
+    }
+
+    /**
+     * Die Ausgabe zeigt den Stand: Bereichszaehler, "x von y LK" an der
+     * teilweise zugeordneten HK und "ueber ... abgedeckt" statt einer
+     * Checkbox unter der ganz zugeordneten.
+     */
+    public function test_render_zeigt_stand(): void {
+        $this->resetAfterTest();
+        $baum = $this->lege_rahmen_an();
+
+        $html = kompetenz_auswahl::render(
+            $baum,
+            $this->zugeordnet('Fertigungsunterlagen erstellen oder überarbeiten', 'MEM 07 01'),
+            new \moodle_url('/local/berufsbildung/block_kompetenzen.php', ['id' => 7]),
+            7
+        );
+
+        $this->assertStringContainsString(s(get_string(
+            'blocklk:bereich_stand_teilweise',
+            'local_berufsbildung',
+            (object) ['ganz' => 1, 'anzahl' => 2, 'teilweise' => 1]
+        )), $html);
+        $this->assertStringContainsString($this->lk_stand(1, 2), $html);
+        $this->assertStringContainsString(s(get_string('blocklk:abgedeckt_durch_hk', 'local_berufsbildung', 'a.01')), $html);
+        $this->assertStringNotContainsString(
+            'value="' . $this->kompetenzen['AU a1 01 1-2']->get('id') . '"',
+            $html
+        );
+        $this->assertStringContainsString(
+            'value="' . $this->kompetenzen['AU a3 03']->get('id') . '"',
+            $html
+        );
+        $this->assertStringNotContainsString('intensitaet', $html);
+    }
+
+    /**
+     * Randfall: bei aktiver Suche zaehlt der Stand weiter ueber die ganze
+     * HK - aus "1 von 2 LK" darf nicht "1 von 1" werden, nur weil das
+     * andere Leistungskriterium ausgeblendet ist.
+     */
+    public function test_render_stand_ignoriert_suchfilter(): void {
+        $this->resetAfterTest();
+        $baum = $this->lege_rahmen_an();
+
+        $html = kompetenz_auswahl::render(
+            $baum,
+            $this->zugeordnet('MEM 07 01'),
+            new \moodle_url('/local/berufsbildung/block_kompetenzen.php', ['id' => 7]),
+            7,
+            'MEM 07'
+        );
+
+        $this->assertStringContainsString($this->lk_stand(1, 2), $html);
+    }
+
+    /**
+     * Erwarteter Text des Teilstands, in der Sprache des Testlaufs.
+     *
+     * @param int $zugeordnet
+     * @param int $anzahl
+     */
+    private function lk_stand(int $zugeordnet, int $anzahl): string {
+        return s(get_string('blocklk:lk_stand', 'local_berufsbildung', (object) [
+            'zugeordnet' => $zugeordnet,
+            'anzahl' => $anzahl,
+        ]));
+    }
 }

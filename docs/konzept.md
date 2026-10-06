@@ -200,7 +200,6 @@ local_berufsbildung_block_lk
   id
   blockid            int(10)
   competencyid       int(10)
-  intensitaet        varchar(20)    -- 'schwerpunkt' | 'teilweise'
 
   UNIQUE KEY (blockid, competencyid)
 ```

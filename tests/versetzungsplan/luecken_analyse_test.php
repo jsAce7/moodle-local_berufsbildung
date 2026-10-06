@@ -86,7 +86,7 @@ final class luecken_analyse_test extends advanced_testcase {
         $block = new block(0, (object) ['nummer' => '4', 'name' => '4', 'ist_betrieb' => true, 'aktiv' => true]);
         $block->create();
         (new block_lk(0, (object) [
-            'blockid' => $block->get('id'), 'competencyid' => $lk->get('id'), 'intensitaet' => 'schwerpunkt',
+            'blockid' => $block->get('id'), 'competencyid' => $lk->get('id'),
         ]))->create();
 
         (new einsatz(0, (object) [
@@ -210,7 +210,7 @@ final class luecken_analyse_test extends advanced_testcase {
         $block = new block(0, (object) ['nummer' => '4', 'name' => '4', 'ist_betrieb' => true, 'aktiv' => true]);
         $block->create();
         (new block_lk(0, (object) [
-            'blockid' => $block->get('id'), 'competencyid' => $lk->get('id'), 'intensitaet' => 'schwerpunkt',
+            'blockid' => $block->get('id'), 'competencyid' => $lk->get('id'),
         ]))->create();
         (new einsatz(0, (object) [
             'userid' => $lernende->id, 'blockid' => $block->get('id'),

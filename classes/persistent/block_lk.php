@@ -50,11 +50,6 @@ class block_lk extends persistent {
             'competencyid' => [
                 'type' => PARAM_INT,
             ],
-            'intensitaet' => [
-                'type' => PARAM_ALPHA,
-                'choices' => ['schwerpunkt', 'teilweise'],
-                'default' => 'schwerpunkt',
-            ],
         ];
     }
 }
