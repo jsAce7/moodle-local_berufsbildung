@@ -520,6 +520,30 @@ final class api_test extends advanced_testcase {
     }
 
     /**
+     * Die verlangte Anzahl Wahlpflicht-HK je Beruf. Einen Stichtag-Randfall
+     * gibt es nicht - die Angabe haengt am Beruf, nicht am Datum.
+     */
+    public function test_get_wahlpflicht_anzahl_for_beruf_konfigurierter_beruf(): void {
+        $this->resetAfterTest();
+        set_config('beruf_wahlpflicht_anzahl', "AU_EFZ=3\nPM_EFZ=2", 'local_berufsbildung');
+
+        $this->assertSame(2, api::get_wahlpflicht_anzahl_for_beruf('PM_EFZ'));
+    }
+
+    /**
+     * Randfall: ohne Eintrag fuer den Beruf, oder ganz ohne Einstellung,
+     * gibt es keine Anzahl - null, nicht 0.
+     */
+    public function test_get_wahlpflicht_anzahl_for_beruf_ohne_eintrag_ist_null(): void {
+        $this->resetAfterTest();
+
+        $this->assertNull(api::get_wahlpflicht_anzahl_for_beruf('AU_EFZ'));
+
+        set_config('beruf_wahlpflicht_anzahl', 'AU_EFZ=3', 'local_berufsbildung');
+        $this->assertNull(api::get_wahlpflicht_anzahl_for_beruf('KR_EFZ'));
+    }
+
+    /**
      * Dieselbe Nummer wie im Kompetenzraster. Einen Stichtag-Randfall gibt
      * es hier nicht - die Methode liest nur die uebergebene ID-Nummer.
      */

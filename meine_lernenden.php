@@ -248,7 +248,11 @@ if (empty($eintraege)) {
             // plant nicht, sie schaut nach, wo sie steht.
             echo luecken_liste::render(api::abdeckung_aus_raster($raster[$lernendeid]), kompakt: false);
             echo html_writer::div(
-                kompetenzraster::render($raster[$lernendeid], api::get_planungshorizont($lernendeid)),
+                kompetenzraster::render(
+                    $raster[$lernendeid],
+                    api::get_planungshorizont($lernendeid),
+                    wahlpflichtsoll: $stand !== null ? api::get_wahlpflicht_anzahl_for_beruf($stand->beruf) : null
+                ),
                 'mb-3'
             );
         }

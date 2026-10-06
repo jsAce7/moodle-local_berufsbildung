@@ -57,4 +57,29 @@ class wahlpflicht_resolver {
 
         return [];
     }
+
+    /**
+     * Wie viele Wahlpflicht-HK der Bildungsplan eines Berufs verlangt.
+     *
+     * @param string $beruf Beruf-Code, z. B. AU_EFZ
+     * @param string $konfiguration Zeilen im Format CODE=Anzahl, z. B. AU_EFZ=3.
+     *     Zeilen ohne '=' oder mit einem Wert, der keine positive ganze Zahl
+     *     ist, werden uebersprungen.
+     * @return int|null Null, wenn fuer den Beruf nichts hinterlegt ist
+     */
+    public function anzahl(string $beruf, string $konfiguration): ?int {
+        foreach (preg_split('/\r\n|\r|\n/', $konfiguration) as $zeile) {
+            $zeile = trim($zeile);
+            if ($zeile === '' || !str_contains($zeile, '=')) {
+                continue;
+            }
+
+            [$code, $anzahl] = array_map('trim', explode('=', $zeile, 2));
+            if ($code === $beruf && $anzahl !== '' && ctype_digit($anzahl) && (int) $anzahl > 0) {
+                return (int) $anzahl;
+            }
+        }
+
+        return null;
+    }
 }

@@ -204,7 +204,8 @@ if ($stand !== null) {
     if (!$istbeendet && api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null) {
         echo $abschnitt(kompetenzraster::render(
             api::get_kompetenzraster($lernendeid),
-            api::get_planungshorizont($lernendeid)
+            api::get_planungshorizont($lernendeid),
+            wahlpflichtsoll: api::get_wahlpflicht_anzahl_for_beruf($stand->beruf)
         ));
     }
 

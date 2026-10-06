@@ -295,6 +295,33 @@ final class kompetenzraster_test extends advanced_testcase {
     }
 
     /**
+     * Mit einer verlangten Anzahl zeigt das Raster, wie viele Wahlpflicht-HK
+     * vorkamen oder eingeplant sind; ohne Anzahl bleibt die Zeile weg.
+     */
+    public function test_wahlpflicht_stand_nur_mit_verlangter_anzahl(): void {
+        $this->resetAfterTest();
+        $raster = [$this->bereich([
+            [raster_kompetenz::STATUS_ABGEDECKT, false],
+            [raster_kompetenz::STATUS_ABGEDECKT, true],
+            [raster_kompetenz::STATUS_EINGEPLANT, true],
+            [raster_kompetenz::STATUS_OFFEN, true],
+        ])];
+        $erwartet = get_string('raster:wahlpflicht_stand', 'local_berufsbildung', (object) [
+            'soll' => 3,
+            'abgedeckt' => 1,
+            'eingeplant' => 1,
+        ]);
+
+        $mit = kompetenzraster::render($raster, time(), wahlpflichtsoll: 3);
+        $ohne = kompetenzraster::render($raster, time());
+
+        $this->assertStringContainsString($erwartet, $mit);
+        // Ohne Anzahl nur die Pflicht-Zusammenfassung.
+        $this->assertSame(2, substr_count($mit, 'local-berufsbildung-raster-zusammenfassung'));
+        $this->assertSame(1, substr_count($ohne, 'local-berufsbildung-raster-zusammenfassung'));
+    }
+
+    /**
      * Ohne Raster gibt es nichts darzustellen - auch keine Ueberschrift mit
      * leerer Tabelle darunter.
      */

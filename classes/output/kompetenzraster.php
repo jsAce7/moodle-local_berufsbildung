@@ -56,8 +56,15 @@ class kompetenzraster {
      * @param int|null $horizont Ende des vorliegenden Plans, siehe api::get_planungshorizont()
      * @param bool $kompakt Nur Kuerzel und Symbol statt der vollen Bezeichnung,
      *                      fuer die Roster-Karten in meine_lernenden.php
+     * @param int|null $wahlpflichtsoll Wie viele Wahlpflicht-HK der Bildungsplan verlangt,
+     *                      siehe api::get_wahlpflicht_anzahl_for_beruf(); null blendet die Angabe aus
      */
-    public static function render(array $raster, ?int $horizont = null, bool $kompakt = false): string {
+    public static function render(
+        array $raster,
+        ?int $horizont = null,
+        bool $kompakt = false,
+        ?int $wahlpflichtsoll = null
+    ): string {
         global $OUTPUT, $PAGE;
 
         if (empty($raster)) {
@@ -90,6 +97,10 @@ class kompetenzraster {
             raster_kompetenz::STATUS_EINGEPLANT => 0,
             raster_kompetenz::STATUS_OFFEN => 0,
         ];
+        // Dasselbe fuer die Wahlpflicht-HK: sie zaehlen nicht in die
+        // Pflicht-Bezugsgroesse, aber der Bildungsplan verlangt eine Anzahl
+        // davon - und die soll man sehen.
+        $wahlpflichtstaende = $pflichtstaende;
 
         $bereiche = [];
         foreach ($raster as $bereich) {
@@ -99,7 +110,9 @@ class kompetenzraster {
             foreach ($bereich->kompetenzen as $kompetenz) {
                 $vorhandenestaende[$kompetenz->status] = true;
                 $vorhandenearten[$kompetenz->istwahlpflicht ? 'wahlpflicht' : 'pflicht'] = true;
-                if (!$kompetenz->istwahlpflicht && isset($pflichtstaende[$kompetenz->status])) {
+                if ($kompetenz->istwahlpflicht) {
+                    $wahlpflichtstaende[$kompetenz->status]++;
+                } else {
                     $pflichtstaende[$kompetenz->status]++;
                 }
                 $zellen[] = self::zelle($kompetenz, $kompetenzen, $kompakt);
@@ -163,6 +176,13 @@ class kompetenzraster {
                 'abgedeckt' => $pflichtstaende[raster_kompetenz::STATUS_ABGEDECKT],
                 'eingeplant' => $pflichtstaende[raster_kompetenz::STATUS_EINGEPLANT],
                 'offen' => $pflichtstaende[raster_kompetenz::STATUS_OFFEN],
+            ]),
+            'haswahlpflichtstand' => !$kompakt && $hinweis === '' && $wahlpflichtsoll !== null
+                && !empty($vorhandenearten['wahlpflicht']),
+            'wahlpflichtstand' => get_string('raster:wahlpflicht_stand', 'local_berufsbildung', (object) [
+                'soll' => (int) $wahlpflichtsoll,
+                'abgedeckt' => $wahlpflichtstaende[raster_kompetenz::STATUS_ABGEDECKT],
+                'eingeplant' => $wahlpflichtstaende[raster_kompetenz::STATUS_EINGEPLANT],
             ]),
             'hathinweis' => $hinweis !== '',
             'hinweis' => $hinweis,
