@@ -152,6 +152,43 @@ final class plan_service_test extends advanced_testcase {
         $this->assertSame([(int) $hk->get('id'), (int) $lk->get('id')], $kompetenzen);
     }
 
+    /**
+     * Die direkten Zuordnungen kommen ohne die uebergeordneten Kompetenzen -
+     * sonst liesse sich nicht sagen, welche LK einer HK vorkommen. Zugleich
+     * der Randfall: ein Einsatz, der genau am Ende des Zeitraums beginnt,
+     * zaehlt noch; einer, der eine Sekunde spaeter beginnt, nicht.
+     */
+    public function test_get_zugeordnete_kompetenzen_ohne_uebergeordnete_randfall(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $lernende = $this->getDataGenerator()->create_user();
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework();
+        $hk = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id')]);
+        $lk = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'parentid' => $hk->get('id'),
+        ]);
+        $spaeter = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'parentid' => $hk->get('id'),
+        ]);
+
+        $block = $this->lege_block_an('4');
+        (new block_lk(0, (object) ['blockid' => $block->get('id'), 'competencyid' => $lk->get('id')]))->create();
+        $this->lege_einsatz_an((int) $lernende->id, (int) $block->get('id'), 2000, 3000);
+
+        $blockspaeter = $this->lege_block_an('5');
+        (new block_lk(0, (object) ['blockid' => $blockspaeter->get('id'), 'competencyid' => $spaeter->get('id')]))->create();
+        $this->lege_einsatz_an((int) $lernende->id, (int) $blockspaeter->get('id'), 2001, 3000);
+
+        $this->assertSame(
+            [(int) $lk->get('id')],
+            (new plan_service())->get_zugeordnete_kompetenzen((int) $lernende->id, 0, 2000)
+        );
+    }
+
     public function test_get_aktueller_einsatz_normalfall(): void {
         $this->resetAfterTest();
 

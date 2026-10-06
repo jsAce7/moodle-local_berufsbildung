@@ -75,6 +75,33 @@ class plan_service {
      * @return int[] Deduplizierte competencyids
      */
     public function get_ausgebildete_kompetenzen(int $lernendeid, int $von, int $bis): array {
+        $kompetenzen = [];
+        foreach ($this->get_zugeordnete_kompetenzen($lernendeid, $von, $bis) as $competencyid) {
+            // Ein Ausbildungsblock wird auf Ebene LK gepflegt. Fuer die
+            // Ausbildungsplanung zählt diese LK zugleich für alle ihre
+            // übergeordneten Handlungskompetenzen.
+            foreach ($this->mit_uebergeordneten_kompetenzen($competencyid) as $kompetenzid) {
+                $kompetenzen[$kompetenzid] = true;
+            }
+        }
+
+        return array_keys($kompetenzen);
+    }
+
+    /**
+     * Die Kompetenzen, die den betrieblichen Bloecken der Einsaetze im
+     * Zeitraum zugeordnet sind - so, wie sie zugeordnet sind, ohne die
+     * uebergeordneten. Erst damit laesst sich sagen, welche
+     * Leistungskriterien einer Handlungskompetenz vorkommen: ueber
+     * get_ausgebildete_kompetenzen() steht die HK schon da, sobald eines
+     * ihrer LK vorkommt.
+     *
+     * @param int $lernendeid
+     * @param int $von Timestamp
+     * @param int $bis Timestamp
+     * @return int[] Deduplizierte competencyids
+     */
+    public function get_zugeordnete_kompetenzen(int $lernendeid, int $von, int $bis): array {
         $einsaetze = $this->get_einsaetze($lernendeid, $von, $bis);
         if (empty($einsaetze)) {
             return [];
@@ -93,12 +120,7 @@ class plan_service {
             }
 
             foreach (block_lk::get_records(['blockid' => $blockid]) as $abdeckung) {
-                // Ein Ausbildungsblock wird auf Ebene LK gepflegt. Fuer die
-                // Ausbildungsplanung zählt diese LK zugleich für alle ihre
-                // übergeordneten Handlungskompetenzen.
-                foreach ($this->mit_uebergeordneten_kompetenzen((int) $abdeckung->get('competencyid')) as $kompetenzid) {
-                    $kompetenzen[$kompetenzid] = true;
-                }
+                $kompetenzen[(int) $abdeckung->get('competencyid')] = true;
             }
         }
 

@@ -122,6 +122,72 @@ final class raster_analyse_test extends advanced_testcase {
     }
 
     /**
+     * Je Leistungskriterium ein eigener Stand: eine HK gilt schon als
+     * vorgekommen, sobald eines ihrer LK vorkommt - welche fehlen, steht in
+     * der LK-Liste. Eine als Ganzes zugeordnete HK deckt alle ihre LK ab.
+     * Randfall am Stichtag wie bei den HK: ein Einsatz, der genau dann
+     * beginnt, zaehlt bereits.
+     */
+    public function test_stand_je_leistungskriterium(): void {
+        $this->resetAfterTest();
+        $lernende = $this->lege_lernende_an();
+        $stichtag = time();
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework(['idnumber' => 'au-2022']);
+        $hkb = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id')]);
+        $teilweise = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hkb->get('id'),
+        ]);
+        $ganz = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hkb->get('id'),
+        ]);
+        $lk = [];
+        foreach (['vorgekommen', 'eingeplant', 'fehlt'] as $name) {
+            $lk[$name] = $generator->create_competency([
+                'competencyframeworkid' => $rahmen->get('id'), 'parentid' => $teilweise->get('id'),
+            ]);
+        }
+        $ganzlk = $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'), 'parentid' => $ganz->get('id'),
+        ]);
+
+        $einsatz = function (array $kompetenzen, int $von) use ($lernende): void {
+            static $nummer = 100;
+            $nummer++;
+            $block = new block(0, (object) [
+                'nummer' => (string) $nummer, 'name' => (string) $nummer, 'ist_betrieb' => true, 'aktiv' => true,
+            ]);
+            $block->create();
+            foreach ($kompetenzen as $kompetenz) {
+                (new block_lk(0, (object) [
+                    'blockid' => $block->get('id'), 'competencyid' => $kompetenz->get('id'),
+                ]))->create();
+            }
+            (new einsatz(0, (object) [
+                'userid' => $lernende->id, 'blockid' => $block->get('id'),
+                'von' => $von, 'bis' => $von + WEEKSECS,
+                'kw_von' => '2027-W01', 'kw_bis' => '2027-W02', 'importid' => 0,
+            ]))->create();
+        };
+        $einsatz([$lk['vorgekommen'], $ganz], $stichtag);
+        $einsatz([$lk['eingeplant']], $stichtag + 1);
+
+        $zellen = $this->zellen((new raster_analyse())->get_raster((int) $lernende->id, $stichtag));
+
+        $this->assertSame(raster_kompetenz::STATUS_ABGEDECKT, $zellen[(int) $teilweise->get('id')]->status);
+        $this->assertSame([
+            (int) $lk['vorgekommen']->get('id') => raster_kompetenz::STATUS_ABGEDECKT,
+            (int) $lk['eingeplant']->get('id') => raster_kompetenz::STATUS_EINGEPLANT,
+            (int) $lk['fehlt']->get('id') => raster_kompetenz::STATUS_OFFEN,
+        ], $zellen[(int) $teilweise->get('id')]->leistungskriterien);
+        $this->assertSame(
+            [(int) $ganzlk->get('id') => raster_kompetenz::STATUS_ABGEDECKT],
+            $zellen[(int) $ganz->get('id')]->leistungskriterien
+        );
+    }
+
+    /**
      * Der Kern des Rasters: drei unterscheidbare Staende. Zugleich die
      * beiden Stichtag-Randfaelle - ein Einsatz, der genau am Stichtag
      * beginnt, zaehlt bereits; einer, der eine Sekunde spaeter beginnt,

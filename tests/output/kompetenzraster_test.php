@@ -247,6 +247,49 @@ final class kompetenzraster_test extends advanced_testcase {
     }
 
     /**
+     * Die Zelle zeigt, wie viele LK schon vorkamen, und listet sie mit
+     * ihrem Stand - auch die fehlenden, mit eigenem Zeichen. In der
+     * kompakten Variante fehlt dafuer der Platz.
+     */
+    public function test_zelle_zeigt_zahl_und_liste_der_leistungskriterien(): void {
+        $this->resetAfterTest();
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework();
+        $hkb = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id')]);
+        $hk = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hkb->get('id')]);
+        $lks = [];
+        foreach (['AU a1 01', 'AU a1 02', 'AU a1 03'] as $name) {
+            $lks[$name] = (int) $generator->create_competency([
+                'competencyframeworkid' => $rahmen->get('id'),
+                'parentid' => $hk->get('id'),
+                'shortname' => $name,
+            ])->get('id');
+        }
+        $raster = [new raster_bereich((int) $hkb->get('id'), [
+            new raster_kompetenz((int) $hk->get('id'), raster_kompetenz::STATUS_ABGEDECKT, false, [
+                $lks['AU a1 01'] => raster_kompetenz::STATUS_ABGEDECKT,
+                $lks['AU a1 02'] => raster_kompetenz::STATUS_EINGEPLANT,
+                $lks['AU a1 03'] => raster_kompetenz::STATUS_OFFEN,
+            ]),
+        ])];
+
+        $html = kompetenzraster::render($raster, time());
+
+        $this->assertStringContainsString(
+            get_string('raster:lk_stand_eingeplant', 'local_berufsbildung', (object) [
+                'abgedeckt' => 1, 'eingeplant' => 1, 'anzahl' => 3,
+            ]),
+            $html
+        );
+        $this->assertStringContainsString('AU a1 03', $html);
+        $this->assertStringContainsString('local-berufsbildung-raster-lk-offen', $html);
+        $this->assertStringContainsString('fa-times', $html);
+
+        $kompakt = kompetenzraster::render($raster, time(), kompakt: true);
+        $this->assertStringNotContainsString('local-berufsbildung-raster-lkliste', $kompakt);
+    }
+
+    /**
      * Ohne Raster gibt es nichts darzustellen - auch keine Ueberschrift mit
      * leerer Tabelle darunter.
      */

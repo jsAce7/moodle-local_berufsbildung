@@ -34,7 +34,9 @@
     * titel - string, Ueberschrift
     * bereiche - array of {name, abdeckung, hatsoll, zellen}
     * zellen - array of {istleer} oder
-               {istleer, name, hascode, code, farbklasse, statusklasse, hatzeichen, icon, statustext, titel}
+               {istleer, name, hascode, code, farbklasse, statusklasse, hatzeichen, icon, statustext, titel,
+                haslk, lktext, leistungskriterien}
+    * leistungskriterien - array of {name, beschreibung, statusklasse, icon, statustext}
     * kompakt - bool, nur Kuerzel und Symbol statt der vollen Bezeichnung
     * haszusammenfassung - bool
     * zusammenfassung - string, Pflicht-HK je Stand ueber alle Bereiche
@@ -75,7 +77,17 @@
                         "hatzeichen": true,
                         "icon": "fa-check",
                         "statustext": "abgedeckt",
-                        "titel": "Fertigungsunterlagen erstellen · Pflicht · abgedeckt"
+                        "titel": "Fertigungsunterlagen erstellen · Pflicht · abgedeckt",
+                        "haslk": true,
+                        "lktext": "1 von 2 LK vorgekommen",
+                        "leistungskriterien": [
+                            {"name": "AU a1 01", "beschreibung": "Sie erstellen Stücklisten.",
+                             "statusklasse": "local-berufsbildung-raster-lk-abgedeckt", "icon": "fa-check",
+                             "statustext": "bereits vorgekommen"},
+                            {"name": "AU a1 02", "beschreibung": "Sie zeichnen Skizzen.",
+                             "statusklasse": "local-berufsbildung-raster-lk-offen", "icon": "fa-times",
+                             "statustext": "nicht im Plan"}
+                        ]
                     },
                     {
                         "istleer": false,
@@ -149,7 +161,7 @@
                                 <td class="local-berufsbildung-raster-zelle {{statusklasse}}" title="{{titel}}">
                                     <span class="local-berufsbildung-raster-fuellung bg-primary" aria-hidden="true"></span>
                                     <span class="local-berufsbildung-raster-art {{farbklasse}}" aria-hidden="true"></span>
-                                    <span class="local-berufsbildung-raster-inhalt">
+                                    <div class="local-berufsbildung-raster-inhalt">
                                         <span class="local-berufsbildung-raster-kopf">
                                             {{#hatzeichen}}<i class="icon fa {{icon}} fa-fw m-0" aria-hidden="true"></i>{{/hatzeichen}}
                                             {{#hascode}}<span class="local-berufsbildung-raster-code">{{code}}</span>{{/hascode}}
@@ -162,7 +174,23 @@
                                             weil die Klasse zwischen Bootstrap 4 (Moodle 4.5) und 5 (Moodle 5.x)
                                             den Namen wechselt. }}
                                         <span class="local-berufsbildung-raster-status small{{^hatzeichen}} local-berufsbildung-nurtext{{/hatzeichen}}">{{statustext}}</span>
-                                    </span>
+                                        {{#haslk}}
+                                            {{! Natives <details>: kein JavaScript, und die Zelle bleibt
+                                                kurz, bis man wissen will, welche LK noch fehlen. }}
+                                            <details class="local-berufsbildung-raster-lk">
+                                                <summary class="local-berufsbildung-raster-lkkopf small">{{lktext}}</summary>
+                                                <ul class="local-berufsbildung-raster-lkliste list-unstyled small mb-0">
+                                                    {{#leistungskriterien}}
+                                                        <li class="{{statusklasse}}" title="{{beschreibung}}">
+                                                            <i class="icon fa {{icon}} fa-fw m-0" aria-hidden="true"></i>
+                                                            <span class="local-berufsbildung-nurtext">{{statustext}}:</span>
+                                                            {{name}}
+                                                        </li>
+                                                    {{/leistungskriterien}}
+                                                </ul>
+                                            </details>
+                                        {{/haslk}}
+                                    </div>
                                 </td>
                             {{/istleer}}
                         {{/zellen}}

@@ -99,6 +99,37 @@ class raster_analyse {
         $abgedeckt = array_flip(api::get_ausgebildete_kompetenzen($lernendeid, 0, $bis));
         $jemals = array_flip(api::get_ausgebildete_kompetenzen($lernendeid, 0, PHP_INT_MAX));
 
+        // Fuer den Stand der einzelnen Leistungskriterien die Zuordnungen,
+        // wie sie an den Bloecken stehen: die Mengen oben enthalten eine HK
+        // schon, sobald eines ihrer LK vorkommt, und taugen deshalb nicht,
+        // um zu sagen, welche LK fehlen.
+        $planservice = new plan_service();
+        $direktabgedeckt = array_flip($planservice->get_zugeordnete_kompetenzen($lernendeid, 0, $bis));
+        $direktjemals = array_flip($planservice->get_zugeordnete_kompetenzen($lernendeid, 0, PHP_INT_MAX));
+
+        $eltern = [];
+        foreach ($rahmenkompetenzen as $kompetenz) {
+            $eltern[(int) $kompetenz->get('id')] = (int) $kompetenz->get('parentid');
+        }
+
+        $lkjehk = [];
+        foreach ((new kompetenz_baum())->baum($rahmenkompetenzen) as $zweig) {
+            foreach ($zweig['handlungskompetenzen'] as $eintrag) {
+                $hkid = (int) $eintrag['kompetenz']->get('id');
+                $lkjehk[$hkid] = [];
+                foreach ($eintrag['leistungskriterien'] as $lk) {
+                    $lkid = (int) $lk->get('id');
+                    if ($this->zugeordnet_bis_hk($lkid, $hkid, $direktabgedeckt, $eltern)) {
+                        $lkjehk[$hkid][$lkid] = raster_kompetenz::STATUS_ABGEDECKT;
+                    } else if ($this->zugeordnet_bis_hk($lkid, $hkid, $direktjemals, $eltern)) {
+                        $lkjehk[$hkid][$lkid] = raster_kompetenz::STATUS_EINGEPLANT;
+                    } else {
+                        $lkjehk[$hkid][$lkid] = raster_kompetenz::STATUS_OFFEN;
+                    }
+                }
+            }
+        }
+
         // Die Bereiche vorab in Rahmenreihenfolge anlegen, damit die
         // Ausgabe der Gliederung des Rahmens folgt und nicht der
         // Reihenfolge, in der die einzelnen HK auftauchen.
@@ -124,6 +155,7 @@ class raster_analyse {
                 competencyid: $competencyid,
                 status: $status,
                 istwahlpflicht: isset($wahlpflicht[$this->vergleichsschluessel((string) $kompetenz->get('idnumber'))]),
+                leistungskriterien: $lkjehk[$competencyid] ?? [],
             );
         }
 
@@ -140,6 +172,31 @@ class raster_analyse {
         }
 
         return $raster;
+    }
+
+    /**
+     * Ist ein Leistungskriterium selbst zugeordnet, oder eine Kompetenz
+     * zwischen ihm und seiner Handlungskompetenz, die HK eingeschlossen?
+     * Eine als Ganzes zugeordnete HK deckt alle ihre LK ab.
+     *
+     * @param int $lkid
+     * @param int $hkid
+     * @param array $zugeordnet competencyid => beliebig
+     * @param array $eltern competencyid => parentid
+     */
+    private function zugeordnet_bis_hk(int $lkid, int $hkid, array $zugeordnet, array $eltern): bool {
+        $id = $lkid;
+        while ($id !== 0) {
+            if (isset($zugeordnet[$id])) {
+                return true;
+            }
+            if ($id === $hkid) {
+                return false;
+            }
+            $id = $eltern[$id] ?? 0;
+        }
+
+        return false;
     }
 
     /**

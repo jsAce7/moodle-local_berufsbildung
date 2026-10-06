@@ -47,4 +47,6 @@ Feature: Kompetenzraster auf Meine Lehre
     And I visit "/local/berufsbildung/meine_lehre.php"
     Then I should see "2 required competency areas: 1 already encountered, 1 scheduled later, 0 not in the plan"
     And I should see "1 of 2 required already encountered"
+    And I should see "1 of 1 criteria encountered"
+    And I should see "0 of 1 criteria encountered, 1 scheduled"
     And I should not see "No competency area occurs in the rotation plan on file yet."
