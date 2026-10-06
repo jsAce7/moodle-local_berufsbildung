@@ -6,8 +6,9 @@ Feature: Kompetenzraster auf Meine Lehre
 
   Background:
     Given the following config values are set as admin:
-      | beruf_rahmen_mapping | AU_EFZ=au-2022 | local_berufsbildung |
-      | beruf_wahlpflicht_hk | AU_EFZ=a.03    | local_berufsbildung |
+      | beruf_rahmen_mapping     | AU_EFZ=au-2022 | local_berufsbildung |
+      | beruf_wahlpflicht_hk     | AU_EFZ=a.03    | local_berufsbildung |
+      | beruf_wahlpflicht_anzahl | AU_EFZ=a:1     | local_berufsbildung |
     And the following "core_competency > frameworks" exist:
       | shortname    | idnumber |
       | Automatik/in | au-2022  |
@@ -49,6 +50,7 @@ Feature: Kompetenzraster auf Meine Lehre
     And I should see "1 of 2 required already encountered"
     And I should see "1 of 1 criteria encountered"
     And I should see "0 of 1 criteria encountered, 1 scheduled"
+    And I should see "Electives from a: required 1, already encountered 0, scheduled later 0"
     And I should not see "No competency area occurs in the rotation plan on file yet."
 
   @javascript

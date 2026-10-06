@@ -250,7 +250,7 @@ if (empty($eintraege)) {
                 kompetenzraster::render(
                     $raster[$lernendeid],
                     api::get_planungshorizont($lernendeid),
-                    wahlpflichtsoll: $stand !== null ? api::get_wahlpflicht_anzahl_for_beruf($stand->beruf) : null
+                    wahlpflichtgruppen: $stand !== null ? api::get_wahlpflicht_gruppen_for_beruf($stand->beruf) : []
                 ),
                 'mb-3'
             );

@@ -767,16 +767,17 @@ class api {
     }
 
     /**
-     * Wie viele Wahlpflicht-HK der Bildungsplan eines Berufs verlangt - die
-     * Bezugsgroesse, an der das Kompetenzraster die gewaehlten misst.
+     * Wie viele Wahlpflicht-HK der Bildungsplan eines Berufs verlangt, je
+     * Gruppe von Bereichen - etwa eine aus a, b und c zusammen und eine aus
+     * d. Die Bezugsgroesse, an der das Kompetenzraster die gewaehlten misst.
      *
      * @param string $beruf Beruf-Code
-     * @return int|null Null, wenn fuer den Beruf keine Anzahl hinterlegt ist
+     * @return wahlpflicht_gruppe[] Leer, wenn fuer den Beruf nichts hinterlegt ist
      */
-    public static function get_wahlpflicht_anzahl_for_beruf(string $beruf): ?int {
+    public static function get_wahlpflicht_gruppen_for_beruf(string $beruf): array {
         $konfiguration = get_config('local_berufsbildung', 'beruf_wahlpflicht_anzahl');
 
-        return (new wahlpflicht_resolver())->anzahl($beruf, $konfiguration !== false ? (string) $konfiguration : '');
+        return (new wahlpflicht_resolver())->gruppen($beruf, $konfiguration !== false ? (string) $konfiguration : '');
     }
 
     /**

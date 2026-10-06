@@ -45,36 +45,61 @@ final class wahlpflicht_resolver_test extends advanced_testcase {
     }
 
     /**
-     * Die verlangte Anzahl des Berufs.
+     * Gruppen von Bereichen mit ihrer Anzahl - Kuerzel klein geschrieben,
+     * Leerzeichen egal.
      */
-    public function test_anzahl_des_berufs(): void {
-        $this->assertSame(3, (new wahlpflicht_resolver())->anzahl('AU_EFZ', "PM_EFZ=2\r\nAU_EFZ = 3"));
+    public function test_gruppen_nach_bereichen(): void {
+        $gruppen = (new wahlpflicht_resolver())->gruppen('AU_EFZ', "PM_EFZ=2\r\nAU_EFZ = A, b ,c : 1 ; d:2");
+
+        $this->assertCount(2, $gruppen);
+        $this->assertSame(['a', 'b', 'c'], $gruppen[0]->bereiche);
+        $this->assertSame(1, $gruppen[0]->anzahl);
+        $this->assertSame(['d'], $gruppen[1]->bereiche);
+        $this->assertSame(2, $gruppen[1]->anzahl);
+        $this->assertTrue($gruppen[0]->umfasst('B'));
+        $this->assertFalse($gruppen[0]->umfasst('d'));
+    }
+
+    /**
+     * Ohne Bereiche gilt die Anzahl fuer den ganzen Beruf - die Gruppe
+     * umfasst jeden Bereich.
+     */
+    public function test_gruppe_ohne_bereiche_gilt_fuer_den_ganzen_beruf(): void {
+        $gruppen = (new wahlpflicht_resolver())->gruppen('AU_EFZ', 'AU_EFZ=3');
+
+        $this->assertCount(1, $gruppen);
+        $this->assertSame([], $gruppen[0]->bereiche);
+        $this->assertSame(3, $gruppen[0]->anzahl);
+        $this->assertTrue($gruppen[0]->umfasst('x'));
     }
 
     /**
      * Randfall: ohne Eintrag, mit leerem, nicht-numerischem oder Null-Wert
-     * gibt es keine Anzahl - eine verlangte Null waere keine Aussage.
+     * gibt es keine Gruppe - eine verlangte Null waere keine Aussage. Eine
+     * ungueltige Gruppe faellt weg, die gueltigen daneben bleiben.
      *
-     * @dataProvider ungueltige_anzahl
+     * @dataProvider ungueltige_gruppen
      * @param string $konfiguration
+     * @param int $erwartet Anzahl gueltiger Gruppen
      */
-    public function test_anzahl_ohne_gueltigen_eintrag_ist_null(string $konfiguration): void {
-        $this->assertNull((new wahlpflicht_resolver())->anzahl('AU_EFZ', $konfiguration));
+    public function test_ungueltige_gruppen_fallen_weg(string $konfiguration, int $erwartet): void {
+        $this->assertCount($erwartet, (new wahlpflicht_resolver())->gruppen('AU_EFZ', $konfiguration));
     }
 
     /**
-     * Konfigurationen ohne gueltige Anzahl fuer AU_EFZ.
+     * Konfigurationen mit ungueltigen Gruppen fuer AU_EFZ.
      *
      * @return array
      */
-    public static function ungueltige_anzahl(): array {
+    public static function ungueltige_gruppen(): array {
         return [
-            'leer' => [''],
-            'anderer beruf' => ['PM_EFZ=2'],
-            'ohne wert' => ['AU_EFZ='],
-            'kein zahl' => ['AU_EFZ=drei'],
-            'null' => ['AU_EFZ=0'],
-            'negativ' => ['AU_EFZ=-1'],
+            'leer' => ['', 0],
+            'anderer beruf' => ['PM_EFZ=2', 0],
+            'ohne wert' => ['AU_EFZ=', 0],
+            'keine zahl' => ['AU_EFZ=drei', 0],
+            'null' => ['AU_EFZ=a:0', 0],
+            'negativ' => ['AU_EFZ=-1', 0],
+            'eine von zwei gueltig' => ['AU_EFZ=a,b:x; d:1', 1],
         ];
     }
 }

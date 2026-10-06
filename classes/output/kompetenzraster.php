@@ -30,6 +30,7 @@ namespace local_berufsbildung\output;
 use core_competency\competency;
 use local_berufsbildung\raster_bereich;
 use local_berufsbildung\raster_kompetenz;
+use local_berufsbildung\wahlpflicht_gruppe;
 use local_berufsbildung\service\kompetenz_baum;
 
 /**
@@ -56,14 +57,15 @@ class kompetenzraster {
      * @param int|null $horizont Ende des vorliegenden Plans, siehe api::get_planungshorizont()
      * @param bool $kompakt Nur Kuerzel und Symbol statt der vollen Bezeichnung,
      *                      fuer die Roster-Karten in meine_lernenden.php
-     * @param int|null $wahlpflichtsoll Wie viele Wahlpflicht-HK der Bildungsplan verlangt,
-     *                      siehe api::get_wahlpflicht_anzahl_for_beruf(); null blendet die Angabe aus
+     * @param wahlpflicht_gruppe[] $wahlpflichtgruppen Wie viele Wahlpflicht-HK der Bildungsplan
+     *                      aus welchen Bereichen verlangt, siehe api::get_wahlpflicht_gruppen_for_beruf();
+     *                      leer blendet die Angabe aus
      */
     public static function render(
         array $raster,
         ?int $horizont = null,
         bool $kompakt = false,
-        ?int $wahlpflichtsoll = null
+        array $wahlpflichtgruppen = []
     ): string {
         global $OUTPUT, $PAGE;
 
@@ -97,21 +99,26 @@ class kompetenzraster {
             raster_kompetenz::STATUS_EINGEPLANT => 0,
             raster_kompetenz::STATUS_OFFEN => 0,
         ];
-        // Dasselbe fuer die Wahlpflicht-HK: sie zaehlen nicht in die
-        // Pflicht-Bezugsgroesse, aber der Bildungsplan verlangt eine Anzahl
-        // davon - und die soll man sehen.
-        $wahlpflichtstaende = $pflichtstaende;
+        // Dasselbe fuer die Wahlpflicht-HK, je Gruppe von Bereichen: sie
+        // zaehlen nicht in die Pflicht-Bezugsgroesse, aber der Bildungsplan
+        // verlangt eine Anzahl davon - etwa eine aus a, b und c zusammen.
+        $wahlpflichtstaende = array_fill(0, count($wahlpflichtgruppen), $pflichtstaende);
 
         $bereiche = [];
         foreach ($raster as $bereich) {
             $soll += $bereich->soll();
+            $bereichkuerzel = $kompetenzen[$bereich->bereichid]['idnumber'] ?? '';
 
             $zellen = [];
             foreach ($bereich->kompetenzen as $kompetenz) {
                 $vorhandenestaende[$kompetenz->status] = true;
                 $vorhandenearten[$kompetenz->istwahlpflicht ? 'wahlpflicht' : 'pflicht'] = true;
                 if ($kompetenz->istwahlpflicht) {
-                    $wahlpflichtstaende[$kompetenz->status]++;
+                    foreach (array_values($wahlpflichtgruppen) as $nummer => $gruppe) {
+                        if ($gruppe->umfasst($bereichkuerzel)) {
+                            $wahlpflichtstaende[$nummer][$kompetenz->status]++;
+                        }
+                    }
                 } else {
                     $pflichtstaende[$kompetenz->status]++;
                 }
@@ -177,13 +184,9 @@ class kompetenzraster {
                 'eingeplant' => $pflichtstaende[raster_kompetenz::STATUS_EINGEPLANT],
                 'offen' => $pflichtstaende[raster_kompetenz::STATUS_OFFEN],
             ]),
-            'haswahlpflichtstand' => !$kompakt && $hinweis === '' && $wahlpflichtsoll !== null
-                && !empty($vorhandenearten['wahlpflicht']),
-            'wahlpflichtstand' => get_string('raster:wahlpflicht_stand', 'local_berufsbildung', (object) [
-                'soll' => (int) $wahlpflichtsoll,
-                'abgedeckt' => $wahlpflichtstaende[raster_kompetenz::STATUS_ABGEDECKT],
-                'eingeplant' => $wahlpflichtstaende[raster_kompetenz::STATUS_EINGEPLANT],
-            ]),
+            'wahlpflichtstaende' => (!$kompakt && $hinweis === '')
+                ? self::wahlpflichtstaende(array_values($wahlpflichtgruppen), $wahlpflichtstaende)
+                : [],
             'hathinweis' => $hinweis !== '',
             'hinweis' => $hinweis,
             'hatbloeckelink' => $bloeckelink,
@@ -201,6 +204,36 @@ class kompetenzraster {
                 : '',
             'legende' => self::legende($vorhandenestaende, $vorhandenearten),
         ]);
+    }
+
+    /**
+     * Je Gruppe von Bereichen eine Zeile: verlangt, bereits vorgekommen,
+     * spaeter eingeplant - und ob das Verlangte schon vorkam.
+     *
+     * @param wahlpflicht_gruppe[] $gruppen
+     * @param array $staende Je Gruppe (gleicher Schluessel) STATUS_* => Anzahl Wahlpflicht-HK
+     * @return array Template-Kontext: je Zeile text, erfuellt
+     */
+    private static function wahlpflichtstaende(array $gruppen, array $staende): array {
+        $zeilen = [];
+        foreach ($gruppen as $nummer => $gruppe) {
+            $daten = (object) [
+                'bereiche' => implode(', ', $gruppe->bereiche),
+                'soll' => $gruppe->anzahl,
+                'abgedeckt' => $staende[$nummer][raster_kompetenz::STATUS_ABGEDECKT],
+                'eingeplant' => $staende[$nummer][raster_kompetenz::STATUS_EINGEPLANT],
+            ];
+            $zeilen[] = [
+                'text' => get_string(
+                    $gruppe->bereiche === [] ? 'raster:wahlpflicht_stand' : 'raster:wahlpflicht_stand_bereiche',
+                    'local_berufsbildung',
+                    $daten
+                ),
+                'erfuellt' => $daten->abgedeckt >= $gruppe->anzahl,
+            ];
+        }
+
+        return $zeilen;
     }
 
     /**

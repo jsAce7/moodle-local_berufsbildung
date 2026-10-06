@@ -41,8 +41,8 @@
     * kompakt - bool, nur Kuerzel und Symbol statt der vollen Bezeichnung
     * haszusammenfassung - bool
     * zusammenfassung - string, Pflicht-HK je Stand ueber alle Bereiche
-    * haswahlpflichtstand - bool, nur wenn fuer den Beruf eine Anzahl hinterlegt ist
-    * wahlpflichtstand - string, verlangte Wahlpflicht-HK und wie viele davon vorkamen
+    * wahlpflichtstaende - array of {text, erfuellt}, je Gruppe von Bereichen eine Zeile;
+      leer, wenn fuer den Beruf keine Anzahl hinterlegt ist
     * hathinweis - bool, statt der Zusammenfassung, wenn nichts im Plan vorkommt
     * hinweis - string, warum nichts im Plan vorkommt
     * hatbloeckelink - bool, darf die Ausbildungsbloecke pflegen
@@ -57,8 +57,10 @@
         "kompakt": false,
         "haszusammenfassung": true,
         "zusammenfassung": "2 Pflicht-Handlungskompetenzen: 1 bereits vorgekommen, 0 später eingeplant, 1 nicht im Plan",
-        "haswahlpflichtstand": true,
-        "wahlpflichtstand": "3 Wahlpflicht-Handlungskompetenzen verlangt: 0 bereits vorgekommen, 1 später eingeplant",
+        "wahlpflichtstaende": [
+            {"text": "Wahlpflicht aus a, b, c: verlangt 1, bereits vorgekommen 1, später eingeplant 0", "erfuellt": true},
+            {"text": "Wahlpflicht aus d: verlangt 1, bereits vorgekommen 0, später eingeplant 1", "erfuellt": false}
+        ],
         "hathinweis": false,
         "hinweis": "",
         "hatbloeckelink": false,
@@ -125,9 +127,14 @@
     {{#haszusammenfassung}}
         <p class="local-berufsbildung-raster-zusammenfassung mb-1">{{zusammenfassung}}</p>
     {{/haszusammenfassung}}
-    {{#haswahlpflichtstand}}
-        <p class="local-berufsbildung-raster-zusammenfassung mb-1">{{wahlpflichtstand}}</p>
-    {{/haswahlpflichtstand}}
+    {{#wahlpflichtstaende}}
+        <p class="local-berufsbildung-raster-zusammenfassung mb-1">
+            {{text}}
+            {{#erfuellt}}
+                <span class="badge bg-success text-white">{{#pix}}i/checked, core{{/pix}}{{#str}} raster:wahlpflicht_erfuellt, local_berufsbildung {{/str}}</span>
+            {{/erfuellt}}
+        </p>
+    {{/wahlpflichtstaende}}
     {{#hathinweis}}
         <div class="alert alert-info py-2 mb-2" role="status">
             {{hinweis}}

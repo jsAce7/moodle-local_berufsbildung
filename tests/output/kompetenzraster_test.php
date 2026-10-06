@@ -29,6 +29,7 @@ namespace local_berufsbildung\output;
 use advanced_testcase;
 use local_berufsbildung\raster_bereich;
 use local_berufsbildung\raster_kompetenz;
+use local_berufsbildung\wahlpflicht_gruppe;
 
 /**
  * Tests fuer kompetenzraster.
@@ -295,29 +296,48 @@ final class kompetenzraster_test extends advanced_testcase {
     }
 
     /**
-     * Mit einer verlangten Anzahl zeigt das Raster, wie viele Wahlpflicht-HK
-     * vorkamen oder eingeplant sind; ohne Anzahl bleibt die Zeile weg.
+     * Je Gruppe von Bereichen eine Zeile, gezaehlt nur die Wahlpflicht-HK
+     * dieser Bereiche; ohne Gruppen keine Zeile.
      */
-    public function test_wahlpflicht_stand_nur_mit_verlangter_anzahl(): void {
+    public function test_wahlpflicht_stand_je_gruppe_von_bereichen(): void {
         $this->resetAfterTest();
-        $raster = [$this->bereich([
-            [raster_kompetenz::STATUS_ABGEDECKT, false],
-            [raster_kompetenz::STATUS_ABGEDECKT, true],
-            [raster_kompetenz::STATUS_EINGEPLANT, true],
-            [raster_kompetenz::STATUS_OFFEN, true],
-        ])];
-        $erwartet = get_string('raster:wahlpflicht_stand', 'local_berufsbildung', (object) [
-            'soll' => 3,
-            'abgedeckt' => 1,
-            'eingeplant' => 1,
-        ]);
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework();
+        $raster = [];
+        // Je Bereich die Staende seiner Wahlpflicht-HK; dazu je eine Pflicht-HK.
+        $wahlpflicht = [
+            'a' => [raster_kompetenz::STATUS_ABGEDECKT],
+            'd' => [raster_kompetenz::STATUS_EINGEPLANT, raster_kompetenz::STATUS_OFFEN],
+        ];
+        foreach ($wahlpflicht as $kuerzel => $staende) {
+            $bereich = $generator->create_competency([
+                'competencyframeworkid' => $rahmen->get('id'),
+                'idnumber' => '7777BE ' . $kuerzel,
+            ]);
+            $kompetenzen = [new raster_kompetenz((int) $generator->create_competency([
+                'competencyframeworkid' => $rahmen->get('id'), 'parentid' => $bereich->get('id'),
+            ])->get('id'), raster_kompetenz::STATUS_OFFEN, false)];
+            foreach ($staende as $status) {
+                $kompetenzen[] = new raster_kompetenz((int) $generator->create_competency([
+                    'competencyframeworkid' => $rahmen->get('id'), 'parentid' => $bereich->get('id'),
+                ])->get('id'), $status, true);
+            }
+            $raster[] = new raster_bereich((int) $bereich->get('id'), $kompetenzen);
+        }
+        $gruppen = [new wahlpflicht_gruppe(['a', 'b', 'c'], 1), new wahlpflicht_gruppe(['d'], 1)];
 
-        $mit = kompetenzraster::render($raster, time(), wahlpflichtsoll: 3);
+        $html = kompetenzraster::render($raster, time(), wahlpflichtgruppen: $gruppen);
+
+        $this->assertStringContainsString(get_string('raster:wahlpflicht_stand_bereiche', 'local_berufsbildung', (object) [
+            'bereiche' => 'a, b, c', 'soll' => 1, 'abgedeckt' => 1, 'eingeplant' => 0,
+        ]), $html);
+        $this->assertStringContainsString(get_string('raster:wahlpflicht_stand_bereiche', 'local_berufsbildung', (object) [
+            'bereiche' => 'd', 'soll' => 1, 'abgedeckt' => 0, 'eingeplant' => 1,
+        ]), $html);
+        // Nur die Gruppe a, b, c ist erfuellt.
+        $this->assertSame(1, substr_count($html, get_string('raster:wahlpflicht_erfuellt', 'local_berufsbildung')));
+
         $ohne = kompetenzraster::render($raster, time());
-
-        $this->assertStringContainsString($erwartet, $mit);
-        // Ohne Anzahl nur die Pflicht-Zusammenfassung.
-        $this->assertSame(2, substr_count($mit, 'local-berufsbildung-raster-zusammenfassung'));
         $this->assertSame(1, substr_count($ohne, 'local-berufsbildung-raster-zusammenfassung'));
     }
 

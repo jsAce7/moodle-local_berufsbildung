@@ -203,7 +203,7 @@ if ($stand !== null) {
         echo $abschnitt(kompetenzraster::render(
             api::get_kompetenzraster($lernendeid),
             api::get_planungshorizont($lernendeid),
-            wahlpflichtsoll: api::get_wahlpflicht_anzahl_for_beruf($stand->beruf)
+            wahlpflichtgruppen: api::get_wahlpflicht_gruppen_for_beruf($stand->beruf)
         ));
     }
 
