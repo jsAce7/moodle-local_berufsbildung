@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.8.4] — 2026-10-06
+
+### Geändert
+
+- **Kompetenzraster zeigt den Stand als Fläche** (`classes/output/kompetenzraster.php`, `templates/kompetenzraster.mustache`, `styles.css`): Die Zellenfläche zeigt jetzt den Ausbildungsstand – kräftig gefüllt „bereits vorgekommen“, hell gefüllt „später eingeplant“, weiss „nicht im Plan“. Pflicht oder Wahlpflicht steht als schmaler Streifen oben in der Zelle, in den Farben des Bildungsplans. Bisher belegte die Pflicht/Wahlpflicht-Farbe die ganze Fläche, und der Stand war nur an einem kleinen Symbol zu erkennen.
+- **Zahlen im Raster beschriftet**: Die Zusammenfassung trennt „bereits vorgekommen“, „später eingeplant“ und „nicht im Plan“ („14 Pflicht-Handlungskompetenzen: 3 bereits vorgekommen, 5 später eingeplant, 6 nicht im Plan“). Je Zeile steht „1 von 3 Pflicht bereits vorgekommen“ statt „1 von 3“.
+- **Hinweis statt „0 von 14“**: Kommt keine Handlungskompetenz im Plan vor, erklärt das Raster den Grund – meist fehlt die Kompetenzzuordnung der Ausbildungsblöcke. Wer Blöcke pflegen darf, bekommt einen Link dorthin. Ohne Versetzungsplan sagt der Hinweis das.
+- **Kompetenzauswahl: Zugeordnetes lässt sich abwählen** (`block_kompetenzen.php`, `templates/kompetenz_auswahl.mustache`): Bereits zugeordnete Kompetenzen stehen angekreuzt in der Auswahl; abwählen und „Auswahl speichern“ entfernt sie. Ein Suchfilter entfernt dabei nichts, was er ausgeblendet hat. Die Auswahl bleibt auch stehen, wenn alles zugeordnet ist.
+- **Kompetenzauswahl zählt Leistungskriterien** (`kompetenz_auswahl::stand()`): Der Bereichskopf zeigt „12 von 40 LK“ statt „1 von 7 HK“. Eine Handlungskompetenz ist kaum je ganz in einem Block, die LK zeigen den Fortschritt. Unter einer als Ganzes zugeordneten HK zählen alle ihre LK.
+
+### Tests
+
+- Behat-Szenarien für das Raster auf „Meine Lehre“ und für das Abwählen in der Kompetenzauswahl. Der Behat-Generator legt dafür auch Lernende mit Beruf und Jahrgang sowie Einsätze an.
+
 ## [0.8.3] — 2026-10-06
 
 ### Geändert

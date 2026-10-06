@@ -37,11 +37,12 @@ use local_berufsbildung\service\kompetenz_baum;
  * dieselbe Anordnung wie im gedruckten Bildungsplan, damit die Darstellung
  * in Moodle und auf Papier dieselbe Gestalt hat.
  *
- * Die Farbe sagt dasselbe wie im Bildungsplan: Pflicht oder Wahlpflicht.
- * Der Ausbildungsstand ist bewusst *nicht* an der Farbe abzulesen, sondern
- * an Symbol, Klartext und Flaechendeckung - sonst haetten dieselben Farben
- * hier eine andere Bedeutung als im Dokument daneben. Zugleich erfuellt das
- * die Anforderung, dass Farbe nie der einzige Traeger einer Information ist.
+ * Die Flaeche einer Zelle zeigt den Ausbildungsstand - er ist das, wofuer
+ * man das Raster aufschlaegt. Pflicht oder Wahlpflicht steht als schmaler
+ * Streifen oben in der Zelle, in den Farben des Bildungsplans; so behaelt
+ * das Raster den Bezug zum Dokument, ohne dass dessen Farben die ganze
+ * Flaeche belegen. Der Stand steht zusaetzlich als Symbol und Klartext da,
+ * damit Farbe nie der einzige Traeger einer Information ist.
  *
  * Kein Beurteilungsstatus: gezeigt wird ausschliesslich, was im
  * importierten Versetzungsplan vorkommt (Architekturregel 6). Ob eine
@@ -80,18 +81,27 @@ class kompetenzraster {
         // Lesezeit und erklaert nichts.
         $vorhandenestaende = [];
         $vorhandenearten = [];
-        $abgedeckt = 0;
         $soll = 0;
+
+        // Die Pflicht-HK je Stand, fuer die Zusammenfassung: "im Plan" allein
+        // liesse offen, ob schon vorgekommen oder erst eingeplant.
+        $pflichtstaende = [
+            raster_kompetenz::STATUS_ABGEDECKT => 0,
+            raster_kompetenz::STATUS_EINGEPLANT => 0,
+            raster_kompetenz::STATUS_OFFEN => 0,
+        ];
 
         $bereiche = [];
         foreach ($raster as $bereich) {
-            $abgedeckt += $bereich->anzahl_abgedeckt();
             $soll += $bereich->soll();
 
             $zellen = [];
             foreach ($bereich->kompetenzen as $kompetenz) {
                 $vorhandenestaende[$kompetenz->status] = true;
                 $vorhandenearten[$kompetenz->istwahlpflicht ? 'wahlpflicht' : 'pflicht'] = true;
+                if (!$kompetenz->istwahlpflicht && isset($pflichtstaende[$kompetenz->status])) {
+                    $pflichtstaende[$kompetenz->status]++;
+                }
                 $zellen[] = self::zelle($kompetenz, $kompetenzen[$kompetenz->competencyid] ?? null);
             }
             for ($leer = count($zellen); $leer < $spalten; $leer++) {
@@ -100,14 +110,37 @@ class kompetenzraster {
 
             $bereiche[] = [
                 'name' => $kompetenzen[$bereich->bereichid]['shortname'] ?? '',
-                'abdeckung' => get_string('raster:bereich_abdeckung', 'local_berufsbildung', (object) [
-                    'abgedeckt' => $bereich->anzahl_abgedeckt(),
-                    'soll' => $bereich->soll(),
-                ]),
+                // Mit "Pflicht" beschriftet: ohne das liest man "0 von 3" in
+                // einer Zeile mit sechs Zellen als Fehler. Kompakt fehlt der
+                // Platz dafuer, dort erklaert es das Badge der Kachel.
+                'abdeckung' => get_string(
+                    $kompakt ? 'raster:bereich_abdeckung' : 'raster:bereich_abdeckung_pflicht',
+                    'local_berufsbildung',
+                    (object) [
+                        'abgedeckt' => $bereich->anzahl_abgedeckt(),
+                        'soll' => $bereich->soll(),
+                    ]
+                ),
                 'hatsoll' => $bereich->soll() > 0,
                 'zellen' => $zellen,
             ];
         }
+
+        // Kommt gar nichts im Plan vor, ist "0 von 14" keine Aussage ueber die
+        // Ausbildung, sondern ueber fehlende Daten - und so soll es auch
+        // dastehen. Ohne Plan fehlt der Versetzungsplan selbst; mit Plan
+        // fehlt fast immer die Kompetenzzuordnung der Ausbildungsbloecke.
+        $nichtsimplan = empty($vorhandenestaende[raster_kompetenz::STATUS_ABGEDECKT])
+            && empty($vorhandenestaende[raster_kompetenz::STATUS_EINGEPLANT]);
+        $hinweis = '';
+        if (!$kompakt && $nichtsimplan) {
+            $hinweis = get_string(
+                $horizont === null ? 'raster:hinweis_kein_plan' : 'raster:hinweis_nichts_im_plan',
+                'local_berufsbildung'
+            );
+        }
+        $bloeckelink = $hinweis !== '' && $horizont !== null
+            && has_capability('local/berufsbildung:manageblocks', \context_system::instance());
 
         return $OUTPUT->render_from_template('local_berufsbildung/kompetenzraster', [
             'titel' => get_string('raster:titel', 'local_berufsbildung'),
@@ -118,11 +151,18 @@ class kompetenzraster {
             // - welche Kompetenzen gemeint sind, steht im Raster darunter.
             // In der kompakten Variante traegt die Roster-Kachel diese Zahl
             // bereits als Badge.
-            'haszusammenfassung' => !$kompakt && $soll > 0,
+            'haszusammenfassung' => !$kompakt && $soll > 0 && $hinweis === '',
             'zusammenfassung' => get_string('raster:zusammenfassung', 'local_berufsbildung', (object) [
-                'abgedeckt' => $abgedeckt,
                 'soll' => $soll,
+                'abgedeckt' => $pflichtstaende[raster_kompetenz::STATUS_ABGEDECKT],
+                'eingeplant' => $pflichtstaende[raster_kompetenz::STATUS_EINGEPLANT],
+                'offen' => $pflichtstaende[raster_kompetenz::STATUS_OFFEN],
             ]),
+            'hathinweis' => $hinweis !== '',
+            'hinweis' => $hinweis,
+            'hatbloeckelink' => $bloeckelink,
+            'bloeckeurl' => (new \moodle_url('/local/berufsbildung/bloecke.php'))->out(false),
+            'bloeckelinktext' => get_string('raster:hinweis_bloecke', 'local_berufsbildung'),
             'hathorizont' => $horizont !== null,
             'horizont' => $horizont !== null
                 ? get_string(
@@ -158,8 +198,8 @@ class kompetenzraster {
             'name' => $name,
             'hascode' => $idnumber !== '',
             'code' => $idnumber,
-            // Die Flaechenfarbe kommt ueber Bootstrap-Klassen, nie aus
-            // styles.css - siehe Kopfkommentar dort.
+            // Farbe des Streifens, wie im Bildungsplan. Sie kommt ueber
+            // Bootstrap-Klassen, nie aus styles.css - siehe Kopfkommentar dort.
             'farbklasse' => $kompetenz->istwahlpflicht ? 'bg-success' : 'bg-warning',
             'statusklasse' => 'local-berufsbildung-raster-' . $kompetenz->status,
             // Der haeufigste Stand bekommt das leiseste Zeichen: "nicht im
@@ -212,19 +252,7 @@ class kompetenzraster {
     private static function legende(array $vorhandenestaende, array $vorhandenearten): array {
         $eintraege = [];
 
-        foreach (['pflicht' => 'bg-warning', 'wahlpflicht' => 'bg-success'] as $art => $farbklasse) {
-            if (empty($vorhandenearten[$art])) {
-                continue;
-            }
-
-            $eintraege[] = [
-                'istfarbe' => true,
-                'hatzeichen' => false,
-                'farbklasse' => $farbklasse,
-                'text' => get_string('raster:legende_' . $art, 'local_berufsbildung'),
-            ];
-        }
-
+        // Zuerst der Stand - er ist das, wofuer man das Raster liest.
         foreach (
             [
             raster_kompetenz::STATUS_ABGEDECKT,
@@ -239,6 +267,9 @@ class kompetenzraster {
             $darstellung = self::darstellung($status);
             $eintraege[] = [
                 'istfarbe' => false,
+                // Das Feld der Legende sieht aus wie eine Zelle mit diesem
+                // Stand: gleiche Flaeche, gleiches Zeichen.
+                'statusklasse' => 'local-berufsbildung-raster-' . $status,
                 // "nicht im Plan" zeigt sich in der Zelle durch das Fehlen
                 // eines Zeichens - die Legende zeigt deshalb auch hier
                 // keins, sonst erklaert sie ein Symbol, das im Raster
@@ -246,6 +277,19 @@ class kompetenzraster {
                 'hatzeichen' => $status !== raster_kompetenz::STATUS_OFFEN,
                 'icon' => $darstellung['icon'],
                 'text' => get_string('raster:legende_' . $status, 'local_berufsbildung'),
+            ];
+        }
+
+        foreach (['pflicht' => 'bg-warning', 'wahlpflicht' => 'bg-success'] as $art => $farbklasse) {
+            if (empty($vorhandenearten[$art])) {
+                continue;
+            }
+
+            $eintraege[] = [
+                'istfarbe' => true,
+                'hatzeichen' => false,
+                'farbklasse' => $farbklasse,
+                'text' => get_string('raster:legende_' . $art, 'local_berufsbildung'),
             ];
         }
 

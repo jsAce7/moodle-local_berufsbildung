@@ -642,8 +642,9 @@
 /*
  * Die Flaeche liegt als eigene Ebene unter dem Text, damit ihre Deckung
  * den Ausbildungsstand zeigen kann, ohne die Lesbarkeit der Beschriftung
- * anzutasten. Die Farbe selbst kommt ueber eine Bootstrap-Klasse im
- * Markup - siehe Kopfkommentar dieser Datei.
+ * anzutasten. Darueber oben ein schmaler Streifen fuer Pflicht oder
+ * Wahlpflicht. Beide Farben kommen ueber Bootstrap-Klassen im Markup -
+ * siehe Kopfkommentar dieser Datei.
  */
 .local-berufsbildung-raster-zelle {
     position: relative;
@@ -661,22 +662,31 @@
 }
 
 /*
- * Die Deckung traegt den Ausbildungsstand: je weiter eine Kompetenz ist,
- * desto kraeftiger ihre Flaeche. Die Stufen liegen so weit auseinander,
- * dass man sie ueber eine Zeile hinweg unterscheidet, und so tief, dass
- * die dunkle Beschriftung darauf lesbar bleibt - bg-warning und bg-success
- * sind bei diesen Werten hell genug fuer Text in Vordergrundfarbe.
+ * Die Deckung traegt den Ausbildungsstand: bereits vorgekommen kraeftig,
+ * spaeter eingeplant hell, nicht im Plan gar nicht - die Zelle bleibt
+ * weiss. Die Stufen liegen so weit auseinander, dass man sie ueber eine
+ * Zeile hinweg unterscheidet, und so tief, dass die dunkle Beschriftung
+ * auf bg-primary lesbar bleibt.
  */
 .local-berufsbildung-raster-abgedeckt > .local-berufsbildung-raster-fuellung {
-    opacity: 0.55;
+    opacity: 0.35;
 }
 
 .local-berufsbildung-raster-eingeplant > .local-berufsbildung-raster-fuellung {
-    opacity: 0.3;
+    opacity: 0.12;
 }
 
 .local-berufsbildung-raster-offen > .local-berufsbildung-raster-fuellung {
-    opacity: 0.1;
+    display: none;
+}
+
+/* Pflicht oder Wahlpflicht, wie im Bildungsplan. */
+.local-berufsbildung-raster-art {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 0.25rem;
 }
 
 .local-berufsbildung-raster-inhalt {
@@ -745,28 +755,24 @@
     gap: 0.3rem;
 }
 
-/* Dieselbe Deckung wie eine abgedeckte Zelle - die Legende soll aussehen
-   wie das, was sie erklaert. */
-.local-berufsbildung-raster-legendenfarbe {
+/*
+ * Das Feld fuer einen Stand sieht aus wie eine Zelle mit diesem Stand:
+ * dieselbe Fuellung in derselben Deckung, "nicht im Plan" leer.
+ */
+.local-berufsbildung-raster-legendenstand {
+    position: relative;
     display: inline-block;
-    width: 0.8rem;
-    height: 0.8rem;
+    width: 0.9rem;
+    height: 0.9rem;
+    overflow: hidden;
     border-radius: 0.15rem;
-    opacity: 0.55;
 }
 
-/*
- * Platzhalter fuer den Stand, der in der Zelle gerade kein Zeichen traegt
- * ("nicht im Plan"). Haelt die Texte der Legende untereinander buendig,
- * ohne ein Symbol zu zeigen, das im Raster nirgends steht.
- */
-.local-berufsbildung-raster-legendenleer {
+/* Der Streifen fuer Pflicht oder Wahlpflicht, wie oben in der Zelle. */
+.local-berufsbildung-raster-legendenart {
     display: inline-block;
-    width: 0.8rem;
-    height: 0.8rem;
-    border: 1px dashed currentColor;
-    border-radius: 0.15rem;
-    opacity: 0.5;
+    width: 0.9rem;
+    height: 0.25rem;
 }
 
 /*

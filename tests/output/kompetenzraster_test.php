@@ -129,8 +129,10 @@ final class kompetenzraster_test extends advanced_testcase {
 
         $this->assertStringContainsString(
             get_string('raster:zusammenfassung', 'local_berufsbildung', (object) [
-                'abgedeckt' => 1,
                 'soll' => 2,
+                'abgedeckt' => 1,
+                'eingeplant' => 0,
+                'offen' => 1,
             ]),
             $html
         );
@@ -151,11 +153,97 @@ final class kompetenzraster_test extends advanced_testcase {
 
         $this->assertStringNotContainsString(
             get_string('raster:zusammenfassung', 'local_berufsbildung', (object) [
-                'abgedeckt' => 1,
                 'soll' => 1,
+                'abgedeckt' => 1,
+                'eingeplant' => 0,
+                'offen' => 0,
             ]),
             $html
         );
+    }
+
+    /**
+     * Die Zusammenfassung trennt "bereits vorgekommen" von "spaeter
+     * eingeplant" - "im Plan" allein liesse offen, was gemeint ist.
+     */
+    public function test_zusammenfassung_trennt_vorgekommen_und_eingeplant(): void {
+        $this->resetAfterTest();
+
+        $html = kompetenzraster::render([$this->bereich([
+            [raster_kompetenz::STATUS_ABGEDECKT, false],
+            [raster_kompetenz::STATUS_EINGEPLANT, false],
+            [raster_kompetenz::STATUS_EINGEPLANT, false],
+            [raster_kompetenz::STATUS_OFFEN, false],
+            [raster_kompetenz::STATUS_EINGEPLANT, true],
+        ])], time());
+
+        $this->assertStringContainsString(
+            get_string('raster:zusammenfassung', 'local_berufsbildung', (object) [
+                'soll' => 4,
+                'abgedeckt' => 1,
+                'eingeplant' => 2,
+                'offen' => 1,
+            ]),
+            $html
+        );
+        $this->assertStringNotContainsString(
+            get_string('raster:hinweis_nichts_im_plan', 'local_berufsbildung'),
+            $html
+        );
+    }
+
+    /**
+     * Kommt keine Handlungskompetenz im Plan vor, sagt das Raster warum,
+     * statt "0 von 14" zu zeigen. Den Link zu den Ausbildungsbloecken gibt
+     * es nur fuer Personen, die sie pflegen duerfen.
+     */
+    public function test_ohne_kompetenz_im_plan_steht_ein_hinweis(): void {
+        $this->resetAfterTest();
+        $raster = [$this->bereich([
+            [raster_kompetenz::STATUS_OFFEN, false],
+            [raster_kompetenz::STATUS_OFFEN, true],
+        ])];
+
+        $this->setUser($this->getDataGenerator()->create_user());
+        $html = kompetenzraster::render($raster, time());
+
+        $this->assertStringContainsString(
+            get_string('raster:hinweis_nichts_im_plan', 'local_berufsbildung'),
+            $html
+        );
+        $this->assertStringNotContainsString('bloecke.php', $html);
+        $this->assertStringNotContainsString(
+            get_string('raster:zusammenfassung', 'local_berufsbildung', (object) [
+                'soll' => 1,
+                'abgedeckt' => 0,
+                'eingeplant' => 0,
+                'offen' => 1,
+            ]),
+            $html
+        );
+
+        $this->setAdminUser();
+        $this->assertStringContainsString('bloecke.php', kompetenzraster::render($raster, time()));
+    }
+
+    /**
+     * Randfall: ohne Versetzungsplan fehlt nicht die Kompetenzzuordnung,
+     * sondern der Plan selbst - der Hinweis sagt das, und ein Link zu den
+     * Ausbildungsbloecken wuerde nicht weiterhelfen.
+     */
+    public function test_ohne_plan_steht_der_hinweis_auf_den_fehlenden_plan(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $html = kompetenzraster::render([$this->bereich([
+            [raster_kompetenz::STATUS_OFFEN, false],
+        ])], null);
+
+        $this->assertStringContainsString(
+            get_string('raster:hinweis_kein_plan', 'local_berufsbildung'),
+            $html
+        );
+        $this->assertStringNotContainsString('bloecke.php', $html);
     }
 
     /**

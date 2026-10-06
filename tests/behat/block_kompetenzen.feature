@@ -36,8 +36,8 @@ Feature: Kompetenzen einem Ausbildungsblock zuordnen
     And I should see "Not found: AU z9 99"
     And I click on "AU c1 02" "text"
     And I click on "AU c2 01" "text"
-    And I press "Add competencies"
-    And I should see "Competency coverage saved (2 newly assigned)."
+    And I press "Save selection"
+    And I should see "Competency coverage saved (2 newly assigned, 0 removed)."
     And I should see "Assigned competencies (2)"
     And "AU c1 02" "text" should exist in the "generaltable" "table"
     And "AU c2 01" "text" should exist in the "generaltable" "table"
@@ -58,3 +58,31 @@ Feature: Kompetenzen einem Ausbildungsblock zuordnen
     And I should see "Not found: AU z9 99"
     And I should see "AU c1 02"
     And I should not see "AU c2 01"
+
+  Scenario: Eine zugeordnete Handlungskompetenz abwaehlen
+    Given the following "local_berufsbildung > block competencies" exist:
+      | block | competency  |
+      | B1    | 7777BE c.02 |
+      | B1    | lk-c1-01    |
+    And I log in as "admin"
+    When I visit "/local/berufsbildung/bloecke.php"
+    And I click on "Assign competencies" "link" in the "B1" "table_row"
+    And I set the field "Stoerungen beheben" to "0"
+    And I press "Save selection"
+    Then I should see "Competency coverage saved (0 newly assigned, 1 removed)."
+    And I should see "Assigned competencies (1)"
+    And I should not see "covered by c.02"
+
+  Scenario: Ein Suchfilter entfernt keine ausgeblendeten Zuordnungen
+    Given the following "local_berufsbildung > block competencies" exist:
+      | block | competency  |
+      | B1    | 7777BE c.02 |
+    And I log in as "admin"
+    When I visit "/local/berufsbildung/bloecke.php"
+    And I click on "Assign competencies" "link" in the "B1" "table_row"
+    And I set the field "suche" to "AU c1 02"
+    And I click on "Search" "button" in the ".local-berufsbildung-auswahl-suche" "css_element"
+    And I set the field "AU c1 02" to "1"
+    And I press "Save selection"
+    Then I should see "Competency coverage saved (1 newly assigned, 0 removed)."
+    And I should see "Assigned competencies (2)"

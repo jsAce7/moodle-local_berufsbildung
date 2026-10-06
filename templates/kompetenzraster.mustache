@@ -21,10 +21,11 @@
     Handlungskompetenzbereiche als Zeilen, Handlungskompetenzen als
     Spalten.
 
-    Die Farbe der Zelle bedeutet dasselbe wie im Bildungsplan - Pflicht
-    oder Wahlpflicht. Der Ausbildungsstand haengt an Symbol und Klartext,
-    nicht an der Farbe: dieselbe Farbe darf hier nichts anderes heissen
-    als im Dokument daneben, und Farbe allein traegt nie eine Information.
+    Die Flaeche der Zelle zeigt den Ausbildungsstand: kraeftig gefuellt
+    bereits vorgekommen, hell gefuellt spaeter eingeplant, weiss nicht im
+    Plan. Pflicht oder Wahlpflicht steht als schmaler Streifen oben, in
+    den Farben des Bildungsplans. Der Stand haengt zusaetzlich an Symbol
+    und Klartext - Farbe allein traegt nie eine Information.
 
     Nur ein Vorschlag fuer die Ausbildungsplanung, keine Festlegung
     (Architekturregel 6), und kein Beurteilungsstatus.
@@ -36,23 +37,32 @@
                {istleer, name, hascode, code, farbklasse, statusklasse, hatzeichen, icon, statustext, titel}
     * kompakt - bool, nur Kuerzel und Symbol statt der vollen Bezeichnung
     * haszusammenfassung - bool
-    * zusammenfassung - string, "x von y abgedeckt" ueber alle Bereiche
+    * zusammenfassung - string, Pflicht-HK je Stand ueber alle Bereiche
+    * hathinweis - bool, statt der Zusammenfassung, wenn nichts im Plan vorkommt
+    * hinweis - string, warum nichts im Plan vorkommt
+    * hatbloeckelink - bool, darf die Ausbildungsbloecke pflegen
+    * bloeckeurl, bloeckelinktext - string
     * hathorizont - bool
     * horizont - string, bis wann der vorliegende Plan reicht
-    * legende - array of {istfarbe, hatzeichen, farbklasse, icon, text}
+    * legende - array of {istfarbe, hatzeichen, farbklasse, statusklasse, icon, text}
 
     Example context (json):
     {
         "titel": "Handlungskompetenzen",
         "kompakt": false,
         "haszusammenfassung": true,
-        "zusammenfassung": "1 von 2 Pflicht-Handlungskompetenzen sind im Plan abgedeckt",
+        "zusammenfassung": "2 Pflicht-Handlungskompetenzen: 1 bereits vorgekommen, 0 später eingeplant, 1 nicht im Plan",
+        "hathinweis": false,
+        "hinweis": "",
+        "hatbloeckelink": false,
+        "bloeckeurl": "/local/berufsbildung/bloecke.php",
+        "bloeckelinktext": "Kompetenzen den Ausbildungsblöcken zuordnen",
         "hathorizont": true,
         "horizont": "Vorliegender Versetzungsplan reicht bis 20. August 2027.",
         "bereiche": [
             {
                 "name": "a Entwickeln von automatisierten Anlagen",
-                "abdeckung": "1 von 2",
+                "abdeckung": "1 von 2 Pflicht bereits vorgekommen",
                 "hatsoll": true,
                 "zellen": [
                     {
@@ -84,8 +94,9 @@
             }
         ],
         "legende": [
-            {"istfarbe": true, "hatzeichen": false, "farbklasse": "bg-warning", "text": "Pflicht"},
-            {"istfarbe": false, "hatzeichen": true, "icon": "fa-check", "text": "abgedeckt"}
+            {"istfarbe": false, "hatzeichen": true, "statusklasse": "local-berufsbildung-raster-abgedeckt",
+             "icon": "fa-check", "text": "abgedeckt"},
+            {"istfarbe": true, "hatzeichen": false, "farbklasse": "bg-warning", "text": "Pflicht"}
         ]
     }
 }}
@@ -94,6 +105,12 @@
     {{#haszusammenfassung}}
         <p class="local-berufsbildung-raster-zusammenfassung mb-1">{{zusammenfassung}}</p>
     {{/haszusammenfassung}}
+    {{#hathinweis}}
+        <div class="alert alert-info py-2 mb-2" role="status">
+            {{hinweis}}
+            {{#hatbloeckelink}}<a href="{{bloeckeurl}}">{{bloeckelinktext}}</a>{{/hatbloeckelink}}
+        </div>
+    {{/hathinweis}}
     {{#hathorizont}}
         <p class="small text-muted mb-2">{{horizont}}</p>
     {{/hathorizont}}
@@ -101,11 +118,13 @@
         {{#legende}}
             <li class="local-berufsbildung-raster-legendeneintrag">
                 {{#istfarbe}}
-                    <span class="local-berufsbildung-raster-legendenfarbe {{farbklasse}}" aria-hidden="true"></span>
+                    <span class="local-berufsbildung-raster-legendenart {{farbklasse}}" aria-hidden="true"></span>
                 {{/istfarbe}}
                 {{^istfarbe}}
+                    <span class="local-berufsbildung-raster-legendenstand border {{statusklasse}}" aria-hidden="true">
+                        <span class="local-berufsbildung-raster-fuellung bg-primary"></span>
+                    </span>
                     {{#hatzeichen}}<i class="icon fa {{icon}} fa-fw m-0" aria-hidden="true"></i>{{/hatzeichen}}
-                    {{^hatzeichen}}<span class="local-berufsbildung-raster-legendenleer" aria-hidden="true"></span>{{/hatzeichen}}
                 {{/istfarbe}}
                 {{text}}
             </li>
@@ -128,7 +147,8 @@
                             {{/istleer}}
                             {{^istleer}}
                                 <td class="local-berufsbildung-raster-zelle {{statusklasse}}" title="{{titel}}">
-                                    <span class="local-berufsbildung-raster-fuellung {{farbklasse}}" aria-hidden="true"></span>
+                                    <span class="local-berufsbildung-raster-fuellung bg-primary" aria-hidden="true"></span>
+                                    <span class="local-berufsbildung-raster-art {{farbklasse}}" aria-hidden="true"></span>
                                     <span class="local-berufsbildung-raster-inhalt">
                                         <span class="local-berufsbildung-raster-kopf">
                                             {{#hatzeichen}}<i class="icon fa {{icon}} fa-fw m-0" aria-hidden="true"></i>{{/hatzeichen}}
