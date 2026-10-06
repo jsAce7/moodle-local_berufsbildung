@@ -666,7 +666,8 @@
  * spaeter eingeplant hell, nicht im Plan gar nicht - die Zelle bleibt
  * weiss. Die Stufen liegen so weit auseinander, dass man sie ueber eine
  * Zeile hinweg unterscheidet, und so tief, dass die dunkle Beschriftung
- * auf bg-primary lesbar bleibt.
+ * auf bg-info lesbar bleibt - ein Ton, der sich von den gelben und
+ * gruenen Streifen fuer Pflicht und Wahlpflicht klar abhebt.
  */
 .local-berufsbildung-raster-abgedeckt > .local-berufsbildung-raster-fuellung {
     opacity: 0.35;
