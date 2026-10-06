@@ -96,13 +96,12 @@ class raster_analyse {
         // ueber die bisherige Lehrzeit und nicht nur ueber die letzte
         // Lieferung.
         $bis = $stichtag ?? time();
-        $abgedeckt = array_flip(api::get_ausgebildete_kompetenzen($lernendeid, 0, $bis));
-        $jemals = array_flip(api::get_ausgebildete_kompetenzen($lernendeid, 0, PHP_INT_MAX));
 
-        // Fuer den Stand der einzelnen Leistungskriterien die Zuordnungen,
-        // wie sie an den Bloecken stehen: die Mengen oben enthalten eine HK
-        // schon, sobald eines ihrer LK vorkommt, und taugen deshalb nicht,
-        // um zu sagen, welche LK fehlen.
+        // Die Zuordnungen, wie sie an den Bloecken stehen - je Zeitraum
+        // einmal. Die uebergeordneten Kompetenzen kommen aus dem bereits
+        // geladenen Rahmen dazu, statt sie je Kompetenz nachzuladen: auf
+        // "Meine Lernenden" laeuft das fuer jede Person. Ausserhalb des
+        // Rahmens interessiert hier nichts.
         $planservice = new plan_service();
         $direktabgedeckt = array_flip($planservice->get_zugeordnete_kompetenzen($lernendeid, 0, $bis));
         $direktjemals = array_flip($planservice->get_zugeordnete_kompetenzen($lernendeid, 0, PHP_INT_MAX));
@@ -111,6 +110,11 @@ class raster_analyse {
         foreach ($rahmenkompetenzen as $kompetenz) {
             $eltern[(int) $kompetenz->get('id')] = (int) $kompetenz->get('parentid');
         }
+
+        // Eine HK gilt als abgedeckt, sobald sie selbst oder eines ihrer
+        // LK zugeordnet ist - dieselbe Regel wie get_ausgebildete_kompetenzen().
+        $abgedeckt = $this->mit_vorfahren($direktabgedeckt, $eltern);
+        $jemals = $this->mit_vorfahren($direktjemals, $eltern);
 
         $lkjehk = [];
         foreach ((new kompetenz_baum())->baum($rahmenkompetenzen) as $zweig) {
@@ -172,6 +176,25 @@ class raster_analyse {
         }
 
         return $raster;
+    }
+
+    /**
+     * Die Kompetenzen und alle ihre Vorfahren im Rahmen.
+     *
+     * @param array $kompetenzen competencyid => beliebig
+     * @param array $eltern competencyid => parentid, der ganze Rahmen
+     * @return array competencyid => true
+     */
+    private function mit_vorfahren(array $kompetenzen, array $eltern): array {
+        $alle = [];
+        foreach (array_keys($kompetenzen) as $id) {
+            while ($id !== 0 && !isset($alle[$id])) {
+                $alle[$id] = true;
+                $id = $eltern[$id] ?? 0;
+            }
+        }
+
+        return $alle;
     }
 
     /**

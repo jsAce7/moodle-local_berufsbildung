@@ -75,17 +75,10 @@ class plan_service {
      * @return int[] Deduplizierte competencyids
      */
     public function get_ausgebildete_kompetenzen(int $lernendeid, int $von, int $bis): array {
-        $kompetenzen = [];
-        foreach ($this->get_zugeordnete_kompetenzen($lernendeid, $von, $bis) as $competencyid) {
-            // Ein Ausbildungsblock wird auf Ebene LK gepflegt. Fuer die
-            // Ausbildungsplanung zählt diese LK zugleich für alle ihre
-            // übergeordneten Handlungskompetenzen.
-            foreach ($this->mit_uebergeordneten_kompetenzen($competencyid) as $kompetenzid) {
-                $kompetenzen[$kompetenzid] = true;
-            }
-        }
-
-        return array_keys($kompetenzen);
+        // Ein Ausbildungsblock wird auf Ebene LK gepflegt. Fuer die
+        // Ausbildungsplanung zählt diese LK zugleich für alle ihre
+        // übergeordneten Handlungskompetenzen.
+        return $this->mit_uebergeordneten_kompetenzen($this->get_zugeordnete_kompetenzen($lernendeid, $von, $bis));
     }
 
     /**
@@ -112,40 +105,58 @@ class plan_service {
             $einsaetze
         )));
 
-        $kompetenzen = [];
-        foreach ($blockids as $blockid) {
-            $block = block::get_record(['id' => $blockid]);
-            if (!$block || !$block->get('ist_betrieb')) {
-                continue;
-            }
+        // Bloecke und ihre Zuordnungen je in einer Abfrage, nicht je Block:
+        // "Meine Lernenden" rechnet das fuer jede Person, und ein Plan hat
+        // ein Dutzend Einsaetze.
+        global $DB;
+        [$insql, $params] = $DB->get_in_or_equal($blockids, SQL_PARAMS_NAMED);
+        $betrieblich = array_map(
+            static fn (block $block): int => (int) $block->get('id'),
+            block::get_records_select("id {$insql} AND ist_betrieb = 1", $params)
+        );
+        if (empty($betrieblich)) {
+            return [];
+        }
 
-            foreach (block_lk::get_records(['blockid' => $blockid]) as $abdeckung) {
-                $kompetenzen[(int) $abdeckung->get('competencyid')] = true;
-            }
+        [$insql, $params] = $DB->get_in_or_equal($betrieblich, SQL_PARAMS_NAMED);
+        $kompetenzen = [];
+        foreach (block_lk::get_records_select("blockid {$insql}", $params) as $abdeckung) {
+            $kompetenzen[(int) $abdeckung->get('competencyid')] = true;
         }
 
         return array_keys($kompetenzen);
     }
 
     /**
-     * Ergaenzt die uebergeordneten Kompetenzen.
+     * Ergaenzt die uebergeordneten Kompetenzen - je Ebene eine Abfrage fuer
+     * alle zusammen, nicht eine je Kompetenz und Vorfahre.
      *
-     * @param int $kompetenzid
-     * @return int[] Kompetenz selbst, gefolgt von ihren Vorfahren
+     * Bei alten oder extern gelöschten Referenzen bleibt die direkte
+     * Zuordnung sichtbar; sie darf nicht den übrigen Plan blockieren.
+     *
+     * @param int[] $kompetenzids
+     * @return int[] Die Kompetenzen selbst und alle ihre Vorfahren, dedupliziert
      */
-    private function mit_uebergeordneten_kompetenzen(int $kompetenzid): array {
-        $ids = [$kompetenzid];
-        $kompetenz = competency::get_record(['id' => $kompetenzid]);
+    private function mit_uebergeordneten_kompetenzen(array $kompetenzids): array {
+        global $DB;
 
-        // Bei alten oder extern gelöschten Referenzen bleibt die direkte
-        // Zuordnung sichtbar; sie darf nicht den übrigen Plan blockieren.
-        while ($kompetenz !== false && (int) $kompetenz->get('parentid') !== 0) {
-            $elternid = (int) $kompetenz->get('parentid');
-            $ids[] = $elternid;
-            $kompetenz = competency::get_record(['id' => $elternid]);
+        $alle = array_fill_keys($kompetenzids, true);
+        $ebene = array_keys($alle);
+
+        while (!empty($ebene)) {
+            $eltern = [];
+            [$insql, $params] = $DB->get_in_or_equal($ebene, SQL_PARAMS_NAMED);
+            foreach (competency::get_records_select("id {$insql}", $params) as $kompetenz) {
+                $elternid = (int) $kompetenz->get('parentid');
+                if ($elternid !== 0 && !isset($alle[$elternid])) {
+                    $eltern[$elternid] = true;
+                    $alle[$elternid] = true;
+                }
+            }
+            $ebene = array_keys($eltern);
         }
 
-        return $ids;
+        return array_keys($alle);
     }
 
     /**

@@ -188,6 +188,63 @@ final class raster_analyse_test extends advanced_testcase {
     }
 
     /**
+     * Die Zahl der Datenbankabfragen haengt nicht davon ab, wie viele LK
+     * den Bloecken zugeordnet sind: "Meine Lernenden" rechnet das Raster
+     * fuer jede Person. Frueher wurde jede Kompetenz einzeln bis zur HK
+     * hinauf geladen - ueber 500 Abfragen fuer eine einzige Person.
+     */
+    public function test_abfragen_wachsen_nicht_mit_den_leistungskriterien(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $lernende = $this->lege_lernende_an();
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework(['idnumber' => 'au-2022']);
+        $hkb = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id')]);
+
+        $messen = function (int $lkjeblock) use ($DB, $lernende, $generator, $rahmen, $hkb): int {
+            static $nummer = 200;
+            for ($einsatz = 0; $einsatz < 3; $einsatz++) {
+                $nummer++;
+                $hk = $generator->create_competency([
+                    'competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hkb->get('id'),
+                ]);
+                $block = new block(0, (object) [
+                    'nummer' => (string) $nummer, 'name' => (string) $nummer, 'ist_betrieb' => true, 'aktiv' => true,
+                ]);
+                $block->create();
+                for ($i = 0; $i < $lkjeblock; $i++) {
+                    $lk = $generator->create_competency([
+                        'competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hk->get('id'),
+                    ]);
+                    (new block_lk(0, (object) [
+                        'blockid' => $block->get('id'), 'competencyid' => $lk->get('id'),
+                    ]))->create();
+                }
+                $von = time() + ($einsatz - 1) * 30 * DAYSECS;
+                (new einsatz(0, (object) [
+                    'userid' => $lernende->id, 'blockid' => $block->get('id'),
+                    'von' => $von, 'bis' => $von + WEEKSECS,
+                    'kw_von' => '2027-W01', 'kw_bis' => '2027-W02', 'importid' => 0,
+                ]))->create();
+            }
+
+            // Einmal vorab, damit Einstellungen und Profilfelder im Cache
+            // liegen und nicht beim ersten Lauf mitzaehlen.
+            (new raster_analyse())->get_raster((int) $lernende->id);
+            $vorher = $DB->perf_get_reads();
+            (new raster_analyse())->get_raster((int) $lernende->id);
+
+            return $DB->perf_get_reads() - $vorher;
+        };
+
+        $wenige = $messen(1);
+        $viele = $messen(20);
+
+        $this->assertSame($wenige, $viele);
+    }
+
+    /**
      * Der Kern des Rasters: drei unterscheidbare Staende. Zugleich die
      * beiden Stichtag-Randfaelle - ein Einsatz, der genau am Stichtag
      * beginnt, zaehlt bereits; einer, der eine Sekunde spaeter beginnt,
