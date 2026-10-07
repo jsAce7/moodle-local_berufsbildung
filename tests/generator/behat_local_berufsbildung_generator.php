@@ -71,6 +71,14 @@ class behat_local_berufsbildung_generator extends behat_generator_base {
                 'required' => ['user', 'block', 'von', 'bis'],
                 'switchids' => ['user' => 'userid', 'block' => 'blockid'],
             ],
+            // Zuordnung Berufsbildner/in - Lernende/r, laufend ab einem Jahr
+            // zurueck, sofern nichts anderes angegeben ist.
+            'assignments' => [
+                'singular' => 'assignment',
+                'datagenerator' => 'zuordnung',
+                'required' => ['trainer', 'learner'],
+                'switchids' => ['trainer' => 'berufsbildnerid', 'learner' => 'lernendeid'],
+            ],
         ];
     }
 
@@ -107,6 +115,26 @@ class behat_local_berufsbildung_generator extends behat_generator_base {
      */
     protected function get_parent_id(string $idnumber): int {
         return $idnumber === '' ? 0 : $this->get_competency_id($idnumber);
+    }
+
+    /**
+     * ID der Berufsbildner/in aus dem Benutzernamen.
+     *
+     * @param string $username
+     * @return int
+     */
+    protected function get_trainer_id(string $username): int {
+        return (int) $this->get_user_id($username);
+    }
+
+    /**
+     * ID der lernenden Person aus dem Benutzernamen.
+     *
+     * @param string $username
+     * @return int
+     */
+    protected function get_learner_id(string $username): int {
+        return (int) $this->get_user_id($username);
     }
 
     /**

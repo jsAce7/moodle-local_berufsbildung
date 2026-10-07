@@ -27,17 +27,25 @@ require_once($CFG->libdir . '/adminlib.php');
 
 use local_berufsbildung\form\block_form;
 use local_berufsbildung\persistent\block;
+use local_berufsbildung\service\block_kopie_service;
 use local_berufsbildung\service\block_kurs_service;
 use local_berufsbildung\service\rahmen_resolver;
 
 admin_externalpage_setup('local_berufsbildung_bloecke');
 
 $id = optional_param('id', 0, PARAM_INT);
+// Kopie eines bestehenden Blocks: ein neuer Block, vorbelegt mit dessen
+// Angaben; nach dem Speichern kommen seine Kompetenzen dazu.
+$kopie = $id ? 0 : optional_param('kopie', 0, PARAM_INT);
 
-$PAGE->set_url(new moodle_url('/local/berufsbildung/block_bearbeiten.php', ['id' => $id]));
-$titel = $id
-    ? get_string('block:bearbeiten', 'local_berufsbildung')
-    : get_string('block:anlegen', 'local_berufsbildung');
+$PAGE->set_url(new moodle_url('/local/berufsbildung/block_bearbeiten.php', $kopie ? ['kopie' => $kopie] : ['id' => $id]));
+if ($id) {
+    $titel = get_string('block:bearbeiten', 'local_berufsbildung');
+} else if ($kopie) {
+    $titel = get_string('block:kopieren', 'local_berufsbildung');
+} else {
+    $titel = get_string('block:anlegen', 'local_berufsbildung');
+}
 $PAGE->set_title($titel);
 $PAGE->set_heading($titel);
 $PAGE->navbar->add(
@@ -48,6 +56,7 @@ $PAGE->navbar->add($titel);
 
 $returnurl = new moodle_url('/local/berufsbildung/bloecke.php');
 $block = $id ? new block($id) : null;
+$quelle = $kopie ? new block($kopie) : null;
 
 $konfiguration = get_config('local_berufsbildung', 'beruf_rahmen_mapping');
 $berufe = (new rahmen_resolver())->alle_codes($konfiguration !== false ? (string) $konfiguration : '');
@@ -73,6 +82,19 @@ if (!$form->is_submitted() && $block !== null) {
     ]);
 }
 
+// Die Nummer bleibt leer: sie muss eindeutig sein, und eine vorbelegte
+// wuerde nur die Fehlermeldung "besteht bereits" ausloesen.
+if (!$form->is_submitted() && $quelle !== null) {
+    $form->set_data((object) [
+        'kopie' => $kopie,
+        'name' => $quelle->get('name'),
+        'beruf' => $quelle->get('beruf'),
+        'ist_betrieb' => $quelle->get('ist_betrieb') ? 1 : 0,
+        'aktiv' => $quelle->get('aktiv') ? 1 : 0,
+        'courseid' => $quelle->get('courseid') ?? 0,
+    ]);
+}
+
 if ($data = $form->get_data()) {
     if ($block === null) {
         $block = new block(0, (object) [
@@ -84,6 +106,15 @@ if ($data = $form->get_data()) {
             'courseid' => !empty($data->courseid) ? (int) $data->courseid : null,
         ]);
         $block->create();
+
+        if ($quelle !== null) {
+            $ergebnis = (new block_kopie_service())->uebernimm_kompetenzen($quelle, $block);
+            $meldung = get_string('block:kopiert', 'local_berufsbildung', (object) $ergebnis);
+            if ($ergebnis['verworfen'] > 0) {
+                $meldung .= ' ' . get_string('block:kopiert_verworfen', 'local_berufsbildung', $ergebnis['verworfen']);
+            }
+            redirect($returnurl, $meldung, null, \core\output\notification::NOTIFY_SUCCESS);
+        }
     } else {
         $block->set('nummer', $data->nummer);
         $block->set('name', $data->name);

@@ -521,6 +521,36 @@ final class api_test extends advanced_testcase {
     }
 
     /**
+     * Die Bloecke je Kompetenz fuer die Planungshilfe: nur die des Berufs,
+     * und ohne Rahmen nichts. Einen Stichtag gibt es nicht - die
+     * Kompetenzzuordnung der Bloecke hat keine Gueltigkeitsdauer.
+     */
+    public function test_get_bloecke_je_kompetenz(): void {
+        $this->resetAfterTest();
+        set_config('beruf_rahmen_mapping', 'AU_EFZ=au-2022', 'local_berufsbildung');
+        $kompetenzen = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $kompetenzen->create_framework(['idnumber' => 'au-2022']);
+        $bereich = $kompetenzen->create_competency(['competencyframeworkid' => $rahmen->get('id')]);
+        $hk = $kompetenzen->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'),
+            'parentid' => $bereich->get('id'),
+        ]);
+        $lk = $kompetenzen->create_competency(['competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hk->get('id')]);
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung');
+        foreach (['B1' => 'AU_EFZ', 'P1' => 'PM_EFZ'] as $nummer => $beruf) {
+            $block = $generator->create_block(['nummer' => $nummer, 'beruf' => $beruf]);
+            $generator->create_block_competency(['blockid' => $block->get('id'), 'competencyid' => $lk->get('id')]);
+        }
+
+        $bloecke = api::get_bloecke_je_kompetenz('AU_EFZ');
+        $this->assertSame([(int) $lk->get('id')], array_keys($bloecke));
+        $this->assertSame('B1', $bloecke[(int) $lk->get('id')][0]->get('nummer'));
+        $this->assertCount(1, $bloecke[(int) $lk->get('id')]);
+        $this->assertSame([], api::get_bloecke_je_kompetenz('PM_EFZ'));
+    }
+
+    /**
      * Die verlangten Wahlpflicht-HK je Beruf, nach Gruppen von Bereichen.
      * Einen Stichtag-Randfall gibt es nicht - die Angabe haengt am Beruf,
      * nicht am Datum.

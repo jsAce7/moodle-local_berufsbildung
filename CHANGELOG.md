@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.8.6] — 2026-10-07
+
+### Geändert
+
+- **Ausbildungsblöcke nach Beruf** (`bloecke.php`): Je Beruf eine eigene Tabelle, innerhalb nach Nummer natürlich sortiert (B2 vor B10); berufsübergreifende Blöcke stehen zuletzt. Neben dem Beruf zeigt ein Badge, wie viele Leistungskriterien noch in keinem Block vorkommen. Die Zahl der LK je Block kommt aus einer Abfrage statt einer je Block.
+- **Leistungskriterien je Block** (neue Seite `lk_abdeckung.php`, `service\lk_abdeckung_service`, `output\lk_abdeckung`): Über „LK-Übersicht“ beim Beruf stehen alle Leistungskriterien des Rahmens, gegliedert wie im Bildungsplan, und daneben die Blöcke, die sie vermitteln – selbst oder über die ganze Handlungskompetenz. Ein Filter zeigt nur die LK, die noch in keinem Block vorkommen. Wie im Kompetenzraster zählen nur aktive betriebliche Blöcke; inaktive und nicht betriebliche stehen gekennzeichnet daneben.
+- **Block kopieren** (`block_bearbeiten.php?kopie=…`, `service\block_kopie_service`): Neben „Bearbeiten“ legt „Kopieren“ einen neuen Block mit den Angaben des bestehenden an; die Nummer wird neu vergeben. Die Kompetenzzuordnung kommt mit, soweit sie im Rahmen des Berufs des neuen Blocks steht. Was nicht dazu passt, wird nicht übernommen, und die Meldung nennt die Zahl.
+- **Einrichtungsprüfung** (`bloecke.php`, `service\einrichtung_pruefung`): Oberhalb der Blöcke steht je Beruf, was dem Kompetenzraster der Lernenden fehlt – kein oder ein nicht vorhandener Kompetenzrahmen, keine Blöcke, kein aktiver betrieblicher Block mit Kompetenzen. Als Hinweis dazu: Kompetenzen in inaktiven oder nicht betrieblichen Blöcken (sie zählen im Raster nicht) und Wahlpflicht-Handlungskompetenzen ohne verlangte Anzahl.
+- **Planungshilfe im Kompetenzraster** (`api::get_bloecke_je_kompetenz()`, `kompetenzraster::render(vorschlaege: …)`): Fehlt ein Leistungskriterium im Plan einer Person, nennt der LK-Dialog die Blöcke, in denen es vorkäme („Kommt vor in: B4 Montage, B7 Labor“). Bei einer Handlungskompetenz ohne LK steht der Hinweis direkt in der Zelle. Nur ein Vorschlag; welcher Einsatz geplant wird, entscheidet die Ausbildungsplanung.
+
+### Code
+
+- **README nachgeführt**: Kompetenzraster mit vier Ständen und LK-Dialog, Blockverwaltung mit LK-Übersicht, Kopieren und Einrichtungsprüfung, Einstellung „Anzahl Wahlpflicht-Handlungskompetenzen je Beruf“, Version.
+- **Konzept korrigiert** (`docs/konzept.md`, Abschnitt 3): „Zuordnungen werden nie gelöscht“ widersprach Architekturregel 2. Jetzt stehen die drei Fälle, in denen endgültig gelöscht wird: falsch erfasst, Aufbewahrungsfrist abgelaufen, Konto der lernenden Person gelöscht. Beim Konto einer Berufsbildner/in enden laufende Zuordnungen nur.
+- **Ungenutzte Darstellung entfernt**: `output\luecken_liste` samt Template, Styles und vier Sprachstrings. Seit „Meine Lernenden“ ohne Lückenliste läuft, nutzte sie keine Seite mehr. `api::get_luecken_nach_bereich()` bleibt.
+- **Behat-Test für „Meine Lernenden“** (`tests/behat/meine_lernenden.feature`, Generator-Entität `assignments`): Badges für offene Pflicht- und Wahlpflicht-HK, Zusammenfassung, Raster mit Planungshilfe und dass fremde Lernende nicht erscheinen.
+
 ## [0.8.5] — 2026-10-07
 
 ### Geändert

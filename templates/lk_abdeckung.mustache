@@ -1,0 +1,116 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_berufsbildung/lk_abdeckung
+
+    Leistungskriterien eines Berufs mit den Bloecken, die sie vermitteln.
+    Je Handlungskompetenzbereich eine Tabelle, die Handlungskompetenzen
+    als Zwischenzeilen.
+
+    Context variables required for this template:
+    * zusammenfassung - string
+    * hatoffene - bool, mindestens ein LK ist keinem zaehlenden Block zugeordnet
+    * nuroffen - bool, der Filter "nur nicht zugeordnete" ist aktiv
+    * alleurl, offenurl - string, Adressen der beiden Filter
+    * hatbereiche - bool
+    * bereiche - array of {name, stand, hatoffene, handlungskompetenzen: [{name,
+      leistungskriterien: [{name, zugeordnet, bloecke: [{nummer, name, url, zaehlt, hinweis}]}]}]}
+
+    Example context (json):
+    {
+        "zusammenfassung": "1 von 2 Leistungskriterien ist einem Block zugeordnet, 1 noch nicht.",
+        "hatoffene": true,
+        "nuroffen": false,
+        "alleurl": "#",
+        "offenurl": "#",
+        "hatbereiche": true,
+        "bereiche": [
+            {
+                "name": "a Entwickeln von Anlagen",
+                "stand": "1 von 2 LK zugeordnet",
+                "hatoffene": true,
+                "handlungskompetenzen": [
+                    {
+                        "name": "a.01 Fertigungsunterlagen erstellen",
+                        "leistungskriterien": [
+                            {"name": "AU a1 01", "zugeordnet": true, "bloecke": [
+                                {"nummer": "B1", "name": "Werkstatt", "url": "#", "zaehlt": true, "hinweis": ""}
+                            ]},
+                            {"name": "AU a1 02", "zugeordnet": false, "bloecke": [
+                                {"nummer": "B9", "name": "Schule", "url": "#", "zaehlt": false, "hinweis": "nicht betrieblich"}
+                            ]}
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}}
+<div class="local-berufsbildung-lkabdeckung">
+    <p class="local-berufsbildung-lkabdeckung-zusammenfassung">
+        {{#hatoffene}}<i class="icon fa fa-exclamation-triangle fa-fw text-warning" aria-hidden="true"></i>{{/hatoffene}}
+        {{^hatoffene}}<i class="icon fa fa-check fa-fw text-success" aria-hidden="true"></i>{{/hatoffene}}
+        {{zusammenfassung}}
+    </p>
+
+    <div class="btn-group mb-3" role="group" aria-label="{{#str}} lkabdeckung:filter, local_berufsbildung {{/str}}">
+        <a href="{{alleurl}}" class="btn btn-sm {{#nuroffen}}btn-outline-secondary{{/nuroffen}}{{^nuroffen}}btn-secondary{{/nuroffen}}"
+            {{^nuroffen}}aria-current="true"{{/nuroffen}}>{{#str}} lkabdeckung:filter_alle, local_berufsbildung {{/str}}</a>
+        <a href="{{offenurl}}" class="btn btn-sm {{#nuroffen}}btn-secondary{{/nuroffen}}{{^nuroffen}}btn-outline-secondary{{/nuroffen}}"
+            {{#nuroffen}}aria-current="true"{{/nuroffen}}>{{#str}} lkabdeckung:filter_offen, local_berufsbildung {{/str}}</a>
+    </div>
+
+    {{^hatbereiche}}
+        <p class="text-muted">{{#str}} lkabdeckung:keine_offenen, local_berufsbildung {{/str}}</p>
+    {{/hatbereiche}}
+
+    {{#bereiche}}
+        <h3 class="h5 mt-4">
+            {{name}}
+            <span class="badge {{#hatoffene}}bg-warning text-dark{{/hatoffene}}{{^hatoffene}}bg-success text-white{{/hatoffene}} local-berufsbildung-abstand-links">{{stand}}</span>
+        </h3>
+        <table class="table generaltable local-berufsbildung-lkabdeckung-tabelle">
+            <thead>
+                <tr>
+                    <th scope="col">{{#str}} lkabdeckung:spalte_lk, local_berufsbildung {{/str}}</th>
+                    <th scope="col">{{#str}} lkabdeckung:spalte_bloecke, local_berufsbildung {{/str}}</th>
+                </tr>
+            </thead>
+            {{#handlungskompetenzen}}
+                <tbody>
+                    <tr class="local-berufsbildung-lkabdeckung-hk">
+                        <th scope="colgroup" colspan="2">{{name}}</th>
+                    </tr>
+                    {{#leistungskriterien}}
+                        <tr>
+                            <td>{{name}}</td>
+                            <td>
+                                {{#bloecke}}
+                                    <a href="{{url}}" title="{{name}}"
+                                        class="badge {{#zaehlt}}bg-info text-white{{/zaehlt}}{{^zaehlt}}bg-light text-muted border{{/zaehlt}} local-berufsbildung-lkabdeckung-block">{{nummer}} {{name}}{{#hinweis}} ({{hinweis}}){{/hinweis}}</a>
+                                {{/bloecke}}
+                                {{^zugeordnet}}
+                                    <span class="badge bg-warning text-dark">{{#str}} lkabdeckung:nicht_zugeordnet, local_berufsbildung {{/str}}</span>
+                                {{/zugeordnet}}
+                            </td>
+                        </tr>
+                    {{/leistungskriterien}}
+                </tbody>
+            {{/handlungskompetenzen}}
+        </table>
+    {{/bereiche}}
+</div>
