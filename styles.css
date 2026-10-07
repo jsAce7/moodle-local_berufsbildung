@@ -1105,3 +1105,21 @@
 .local-berufsbildung-kachel[open] .local-berufsbildung-kachel-chevron {
     transform: rotate(180deg);
 }
+
+/*
+ * LK-Uebersicht je Beruf (lk_abdeckung.php): je Bereich eine eigene
+ * Tabelle. Mit fester Spaltenbreite liegt die Spalte der Bloecke in allen
+ * Tabellen buendig, statt sich je Tabelle nach dem laengsten Text zu
+ * richten.
+ */
+.local-berufsbildung-lkabdeckung-tabelle {
+    table-layout: fixed;
+}
+
+.local-berufsbildung-lkabdeckung-tabelle thead th:first-child {
+    width: 35%;
+}
+
+.local-berufsbildung-lkabdeckung-tabelle td {
+    overflow-wrap: anywhere;
+}
