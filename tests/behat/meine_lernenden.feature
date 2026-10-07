@@ -49,7 +49,7 @@ Feature: Meine Lernenden
     And I visit "/local/berufsbildung/meine_lernenden.php"
     Then I should see "2 trainees · 2 with open gaps"
     And I should see "1 still open" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Lea Lernende')]" "xpath_element"
-    And I should see "1 elective open" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Lea Lernende')]" "xpath_element"
+    And I should see "1 elective(s) open" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Lea Lernende')]" "xpath_element"
     And I should see "2 still open" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Tom Tester')]" "xpath_element"
     And I should see "1 of 2 required complete" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Lea Lernende')]" "xpath_element"
 
