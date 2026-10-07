@@ -26,8 +26,6 @@ declare(strict_types=1);
 
 namespace local_berufsbildung\nachweis;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Test-Provider, der jeden Aufruf protokolliert - damit sichtbar wird, ob
  * er ueberhaupt gefragt wurde (Architekturregel 7: nie ungeprueft

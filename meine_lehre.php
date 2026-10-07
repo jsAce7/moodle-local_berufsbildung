@@ -113,7 +113,7 @@ if ($stand !== null) {
     echo semester_stepper::render($stand->semester, $stand->gesamtsemester);
 
     if (!$istbeendet) {
-        // "Wo bin ich gerade" - die unmittelbarste Information des Plans,
+        // Wo bin ich gerade? Die unmittelbarste Information des Plans,
         // und nur solange die Lehre laeuft ueberhaupt eine Frage.
         $einsatz = api::get_aktueller_einsatz($lernendeid);
         if ($einsatz !== null) {
@@ -198,13 +198,12 @@ if ($stand !== null) {
     // Stand, die Liste nur ohne die Kuerzel, ueber die man sie im Raster
     // wiederfinden wuerde. Die Bezugsgroesse ("x von y abgedeckt") bringt
     // das Raster selbst mit, welche Kompetenzen offen sind, steht in seinen
-    // Zellen. Fuer die Berufsbildner/innen bleibt die Liste in
-    // meine_lernenden.php - dort ist das Raster kompakt und zeigt nur
-    // Kuerzel.
+    // Zellen. Ebenso auf meine_lernenden.php.
     if (!$istbeendet && api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null) {
         echo $abschnitt(kompetenzraster::render(
             api::get_kompetenzraster($lernendeid),
-            api::get_planungshorizont($lernendeid)
+            api::get_planungshorizont($lernendeid),
+            wahlpflichtgruppen: api::get_wahlpflicht_gruppen_for_beruf($stand->beruf)
         ));
     }
 

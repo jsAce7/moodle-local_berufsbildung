@@ -26,8 +26,6 @@ declare(strict_types=1);
 
 namespace local_berufsbildung\nachweis;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Test-Provider, der festhaelt, ob er nach Ausstehendem gefragt wurde -
  * damit pruefbar ist, dass der Collector vorher die Zustaendigkeit prueft

@@ -38,6 +38,7 @@ use local_berufsbildung\persistent\kohorten_link;
 use local_berufsbildung\persistent\plan_import;
 use local_berufsbildung\persistent\zuordnung;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\privacy\provider::class)]
 /**
  * Tests fuer provider.
  *
@@ -127,7 +128,9 @@ final class provider_test extends \core_privacy\tests\provider_testcase {
         $this->export_all_data_for_user((int) $berufsbildner->id, 'local_berufsbildung');
         $berufsbildnerwriter = writer::with_context(context_user::instance((int) $berufsbildner->id));
         $this->assertTrue($berufsbildnerwriter->has_any_data());
-        $zuordnungsdaten = $berufsbildnerwriter->get_data([get_string('privacy:pfad_zuordnungen_berufsbildner', 'local_berufsbildung')]);
+        $zuordnungsdaten = $berufsbildnerwriter->get_data([
+            get_string('privacy:pfad_zuordnungen_berufsbildner', 'local_berufsbildung'),
+        ]);
         $this->assertCount(1, $zuordnungsdaten->zuordnungen);
         $linkdaten = $berufsbildnerwriter->get_data([get_string('privacy:pfad_kohortenlinks', 'local_berufsbildung')]);
         $this->assertCount(1, $linkdaten->kohorten_links);

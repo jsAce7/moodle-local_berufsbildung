@@ -62,6 +62,10 @@ class lernenden_kachel {
      *        ohne Schnellaktionen ohne Bedeutung.
      * @param schnellaktion[] $schnellaktionen Aus collector::get_schnellaktionen(),
      *        stehen in der Kopfzeile, ohne dass die Kachel aufklappt.
+     * @param int $anzahlwahlpflichtoffen Verlangte Wahlpflicht-HK, die noch nicht
+     *        vorkamen, siehe wahlpflicht_gruppe::offen(); 0 unterdrueckt das Badge.
+     *        Getrennt von $anzahlluecken: das zaehlt bestimmte fehlende HK, hier
+     *        fehlt eine Anzahl, die man aus mehreren waehlen kann.
      */
     public static function render(
         string $name,
@@ -74,7 +78,8 @@ class lernenden_kachel {
         int $anzahlueberfaellig = 0,
         bool $istextern = false,
         int $lernendeid = 0,
-        array $schnellaktionen = []
+        array $schnellaktionen = [],
+        int $anzahlwahlpflichtoffen = 0
     ): string {
         global $OUTPUT;
 
@@ -92,6 +97,8 @@ class lernenden_kachel {
                 'semester' => $stand->semester,
             ]) : '',
             'stepper' => $stand !== null ? semester_stepper::render($stand->semester, $stand->gesamtsemester, kompakt: true) : '',
+            'haswahlpflichtoffen' => $anzahlwahlpflichtoffen > 0,
+            'anzahlwahlpflichtoffen' => $anzahlwahlpflichtoffen,
             'hasluecken' => $anzahlluecken > 0,
             'anzahlluecken' => $anzahlluecken,
             'hasueberfaellig' => $anzahlueberfaellig > 0,

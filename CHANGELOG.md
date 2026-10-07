@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.8.4] — 2026-10-06
+
+### Geändert
+
+- **Kompetenzraster zeigt den Stand als Fläche** (`classes/output/kompetenzraster.php`, `templates/kompetenzraster.mustache`, `styles.css`): Die Zellenfläche zeigt jetzt den Ausbildungsstand in Türkis – kräftig gefüllt „bereits vorgekommen“, hell gefüllt „später eingeplant“, weiss „nicht im Plan“. Pflicht oder Wahlpflicht steht als schmaler Streifen oben in der Zelle, in den Farben des Bildungsplans. Bisher belegte die Pflicht/Wahlpflicht-Farbe die ganze Fläche, und der Stand war nur an einem kleinen Symbol zu erkennen.
+- **Zahlen im Raster beschriftet**: Die Zusammenfassung trennt „bereits vorgekommen“, „später eingeplant“ und „nicht im Plan“ („14 Pflicht-Handlungskompetenzen: 3 bereits vorgekommen, 5 später eingeplant, 6 nicht im Plan“). Je Zeile steht „1 von 3 Pflicht bereits vorgekommen“ statt „1 von 3“.
+- **Hinweis statt „0 von 14“**: Kommt keine Handlungskompetenz im Plan vor, erklärt das Raster den Grund – meist fehlt die Kompetenzzuordnung der Ausbildungsblöcke. Wer Blöcke pflegen darf, bekommt einen Link dorthin. Ohne Versetzungsplan sagt der Hinweis das.
+- **Leistungskriterien je Zelle im Raster** (`raster_analyse`, `raster_kompetenz::$leistungskriterien`, `plan_service::get_zugeordnete_kompetenzen()`): Eine Handlungskompetenz gilt weiterhin als vorgekommen, sobald eines ihrer Leistungskriterien in einem Einsatz vorkommt. Neu zeigt die Zelle, wie weit sie ist („2 von 4 LK vorgekommen, 1 eingeplant“). Ein Klick darauf öffnet einen Dialog mit allen Leistungskriterien samt Text, gruppiert nach „Fehlt noch“, „Später eingeplant“ und „Bereits vorgekommen“ (`amd/src/kompetenzraster.js`). Ohne JavaScript klappt die Liste in der Zelle auf. Ist eine Handlungskompetenz als Ganzes einem Block zugeordnet, zählen alle ihre LK.
+- **Kompetenzauswahl: Zugeordnetes lässt sich abwählen** (`block_kompetenzen.php`, `templates/kompetenz_auswahl.mustache`): Bereits zugeordnete Kompetenzen stehen angekreuzt in der Auswahl; abwählen und „Auswahl speichern“ entfernt sie. Ein Suchfilter entfernt dabei nichts, was er ausgeblendet hat. Die Auswahl bleibt auch stehen, wenn alles zugeordnet ist.
+- **Kompetenzauswahl zählt Leistungskriterien** (`kompetenz_auswahl::stand()`): Der Bereichskopf zeigt „12 von 40 LK“ statt „1 von 7 HK“. Eine Handlungskompetenz ist kaum je ganz in einem Block, die LK zeigen den Fortschritt. Unter einer als Ganzes zugeordneten HK zählen alle ihre LK.
+
+- **Wahlpflicht-Soll je Gruppe von Bereichen** (Einstellung „Anzahl Wahlpflicht-Handlungskompetenzen je Beruf“, `api::get_wahlpflicht_gruppen_for_beruf()`, `wahlpflicht_gruppe`): Der Bildungsplan verlangt eine Anzahl Wahlpflicht-Handlungskompetenzen, oft aus bestimmten Bereichen – etwa eine aus a, b und c zusammen und eine aus d. Das lässt sich als `AU_EFZ=a,b,c:1; d:1` hinterlegen, `AU_EFZ=3` gilt für den ganzen Beruf. Das Raster zeigt je Gruppe eine Zeile („Wahlpflicht aus a, b, c: verlangt 1, bereits vorgekommen 1, später eingeplant 0“) und markiert erfüllte Gruppen. Ohne Eintrag bleibt alles wie bisher.
+- **Offene Wahlpflicht auf der Kachel** (`lernenden_kachel`, `wahlpflicht_gruppe::stand()`/`offen()`): Neben „x noch offen“ (Pflicht) steht auf „Meine Lernenden“ ein Badge „1 Wahlpflicht offen“, solange eine verlangte Wahlpflicht-Handlungskompetenz noch nicht vorkam. Die Zusammenfassung „… mit offenen Lücken“ zählt solche Personen mit. Raster und Kachel zählen mit derselben Methode.
+- **„Meine Lernenden“ ohne Lückenliste**: Je Person steht nur noch das Raster. Was fehlt, zeigen die weissen Zellen und je Zelle der Dialog; die Zahl der fehlenden Pflicht-Handlungskompetenzen trägt weiterhin das Badge der Kachel.
+- **Kompetenzraster mit wenigen Datenbankabfragen** (`plan_service`, `raster_analyse`): Für eine Person mit acht Einsätzen und 90 zugeordneten Leistungskriterien brauchte das Raster 548 Lesezugriffe, auf „Meine Lernenden“ mit zehn Personen über 5000. Jetzt sind es 11 je Person, unabhängig von der Zahl der Leistungskriterien.
+
+### Code
+
+- **Konzept nachgeführt** (`docs/konzept.md`, neuer Abschnitt 5.9): Kompetenzraster, Stand je HK und LK, Pflicht und Wahlpflicht mit Wahlpflicht-Gruppen, die zugehörigen API-Methoden und Wertobjekte. Abschnitt 4 verweist für die vollständige API auf `classes/api.php`.
+- **PHPUnit-Attribute** (`#[CoversClass]`, `#[DataProvider]`) neben den Docblock-Angaben: PHPUnit 12 liest die Docblocks nicht mehr. Die Docblocks bleiben für PHPUnit 9 unter Moodle 4.5.
+- **Keine Warnungen des Code-Checkers mehr**: 49 Warnungen behoben (zu lange Zeilen, Kommentare in Kleinschreibung, fehlende Docblocks an Test-Hilfsmethoden, überflüssige `MOODLE_INTERNAL`-Prüfungen). Die CI läuft den Code-Checker jetzt mit `--max-warnings 0`, damit es so bleibt.
+
+### Tests
+
+- Behat-Szenarien für das Raster auf „Meine Lehre“ und für das Abwählen in der Kompetenzauswahl. Der Behat-Generator legt dafür auch Lernende mit Beruf und Jahrgang sowie Einsätze an.
+
 ## [0.8.3] — 2026-10-06
 
 ### Geändert

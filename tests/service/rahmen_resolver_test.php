@@ -28,6 +28,7 @@ namespace local_berufsbildung\service;
 
 use advanced_testcase;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\rahmen_resolver::class)]
 /**
  * Tests fuer rahmen_resolver.
  *

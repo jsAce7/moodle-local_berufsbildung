@@ -29,6 +29,7 @@ namespace local_berufsbildung\output;
 use advanced_testcase;
 use local_berufsbildung\persistent\einsatz;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\einsatz_timeline::class)]
 /**
  * Tests fuer einsatz_timeline.
  *

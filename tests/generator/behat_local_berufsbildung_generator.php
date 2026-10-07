@@ -25,8 +25,8 @@
 declare(strict_types=1);
 
 /**
- * Testdaten fuer Behat: Ausbildungsblöcke, deren Kompetenzzuordnung und ein
- * gegliederter Kompetenzrahmen.
+ * Testdaten fuer Behat: Ausbildungsblöcke, deren Kompetenzzuordnung, ein
+ * gegliederter Kompetenzrahmen sowie Lernende mit ihren Einsaetzen.
  *
  * Aufruf z.B. mit 'the following "local_berufsbildung > blocks" exist:'.
  */
@@ -57,6 +57,19 @@ class behat_local_berufsbildung_generator extends behat_generator_base {
                 'datagenerator' => 'block_competency',
                 'required' => ['block', 'competency'],
                 'switchids' => ['block' => 'blockid', 'competency' => 'competencyid'],
+            ],
+            // Mit Beruf und Jahrgang im Profil, damit sich ihr
+            // Ausbildungsstand aufloesen laesst.
+            'learners' => [
+                'singular' => 'learner',
+                'datagenerator' => 'lernende',
+                'required' => ['username'],
+            ],
+            'placements' => [
+                'singular' => 'placement',
+                'datagenerator' => 'einsatz',
+                'required' => ['user', 'block', 'von', 'bis'],
+                'switchids' => ['user' => 'userid', 'block' => 'blockid'],
             ],
         ];
     }
@@ -109,6 +122,19 @@ class behat_local_berufsbildung_generator extends behat_generator_base {
         }
 
         return (int) $block->get('id');
+    }
+
+    /**
+     * Passwort wie beim Behat-Generator fuer "users": gleich dem
+     * Benutzernamen, damit "I log in as" funktioniert.
+     *
+     * @param array $data
+     * @return array
+     */
+    protected function preprocess_lernende(array $data): array {
+        $data += ['password' => $data['username']];
+
+        return $data;
     }
 
     /**

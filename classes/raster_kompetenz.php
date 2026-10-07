@@ -54,6 +54,8 @@ class raster_kompetenz {
      * @param int $competencyid competencyid der Handlungskompetenz (zweite Ebene)
      * @param string $status Eine der STATUS_*-Konstanten
      * @param bool $istwahlpflicht Wahlpflicht-HK dieses Berufs - zaehlt nicht in die Bezugsgroesse
+     * @param array $leistungskriterien competencyid => STATUS_* je Leistungskriterium dieser HK,
+     *                           in Rahmenreihenfolge; leer, wenn die HK keine hat
      */
     public function __construct(
         /** @var int competencyid der Handlungskompetenz (zweite Ebene). */
@@ -62,7 +64,21 @@ class raster_kompetenz {
         public readonly string $status,
         /** @var bool Wahlpflicht-HK dieses Berufs - zaehlt nicht in die Bezugsgroesse. */
         public readonly bool $istwahlpflicht,
+        /** @var array<int, string> competencyid => STATUS_* je Leistungskriterium dieser HK. */
+        public readonly array $leistungskriterien = [],
     ) {
+    }
+
+    /**
+     * Anzahl Leistungskriterien dieser HK mit dem gegebenen Stand.
+     *
+     * @param string $status Eine der STATUS_*-Konstanten
+     */
+    public function anzahl_lk(string $status): int {
+        return count(array_filter(
+            $this->leistungskriterien,
+            static fn (string $lkstatus): bool => $lkstatus === $status
+        ));
     }
 
     /**

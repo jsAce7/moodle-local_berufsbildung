@@ -29,6 +29,8 @@ namespace local_berufsbildung\service;
 use advanced_testcase;
 use context_system;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\leitungsrolle_service::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\observer::class)]
 /**
  * Tests fuer leitungsrolle_service und den Observer, der ihn ausloest.
  *

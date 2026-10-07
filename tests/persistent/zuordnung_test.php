@@ -28,6 +28,7 @@ namespace local_berufsbildung\persistent;
 
 use advanced_testcase;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\persistent\zuordnung::class)]
 /**
  * Tests fuer zuordnung.
  *

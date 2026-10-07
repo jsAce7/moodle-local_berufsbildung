@@ -111,6 +111,10 @@ class kompetenz_auswahl {
                     $lkeintrag = self::eintrag($lk, $zugeordnet, false);
                     $lkeintrag['istabgedeckt'] = !$lkeintrag['istzugeordnet'] && $hkstand['direkt'];
                     $lkeintrag['waehlbar'] = !$lkeintrag['istzugeordnet'] && !$lkeintrag['istabgedeckt'];
+                    // Zugeordnetes steht angekreuzt da und laesst sich
+                    // abwaehlen; ein ueber die HK abgedecktes LK nicht - es
+                    // faellt weg, sobald man die HK abwaehlt.
+                    $lkeintrag['hatcheckbox'] = $lkeintrag['waehlbar'] || $lkeintrag['istzugeordnet'];
                     $lkeintrag['erledigt'] = !$lkeintrag['waehlbar'];
                     $lkeintrag['abgedeckttext'] = $abgedecktdurch;
                     $leistungskriterien[] = $lkeintrag;
@@ -137,6 +141,7 @@ class kompetenz_auswahl {
 
                 $handlungskompetenzen[] = $hk + [
                     'waehlbar' => !$hkstand['ganz'],
+                    'hatcheckbox' => !$hkstand['ganz'] || $hk['istzugeordnet'],
                     'erledigt' => $hkstand['ganz'],
                     'hatteilstand' => $teilstand,
                     'teilstandtext' => $teilstand ? get_string('blocklk:lk_stand', 'local_berufsbildung', (object) [
@@ -162,18 +167,14 @@ class kompetenz_auswahl {
                 'suchtext' => self::suchtext($zweig['bereich']),
                 'handlungskompetenzen' => $handlungskompetenzen,
                 'hatstand' => $bereichstand['anzahl'] > 0,
-                'standtext' => get_string(
-                    $bereichstand['teilweise'] > 0 ? 'blocklk:bereich_stand_teilweise' : 'blocklk:bereich_stand',
-                    'local_berufsbildung',
-                    (object) $bereichstand
-                ),
-                'standvollstaendig' => $bereichstand['anzahl'] > 0 && $bereichstand['ganz'] === $bereichstand['anzahl'],
+                'standtext' => get_string('blocklk:bereich_stand', 'local_berufsbildung', (object) $bereichstand),
+                'standvollstaendig' => $bereichstand['anzahl'] > 0 && $bereichstand['zugeordnet'] === $bereichstand['anzahl'],
                 // Aufgeklappt starten, wo noch etwas zu tun ist. Der Bereich
                 // zeigt dann seine Handlungskompetenzen als kurze Liste; die
                 // Leistungskriterien darunter bleiben zugeklappt, sonst waeren
                 // es ueber alle Bereiche mehrere hundert Zeilen und die
                 // HK-Namen gingen darin unter.
-                'offen' => $suchaktiv || $bereichstand['ganz'] < $bereichstand['anzahl'],
+                'offen' => $suchaktiv || $bereichstand['zugeordnet'] < $bereichstand['anzahl'],
             ];
         }
 
@@ -202,7 +203,7 @@ class kompetenz_auswahl {
             'hatnichtgefunden' => !empty($nichtgefunden) && !empty($bereiche),
             'nichtgefunden' => implode(', ', $nichtgefunden),
             'nichtgefundenlabel' => get_string('blocklk:suche_nicht_gefunden', 'local_berufsbildung'),
-            'absenden' => get_string('blocklk:hinzufuegen', 'local_berufsbildung'),
+            'absenden' => get_string('blocklk:speichern', 'local_berufsbildung'),
             'zugeordnettext' => get_string('blocklk:bereits_zugeordnet', 'local_berufsbildung'),
         ]);
     }
@@ -211,9 +212,9 @@ class kompetenz_auswahl {
      * Zuordnungsstand des ganzen Baums, ohne Datenbankzugriff.
      *
      * Eine Handlungskompetenz ist "ganz" zugeordnet, wenn sie selbst
-     * zugeordnet ist oder alle ihre Leistungskriterien einzeln. Sind nur
-     * einige ihrer Leistungskriterien zugeordnet, zaehlt sie im Bereich als
-     * "teilweise".
+     * zugeordnet ist oder alle ihre Leistungskriterien einzeln. Der Bereich
+     * zaehlt die zugeordneten Leistungskriterien; unter einer als Ganzes
+     * zugeordneten Handlungskompetenz gelten alle ihre LK als zugeordnet.
      *
      * Waehlbar ist, was eine neue Zuordnung noch etwas aendern wuerde: keine
      * bereits zugeordnete Kompetenz, kein Leistungskriterium unter einer
@@ -224,7 +225,7 @@ class kompetenz_auswahl {
      * @param array $baum Ergebnis von service\kompetenz_baum::baum(), ungefiltert
      * @param array $zugeordnet competencyid => beliebiger Wert, geprueft wird nur der Schluessel
      * @return array{handlungskompetenzen: array<int, array{direkt: bool, ganz: bool, lkanzahl: int,
-     *               lkzugeordnet: int}>, bereiche: array<int, array{anzahl: int, ganz: int, teilweise: int}>,
+     *               lkzugeordnet: int}>, bereiche: array<int, array{anzahl: int, zugeordnet: int}>,
      *               waehlbar: array<int, true>}
      */
     public static function stand(array $baum, array $zugeordnet): array {
@@ -233,7 +234,11 @@ class kompetenz_auswahl {
         $waehlbar = [];
 
         foreach ($baum as $zweig) {
-            $bereich = ['anzahl' => 0, 'ganz' => 0, 'teilweise' => 0];
+            // Der Bereich zaehlt Leistungskriterien, nicht Handlungskompetenzen:
+            // ein Block deckt eine HK kaum je ganz ab - ganz abgeschlossen
+            // sind sie erst am Ende der Lehre. "0 von 7 HK" sagte deshalb
+            // fast immer dasselbe, die LK zeigen den Fortschritt.
+            $bereich = ['anzahl' => 0, 'zugeordnet' => 0];
 
             foreach ($zweig['handlungskompetenzen'] as $eintrag) {
                 $hkid = (int) $eintrag['kompetenz']->get('id');
@@ -262,12 +267,11 @@ class kompetenz_auswahl {
                     'lkzugeordnet' => $lkzugeordnet,
                 ];
 
-                $bereich['anzahl']++;
-                if ($ganz) {
-                    $bereich['ganz']++;
-                } else if ($lkzugeordnet > 0) {
-                    $bereich['teilweise']++;
-                }
+                // Unter einer als Ganzes zugeordneten HK zaehlen alle ihre LK
+                // als zugeordnet. Eine HK ohne LK zaehlt als eine Einheit.
+                $einheiten = max($lkanzahl, 1);
+                $bereich['anzahl'] += $einheiten;
+                $bereich['zugeordnet'] += $direkt ? $einheiten : $lkzugeordnet;
             }
 
             $bereiche[(int) $zweig['bereich']->get('id')] = $bereich;

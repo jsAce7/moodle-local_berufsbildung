@@ -43,12 +43,16 @@ class raster_bereich {
      *
      * @param int $bereichid competencyid des Handlungskompetenzbereichs (oberste Ebene)
      * @param raster_kompetenz[] $kompetenzen Alle HK des Bereichs in Rahmenreihenfolge
+     * @param string $kuerzel Kuerzel des Bereichs wie im Bildungsplan ("a"), fuer die
+     *                        Wahlpflicht-Gruppen; leer, wenn die ID-Nummer keines hergibt
      */
     public function __construct(
         /** @var int competencyid des Handlungskompetenzbereichs (oberste Ebene). */
         public readonly int $bereichid,
         /** @var array Alle HK des Bereichs in Rahmenreihenfolge. */
         public readonly array $kompetenzen,
+        /** @var string Kuerzel des Bereichs wie im Bildungsplan, z. B. "a". */
+        public readonly string $kuerzel = '',
     ) {
     }
 

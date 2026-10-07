@@ -42,12 +42,19 @@ require_once(__DIR__ . '/../fixtures/collector_test_ausstehend_provider.php');
 require_once(__DIR__ . '/../fixtures/collector_test_zustaendigen_provider.php');
 require_once(__DIR__ . '/../fixtures/collector_test_schnellaktion_provider.php');
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\nachweis\collector::class)]
 /**
  * Tests fuer collector.
  *
  * @covers \local_berufsbildung\nachweis\collector
  */
 final class collector_test extends advanced_testcase {
+    /**
+     * Legt eine Zuordnung zwischen Berufsbildner/in und Lernender an.
+     *
+     * @param int $berufsbildnerid
+     * @param int $lernendeid
+     */
     private function lege_zuordnung_an(int $berufsbildnerid, int $lernendeid): void {
         $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_zuordnung([
             'berufsbildnerid' => $berufsbildnerid,

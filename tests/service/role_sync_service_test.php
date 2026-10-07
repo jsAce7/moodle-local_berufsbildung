@@ -30,6 +30,7 @@ use advanced_testcase;
 use context_system;
 use context_user;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\role_sync_service::class)]
 /**
  * Tests fuer role_sync_service.
  *
@@ -83,6 +84,14 @@ final class role_sync_service_test extends advanced_testcase {
         return (int) $roleid;
     }
 
+    /**
+     * Legt eine Zuordnung zwischen Berufsbildner/in und Lernender an.
+     *
+     * @param int $berufsbildnerid
+     * @param int $lernendeid
+     * @param int $von
+     * @param int|null $bis
+     */
     private function lege_zuordnung_an(int $berufsbildnerid, int $lernendeid, int $von, ?int $bis = null): void {
         $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_zuordnung([
             'berufsbildnerid' => $berufsbildnerid,

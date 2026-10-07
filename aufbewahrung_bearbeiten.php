@@ -59,7 +59,7 @@ if (!$form->is_submitted() && $eintrag !== null) {
         'lernendeid' => $eintrag->get('lernendeid'),
         'grund' => $eintrag->get('grund'),
         'gueltig_von' => $eintrag->get('gueltig_von'),
-        // date_selector mit optional => true erwartet 0 statt null fuer
+        // Ein date_selector mit optional => true erwartet 0 statt null fuer
         // "kein Datum" (siehe zuordnung_beenden.php).
         'gueltig_bis' => $eintrag->get('gueltig_bis') ?? 0,
     ]);

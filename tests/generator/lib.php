@@ -22,8 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Erzeugt Testdaten fuer local_berufsbildung, aufrufbar ueber
  * $this->getDataGenerator()->get_plugin_generator('local_berufsbildung').
@@ -135,5 +133,30 @@ class local_berufsbildung_generator extends component_generator_base {
         $abdeckung->create();
 
         return $abdeckung;
+    }
+
+    /**
+     * Legt einen Einsatz aus dem Versetzungsplan an.
+     *
+     * @param array $record Muss userid, blockid, von und bis enthalten.
+     * @return \local_berufsbildung\persistent\einsatz
+     */
+    public function create_einsatz(array $record): \local_berufsbildung\persistent\einsatz {
+        foreach (['userid', 'blockid', 'von', 'bis'] as $feld) {
+            if (empty($record[$feld])) {
+                throw new coding_exception('create_einsatz() benoetigt ' . $feld);
+            }
+        }
+
+        $record += [
+            'kw_von' => date('o-\\WW', (int) $record['von']),
+            'kw_bis' => date('o-\\WW', (int) $record['bis']),
+            'importid' => 0,
+        ];
+
+        $einsatz = new \local_berufsbildung\persistent\einsatz(0, (object) $record);
+        $einsatz->create();
+
+        return $einsatz;
     }
 }

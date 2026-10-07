@@ -40,7 +40,6 @@ use local_berufsbildung\output\faelligkeiten_liste;
 use local_berufsbildung\output\kompetenzraster;
 use local_berufsbildung\output\lernenden_kachel;
 use local_berufsbildung\output\lernenden_roster;
-use local_berufsbildung\output\luecken_liste;
 use local_berufsbildung\output\nachweis_liste;
 
 require_login();
@@ -137,13 +136,19 @@ if (empty($eintraege)) {
     // in der Toolbar unabhaengig von Suche/Filter bleibt.
     //
     // Einmal das Raster, daraus beides: die Zahl fuer die Kachel und
-    // weiter unten Lueckenliste wie Raster. Sonst liefe dieselbe
-    // Auswertung je Person mehrfach.
+    // weiter unten das Raster selbst. Sonst liefe dieselbe Auswertung je
+    // Person mehrfach.
     $raster = [];
     $anzahlluecken = [];
+    // Verlangte Wahlpflicht-HK, die noch nicht vorkamen - je Person, aber
+    // die Gruppen nur einmal je Beruf aus der Einstellung gelesen.
+    $anzahlwahlpflichtoffen = [];
+    $wahlpflichtgruppen = [];
     foreach ($eintraege as $eintrag) {
         $stand = $eintrag['stand'];
-        $raster[$eintrag['id']] = (!$eintrag['istextern'] && $stand !== null && api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null)
+        $mitraster = !$eintrag['istextern'] && $stand !== null
+            && api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null;
+        $raster[$eintrag['id']] = $mitraster
             ? api::get_kompetenzraster($eintrag['id'])
             : [];
 
@@ -152,8 +157,22 @@ if (empty($eintraege)) {
             $offen += count($abdeckung->luecken);
         }
         $anzahlluecken[$eintrag['id']] = $offen;
+
+        $wahlpflichtoffen = 0;
+        if ($mitraster) {
+            $wahlpflichtgruppen[$stand->beruf] ??= api::get_wahlpflicht_gruppen_for_beruf($stand->beruf);
+            foreach ($wahlpflichtgruppen[$stand->beruf] as $gruppe) {
+                $wahlpflichtoffen += $gruppe->offen($raster[$eintrag['id']]);
+            }
+        }
+        $anzahlwahlpflichtoffen[$eintrag['id']] = $wahlpflichtoffen;
     }
-    $anzahlmitluecken = count(array_filter($anzahlluecken, static fn (int $anzahl): bool => $anzahl > 0));
+    // Mit Luecken heisst: eine fehlende Pflicht-HK oder eine noch offene
+    // verlangte Wahlpflicht-HK - beides steht als Badge auf der Kachel.
+    $anzahlmitluecken = count(array_filter(
+        array_keys($anzahlluecken),
+        static fn (int $id): bool => $anzahlluecken[$id] > 0 || $anzahlwahlpflichtoffen[$id] > 0
+    ));
 
     echo html_writer::start_tag('div', ['class' => 'card mb-3 local-berufsbildung-roster-steuerung']);
     echo html_writer::start_tag('div', ['class' => 'card-body']);
@@ -241,14 +260,16 @@ if (empty($eintraege)) {
         }
 
         if (!empty($raster[$lernendeid])) {
-            // Beides, anders als auf meine_lehre.php: die Lueckenliste
-            // beantwortet die Planungsfrage "was muss ich noch einplanen"
-            // als kurze Aufzaehlung, das Raster zeigt daneben die ganze
-            // Karte. Fuer die lernende Person waere das doppelt - sie
-            // plant nicht, sie schaut nach, wo sie steht.
-            echo luecken_liste::render(api::abdeckung_aus_raster($raster[$lernendeid]), kompakt: false);
+            // Nur das Raster, ohne Lueckenliste daneben - wie auf
+            // meine_lehre.php. Was fehlt, zeigt es selbst: die weissen
+            // Zellen, und je Zelle die fehlenden LK im Dialog. Die Zahl
+            // der fehlenden Pflicht-HK traegt das Badge der Kachel.
             echo html_writer::div(
-                kompetenzraster::render($raster[$lernendeid], api::get_planungshorizont($lernendeid)),
+                kompetenzraster::render(
+                    $raster[$lernendeid],
+                    api::get_planungshorizont($lernendeid),
+                    wahlpflichtgruppen: $stand !== null ? ($wahlpflichtgruppen[$stand->beruf] ?? []) : []
+                ),
                 'mb-3'
             );
         }
@@ -293,8 +314,8 @@ if (empty($eintraege)) {
             ])
             : null;
 
-        // "Wo steht die Person gerade" - beim Blick auf den Roster die
-        // erste Frage. Der Plan ist ein Spiegel (Architekturregel 5):
+        // Wo steht die Person gerade? Beim Blick auf den Roster die erste
+        // Frage. Der Plan ist ein Spiegel (Architekturregel 5):
         // gezeigt wird, was zuletzt importiert wurde. Laeuft zum Stichtag
         // kein Einsatz, bleibt die Spalte leer.
         $einsatz = api::get_aktueller_einsatz($lernendeid);
@@ -333,7 +354,8 @@ if (empty($eintraege)) {
             anzahlueberfaellig: $anzahlueberfaellig[$lernendeid] ?? 0,
             istextern: $eintrag['istextern'],
             lernendeid: $lernendeid,
-            schnellaktionen: $schnellaktionen
+            schnellaktionen: $schnellaktionen,
+            anzahlwahlpflichtoffen: $anzahlwahlpflichtoffen[$lernendeid] ?? 0
         );
     }
 

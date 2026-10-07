@@ -70,7 +70,12 @@ if (!empty($rahmenoptionen) && !empty($offeneberufe) && $data = $form->get_data(
     $paare[$data->beruf] = $data->rahmenidnumber;
     set_config('beruf_rahmen_mapping', $resolver->serialisiere($paare), 'local_berufsbildung');
 
-    redirect($returnurl, get_string('berufrahmen:hinzugefuegt', 'local_berufsbildung'), null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect(
+        $returnurl,
+        get_string('berufrahmen:hinzugefuegt', 'local_berufsbildung'),
+        null,
+        \core\output\notification::NOTIFY_SUCCESS
+    );
 }
 
 echo $OUTPUT->header();

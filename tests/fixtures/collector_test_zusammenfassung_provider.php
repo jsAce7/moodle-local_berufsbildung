@@ -26,8 +26,6 @@ declare(strict_types=1);
 
 namespace local_berufsbildung\nachweis;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Test-Provider, der festhaelt, welche Nachweise er zum Zusammenfassen
  * bekommen hat - damit pruefbar ist, dass jede Quelle nur ihre eigenen

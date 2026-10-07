@@ -30,6 +30,7 @@ use advanced_testcase;
 use core_competency\competency;
 use local_berufsbildung\service\kompetenz_baum;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\kompetenz_auswahl::class)]
 /**
  * Tests fuer kompetenz_auswahl.
  *
@@ -240,7 +241,8 @@ final class kompetenz_auswahl_test extends advanced_testcase {
     }
 
     /**
-     * Ohne Zuordnung ist alles waehlbar und nichts ganz oder teilweise.
+     * Ohne Zuordnung ist alles waehlbar und kein Leistungskriterium
+     * zugeordnet.
      */
     public function test_stand_ohne_zuordnung(): void {
         $this->resetAfterTest();
@@ -251,7 +253,7 @@ final class kompetenz_auswahl_test extends advanced_testcase {
         // Zwei HK und vier LK - der Bereich selbst ist nie waehlbar.
         $this->assertCount(6, $stand['waehlbar']);
         $this->assertSame(
-            ['anzahl' => 2, 'ganz' => 0, 'teilweise' => 0],
+            ['anzahl' => 4, 'zugeordnet' => 0],
             $stand['bereiche'][(int) $this->kompetenzen['a Entwickeln von automatisierten Anlagen']->get('id')]
         );
     }
@@ -259,7 +261,7 @@ final class kompetenz_auswahl_test extends advanced_testcase {
     /**
      * Eine als Ganzes zugeordnete Handlungskompetenz deckt ihre
      * Leistungskriterien ab: keines davon ist mehr waehlbar, die andere HK
-     * bleibt es.
+     * bleibt es. Im Bereich zaehlen ihre beiden LK als zugeordnet.
      */
     public function test_stand_ganze_hk_deckt_leistungskriterien_ab(): void {
         $this->resetAfterTest();
@@ -276,15 +278,15 @@ final class kompetenz_auswahl_test extends advanced_testcase {
         sort($waehlbar);
         $this->assertSame($erwartet, $waehlbar);
         $this->assertSame(
-            ['anzahl' => 2, 'ganz' => 1, 'teilweise' => 0],
+            ['anzahl' => 4, 'zugeordnet' => 2],
             $stand['bereiche'][(int) $this->kompetenzen['a Entwickeln von automatisierten Anlagen']->get('id')]
         );
     }
 
     /**
      * Randfall: nur ein Teil der Leistungskriterien ist zugeordnet. Die HK
-     * zaehlt als teilweise und bleibt als Ganzes waehlbar, ebenso das
-     * noch offene Leistungskriterium.
+     * bleibt als Ganzes waehlbar, ebenso das noch offene
+     * Leistungskriterium; der Bereich zaehlt das eine zugeordnete LK.
      */
     public function test_stand_einzelne_leistungskriterien_sind_teilweise(): void {
         $this->resetAfterTest();
@@ -301,7 +303,7 @@ final class kompetenz_auswahl_test extends advanced_testcase {
         $this->assertArrayHasKey((int) $this->kompetenzen['AU a1 01 1-2']->get('id'), $stand['waehlbar']);
         $this->assertArrayNotHasKey((int) $this->kompetenzen['MEM 02 02']->get('id'), $stand['waehlbar']);
         $this->assertSame(
-            ['anzahl' => 2, 'ganz' => 0, 'teilweise' => 1],
+            ['anzahl' => 4, 'zugeordnet' => 1],
             $stand['bereiche'][(int) $this->kompetenzen['a Entwickeln von automatisierten Anlagen']->get('id')]
         );
     }
@@ -340,9 +342,9 @@ final class kompetenz_auswahl_test extends advanced_testcase {
         );
 
         $this->assertStringContainsString(s(get_string(
-            'blocklk:bereich_stand_teilweise',
+            'blocklk:bereich_stand',
             'local_berufsbildung',
-            (object) ['ganz' => 1, 'anzahl' => 2, 'teilweise' => 1]
+            (object) ['zugeordnet' => 3, 'anzahl' => 4]
         )), $html);
         $this->assertStringContainsString($this->lk_stand(1, 2), $html);
         $this->assertStringContainsString(s(get_string('blocklk:abgedeckt_durch_hk', 'local_berufsbildung', 'a.01')), $html);
@@ -355,6 +357,34 @@ final class kompetenz_auswahl_test extends advanced_testcase {
             $html
         );
         $this->assertStringNotContainsString('intensitaet', $html);
+    }
+
+    /**
+     * Zugeordnetes steht angekreuzt in der Auswahl und laesst sich damit
+     * abwaehlen; ein verstecktes Feld nennt es, damit beim Speichern nur
+     * entfernt wird, was auf der Seite stand.
+     */
+    public function test_render_kreuzt_zugeordnetes_an(): void {
+        $this->resetAfterTest();
+        $baum = $this->lege_rahmen_an();
+        $hk = $this->kompetenzen['Fertigungsunterlagen erstellen oder überarbeiten']->get('id');
+        $lk = $this->kompetenzen['MEM 07 01']->get('id');
+
+        $html = kompetenz_auswahl::render(
+            $baum,
+            $this->zugeordnet('Fertigungsunterlagen erstellen oder überarbeiten', 'MEM 07 01'),
+            new \moodle_url('/local/berufsbildung/block_kompetenzen.php', ['id' => 7]),
+            7
+        );
+
+        foreach ([$hk, $lk] as $id) {
+            $this->assertMatchesRegularExpression('/value="' . $id . '" id="lbk-' . $id . '" checked/', $html);
+            $this->assertStringContainsString('name="zugeordnet[]" value="' . $id . '"', $html);
+        }
+        // Nicht zugeordnet: Checkbox ohne Haken, kein verstecktes Feld.
+        $offen = $this->kompetenzen['AU a3 03']->get('id');
+        $this->assertMatchesRegularExpression('/value="' . $offen . '" id="lbk-' . $offen . '">/', $html);
+        $this->assertStringNotContainsString('name="zugeordnet[]" value="' . $offen . '"', $html);
     }
 
     /**

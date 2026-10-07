@@ -72,7 +72,7 @@ class beruf_katalog {
             $codes = preg_split('/\r\n|\r|\n/', (string) $feld->param1) ?: [];
         }
 
-        // sql_compare_text(), weil user_info_data.data ein Textfeld ist und
+        // Mit sql_compare_text(), weil user_info_data.data ein Textfeld ist und
         // DISTINCT darauf nicht auf jeder Datenbank erlaubt ist.
         $gespeicherte = $DB->get_fieldset_sql(
             'SELECT DISTINCT ' . $DB->sql_compare_text('data', 255) . '

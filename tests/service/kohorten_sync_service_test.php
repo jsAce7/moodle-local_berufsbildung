@@ -36,12 +36,21 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot . '/cohort/lib.php');
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\kohorten_sync_service::class)]
 /**
  * Tests fuer kohorten_sync_service.
  *
  * @covers \local_berufsbildung\service\kohorten_sync_service
  */
 final class kohorten_sync_service_test extends advanced_testcase {
+    /**
+     * Verknuepft eine Kohorte mit einer Berufsbildnerin oder einem Berufsbildner.
+     *
+     * @param int $cohortid
+     * @param int $berufsbildnerid
+     * @param string $rolle
+     * @return kohorten_link
+     */
     private function lege_link_an(int $cohortid, int $berufsbildnerid, string $rolle = 'hauptverantwortlich'): kohorten_link {
         $link = new kohorten_link(0, (object) [
             'cohortid' => $cohortid,
@@ -101,7 +110,7 @@ final class kohorten_sync_service_test extends advanced_testcase {
         $gueltigbis = reset($zuordnungen)->get('gueltig_bis');
         $this->assertNotNull($gueltigbis);
 
-        // gueltig_bis ist inklusiv (Architekturregel 3) - "jetzt beendet"
+        // Das Feld gueltig_bis ist inklusiv (Architekturregel 3) - "jetzt beendet"
         // gilt also noch in derselben Sekunde, aber nicht mehr danach.
         $this->assertTrue(api::is_zustaendig((int) $berufsbildner->id, (int) $lernende->id, $gueltigbis));
         $this->assertFalse(api::is_zustaendig((int) $berufsbildner->id, (int) $lernende->id, $gueltigbis + 1));

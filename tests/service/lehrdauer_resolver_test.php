@@ -28,6 +28,7 @@ namespace local_berufsbildung\service;
 
 use advanced_testcase;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\lehrdauer_resolver::class)]
 /**
  * Tests fuer lehrdauer_resolver.
  *

@@ -101,7 +101,10 @@ if ($ergebnis !== null) {
         $table->data = [
             [get_string('planimport:zeilen_gelesen', 'local_berufsbildung'), $ergebnis['zeilen_gelesen']],
             [get_string('planimport:personen_verarbeitet', 'local_berufsbildung'), $ergebnis['personen_verarbeitet']],
-            [get_string('planimport:ausserhalb_geltungsbereich', 'local_berufsbildung'), $ergebnis['zeilen_ausserhalb_geltungsbereich']],
+            [
+                get_string('planimport:ausserhalb_geltungsbereich', 'local_berufsbildung'),
+                $ergebnis['zeilen_ausserhalb_geltungsbereich'],
+            ],
             [get_string('planimport:einsaetze_erzeugt', 'local_berufsbildung'), $ergebnis['einsaetze_erzeugt']],
         ];
         echo html_writer::table($table);

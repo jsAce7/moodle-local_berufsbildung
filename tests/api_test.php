@@ -33,6 +33,7 @@ use local_berufsbildung\persistent\zuordnung;
 use local_berufsbildung\service\kompetenz_baum;
 use local_berufsbildung\service\semester_calculator;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\api::class)]
 /**
  * Tests fuer api.
  *
@@ -517,6 +518,36 @@ final class api_test extends advanced_testcase {
         set_config('beruf_rahmen_mapping', 'AU_EFZ=au-2022', 'local_berufsbildung');
 
         $this->assertNull(api::get_kompetenzrahmen_for_beruf('KR_EFZ'));
+    }
+
+    /**
+     * Die verlangten Wahlpflicht-HK je Beruf, nach Gruppen von Bereichen.
+     * Einen Stichtag-Randfall gibt es nicht - die Angabe haengt am Beruf,
+     * nicht am Datum.
+     */
+    public function test_get_wahlpflicht_gruppen_for_beruf_konfigurierter_beruf(): void {
+        $this->resetAfterTest();
+        set_config('beruf_wahlpflicht_anzahl', "AU_EFZ=a,b,c:1; d:1\nPM_EFZ=2", 'local_berufsbildung');
+
+        $gruppen = api::get_wahlpflicht_gruppen_for_beruf('AU_EFZ');
+
+        $this->assertCount(2, $gruppen);
+        $this->assertSame(['a', 'b', 'c'], $gruppen[0]->bereiche);
+        $this->assertSame(1, $gruppen[0]->anzahl);
+        $this->assertSame(['d'], $gruppen[1]->bereiche);
+    }
+
+    /**
+     * Randfall: ohne Eintrag fuer den Beruf, oder ganz ohne Einstellung,
+     * gibt es keine Gruppen.
+     */
+    public function test_get_wahlpflicht_gruppen_for_beruf_ohne_eintrag_ist_leer(): void {
+        $this->resetAfterTest();
+
+        $this->assertSame([], api::get_wahlpflicht_gruppen_for_beruf('AU_EFZ'));
+
+        set_config('beruf_wahlpflicht_anzahl', 'AU_EFZ=3', 'local_berufsbildung');
+        $this->assertSame([], api::get_wahlpflicht_gruppen_for_beruf('KR_EFZ'));
     }
 
     /**

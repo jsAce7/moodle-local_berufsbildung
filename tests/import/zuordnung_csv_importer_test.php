@@ -30,6 +30,7 @@ use advanced_testcase;
 use local_berufsbildung\api;
 use local_berufsbildung\persistent\zuordnung;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\import\zuordnung_csv_importer::class)]
 /**
  * Tests fuer zuordnung_csv_importer.
  *
@@ -126,7 +127,11 @@ final class zuordnung_csv_importer_test extends advanced_testcase {
     public function test_verarbeite_zeile_leerer_beruf_wird_aus_profil_uebernommen(): void {
         $this->resetAfterTest();
         $this->getDataGenerator()->create_custom_profile_field(['datatype' => 'text', 'shortname' => 'beruf', 'name' => 'Beruf']);
-        $this->getDataGenerator()->create_custom_profile_field(['datatype' => 'text', 'shortname' => 'jahrgang', 'name' => 'Jahrgang']);
+        $this->getDataGenerator()->create_custom_profile_field([
+            'datatype' => 'text',
+            'shortname' => 'jahrgang',
+            'name' => 'Jahrgang',
+        ]);
 
         $berufsbildner = $this->getDataGenerator()->create_user(['username' => 'bb_csv']);
         $lernende = $this->getDataGenerator()->create_user([

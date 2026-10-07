@@ -117,8 +117,8 @@ foreach (block_lk::get_records(['blockid' => $id], 'id', 'ASC') as $abdeckung) {
     $zugeordnet[(int) $abdeckung->get('competencyid')] = $abdeckung;
 }
 
-// Bereits Zugeordnetes steht nicht mehr zur Auswahl - besser gar nicht
-// anbieten, als hinterher die Duplikat-Fehlermeldung zu zeigen. Dasselbe
+// Neu zuordnen laesst sich nur, was noch nicht zugeordnet ist - besser gar
+// nicht anbieten, als hinterher die Duplikat-Fehlermeldung zu zeigen. Dasselbe
 // gilt fuer alles, was ueber eine Zuordnung darueber oder darunter schon
 // abgedeckt ist (siehe kompetenz_auswahl::stand()).
 $offen = array_intersect_key($auswaehlbar, kompetenz_auswahl::stand($baum, $zugeordnet)['waehlbar']);
@@ -126,34 +126,48 @@ $offen = array_intersect_key($auswaehlbar, kompetenz_auswahl::stand($baum, $zuge
 if (optional_param('speichern', 0, PARAM_BOOL)) {
     require_sesskey();
 
+    $angekreuzt = optional_param_array('competencyids', [], PARAM_INT);
+
     // Gegen die angebotenen Eintraege filtern: was nicht im Rahmen dieses
     // Berufs steht oder bereits zugeordnet ist, darf auch ueber ein
     // manipuliertes POST nicht hereinkommen. Damit ist zugleich der
     // Unique-Index abgedeckt, wenn zwei Formulare sich ueberholen.
-    $auswahl = array_intersect(
-        optional_param_array('competencyids', [], PARAM_INT),
-        array_keys($offen)
-    );
+    $neu = array_values(array_intersect($angekreuzt, array_keys($offen)));
 
-    if (empty($auswahl)) {
+    // Entfernt wird nur, was im Formular angekreuzt stand und jetzt nicht
+    // mehr: "zugeordnet[]" nennt die angezeigten Zuordnungen. Ohne diese
+    // Liste wuerde ein Suchfilter alles entfernen, was er ausgeblendet hat.
+    $entfernen = array_values(array_diff(
+        array_intersect(optional_param_array('zugeordnet', [], PARAM_INT), array_keys($zugeordnet)),
+        $angekreuzt
+    ));
+
+    if (empty($neu) && empty($entfernen)) {
         redirect(
             $returnurl,
-            get_string('blocklk:fehler_keine_auswahl', 'local_berufsbildung'),
+            get_string('blocklk:keine_aenderung', 'local_berufsbildung'),
             null,
-            \core\output\notification::NOTIFY_ERROR
+            \core\output\notification::NOTIFY_INFO
         );
     }
 
-    foreach ($auswahl as $competencyid) {
+    foreach ($neu as $competencyid) {
         (new block_lk(0, (object) [
             'blockid' => $id,
             'competencyid' => $competencyid,
         ]))->create();
     }
 
+    foreach ($entfernen as $competencyid) {
+        $zugeordnet[$competencyid]->delete();
+    }
+
     redirect(
         $returnurl,
-        get_string('blocklk:hinzugefuegt', 'local_berufsbildung', count($auswahl)),
+        get_string('blocklk:gespeichert', 'local_berufsbildung', (object) [
+            'neu' => count($neu),
+            'entfernt' => count($entfernen),
+        ]),
         null,
         \core\output\notification::NOTIFY_SUCCESS
     );
@@ -291,9 +305,12 @@ if (empty($auswaehlbar)) {
             'info'
         );
     }
-} else if (empty($offen)) {
-    echo $OUTPUT->notification(get_string('blocklk:alle_zugeordnet', 'local_berufsbildung'), 'info');
 } else {
+    // Auch wenn alles zugeordnet ist, bleibt die Auswahl stehen - sonst
+    // liesse sich dort nichts mehr abwaehlen.
+    if (empty($offen)) {
+        echo $OUTPUT->notification(get_string('blocklk:alle_zugeordnet', 'local_berufsbildung'), 'info');
+    }
     echo html_writer::tag('h3', get_string('blocklk:hinzufuegen', 'local_berufsbildung'));
     echo html_writer::tag('p', get_string('blocklk:auswahl_hinweis', 'local_berufsbildung'), ['class' => 'text-muted']);
     echo kompetenz_auswahl::render(

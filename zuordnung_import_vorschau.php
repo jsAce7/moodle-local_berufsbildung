@@ -50,7 +50,12 @@ $cir = new csv_import_reader($iid, 'local_berufsbildungzuordnung');
 $columns = $cir->get_columns();
 
 if (empty($columns)) {
-    redirect($uploadurl, get_string('import:fehler_abgelaufen', 'local_berufsbildung'), null, \core\output\notification::NOTIFY_ERROR);
+    redirect(
+        $uploadurl,
+        get_string('import:fehler_abgelaufen', 'local_berufsbildung'),
+        null,
+        \core\output\notification::NOTIFY_ERROR
+    );
 }
 
 $spaltenindex = [];
@@ -188,7 +193,11 @@ if ($bestaetigt) {
         ]);
         echo html_writer::div(
             $OUTPUT->single_button($bestaetigenurl, get_string('import:bestaetigen', 'local_berufsbildung'))
-            . html_writer::link($uploadurl, get_string('import:abbrechen', 'local_berufsbildung'), ['class' => 'local-berufsbildung-abstand-links-2']),
+            . html_writer::link(
+                $uploadurl,
+                get_string('import:abbrechen', 'local_berufsbildung'),
+                ['class' => 'local-berufsbildung-abstand-links-2']
+            ),
             'mt-3'
         );
     }

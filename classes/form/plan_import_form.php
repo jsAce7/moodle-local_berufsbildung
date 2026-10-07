@@ -52,7 +52,11 @@ class plan_import_form extends \moodleform {
         $mform->addElement('advcheckbox', 'testlauf', get_string('planimport:testlauf', 'local_berufsbildung'));
         $mform->setDefault('testlauf', 1);
 
-        $mform->addElement('advcheckbox', 'rueckgang_bestaetigt', get_string('planimport:rueckgang_bestaetigt', 'local_berufsbildung'));
+        $mform->addElement(
+            'advcheckbox',
+            'rueckgang_bestaetigt',
+            get_string('planimport:rueckgang_bestaetigt', 'local_berufsbildung')
+        );
         $mform->setDefault('rueckgang_bestaetigt', 0);
 
         $this->add_action_buttons(false, get_string('planimport:hochladen', 'local_berufsbildung'));

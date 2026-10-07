@@ -26,8 +26,6 @@ declare(strict_types=1);
 
 namespace local_berufsbildung\nachweis;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Test-Provider mit eigener Erfassung, wahlweise ohne Erfassungs-URL - fuer
  * den Fall, dass eine Quelle zwar `erfassbare_quelle` implementiert, aber

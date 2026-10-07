@@ -28,6 +28,7 @@ namespace local_berufsbildung\versetzungsplan;
 
 use advanced_testcase;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\versetzungsplan\csv_parser::class)]
 /**
  * Tests fuer csv_parser.
  *

@@ -28,6 +28,7 @@ namespace local_berufsbildung\service;
 
 use advanced_testcase;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\beruf_katalog::class)]
 /**
  * Tests fuer beruf_katalog.
  *

@@ -29,6 +29,7 @@ namespace local_berufsbildung\output;
 use advanced_testcase;
 use local_berufsbildung\ausbildungsstand;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\lernenden_roster::class)]
 /**
  * Tests fuer lernenden_roster.
  *

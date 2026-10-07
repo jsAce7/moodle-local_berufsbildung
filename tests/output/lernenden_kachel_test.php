@@ -29,6 +29,7 @@ namespace local_berufsbildung\output;
 use advanced_testcase;
 use local_berufsbildung\nachweis\schnellaktion;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\lernenden_kachel::class)]
 /**
  * Tests fuer lernenden_kachel.
  *
@@ -92,6 +93,24 @@ final class lernenden_kachel_test extends advanced_testcase {
         $this->assertStringContainsString(
             get_string('meine_lernenden:taetigkeiten_anzahl', 'local_berufsbildung', 9),
             $mehrere
+        );
+    }
+
+    /**
+     * Offene Wahlpflicht-HK stehen als eigenes Badge in der Kopfzeile,
+     * ohne Zahl kein Badge.
+     */
+    public function test_wahlpflicht_offen_als_badge(): void {
+        $this->resetAfterTest();
+        $text = get_string('luecken:wahlpflicht_offen', 'local_berufsbildung', 2);
+
+        $mit = lernenden_kachel::render('Elena Furrer', null, 0, 0, '', anzahlwahlpflichtoffen: 2);
+        $ohne = lernenden_kachel::render('Elena Furrer', null, 0, 0, '');
+
+        $this->assertStringContainsString($text, $mit);
+        $this->assertStringNotContainsString(
+            get_string('luecken:wahlpflicht_offen', 'local_berufsbildung', 0),
+            $ohne
         );
     }
 }

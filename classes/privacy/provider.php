@@ -197,7 +197,9 @@ class provider implements
             return;
         }
 
-        $alslernende = array_values($DB->get_records('local_berufsbildung_zuordnung', ['lernendeid' => $userid], 'gueltig_von ASC'));
+        $alslernende = array_values(
+            $DB->get_records('local_berufsbildung_zuordnung', ['lernendeid' => $userid], 'gueltig_von ASC')
+        );
         if (!empty($alslernende)) {
             writer::with_context($context)->export_data(
                 [get_string('privacy:pfad_zuordnungen_lernende', 'local_berufsbildung')],
@@ -211,7 +213,9 @@ class provider implements
             );
         }
 
-        $alsberufsbildner = array_values($DB->get_records('local_berufsbildung_zuordnung', ['berufsbildnerid' => $userid], 'gueltig_von ASC'));
+        $alsberufsbildner = array_values(
+            $DB->get_records('local_berufsbildung_zuordnung', ['berufsbildnerid' => $userid], 'gueltig_von ASC')
+        );
         if (!empty($alsberufsbildner)) {
             writer::with_context($context)->export_data(
                 [get_string('privacy:pfad_zuordnungen_berufsbildner', 'local_berufsbildung')],
@@ -252,7 +256,9 @@ class provider implements
             );
         }
 
-        $importe = array_values($DB->get_records('local_berufsbildung_plan_import', ['ausgefuehrt_von' => $userid], 'zeitpunkt ASC'));
+        $importe = array_values(
+            $DB->get_records('local_berufsbildung_plan_import', ['ausgefuehrt_von' => $userid], 'zeitpunkt ASC')
+        );
         if (!empty($importe)) {
             writer::with_context($context)->export_data(
                 [get_string('privacy:pfad_planimporte', 'local_berufsbildung')],
@@ -266,7 +272,9 @@ class provider implements
             );
         }
 
-        $aufbewahrungen = array_values($DB->get_records('local_berufsbildung_aufbewahrung', ['lernendeid' => $userid], 'gueltig_von ASC'));
+        $aufbewahrungen = array_values(
+            $DB->get_records('local_berufsbildung_aufbewahrung', ['lernendeid' => $userid], 'gueltig_von ASC')
+        );
         if (!empty($aufbewahrungen)) {
             writer::with_context($context)->export_data(
                 [get_string('privacy:pfad_aufbewahrung', 'local_berufsbildung')],

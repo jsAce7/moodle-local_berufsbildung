@@ -29,6 +29,7 @@ namespace local_berufsbildung\service;
 use advanced_testcase;
 use core_competency\competency;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\kompetenz_baum::class)]
 /**
  * Tests fuer kompetenz_baum.
  *

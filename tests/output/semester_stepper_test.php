@@ -28,6 +28,7 @@ namespace local_berufsbildung\output;
 
 use advanced_testcase;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\semester_stepper::class)]
 /**
  * Tests fuer semester_stepper.
  *

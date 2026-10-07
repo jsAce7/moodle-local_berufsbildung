@@ -170,6 +170,16 @@ if ($hassiteconfig) {
         PARAM_RAW
     ));
 
+    // Ohne Vorgabe: wie viele Wahlpflicht-HK verlangt sind, steht im
+    // Bildungsplan des Berufs und ist hier nicht zu raten.
+    $settings->add(new admin_setting_configtextarea(
+        'local_berufsbildung/beruf_wahlpflicht_anzahl',
+        new lang_string('settings:beruf_wahlpflicht_anzahl', 'local_berufsbildung'),
+        new lang_string('settings:beruf_wahlpflicht_anzahl_desc', 'local_berufsbildung'),
+        '',
+        PARAM_RAW
+    ));
+
     $settings->add(new admin_setting_configtext(
         'local_berufsbildung/versetzungsplan_schwelle_prozent',
         new lang_string('settings:versetzungsplan_schwelle_prozent', 'local_berufsbildung'),

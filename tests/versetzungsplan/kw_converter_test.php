@@ -29,6 +29,7 @@ namespace local_berufsbildung\versetzungsplan;
 use advanced_testcase;
 use coding_exception;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\versetzungsplan\kw_converter::class)]
 /**
  * Tests fuer kw_converter.
  *

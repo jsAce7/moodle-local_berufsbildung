@@ -22,12 +22,15 @@
     Handlungskompetenzen, darunter deren Leistungskriterien.
 
     Auswaehlbar sind beide Ebenen - die Handlungskompetenz als Ganzes oder
-    einzelne Leistungskriterien. Bereits zugeordnete Eintraege tragen statt
-    der Checkbox einen Hinweis; entfernt werden sie in der Tabelle darueber.
+    einzelne Leistungskriterien. Bereits zugeordnete Eintraege sind
+    angekreuzt und tragen zusaetzlich ein Badge; abwaehlen und speichern
+    entfernt die Zuordnung. Ein verstecktes Feld "zugeordnet[]" nennt die
+    angezeigten Zuordnungen, damit ein Suchfilter nichts entfernt, was gar
+    nicht auf der Seite stand.
     Leistungskriterien unter einer als Ganzes zugeordneten Handlungskompetenz
     sind damit abgedeckt und nicht mehr waehlbar. Ist eine Handlungskompetenz
     nur ueber einzelne Leistungskriterien zugeordnet, zeigt sie "2 von 5 LK";
-    der Bereichskopf zaehlt die ganz und teilweise zugeordneten HK.
+    der Bereichskopf zaehlt die zugeordneten Leistungskriterien.
 
     Der Bereich startet aufgeklappt, wo noch etwas offen ist, und zeigt
     dann seine Handlungskompetenzen als kurze Liste. Die Leistungskriterien
@@ -52,11 +55,11 @@
     * nichtgefundenlabel - string
     * handlungskompetenzen - array of {id, code, hatcode, name, beschreibung, hatbeschreibung,
                                        kurzbeschreibung, suchtext, istzugeordnet, waehlbar, erledigt,
-                                       hatteilstand, teilstandtext, hatlk, lkoffen, lktext,
+                                       hatcheckbox, hatteilstand, teilstandtext, hatlk, lkoffen, lktext,
                                        leistungskriterien}
     * leistungskriterien - array of {id, code, hatcode, name, beschreibung, hatbeschreibung,
                                      kurzbeschreibung, suchtext, istzugeordnet, istabgedeckt,
-                                     waehlbar, erledigt, abgedeckttext}
+                                     waehlbar, hatcheckbox, erledigt, abgedeckttext}
 
     suchtext traegt Bezeichnung, ID-Nummer und volle Beschreibung klein
     geschrieben - die Grundlage der Live-Suche in amd/src/kompetenz_suche.js.
@@ -92,7 +95,7 @@
                 "suchtext": "erstellen und inbetriebnehmen von automatisierten anlagen 7777be b",
                 "offen": true,
                 "hatstand": true,
-                "standtext": "0 von 1 HK, 1 teilweise",
+                "standtext": "1 von 2 LK",
                 "standvollstaendig": false,
                 "handlungskompetenzen": [
                     {
@@ -106,6 +109,7 @@
                         "suchtext": "automatisierte anlagen mit robotern ergänzen 7777be b.07",
                         "istzugeordnet": false,
                         "waehlbar": true,
+                        "hatcheckbox": true,
                         "erledigt": false,
                         "hatteilstand": true,
                         "teilstandtext": "1 von 2 LK",
@@ -118,12 +122,12 @@
                              "hatbeschreibung": true,
                              "kurzbeschreibung": "Sie dokumentieren und archivieren ihre Arbeit...",
                              "suchtext": "au b1 01 1-2 sie dokumentieren und archivieren ihre arbeit.",
-                             "istzugeordnet": false, "istabgedeckt": false, "waehlbar": true,
+                             "istzugeordnet": false, "istabgedeckt": false, "waehlbar": true, "hatcheckbox": true,
                              "erledigt": false, "abgedeckttext": "über b.07 abgedeckt"},
                             {"id": 44, "code": "", "hatcode": false, "name": "AU b8 01 1-2",
                              "beschreibung": "", "hatbeschreibung": false,
                              "kurzbeschreibung": "", "suchtext": "au b8 01 1-2", "istzugeordnet": true,
-                             "istabgedeckt": false, "waehlbar": false, "erledigt": true,
+                             "istabgedeckt": false, "waehlbar": false, "hatcheckbox": true, "erledigt": true,
                              "abgedeckttext": "über b.07 abgedeckt"}
                         ]
                     }
@@ -189,20 +193,21 @@
                             {{#istzugeordnet}}
                                 <span class="local-berufsbildung-auswahl-zugeordnet badge bg-success text-white">{{#pix}}i/checked, core{{/pix}}{{zugeordnettext}}</span>
                             {{/istzugeordnet}}
-                            {{#waehlbar}}
+                            {{#hatcheckbox}}
                                 <input class="form-check-input" type="checkbox" name="competencyids[]"
-                                       value="{{id}}" id="lbk-{{id}}">
-                            {{/waehlbar}}
+                                       value="{{id}}" id="lbk-{{id}}"{{#istzugeordnet}} checked{{/istzugeordnet}}>
+                                {{#istzugeordnet}}<input type="hidden" name="zugeordnet[]" value="{{id}}">{{/istzugeordnet}}
+                            {{/hatcheckbox}}
                             {{#hatcode}}
                                 <span class="local-berufsbildung-auswahl-code badge bg-light text-dark border">{{code}}</span>
                             {{/hatcode}}
-                            {{#waehlbar}}
+                            {{#hatcheckbox}}
                                 <label class="form-check-label local-berufsbildung-auswahl-hkname"
                                        for="lbk-{{id}}" title="{{beschreibung}}">{{name}}</label>
-                            {{/waehlbar}}
-                            {{^waehlbar}}
+                            {{/hatcheckbox}}
+                            {{^hatcheckbox}}
                                 <span class="local-berufsbildung-auswahl-hkname" title="{{beschreibung}}">{{name}}</span>
-                            {{/waehlbar}}
+                            {{/hatcheckbox}}
                             {{#hatteilstand}}
                                 <span class="local-berufsbildung-auswahl-teilstand badge border border-success text-success">{{teilstandtext}}</span>
                             {{/hatteilstand}}
@@ -224,24 +229,25 @@
                                             {{#istabgedeckt}}
                                                 <span class="local-berufsbildung-auswahl-abgedeckt badge bg-light text-success border border-success">{{abgedeckttext}}</span>
                                             {{/istabgedeckt}}
-                                            {{#waehlbar}}
+                                            {{#hatcheckbox}}
                                                 <input class="form-check-input" type="checkbox" name="competencyids[]"
-                                                       value="{{id}}" id="lbk-{{id}}">
+                                                       value="{{id}}" id="lbk-{{id}}"{{#istzugeordnet}} checked{{/istzugeordnet}}>
+                                                {{#istzugeordnet}}<input type="hidden" name="zugeordnet[]" value="{{id}}">{{/istzugeordnet}}
                                                 <label class="form-check-label" for="lbk-{{id}}" title="{{beschreibung}}">
                                                     <span class="local-berufsbildung-auswahl-lkcode">{{name}}</span>
                                                     {{#hatbeschreibung}}
                                                         <span class="local-berufsbildung-auswahl-lktext text-muted">{{kurzbeschreibung}}</span>
                                                     {{/hatbeschreibung}}
                                                 </label>
-                                            {{/waehlbar}}
-                                            {{^waehlbar}}
+                                            {{/hatcheckbox}}
+                                            {{^hatcheckbox}}
                                                 <span title="{{beschreibung}}">
                                                     <span class="local-berufsbildung-auswahl-lkcode">{{name}}</span>
                                                     {{#hatbeschreibung}}
                                                         <span class="local-berufsbildung-auswahl-lktext text-muted">{{kurzbeschreibung}}</span>
                                                     {{/hatbeschreibung}}
                                                 </span>
-                                            {{/waehlbar}}
+                                            {{/hatcheckbox}}
                                         </div>
                                     {{/leistungskriterien}}
                                 </div>

@@ -16,6 +16,7 @@
 
 namespace local_berufsbildung\pdf;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\pdf\gestaltung::class)]
 /**
  * Tests for what the printed document is allowed to look like.
  *
@@ -50,6 +51,7 @@ final class gestaltung_test extends \advanced_testcase {
      * @param string $eingabe what stands in the setting
      * @param int[] $erwartet the colour it means
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('akzent_provider')]
     public function test_akzent_liest_hexwerte(string $eingabe, array $erwartet): void {
         $this->resetAfterTest();
         set_config('akzentfarbe', $eingabe, 'local_berufsbildung');
@@ -78,6 +80,7 @@ final class gestaltung_test extends \advanced_testcase {
      * @dataProvider akzent_unbrauchbar_provider
      * @param string $eingabe what stands in the setting
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('akzent_unbrauchbar_provider')]
     public function test_akzent_faellt_zurueck(string $eingabe): void {
         $this->resetAfterTest();
         set_config('akzentfarbe', $eingabe, 'local_berufsbildung');

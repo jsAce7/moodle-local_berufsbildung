@@ -96,16 +96,53 @@ class raster_analyse {
         // ueber die bisherige Lehrzeit und nicht nur ueber die letzte
         // Lieferung.
         $bis = $stichtag ?? time();
-        $abgedeckt = array_flip(api::get_ausgebildete_kompetenzen($lernendeid, 0, $bis));
-        $jemals = array_flip(api::get_ausgebildete_kompetenzen($lernendeid, 0, PHP_INT_MAX));
+
+        // Die Zuordnungen, wie sie an den Bloecken stehen - je Zeitraum
+        // einmal. Die uebergeordneten Kompetenzen kommen aus dem bereits
+        // geladenen Rahmen dazu, statt sie je Kompetenz nachzuladen: auf
+        // "Meine Lernenden" laeuft das fuer jede Person. Ausserhalb des
+        // Rahmens interessiert hier nichts.
+        $planservice = new plan_service();
+        $direktabgedeckt = array_flip($planservice->get_zugeordnete_kompetenzen($lernendeid, 0, $bis));
+        $direktjemals = array_flip($planservice->get_zugeordnete_kompetenzen($lernendeid, 0, PHP_INT_MAX));
+
+        $eltern = [];
+        foreach ($rahmenkompetenzen as $kompetenz) {
+            $eltern[(int) $kompetenz->get('id')] = (int) $kompetenz->get('parentid');
+        }
+
+        // Eine HK gilt als abgedeckt, sobald sie selbst oder eines ihrer
+        // LK zugeordnet ist - dieselbe Regel wie get_ausgebildete_kompetenzen().
+        $abgedeckt = $this->mit_vorfahren($direktabgedeckt, $eltern);
+        $jemals = $this->mit_vorfahren($direktjemals, $eltern);
+
+        $lkjehk = [];
+        foreach ((new kompetenz_baum())->baum($rahmenkompetenzen) as $zweig) {
+            foreach ($zweig['handlungskompetenzen'] as $eintrag) {
+                $hkid = (int) $eintrag['kompetenz']->get('id');
+                $lkjehk[$hkid] = [];
+                foreach ($eintrag['leistungskriterien'] as $lk) {
+                    $lkid = (int) $lk->get('id');
+                    if ($this->zugeordnet_bis_hk($lkid, $hkid, $direktabgedeckt, $eltern)) {
+                        $lkjehk[$hkid][$lkid] = raster_kompetenz::STATUS_ABGEDECKT;
+                    } else if ($this->zugeordnet_bis_hk($lkid, $hkid, $direktjemals, $eltern)) {
+                        $lkjehk[$hkid][$lkid] = raster_kompetenz::STATUS_EINGEPLANT;
+                    } else {
+                        $lkjehk[$hkid][$lkid] = raster_kompetenz::STATUS_OFFEN;
+                    }
+                }
+            }
+        }
 
         // Die Bereiche vorab in Rahmenreihenfolge anlegen, damit die
         // Ausgabe der Gliederung des Rahmens folgt und nicht der
         // Reihenfolge, in der die einzelnen HK auftauchen.
         $bereiche = [];
+        $bereichkompetenzen = [];
         foreach ($rahmenkompetenzen as $kompetenz) {
             if ((int) $kompetenz->get('parentid') === 0) {
                 $bereiche[(int) $kompetenz->get('id')] = [];
+                $bereichkompetenzen[(int) $kompetenz->get('id')] = $kompetenz;
             }
         }
 
@@ -124,6 +161,7 @@ class raster_analyse {
                 competencyid: $competencyid,
                 status: $status,
                 istwahlpflicht: isset($wahlpflicht[$this->vergleichsschluessel((string) $kompetenz->get('idnumber'))]),
+                leistungskriterien: $lkjehk[$competencyid] ?? [],
             );
         }
 
@@ -136,10 +174,58 @@ class raster_analyse {
                 continue;
             }
 
-            $raster[] = new raster_bereich(bereichid: $bereichid, kompetenzen: $kompetenzen);
+            $raster[] = new raster_bereich(
+                bereichid: $bereichid,
+                kompetenzen: $kompetenzen,
+                kuerzel: kompetenz_baum::kuerzel($bereichkompetenzen[$bereichid]),
+            );
         }
 
         return $raster;
+    }
+
+    /**
+     * Die Kompetenzen und alle ihre Vorfahren im Rahmen.
+     *
+     * @param array $kompetenzen competencyid => beliebig
+     * @param array $eltern competencyid => parentid, der ganze Rahmen
+     * @return array competencyid => true
+     */
+    private function mit_vorfahren(array $kompetenzen, array $eltern): array {
+        $alle = [];
+        foreach (array_keys($kompetenzen) as $id) {
+            while ($id !== 0 && !isset($alle[$id])) {
+                $alle[$id] = true;
+                $id = $eltern[$id] ?? 0;
+            }
+        }
+
+        return $alle;
+    }
+
+    /**
+     * Ist ein Leistungskriterium selbst zugeordnet, oder eine Kompetenz
+     * zwischen ihm und seiner Handlungskompetenz, die HK eingeschlossen?
+     * Eine als Ganzes zugeordnete HK deckt alle ihre LK ab.
+     *
+     * @param int $lkid
+     * @param int $hkid
+     * @param array $zugeordnet competencyid => beliebig
+     * @param array $eltern competencyid => parentid
+     */
+    private function zugeordnet_bis_hk(int $lkid, int $hkid, array $zugeordnet, array $eltern): bool {
+        $id = $lkid;
+        while ($id !== 0) {
+            if (isset($zugeordnet[$id])) {
+                return true;
+            }
+            if ($id === $hkid) {
+                return false;
+            }
+            $id = $eltern[$id] ?? 0;
+        }
+
+        return false;
     }
 
     /**

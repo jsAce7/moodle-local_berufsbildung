@@ -26,6 +26,8 @@ declare(strict_types=1);
 
 namespace local_berufsbildung\service;
 
+use local_berufsbildung\wahlpflicht_gruppe;
+
 /**
  * Die Bildungspläne kennzeichnen Handlungskompetenzen als P oder W. Die
  * Kennzeichnung bleibt ausserhalb von core_competency: Der Rahmen beschreibt
@@ -53,6 +55,55 @@ class wahlpflicht_resolver {
             }
 
             return array_values(array_filter(array_map('trim', explode(',', $idnumbers))));
+        }
+
+        return [];
+    }
+
+    /**
+     * Wie viele Wahlpflicht-HK der Bildungsplan eines Berufs verlangt, je
+     * Gruppe von Bereichen.
+     *
+     * Format je Beruf: Gruppen durch Semikolon getrennt, je Gruppe die
+     * Kuerzel der Bereiche mit Komma, ein Doppelpunkt und die Anzahl.
+     * "AU_EFZ=a,b,c:1; d:1" verlangt eine aus a, b und c zusammen und eine
+     * aus d. Ohne Bereiche gilt die Anzahl fuer den ganzen Beruf:
+     * "AU_EFZ=3". Gruppen ohne positive ganze Zahl werden uebersprungen.
+     *
+     * @param string $beruf Beruf-Code, z. B. AU_EFZ
+     * @param string $konfiguration Eine Zeile je Beruf, siehe oben
+     * @return wahlpflicht_gruppe[] Leer, wenn fuer den Beruf nichts hinterlegt ist
+     */
+    public function gruppen(string $beruf, string $konfiguration): array {
+        foreach (preg_split('/\r\n|\r|\n/', $konfiguration) as $zeile) {
+            $zeile = trim($zeile);
+            if ($zeile === '' || !str_contains($zeile, '=')) {
+                continue;
+            }
+
+            [$code, $wert] = array_map('trim', explode('=', $zeile, 2));
+            if ($code !== $beruf) {
+                continue;
+            }
+
+            $gruppen = [];
+            foreach (explode(';', $wert) as $teil) {
+                $teil = trim($teil);
+                $bereiche = [];
+                if (str_contains($teil, ':')) {
+                    [$liste, $teil] = array_map('trim', explode(':', $teil, 2));
+                    $bereiche = array_values(array_filter(array_map(
+                        static fn (string $kuerzel): string => \core_text::strtolower(trim($kuerzel)),
+                        explode(',', $liste)
+                    ), static fn (string $kuerzel): bool => $kuerzel !== ''));
+                }
+                if ($teil === '' || !ctype_digit($teil) || (int) $teil < 1) {
+                    continue;
+                }
+                $gruppen[] = new wahlpflicht_gruppe($bereiche, (int) $teil);
+            }
+
+            return $gruppen;
         }
 
         return [];
