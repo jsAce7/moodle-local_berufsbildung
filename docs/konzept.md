@@ -529,6 +529,12 @@ Für den Jahreswechsel, wenn ein ganzer Lehrjahrgang neu zugeordnet wird. Spalte
 **Einzelbearbeitung**
 Zuordnung anlegen und beenden über ein einfaches Formular. Beim Anlegen einer neuen Zuordnung für eine/n Lernende/n, die/der bereits eine laufende hat, wird die alte automatisch zum Vortag beendet — mit Hinweis im Formular, nicht stillschweigend.
 
+**Ausbildungsblöcke** `local/berufsbildung/bloecke.php`
+Je Beruf eine Tabelle, nach Nummer natürlich sortiert (B2 vor B10); berufsübergreifende Blöcke stehen zuletzt. Neben dem Beruf zeigt ein Badge, wie viele Leistungskriterien noch in keinem Block vorkommen.
+
+**Leistungskriterien je Block** `local/berufsbildung/lk_abdeckung.php?beruf=…`
+Die Blockzuordnung vom Kompetenzrahmen her gesehen: je Leistungskriterium die Blöcke des Berufs, die es selbst oder über seine ganze Handlungskompetenz abdecken, mit Filter auf die LK in keinem Block (`service\lk_abdeckung_service`). Es zählt dieselbe Regel wie im Kompetenzraster: nur aktive betriebliche Blöcke. Inaktive und nicht betriebliche Blöcke stehen gekennzeichnet daneben, damit sichtbar ist, warum eine Zuordnung nicht zählt.
+
 ---
 
 ## 9. Capabilities

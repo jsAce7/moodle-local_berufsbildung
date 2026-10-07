@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.6] — 2026-10-07
+
+### Geändert
+
+- **Ausbildungsblöcke nach Beruf** (`bloecke.php`): Je Beruf eine eigene Tabelle, innerhalb nach Nummer natürlich sortiert (B2 vor B10); berufsübergreifende Blöcke stehen zuletzt. Neben dem Beruf zeigt ein Badge, wie viele Leistungskriterien noch in keinem Block vorkommen. Die Zahl der LK je Block kommt aus einer Abfrage statt einer je Block.
+- **Leistungskriterien je Block** (neue Seite `lk_abdeckung.php`, `service\lk_abdeckung_service`, `output\lk_abdeckung`): Über „LK-Übersicht“ beim Beruf stehen alle Leistungskriterien des Rahmens, gegliedert wie im Bildungsplan, und daneben die Blöcke, die sie vermitteln – selbst oder über die ganze Handlungskompetenz. Ein Filter zeigt nur die LK, die noch in keinem Block vorkommen. Wie im Kompetenzraster zählen nur aktive betriebliche Blöcke; inaktive und nicht betriebliche stehen gekennzeichnet daneben.
+
 ## [0.8.5] — 2026-10-07
 
 ### Geändert
