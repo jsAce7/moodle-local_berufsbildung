@@ -46,11 +46,11 @@ Feature: Kompetenzraster auf Meine Lehre
       | B2    | 7777BE a.02 |
     When I log in as "lea"
     And I visit "/local/berufsbildung/meine_lehre.php"
-    Then I should see "2 required competency areas: 1 already encountered, 1 scheduled later, 0 not in the plan"
-    And I should see "1 of 2 required already encountered"
+    Then I should see "2 required competency areas: 1 complete, 0 partly, 1 only scheduled, 0 not in the plan"
+    And I should see "1 of 2 required complete"
     And I should see "1 of 1 criteria encountered"
     And I should see "0 of 1 criteria encountered, 1 scheduled"
-    And I should see "Electives from a: required 1, already encountered 0, scheduled later 0"
+    And I should see "Electives from a: required 1, complete 0, partly 0, scheduled later 0"
     And I should not see "No competency area occurs in the rotation plan on file yet."
 
   @javascript
@@ -64,3 +64,4 @@ Feature: Kompetenzraster auf Meine Lehre
     Then "a.01 Fertigungsunterlagen erstellen" "dialogue" should be visible
     And I should see "Already encountered (1)" in the "a.01 Fertigungsunterlagen erstellen" "dialogue"
     And I should see "AU a1 01" in the "a.01 Fertigungsunterlagen erstellen" "dialogue"
+    And I should see "Werkstatt, " in the "a.01 Fertigungsunterlagen erstellen" "dialogue"

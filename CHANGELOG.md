@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.5] — 2026-10-07
+
+### Geändert
+
+- **Häkchen erst bei vollständiger Handlungskompetenz** (`raster_kompetenz::anzeigestand()`, `kompetenzraster`): Das Raster unterscheidet vier Stände: vollständig (alle Leistungskriterien kamen vor, Häkchen, kräftige Fläche), teilweise (Sanduhr, mittlere Fläche), nur eingeplant (Kalender, helle Fläche) und nicht im Plan (weiss). Bisher bekam eine HK das Häkchen, sobald ein einziges LK vorkam. Zusammenfassung, Zeilenzahl („1 von 3 Pflicht vollständig“) und Wahlpflicht-Zeilen zählen nach den neuen Ständen; eine Wahlpflicht-Gruppe ist erst erfüllt, wenn genug HK vollständig sind. Das Badge „x noch offen“ zählt weiterhin HK, von denen kein LK im Plan steht.
+- **Wo ein Leistungskriterium vorkam oder geplant ist** (`raster_kompetenz::$lkeinsaetze`, `plan_service::get_kompetenzen_je_einsatz()`): Der LK-Dialog nennt je Leistungskriterium Block und Kalenderwochen der Einsätze, z. B. „Werkstatt, KW 28–32“.
+
 ## [0.8.4] — 2026-10-06
 
 ### Geändert

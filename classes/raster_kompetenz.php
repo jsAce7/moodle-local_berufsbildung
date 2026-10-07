@@ -48,6 +48,18 @@ class raster_kompetenz {
     /** Stand: steht im vorliegenden Plan in keinem Einsatz. */
     public const STATUS_OFFEN = 'offen';
 
+    /** Anzeige: alle LK kamen bis zum Stichtag vor. */
+    public const ANZEIGE_VOLLSTAENDIG = 'vollstaendig';
+
+    /** Anzeige: ein Teil der LK kam vor, nicht alle. */
+    public const ANZEIGE_TEILWEISE = 'teilweise';
+
+    /** Anzeige: noch kein LK kam vor, aber welche sind eingeplant. */
+    public const ANZEIGE_EINGEPLANT = 'eingeplant';
+
+    /** Anzeige: kein LK steht im vorliegenden Plan. */
+    public const ANZEIGE_OFFEN = 'offen';
+
     /**
      * Konstruktor.
      *
@@ -56,6 +68,8 @@ class raster_kompetenz {
      * @param bool $istwahlpflicht Wahlpflicht-HK dieses Berufs - zaehlt nicht in die Bezugsgroesse
      * @param array $leistungskriterien competencyid => STATUS_* je Leistungskriterium dieser HK,
      *                           in Rahmenreihenfolge; leer, wenn die HK keine hat
+     * @param array $lkeinsaetze competencyid => einsatz-ids je Leistungskriterium: die Einsaetze,
+     *                           in denen es vorkam oder vorkommen wird, nach Beginn sortiert
      */
     public function __construct(
         /** @var int competencyid der Handlungskompetenz (zweite Ebene). */
@@ -66,7 +80,34 @@ class raster_kompetenz {
         public readonly bool $istwahlpflicht,
         /** @var array<int, string> competencyid => STATUS_* je Leistungskriterium dieser HK. */
         public readonly array $leistungskriterien = [],
+        /** @var array<int, int[]> competencyid => einsatz-ids je Leistungskriterium. */
+        public readonly array $lkeinsaetze = [],
     ) {
+    }
+
+    /**
+     * Stand fuer die Anzeige: eine HK ist erst vollstaendig, wenn alle ihre
+     * LK vorkamen - abgeschlossen ist sie meist erst gegen Ende der Lehre.
+     * Kam ein Teil vor, ist sie teilweise. Fuer die Lueckenanalyse zaehlt
+     * weiterhin $status: dort ist eine HK keine Luecke mehr, sobald eines
+     * ihrer LK vorkam.
+     *
+     * @return string Eine der ANZEIGE_*-Konstanten
+     */
+    public function anzeigestand(): string {
+        if ($this->status === self::STATUS_EINGEPLANT) {
+            return self::ANZEIGE_EINGEPLANT;
+        }
+        if ($this->status !== self::STATUS_ABGEDECKT) {
+            return self::ANZEIGE_OFFEN;
+        }
+        foreach ($this->leistungskriterien as $lkstatus) {
+            if ($lkstatus !== self::STATUS_ABGEDECKT) {
+                return self::ANZEIGE_TEILWEISE;
+            }
+        }
+
+        return self::ANZEIGE_VOLLSTAENDIG;
     }
 
     /**

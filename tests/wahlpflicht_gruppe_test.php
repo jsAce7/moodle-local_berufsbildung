@@ -61,22 +61,39 @@ final class wahlpflicht_gruppe_test extends advanced_testcase {
      */
     public function test_stand_zaehlt_nur_wahlpflicht_der_eigenen_bereiche(): void {
         $this->assertSame(
-            ['abgedeckt' => 1, 'eingeplant' => 1],
+            ['vollstaendig' => 1, 'teilweise' => 0, 'eingeplant' => 1],
             (new wahlpflicht_gruppe(['a', 'b', 'c'], 1))->stand($this->raster())
         );
         $this->assertSame(
-            ['abgedeckt' => 0, 'eingeplant' => 1],
+            ['vollstaendig' => 0, 'teilweise' => 0, 'eingeplant' => 1],
             (new wahlpflicht_gruppe(['d'], 1))->stand($this->raster())
         );
         $this->assertSame(
-            ['abgedeckt' => 1, 'eingeplant' => 2],
+            ['vollstaendig' => 1, 'teilweise' => 0, 'eingeplant' => 2],
             (new wahlpflicht_gruppe([], 3))->stand($this->raster())
         );
     }
 
     /**
-     * Offen ist, was vom Verlangten noch nicht vorkam - eine eingeplante HK
-     * zaehlt noch als offen, wie bei den Pflicht-HK. Randfall: mehr als
+     * Eine HK, von der erst ein Teil der LK vorkam, ist teilweise und
+     * erfuellt die Gruppe noch nicht.
+     */
+    public function test_teilweise_erfuellt_noch_nicht(): void {
+        $raster = [new raster_bereich(1, [
+            new raster_kompetenz(12, raster_kompetenz::STATUS_ABGEDECKT, true, [
+                121 => raster_kompetenz::STATUS_ABGEDECKT,
+                122 => raster_kompetenz::STATUS_EINGEPLANT,
+            ]),
+        ], 'a')];
+        $gruppe = new wahlpflicht_gruppe(['a'], 1);
+
+        $this->assertSame(['vollstaendig' => 0, 'teilweise' => 1, 'eingeplant' => 0], $gruppe->stand($raster));
+        $this->assertSame(1, $gruppe->offen($raster));
+    }
+
+    /**
+     * Offen ist, was vom Verlangten noch nicht vollstaendig vorkam - eine
+     * eingeplante HK zaehlt noch als offen. Randfall: mehr als
      * verlangt ergibt null, nicht eine negative Zahl.
      */
     public function test_offen_zaehlt_eingeplantes_noch_mit(): void {

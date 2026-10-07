@@ -330,6 +330,47 @@ final class raster_analyse_test extends advanced_testcase {
     }
 
     /**
+     * Je LK die Einsaetze, in denen es vorkam oder geplant ist, nach Beginn.
+     * Eine als Ganzes zugeordnete HK bringt alle ihre LK in den Einsatz.
+     */
+    public function test_einsaetze_je_leistungskriterium(): void {
+        $this->resetAfterTest();
+        $lernende = $this->lege_lernende_an();
+        $plugin = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung');
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework(['idnumber' => 'au-2022']);
+        $hkb = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id')]);
+        $hk = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hkb->get('id')]);
+        $lk1 = (int) $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hk->get('id'),
+        ])->get('id');
+        $lk2 = (int) $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hk->get('id'),
+        ])->get('id');
+
+        $frueh = $plugin->create_block(['nummer' => 'F']);
+        $plugin->create_block_competency(['blockid' => $frueh->get('id'), 'competencyid' => $lk1]);
+        $spaet = $plugin->create_block(['nummer' => 'S']);
+        $plugin->create_block_competency(['blockid' => $spaet->get('id'), 'competencyid' => (int) $hk->get('id')]);
+
+        $einsatzfrueh = $plugin->create_einsatz([
+            'userid' => $lernende->id, 'blockid' => $frueh->get('id'),
+            'von' => time() - 60 * DAYSECS, 'bis' => time() - 30 * DAYSECS,
+        ]);
+        $einsatzspaet = $plugin->create_einsatz([
+            'userid' => $lernende->id, 'blockid' => $spaet->get('id'),
+            'von' => time() + 30 * DAYSECS, 'bis' => time() + 60 * DAYSECS,
+        ]);
+
+        $zelle = $this->zellen((new raster_analyse())->get_raster((int) $lernende->id))[(int) $hk->get('id')];
+
+        $this->assertSame([(int) $einsatzfrueh->get('id'), (int) $einsatzspaet->get('id')], $zelle->lkeinsaetze[$lk1]);
+        $this->assertSame([(int) $einsatzspaet->get('id')], $zelle->lkeinsaetze[$lk2]);
+        $this->assertSame(raster_kompetenz::ANZEIGE_TEILWEISE, $zelle->anzeigestand());
+    }
+
+    /**
      * Jeder Bereich traegt sein Kuerzel aus der ID-Nummer - darueber finden
      * die Wahlpflicht-Gruppen ("a,b,c:1") ihre Bereiche.
      */

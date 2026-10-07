@@ -95,6 +95,34 @@ class plan_service {
      * @return int[] Deduplizierte competencyids
      */
     public function get_zugeordnete_kompetenzen(int $lernendeid, int $von, int $bis): array {
+        $kompetenzen = [];
+        foreach ($this->get_kompetenzen_je_einsatz($lernendeid, $von, $bis) as $eintrag) {
+            foreach ($eintrag['kompetenzen'] as $competencyid) {
+                $kompetenzen[$competencyid] = true;
+            }
+        }
+
+        return array_keys($kompetenzen);
+    }
+
+    /**
+     * Die betrieblichen Einsaetze im Zeitraum, je mit den Kompetenzen, die
+     * ihrem Block zugeordnet sind - so, wie sie zugeordnet sind, ohne die
+     * uebergeordneten. Daraus laesst sich ablesen, in welchem Einsatz ein
+     * Leistungskriterium vorkam oder vorkommen wird.
+     *
+     * Einsaetze, Bloecke und Zuordnungen je in einer Abfrage, nicht je Block:
+     * "Meine Lernenden" rechnet das fuer jede Person, und ein Plan hat ein
+     * Dutzend Einsaetze.
+     *
+     * @param int $lernendeid
+     * @param int|null $von Timestamp, null ohne untere Grenze
+     * @param int|null $bis Timestamp, null ohne obere Grenze
+     * @return array<int, array{einsatz: einsatz, kompetenzen: int[]}> Nach einsatz-id, nach Beginn sortiert
+     */
+    public function get_kompetenzen_je_einsatz(int $lernendeid, ?int $von = null, ?int $bis = null): array {
+        global $DB;
+
         $einsaetze = $this->get_einsaetze($lernendeid, $von, $bis);
         if (empty($einsaetze)) {
             return [];
@@ -104,27 +132,32 @@ class plan_service {
             static fn (einsatz $einsatz): int => (int) $einsatz->get('blockid'),
             $einsaetze
         )));
-
-        // Bloecke und ihre Zuordnungen je in einer Abfrage, nicht je Block:
-        // "Meine Lernenden" rechnet das fuer jede Person, und ein Plan hat
-        // ein Dutzend Einsaetze.
-        global $DB;
         [$insql, $params] = $DB->get_in_or_equal($blockids, SQL_PARAMS_NAMED);
-        $betrieblich = array_map(
-            static fn (block $block): int => (int) $block->get('id'),
-            block::get_records_select("id {$insql} AND ist_betrieb = 1", $params)
-        );
+        $betrieblich = [];
+        foreach (block::get_records_select("id {$insql} AND ist_betrieb = 1", $params) as $block) {
+            $betrieblich[(int) $block->get('id')] = [];
+        }
         if (empty($betrieblich)) {
             return [];
         }
 
-        [$insql, $params] = $DB->get_in_or_equal($betrieblich, SQL_PARAMS_NAMED);
-        $kompetenzen = [];
+        [$insql, $params] = $DB->get_in_or_equal(array_keys($betrieblich), SQL_PARAMS_NAMED);
         foreach (block_lk::get_records_select("blockid {$insql}", $params) as $abdeckung) {
-            $kompetenzen[(int) $abdeckung->get('competencyid')] = true;
+            $betrieblich[(int) $abdeckung->get('blockid')][] = (int) $abdeckung->get('competencyid');
         }
 
-        return array_keys($kompetenzen);
+        $ergebnis = [];
+        foreach ($einsaetze as $einsatz) {
+            $blockid = (int) $einsatz->get('blockid');
+            if (isset($betrieblich[$blockid])) {
+                $ergebnis[(int) $einsatz->get('id')] = [
+                    'einsatz' => $einsatz,
+                    'kompetenzen' => $betrieblich[$blockid],
+                ];
+            }
+        }
+
+        return $ergebnis;
     }
 
     /**

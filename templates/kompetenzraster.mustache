@@ -22,8 +22,8 @@
     Spalten.
 
     Die Flaeche der Zelle zeigt den Ausbildungsstand: kraeftig gefuellt
-    bereits vorgekommen, hell gefuellt spaeter eingeplant, weiss nicht im
-    Plan. Pflicht oder Wahlpflicht steht als schmaler Streifen oben, in
+    vollstaendig (alle LK vorgekommen, mit Haekchen), mittel teilweise,
+    hell nur eingeplant, weiss nicht im Plan. Pflicht oder Wahlpflicht steht als schmaler Streifen oben, in
     den Farben des Bildungsplans. Der Stand haengt zusaetzlich an Symbol
     und Klartext - Farbe allein traegt nie eine Information.
 
@@ -37,7 +37,8 @@
                {istleer, name, hascode, code, farbklasse, statusklasse, hatzeichen, icon, statustext, titel,
                 dialogtitel, haslk, lktext, lkgruppen}
     * lkgruppen - array of {titel, statusklasse, icon, leistungskriterien}, das Fehlende zuerst
-    * leistungskriterien - array of {name, beschreibung, hatbeschreibung}
+    * leistungskriterien - array of {name, beschreibung, hatbeschreibung, hatorte, orte}
+      orte - Block und Zeitraum der Einsaetze, in denen das LK vorkam oder geplant ist
     * kompakt - bool, nur Kuerzel und Symbol statt der vollen Bezeichnung
     * haszusammenfassung - bool
     * zusammenfassung - string, Pflicht-HK je Stand ueber alle Bereiche
@@ -80,7 +81,7 @@
                         "hascode": true,
                         "code": "a1",
                         "farbklasse": "bg-warning",
-                        "statusklasse": "local-berufsbildung-raster-abgedeckt",
+                        "statusklasse": "local-berufsbildung-raster-vollstaendig",
                         "hatzeichen": true,
                         "icon": "fa-check",
                         "statustext": "abgedeckt",
@@ -92,11 +93,11 @@
                             {"titel": "Fehlt noch (1)", "statusklasse": "local-berufsbildung-raster-lk-offen",
                              "icon": "fa-times",
                              "leistungskriterien": [{"name": "AU a1 02", "beschreibung": "Sie zeichnen Skizzen.",
-                                                     "hatbeschreibung": true}]},
+                                                     "hatbeschreibung": true, "hatorte": false, "orte": ""}]},
                             {"titel": "Bereits vorgekommen (1)", "statusklasse": "local-berufsbildung-raster-lk-abgedeckt",
                              "icon": "fa-check",
                              "leistungskriterien": [{"name": "AU a1 01", "beschreibung": "Sie erstellen Stücklisten.",
-                                                     "hatbeschreibung": true}]}
+                                                     "hatbeschreibung": true, "hatorte": true, "orte": "Werkstatt, KW 32–37"}]}
                         ]
                     },
                     {
@@ -116,7 +117,7 @@
             }
         ],
         "legende": [
-            {"istfarbe": false, "hatzeichen": true, "statusklasse": "local-berufsbildung-raster-abgedeckt",
+            {"istfarbe": false, "hatzeichen": true, "statusklasse": "local-berufsbildung-raster-vollstaendig",
              "icon": "fa-check", "text": "abgedeckt"},
             {"istfarbe": true, "hatzeichen": false, "farbklasse": "bg-warning", "text": "Pflicht"}
         ]
@@ -215,6 +216,9 @@
                                                                         {{#hatbeschreibung}}
                                                                             <span class="local-berufsbildung-raster-lktext text-muted">{{beschreibung}}</span>
                                                                         {{/hatbeschreibung}}
+                                                                        {{#hatorte}}
+                                                                            <span class="local-berufsbildung-raster-lkorte small">{{#pix}}i/location, core{{/pix}}{{orte}}</span>
+                                                                        {{/hatorte}}
                                                                     </li>
                                                                 {{/leistungskriterien}}
                                                             </ul>
