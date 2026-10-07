@@ -60,29 +60,30 @@ class wahlpflicht_gruppe {
     }
 
     /**
-     * Wie viele Wahlpflicht-HK aus den Bereichen dieser Gruppe bereits
-     * vorkamen und wie viele erst eingeplant sind.
+     * Wie viele Wahlpflicht-HK aus den Bereichen dieser Gruppe vollstaendig
+     * vorkamen (alle LK), wie viele teilweise und wie viele erst eingeplant
+     * sind - siehe raster_kompetenz::anzeigestand().
      *
      * Raster und Kachel auf "Meine Lernenden" zaehlen beide hiermit, damit
      * sie nie auseinanderlaufen.
      *
      * @param raster_bereich[] $raster Ergebnis von api::get_kompetenzraster()
-     * @return array{abgedeckt: int, eingeplant: int}
+     * @return array{vollstaendig: int, teilweise: int, eingeplant: int}
      */
     public function stand(array $raster): array {
-        $stand = ['abgedeckt' => 0, 'eingeplant' => 0];
+        $stand = [
+            raster_kompetenz::ANZEIGE_VOLLSTAENDIG => 0,
+            raster_kompetenz::ANZEIGE_TEILWEISE => 0,
+            raster_kompetenz::ANZEIGE_EINGEPLANT => 0,
+        ];
         foreach ($raster as $bereich) {
             if (!$this->umfasst($bereich->kuerzel)) {
                 continue;
             }
             foreach ($bereich->kompetenzen as $kompetenz) {
-                if (!$kompetenz->istwahlpflicht) {
-                    continue;
-                }
-                if ($kompetenz->status === raster_kompetenz::STATUS_ABGEDECKT) {
-                    $stand['abgedeckt']++;
-                } else if ($kompetenz->status === raster_kompetenz::STATUS_EINGEPLANT) {
-                    $stand['eingeplant']++;
+                $anzeige = $kompetenz->anzeigestand();
+                if ($kompetenz->istwahlpflicht && isset($stand[$anzeige])) {
+                    $stand[$anzeige]++;
                 }
             }
         }
@@ -91,12 +92,13 @@ class wahlpflicht_gruppe {
     }
 
     /**
-     * Wie viele der verlangten Wahlpflicht-HK noch nicht vorkamen. Wie bei
-     * den Pflicht-HK zaehlt eine erst eingeplante noch als offen.
+     * Wie viele der verlangten Wahlpflicht-HK noch nicht vollstaendig
+     * vorkamen. Erfuellt ist die Gruppe erst, wenn genug HK vollstaendig
+     * sind - wie das Haekchen im Raster.
      *
      * @param raster_bereich[] $raster Ergebnis von api::get_kompetenzraster()
      */
     public function offen(array $raster): int {
-        return max(0, $this->anzahl - $this->stand($raster)['abgedeckt']);
+        return max(0, $this->anzahl - $this->stand($raster)[raster_kompetenz::ANZEIGE_VOLLSTAENDIG]);
     }
 }

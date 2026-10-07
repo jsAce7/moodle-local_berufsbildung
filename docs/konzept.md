@@ -329,7 +329,18 @@ Das Kompetenzraster zeigt den Kompetenzrahmen eines Berufs so, wie er im Bildung
 | `eingeplant` | Ein LK der HK kommt erst in einem späteren Einsatz des vorliegenden Plans vor. |
 | `offen` | Kein Einsatz des vorliegenden Plans enthält ein LK der HK. |
 
-Eine HK ist selten ganz in einem Block; abgeschlossen ist sie meist erst am Ende der Lehre. Deshalb trägt jede HK zusätzlich den Stand **je LK** (`raster_kompetenz::$leistungskriterien`). Die Darstellung zeigt daraus „4 von 12 LK vorgekommen, 2 eingeplant" und auf Klick die fehlenden LK.
+Eine HK ist selten ganz in einem Block; abgeschlossen ist sie meist erst gegen Ende der Lehre. Deshalb trägt jede HK zusätzlich den Stand **je LK** (`raster_kompetenz::$leistungskriterien`) und je LK die Einsätze, in denen es vorkam oder geplant ist (`raster_kompetenz::$lkeinsaetze`).
+
+Für die **Anzeige** ergibt das vier Stände (`raster_kompetenz::anzeigestand()`):
+
+| Anzeige | Bedeutung | Darstellung |
+|---|---|---|
+| `vollstaendig` | alle LK kamen bis zum Stichtag vor | Häkchen, kräftige Fläche |
+| `teilweise` | ein Teil der LK kam vor | Sanduhr, mittlere Fläche |
+| `eingeplant` | noch kein LK kam vor, welche sind eingeplant | Kalender, helle Fläche |
+| `offen` | kein LK steht im Plan | weiss |
+
+Die Lückenanalyse (`get_luecken_nach_bereich()`, Badge „x noch offen") bleibt beim Status oben: eine HK ist keine Planungslücke mehr, sobald eines ihrer LK vorkam. Die Zelle zeigt „4 von 12 LK vorgekommen, 2 eingeplant"; ein Klick öffnet die LK-Liste mit Block und Kalenderwochen je LK.
 
 **Pflicht und Wahlpflicht.** Welche HK eines Berufs Wahlpflicht sind, steht in der Einstellung `beruf_wahlpflicht_hk` (`AU_EFZ=a.04,a.05,…`). Wahlpflicht-HK zählen nicht in die Pflicht-Bezugsgrösse („x von 14 Pflicht-HK"). Wie viele davon der Bildungsplan verlangt, steht in `beruf_wahlpflicht_anzahl`, je Gruppe von Bereichen:
 
@@ -338,7 +349,7 @@ AU_EFZ=a,b,c:1; d:1     eine aus a, b und c zusammen, eine aus d
 AU_EFZ=3                drei aus dem ganzen Beruf
 ```
 
-Ohne Eintrag zeigt das Raster keine Wahlpflicht-Angabe. Eine Gruppe gilt als erfüllt, wenn genügend ihrer Wahlpflicht-HK bereits vorkamen; eingeplante zählen dafür noch nicht.
+Ohne Eintrag zeigt das Raster keine Wahlpflicht-Angabe. Eine Gruppe gilt als erfüllt, wenn genügend ihrer Wahlpflicht-HK **vollständig** vorkamen; teilweise und eingeplante zählen dafür noch nicht.
 
 **API**
 
@@ -383,12 +394,14 @@ class raster_kompetenz {
     public string $status;        // STATUS_ABGEDECKT | STATUS_EINGEPLANT | STATUS_OFFEN
     public bool $istwahlpflicht;
     public array $leistungskriterien; // competencyid => Status je LK
+    public array $lkeinsaetze;        // competencyid => einsatz-ids je LK
+    // anzeigestand() => vollstaendig | teilweise | eingeplant | offen
 }
 
 class wahlpflicht_gruppe {
     public array $bereiche;       // Kürzel, leer = ganzer Beruf
     public int $anzahl;           // verlangt
-    // stand(raster) => [abgedeckt, eingeplant]; offen(raster) => noch nicht vorgekommen
+    // stand(raster) => [vollstaendig, teilweise, eingeplant]; offen(raster) => noch nicht vollständig
 }
 ```
 

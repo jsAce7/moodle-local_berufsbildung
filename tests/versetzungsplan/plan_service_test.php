@@ -206,6 +206,28 @@ final class plan_service_test extends advanced_testcase {
         );
     }
 
+    /**
+     * Je betrieblichem Einsatz die Kompetenzen seines Blocks, nach Beginn
+     * sortiert; Einsaetze in Schule oder ueK fehlen.
+     */
+    public function test_get_kompetenzen_je_einsatz_nur_betriebliche(): void {
+        $this->resetAfterTest();
+
+        $lernende = $this->getDataGenerator()->create_user();
+        $betrieb = $this->lege_block_an('4');
+        $schule = $this->lege_block_an('S', false);
+        (new block_lk(0, (object) ['blockid' => $betrieb->get('id'), 'competencyid' => 77]))->create();
+        (new block_lk(0, (object) ['blockid' => $schule->get('id'), 'competencyid' => 88]))->create();
+        $spaet = $this->lege_einsatz_an((int) $lernende->id, (int) $betrieb->get('id'), 3000, 4000);
+        $frueh = $this->lege_einsatz_an((int) $lernende->id, (int) $betrieb->get('id'), 1000, 2000);
+        $this->lege_einsatz_an((int) $lernende->id, (int) $schule->get('id'), 1500, 1600);
+
+        $ergebnis = (new plan_service())->get_kompetenzen_je_einsatz((int) $lernende->id);
+
+        $this->assertSame([(int) $frueh->get('id'), (int) $spaet->get('id')], array_keys($ergebnis));
+        $this->assertSame([77], $ergebnis[(int) $frueh->get('id')]['kompetenzen']);
+    }
+
     public function test_get_aktueller_einsatz_normalfall(): void {
         $this->resetAfterTest();
 

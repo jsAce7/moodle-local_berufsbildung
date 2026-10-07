@@ -100,7 +100,7 @@ final class kompetenzraster_test extends advanced_testcase {
         ])]);
 
         $this->assertStringContainsString(
-            get_string('raster:legende_abgedeckt', 'local_berufsbildung'),
+            get_string('raster:legende_vollstaendig', 'local_berufsbildung'),
             $html
         );
         $this->assertStringNotContainsString(
@@ -132,7 +132,8 @@ final class kompetenzraster_test extends advanced_testcase {
         $this->assertStringContainsString(
             get_string('raster:zusammenfassung', 'local_berufsbildung', (object) [
                 'soll' => 2,
-                'abgedeckt' => 1,
+                'vollstaendig' => 1,
+                'teilweise' => 0,
                 'eingeplant' => 0,
                 'offen' => 1,
             ]),
@@ -156,7 +157,8 @@ final class kompetenzraster_test extends advanced_testcase {
         $this->assertStringNotContainsString(
             get_string('raster:zusammenfassung', 'local_berufsbildung', (object) [
                 'soll' => 1,
-                'abgedeckt' => 1,
+                'vollstaendig' => 1,
+                'teilweise' => 0,
                 'eingeplant' => 0,
                 'offen' => 0,
             ]),
@@ -182,7 +184,8 @@ final class kompetenzraster_test extends advanced_testcase {
         $this->assertStringContainsString(
             get_string('raster:zusammenfassung', 'local_berufsbildung', (object) [
                 'soll' => 4,
-                'abgedeckt' => 1,
+                'vollstaendig' => 1,
+                'teilweise' => 0,
                 'eingeplant' => 2,
                 'offen' => 1,
             ]),
@@ -217,7 +220,8 @@ final class kompetenzraster_test extends advanced_testcase {
         $this->assertStringNotContainsString(
             get_string('raster:zusammenfassung', 'local_berufsbildung', (object) [
                 'soll' => 1,
-                'abgedeckt' => 0,
+                'vollstaendig' => 0,
+                'teilweise' => 0,
                 'eingeplant' => 0,
                 'offen' => 1,
             ]),
@@ -330,16 +334,79 @@ final class kompetenzraster_test extends advanced_testcase {
         $html = kompetenzraster::render($raster, time(), wahlpflichtgruppen: $gruppen);
 
         $this->assertStringContainsString(get_string('raster:wahlpflicht_stand_bereiche', 'local_berufsbildung', (object) [
-            'bereiche' => 'a, b, c', 'soll' => 1, 'abgedeckt' => 1, 'eingeplant' => 0,
+            'bereiche' => 'a, b, c', 'soll' => 1, 'vollstaendig' => 1, 'teilweise' => 0, 'eingeplant' => 0,
         ]), $html);
         $this->assertStringContainsString(get_string('raster:wahlpflicht_stand_bereiche', 'local_berufsbildung', (object) [
-            'bereiche' => 'd', 'soll' => 1, 'abgedeckt' => 0, 'eingeplant' => 1,
+            'bereiche' => 'd', 'soll' => 1, 'vollstaendig' => 0, 'teilweise' => 0, 'eingeplant' => 1,
         ]), $html);
         // Nur die Gruppe a, b, c ist erfuellt.
         $this->assertSame(1, substr_count($html, get_string('raster:wahlpflicht_erfuellt', 'local_berufsbildung')));
 
         $ohne = kompetenzraster::render($raster, time());
         $this->assertSame(1, substr_count($ohne, 'local-berufsbildung-raster-zusammenfassung'));
+    }
+
+    /**
+     * Das Haekchen gibt es erst, wenn alle LK vorkamen; kam ein Teil vor,
+     * ist die HK teilweise. In der LK-Liste steht je LK, in welchem Einsatz
+     * es vorkam oder geplant ist.
+     */
+    public function test_haekchen_erst_wenn_alle_lk_vorkamen_und_orte_je_lk(): void {
+        $this->resetAfterTest();
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $plugin = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung');
+        $rahmen = $generator->create_framework();
+        $hkb = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id')]);
+        $hk = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hkb->get('id')]);
+        $vorgekommen = (int) $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hk->get('id'), 'shortname' => 'AU a1 01',
+        ])->get('id');
+        $fehlt = (int) $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hk->get('id'), 'shortname' => 'AU a1 02',
+        ])->get('id');
+        $lernende = $this->getDataGenerator()->create_user();
+        $block = $plugin->create_block(['nummer' => 'B1', 'name' => 'Werkstatt']);
+        $einsatz = $plugin->create_einsatz([
+            'userid' => $lernende->id, 'blockid' => $block->get('id'),
+            'von' => time() - 60 * DAYSECS, 'bis' => time() - 30 * DAYSECS,
+        ]);
+
+        $teilweise = [new raster_bereich((int) $hkb->get('id'), [
+            new raster_kompetenz((int) $hk->get('id'), raster_kompetenz::STATUS_ABGEDECKT, false, [
+                $vorgekommen => raster_kompetenz::STATUS_ABGEDECKT,
+                $fehlt => raster_kompetenz::STATUS_OFFEN,
+            ], [$vorgekommen => [(int) $einsatz->get('id')], $fehlt => []]),
+        ])];
+        $html = kompetenzraster::render($teilweise, time());
+
+        $this->assertStringContainsString('local-berufsbildung-raster-teilweise', $html);
+        $this->assertStringNotContainsString('fa-check', $this->zellenkopf($html));
+        $this->assertStringContainsString('fa-hourglass-half', $this->zellenkopf($html));
+        $this->assertStringContainsString('Werkstatt, ', $html);
+
+        $vollstaendig = [new raster_bereich((int) $hkb->get('id'), [
+            new raster_kompetenz((int) $hk->get('id'), raster_kompetenz::STATUS_ABGEDECKT, false, [
+                $vorgekommen => raster_kompetenz::STATUS_ABGEDECKT,
+                $fehlt => raster_kompetenz::STATUS_ABGEDECKT,
+            ]),
+        ])];
+        $html = kompetenzraster::render($vollstaendig, time());
+
+        $this->assertStringContainsString('local-berufsbildung-raster-vollstaendig', $html);
+        $this->assertStringContainsString('fa-check', $this->zellenkopf($html));
+    }
+
+    /**
+     * Der Kopf der ersten Rasterzelle - Zeichen und Kuerzel, ohne die
+     * LK-Liste darunter, die eigene Zeichen je Gruppe traegt.
+     *
+     * @param string $html
+     * @return string
+     */
+    private function zellenkopf(string $html): string {
+        preg_match('~<span class="local-berufsbildung-raster-kopf">(.*?)</span>~s', $html, $treffer);
+
+        return $treffer[1] ?? '';
     }
 
     /**

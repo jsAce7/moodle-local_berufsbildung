@@ -102,9 +102,20 @@ class raster_analyse {
         // geladenen Rahmen dazu, statt sie je Kompetenz nachzuladen: auf
         // "Meine Lernenden" laeuft das fuer jede Person. Ausserhalb des
         // Rahmens interessiert hier nichts.
-        $planservice = new plan_service();
-        $direktabgedeckt = array_flip($planservice->get_zugeordnete_kompetenzen($lernendeid, 0, $bis));
-        $direktjemals = array_flip($planservice->get_zugeordnete_kompetenzen($lernendeid, 0, PHP_INT_MAX));
+        // Einmal alle Einsaetze mit ihren Kompetenzen; was bis zum Stichtag
+        // begonnen hat, ist vorgekommen - dieselbe Grenze wie
+        // get_einsaetze($lernendeid, 0, $bis).
+        $jeeinsatz = (new plan_service())->get_kompetenzen_je_einsatz($lernendeid);
+        $direktabgedeckt = [];
+        $direktjemals = [];
+        foreach ($jeeinsatz as $eintrag) {
+            foreach ($eintrag['kompetenzen'] as $competencyid) {
+                $direktjemals[$competencyid] = true;
+                if ((int) $eintrag['einsatz']->get('von') <= $bis) {
+                    $direktabgedeckt[$competencyid] = true;
+                }
+            }
+        }
 
         $eltern = [];
         foreach ($rahmenkompetenzen as $kompetenz) {
@@ -116,13 +127,26 @@ class raster_analyse {
         $abgedeckt = $this->mit_vorfahren($direktabgedeckt, $eltern);
         $jemals = $this->mit_vorfahren($direktjemals, $eltern);
 
+        // Je Einsatz die Kompetenzen als Schluessel, fuer die Frage, in
+        // welchen Einsaetzen ein LK vorkam oder vorkommen wird.
+        $einsatzkompetenzen = [];
+        foreach ($jeeinsatz as $einsatzid => $eintrag) {
+            $einsatzkompetenzen[$einsatzid] = array_flip($eintrag['kompetenzen']);
+        }
+
         $lkjehk = [];
+        $lkeinsaetze = [];
         foreach ((new kompetenz_baum())->baum($rahmenkompetenzen) as $zweig) {
             foreach ($zweig['handlungskompetenzen'] as $eintrag) {
                 $hkid = (int) $eintrag['kompetenz']->get('id');
                 $lkjehk[$hkid] = [];
+                $lkeinsaetze[$hkid] = [];
                 foreach ($eintrag['leistungskriterien'] as $lk) {
                     $lkid = (int) $lk->get('id');
+                    $lkeinsaetze[$hkid][$lkid] = array_keys(array_filter(
+                        $einsatzkompetenzen,
+                        fn (array $kompetenzen): bool => $this->zugeordnet_bis_hk($lkid, $hkid, $kompetenzen, $eltern)
+                    ));
                     if ($this->zugeordnet_bis_hk($lkid, $hkid, $direktabgedeckt, $eltern)) {
                         $lkjehk[$hkid][$lkid] = raster_kompetenz::STATUS_ABGEDECKT;
                     } else if ($this->zugeordnet_bis_hk($lkid, $hkid, $direktjemals, $eltern)) {
@@ -162,6 +186,7 @@ class raster_analyse {
                 status: $status,
                 istwahlpflicht: isset($wahlpflicht[$this->vergleichsschluessel((string) $kompetenz->get('idnumber'))]),
                 leistungskriterien: $lkjehk[$competencyid] ?? [],
+                lkeinsaetze: $lkeinsaetze[$competencyid] ?? [],
             );
         }
 

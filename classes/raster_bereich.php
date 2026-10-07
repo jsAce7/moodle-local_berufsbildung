@@ -94,6 +94,18 @@ class raster_bereich {
     }
 
     /**
+     * Anzahl der Pflicht-HK dieses Bereichs, deren LK alle bis zum Stichtag
+     * vorkamen - siehe raster_kompetenz::anzeigestand().
+     */
+    public function anzahl_vollstaendig(): int {
+        return count(array_filter(
+            $this->pflicht(),
+            static fn (raster_kompetenz $kompetenz): bool =>
+                $kompetenz->anzeigestand() === raster_kompetenz::ANZEIGE_VOLLSTAENDIG
+        ));
+    }
+
+    /**
      * Anzahl der bis zum Stichtag abgedeckten Pflicht-HK dieses Bereichs.
      */
     public function anzahl_abgedeckt(): int {
