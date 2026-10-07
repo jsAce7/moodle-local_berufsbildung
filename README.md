@@ -93,7 +93,7 @@ Das Plugin legt drei Rollen an:
 | Rolle | Kontext | Zweck |
 |---|---|---|
 | `berufsbildner` (Berufsbildner/in) | Nutzerkontext der lernenden Person | Trägt selbst keine Capabilities — die vergeben die aufsetzenden Plugins. Wird je bestehender Zuordnung zugewiesen und bleibt nach deren Ende bestehen, damit eine frühere Zuständigkeit zum damaligen Stichtag noch auflösbar ist. Entzogen erst mit der Datenbereinigung (Aufbewahrungsfrist, Löschung der Zuordnung, Account-Löschung). |
-| `berufsbildung_planung` (Ausbildungsplanung) | Systemkontext | Trägt `local/berufsbildung:manageblocks` und öffnet damit die Ausbildungsblöcke samt Kompetenzabdeckung und die Seite *Kompetenzrahmen je Beruf*. Wird jeder Person zugewiesen, die mindestens eine **laufende** Zuordnung hat, und wieder entzogen, sobald die letzte davon beendet ist. |
+| `berufsbildung_planung` (Ausbildungsplanung) | Systemkontext | Trägt `local/berufsbildung:manageblocks` und öffnet damit die Ausbildungsblöcke samt Kompetenzabdeckung und LK-Übersicht und die Seite *Kompetenzrahmen je Beruf*. Wird jeder Person zugewiesen, die mindestens eine **laufende** Zuordnung hat, und wieder entzogen, sobald die letzte davon beendet ist. |
 | `berufsbildung_leitung` (Leitung Berufsbildung) | Systemkontext | Für die Leitung Berufsbildung, die ohne eigene Zuordnung über alle Lernenden hinweg liest, etwa die üK-Noten eines Jahrgangs. Trägt selbst keine Capabilities — die vergeben die aufsetzenden Plugins (siehe deren README). Wird **nie automatisch** zugewiesen, sondern von Hand als globale Rolle. |
 
 Der Unterschied im Entzug ist beabsichtigt: die personenbezogene Rolle ist stichtagsgeprüfter Lesezugriff und muss für einen Bericht aus einem früheren Semester noch greifen; die Planungsrolle ist systemweites Schreibrecht auf Stammdaten und endet deshalb mit der Betreuung.
@@ -112,7 +112,7 @@ Alle im Systemkontext. Die Verwaltungsseiten hängen unter *Website-Administrati
 |---|---|---|
 | `local/berufsbildung:viewzuordnung` | Manager | *Zuordnungen und Gruppen ▸ Zuordnungen* (Übersicht, ohne zu ändern) |
 | `local/berufsbildung:managezuordnung` | Manager | in der Zuordnungsübersicht die Aktionen Anlegen, Importieren, Beenden, Löschen und Teilnahmeart setzen, dazu *Zuordnungen und Gruppen ▸ Verknüpfungen mit globalen Gruppen* |
-| `local/berufsbildung:manageblocks` | Manager, Ausbildungsplanung | *Ausbildungsplanung ▸ Ausbildungsblöcke* und *Kompetenzrahmen je Beruf* |
+| `local/berufsbildung:manageblocks` | Manager, Ausbildungsplanung | *Ausbildungsplanung ▸ Ausbildungsblöcke* samt Kompetenzzuordnung, Kopieren und LK-Übersicht je Beruf, dazu *Kompetenzrahmen je Beruf* |
 | `local/berufsbildung:importplan` | niemand | *Ausbildungsplanung ▸ Versetzungsplan-Import* und der Webservice. Wird gezielt dem Dienstkonto zugewiesen. |
 | `local/berufsbildung:manageaufbewahrung` | Manager | *Einstellungen und Datenschutz ▸ Aufbewahrungspflichten* |
 
@@ -207,7 +207,7 @@ Aus der Entwicklungsumgebung `~/moodle-dev/`:
 ./scripts/lint.sh local/berufsbildung    # phpcs (moodle-cs)
 ```
 
-Es gibt 313 PHPUnit-Tests in 30 Dateien. Behat deckt mit 2 Szenarien nur das Anlegen und Beenden einer Zuordnung ab, nicht jede Seite. Die CI ([.github/workflows/ci.yml](.github/workflows/ci.yml), `moodle-plugin-ci`) läuft bei jedem Push und Pull Request auf GitHub Actions, mit Moodle 4.5 / PHP 8.1 / PostgreSQL und Moodle 5.2 / PHP 8.4 / MariaDB; Moodle 5.0 und 5.1 laufen nicht eigens mit.
+Es gibt 379 PHPUnit-Tests in 38 Dateien. Behat deckt mit 15 Szenarien Zuordnungen, die Kompetenzauswahl und das Kopieren von Blöcken, die LK-Übersicht, das Kompetenzraster auf „Meine Lehre“ und „Meine Lernenden“ ab, nicht jede Seite. Die CI ([.github/workflows/ci.yml](.github/workflows/ci.yml), `moodle-plugin-ci`) läuft bei jedem Push und Pull Request auf GitHub Actions, mit Moodle 4.5 / PHP 8.1 / PostgreSQL und Moodle 5.2 / PHP 8.4 / MariaDB; Moodle 5.0 und 5.1 laufen nicht eigens mit.
 
 **JavaScript** liegt als AMD-Modul in `amd/src`, das gebaute `amd/build` gehört mit ins Repository. Nach einer Änderung neu bauen. Weil das Plugin ausserhalb des Moodle-Baums liegt und dort nur im Container eingehängt ist, wird es für Grunt vorübergehend eingebunden (Node und `node_modules` im Moodle-Verzeichnis vorausgesetzt):
 
