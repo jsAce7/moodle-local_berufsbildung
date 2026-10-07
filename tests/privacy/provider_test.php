@@ -38,12 +38,12 @@ use local_berufsbildung\persistent\kohorten_link;
 use local_berufsbildung\persistent\plan_import;
 use local_berufsbildung\persistent\zuordnung;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\privacy\provider::class)]
 /**
  * Tests fuer provider.
  *
  * @covers \local_berufsbildung\privacy\provider
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\privacy\provider::class)]
 final class provider_test extends \core_privacy\tests\provider_testcase {
     public function test_get_metadata(): void {
         $collection = provider::get_metadata(new \core_privacy\local\metadata\collection('local_berufsbildung'));

@@ -32,12 +32,12 @@ use local_berufsbildung\api;
 use local_berufsbildung\persistent\aufbewahrung;
 use local_berufsbildung\persistent\zuordnung;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\zuordnung_retention_service::class)]
 /**
  * Tests fuer zuordnung_retention_service.
  *
  * @covers \local_berufsbildung\service\zuordnung_retention_service
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\zuordnung_retention_service::class)]
 final class zuordnung_retention_service_test extends advanced_testcase {
     /**
      * Legt eine Zuordnung zwischen Berufsbildner/in und Lernender an.

@@ -28,12 +28,12 @@ namespace local_berufsbildung\service;
 
 use advanced_testcase;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\wahlpflicht_resolver::class)]
 /**
  * Tests fuer wahlpflicht_resolver.
  *
  * @covers \local_berufsbildung\service\wahlpflicht_resolver
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\wahlpflicht_resolver::class)]
 final class wahlpflicht_resolver_test extends advanced_testcase {
     /**
      * Die Wahlpflicht-HK des Berufs, nicht die eines anderen.

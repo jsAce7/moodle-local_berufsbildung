@@ -31,12 +31,12 @@ use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\block_lk;
 use local_berufsbildung\persistent\einsatz;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\versetzungsplan\plan_service::class)]
 /**
  * Tests fuer plan_service.
  *
  * @covers \local_berufsbildung\versetzungsplan\plan_service
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\versetzungsplan\plan_service::class)]
 final class plan_service_test extends advanced_testcase {
     /**
      * Legt einen Ausbildungsblock an.

@@ -28,12 +28,12 @@ namespace local_berufsbildung\service;
 
 use advanced_testcase;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\rahmen_resolver::class)]
 /**
  * Tests fuer rahmen_resolver.
  *
  * @covers \local_berufsbildung\service\rahmen_resolver
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\rahmen_resolver::class)]
 final class rahmen_resolver_test extends advanced_testcase {
     public function test_beruf_in_konfiguration_liefert_framework_idnumber(): void {
         $resolver = new rahmen_resolver();

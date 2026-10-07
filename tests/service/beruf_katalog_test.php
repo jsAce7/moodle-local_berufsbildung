@@ -28,12 +28,12 @@ namespace local_berufsbildung\service;
 
 use advanced_testcase;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\beruf_katalog::class)]
 /**
  * Tests fuer beruf_katalog.
  *
  * @covers \local_berufsbildung\service\beruf_katalog
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\beruf_katalog::class)]
 final class beruf_katalog_test extends advanced_testcase {
     /**
      * Legt das Beruf-Profilfeld an.

@@ -29,12 +29,12 @@ namespace local_berufsbildung\versetzungsplan;
 use advanced_testcase;
 use coding_exception;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\versetzungsplan\kw_converter::class)]
 /**
  * Tests fuer kw_converter.
  *
  * @covers \local_berufsbildung\versetzungsplan\kw_converter
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\versetzungsplan\kw_converter::class)]
 final class kw_converter_test extends advanced_testcase {
     /**
      * Regel aus docs/konzept.md §5.3: 2027-W03 -> 18. bis 24. Januar 2027.

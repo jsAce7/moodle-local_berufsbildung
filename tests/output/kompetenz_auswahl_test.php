@@ -30,12 +30,12 @@ use advanced_testcase;
 use core_competency\competency;
 use local_berufsbildung\service\kompetenz_baum;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\kompetenz_auswahl::class)]
 /**
  * Tests fuer kompetenz_auswahl.
  *
  * @covers \local_berufsbildung\output\kompetenz_auswahl
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\kompetenz_auswahl::class)]
 final class kompetenz_auswahl_test extends advanced_testcase {
     /** @var competency[] Die angelegten Kompetenzen, nach Kurzname. */
     private array $kompetenzen = [];

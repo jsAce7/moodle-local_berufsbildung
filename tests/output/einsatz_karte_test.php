@@ -29,12 +29,12 @@ namespace local_berufsbildung\output;
 use advanced_testcase;
 use local_berufsbildung\persistent\einsatz;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\einsatz_karte::class)]
 /**
  * Tests fuer einsatz_karte.
  *
  * @covers \local_berufsbildung\output\einsatz_karte
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\einsatz_karte::class)]
 final class einsatz_karte_test extends advanced_testcase {
     /**
      * Baut einen Einsatz, den die Karte ohne Datenbankzugriff rendern kann.

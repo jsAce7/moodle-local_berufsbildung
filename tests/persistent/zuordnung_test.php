@@ -28,12 +28,12 @@ namespace local_berufsbildung\persistent;
 
 use advanced_testcase;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\persistent\zuordnung::class)]
 /**
  * Tests fuer zuordnung.
  *
  * @covers \local_berufsbildung\persistent\zuordnung
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\persistent\zuordnung::class)]
 final class zuordnung_test extends advanced_testcase {
     /**
      * Eine Zuordnung anlegen und unveraendert zurueckgelesen bekommen.

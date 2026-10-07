@@ -16,6 +16,7 @@
 
 namespace local_berufsbildung\pdf;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\pdf\gestaltung::class)]
 /**
  * Tests for what the printed document is allowed to look like.
  *
@@ -29,7 +30,6 @@ namespace local_berufsbildung\pdf;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \local_berufsbildung\pdf\gestaltung
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\pdf\gestaltung::class)]
 final class gestaltung_test extends \advanced_testcase {
     /** @var string A one pixel PNG, small enough to be carried here rather than generated. */
     private const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAA'

@@ -28,12 +28,12 @@ namespace local_berufsbildung\service;
 
 use advanced_testcase;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\lehrdauer_resolver::class)]
 /**
  * Tests fuer lehrdauer_resolver.
  *
  * @covers \local_berufsbildung\service\lehrdauer_resolver
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\lehrdauer_resolver::class)]
 final class lehrdauer_resolver_test extends advanced_testcase {
     public function test_beruf_in_konfiguration_ueberschreibt_standard(): void {
         $resolver = new lehrdauer_resolver();

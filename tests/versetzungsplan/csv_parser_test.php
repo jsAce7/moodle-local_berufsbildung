@@ -28,12 +28,12 @@ namespace local_berufsbildung\versetzungsplan;
 
 use advanced_testcase;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\versetzungsplan\csv_parser::class)]
 /**
  * Tests fuer csv_parser.
  *
  * @covers \local_berufsbildung\versetzungsplan\csv_parser
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\versetzungsplan\csv_parser::class)]
 final class csv_parser_test extends advanced_testcase {
     public function test_blockformat_normalfall(): void {
         $csv = "email;block;kw_von;kw_bis;bemerkung\n"

@@ -28,12 +28,12 @@ namespace local_berufsbildung\service;
 
 use advanced_testcase;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\semester_calculator::class)]
 /**
  * Tests fuer semester_calculator.
  *
  * @covers \local_berufsbildung\service\semester_calculator
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\semester_calculator::class)]
 final class semester_calculator_test extends advanced_testcase {
     /**
      * Pruefbeispiele fuer Jahrgang 2026 aus docs/schnitt1.md.

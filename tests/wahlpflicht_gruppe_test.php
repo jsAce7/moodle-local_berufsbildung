@@ -28,12 +28,12 @@ namespace local_berufsbildung;
 
 use advanced_testcase;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\wahlpflicht_gruppe::class)]
 /**
  * Tests fuer wahlpflicht_gruppe.
  *
  * @covers \local_berufsbildung\wahlpflicht_gruppe
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\wahlpflicht_gruppe::class)]
 final class wahlpflicht_gruppe_test extends advanced_testcase {
     /**
      * Ein Raster aus zwei Bereichen, a und d, mit Wahlpflicht-HK in

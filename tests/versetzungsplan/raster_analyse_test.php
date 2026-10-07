@@ -35,12 +35,12 @@ use local_berufsbildung\raster_bereich;
 use local_berufsbildung\raster_kompetenz;
 use stdClass;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\versetzungsplan\raster_analyse::class)]
 /**
  * Tests fuer raster_analyse.
  *
  * @covers \local_berufsbildung\versetzungsplan\raster_analyse
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\versetzungsplan\raster_analyse::class)]
 final class raster_analyse_test extends advanced_testcase {
     /**
      * Legt die Profilfelder Beruf und Jahrgang an.

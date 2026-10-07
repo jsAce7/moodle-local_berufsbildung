@@ -29,12 +29,12 @@ namespace local_berufsbildung\service;
 use advanced_testcase;
 use core_competency\competency;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\kompetenz_baum::class)]
 /**
  * Tests fuer kompetenz_baum.
  *
  * @covers \local_berufsbildung\service\kompetenz_baum
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\kompetenz_baum::class)]
 final class kompetenz_baum_test extends advanced_testcase {
     /**
      * Dreistufiger Rahmen wie in der Praxis: Handlungskompetenzbereich ->

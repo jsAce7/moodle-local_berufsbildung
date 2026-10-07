@@ -31,12 +31,12 @@ use local_berufsbildung\raster_bereich;
 use local_berufsbildung\raster_kompetenz;
 use local_berufsbildung\wahlpflicht_gruppe;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\kompetenzraster::class)]
 /**
  * Tests fuer kompetenzraster.
  *
  * @covers \local_berufsbildung\output\kompetenzraster
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\kompetenzraster::class)]
 final class kompetenzraster_test extends advanced_testcase {
     /**
      * Ein Bereich mit den uebergebenen Staenden. Die Kompetenzen entstehen

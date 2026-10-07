@@ -29,12 +29,12 @@ namespace local_berufsbildung\service;
 use advanced_testcase;
 use context_system;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\role_matrix_service::class)]
 /**
  * Tests fuer role_matrix_service.
  *
  * @covers \local_berufsbildung\service\role_matrix_service
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\role_matrix_service::class)]
 final class role_matrix_service_test extends advanced_testcase {
     /**
      * Legt die Rollen an, falls sie (wie im normalen Installationsablauf

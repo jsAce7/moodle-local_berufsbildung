@@ -30,12 +30,12 @@ use advanced_testcase;
 use local_berufsbildung\nachweis\ausstehend;
 use local_berufsbildung\nachweis\nachweis;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\nachweis_liste::class)]
 /**
  * Tests fuer nachweis_liste.
  *
  * @covers \local_berufsbildung\output\nachweis_liste
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\nachweis_liste::class)]
 final class nachweis_liste_test extends advanced_testcase {
     public function test_ohne_nachweise_zeigt_leertext(): void {
         $this->resetAfterTest();

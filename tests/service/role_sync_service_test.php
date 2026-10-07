@@ -30,12 +30,12 @@ use advanced_testcase;
 use context_system;
 use context_user;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\role_sync_service::class)]
 /**
  * Tests fuer role_sync_service.
  *
  * @covers \local_berufsbildung\service\role_sync_service
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\role_sync_service::class)]
 final class role_sync_service_test extends advanced_testcase {
     /**
      * Legt die Rolle 'berufsbildner' an, falls sie (wie im normalen
