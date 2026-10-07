@@ -144,6 +144,7 @@ if (empty($eintraege)) {
     // die Gruppen nur einmal je Beruf aus der Einstellung gelesen.
     $anzahlwahlpflichtoffen = [];
     $wahlpflichtgruppen = [];
+    $vorschlaege = [];
     foreach ($eintraege as $eintrag) {
         $stand = $eintrag['stand'];
         $mitraster = !$eintrag['istextern'] && $stand !== null
@@ -268,7 +269,11 @@ if (empty($eintraege)) {
                 kompetenzraster::render(
                     $raster[$lernendeid],
                     api::get_planungshorizont($lernendeid),
-                    wahlpflichtgruppen: $stand !== null ? ($wahlpflichtgruppen[$stand->beruf] ?? []) : []
+                    wahlpflichtgruppen: $stand !== null ? ($wahlpflichtgruppen[$stand->beruf] ?? []) : [],
+                    // Je Beruf einmal geladen, nicht je Person.
+                    vorschlaege: $stand !== null
+                        ? ($vorschlaege[$stand->beruf] ??= api::get_bloecke_je_kompetenz($stand->beruf))
+                        : []
                 ),
                 'mb-3'
             );

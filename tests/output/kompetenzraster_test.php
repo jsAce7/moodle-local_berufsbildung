@@ -410,6 +410,55 @@ final class kompetenzraster_test extends advanced_testcase {
     }
 
     /**
+     * Planungshilfe: Bei einem LK, das im Plan fehlt, und bei einer HK ohne
+     * LK, die im Plan fehlt, stehen die Bloecke, in denen sie vorkaemen.
+     * Bei Vorgekommenem und Eingeplantem nicht - dort stehen die Einsaetze.
+     */
+    public function test_vorschlag_nennt_bloecke_fuer_fehlende_kompetenzen(): void {
+        $this->resetAfterTest();
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework();
+        $hkb = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id')]);
+        $hk = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hkb->get('id')]);
+        $ohnelk = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hkb->get('id')]);
+        $offen = (int) $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hk->get('id'), 'shortname' => 'AU a1 01',
+        ])->get('id');
+        $vorgekommen = (int) $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hk->get('id'), 'shortname' => 'AU a1 02',
+        ])->get('id');
+
+        $bloecke = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung');
+        $b4 = $bloecke->create_block(['nummer' => 'B4', 'name' => 'Montage']);
+        $b7 = $bloecke->create_block(['nummer' => 'B7', 'name' => 'Labor']);
+
+        $raster = [new raster_bereich((int) $hkb->get('id'), [
+            new raster_kompetenz((int) $hk->get('id'), raster_kompetenz::STATUS_ABGEDECKT, false, [
+                $offen => raster_kompetenz::STATUS_OFFEN,
+                $vorgekommen => raster_kompetenz::STATUS_ABGEDECKT,
+            ]),
+            new raster_kompetenz((int) $ohnelk->get('id'), raster_kompetenz::STATUS_OFFEN, false),
+        ])];
+        $vorschlaege = [
+            $offen => [$b4, $b7],
+            $vorgekommen => [$b7],
+            (int) $ohnelk->get('id') => [$b7],
+        ];
+
+        $html = kompetenzraster::render($raster, time(), vorschlaege: $vorschlaege);
+
+        $this->assertStringContainsString(
+            get_string('raster:vorschlag', 'local_berufsbildung', 'B4 Montage, B7 Labor'),
+            $html
+        );
+        $this->assertSame(1, substr_count($html, get_string('raster:vorschlag', 'local_berufsbildung', 'B7 Labor')));
+        $this->assertStringNotContainsString(
+            get_string('raster:vorschlag', 'local_berufsbildung', ''),
+            kompetenzraster::render($raster, time())
+        );
+    }
+
+    /**
      * Ohne Raster gibt es nichts darzustellen - auch keine Ueberschrift mit
      * leerer Tabelle darunter.
      */

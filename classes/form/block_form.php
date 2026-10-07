@@ -73,6 +73,10 @@ class block_form extends \moodleform {
         $mform->addElement('hidden', 'id', 0);
         $mform->setType('id', PARAM_INT);
 
+        // Beim Kopieren der Quellblock, dessen Kompetenzen uebernommen werden.
+        $mform->addElement('hidden', 'kopie', 0);
+        $mform->setType('kopie', PARAM_INT);
+
         $this->add_action_buttons(true, get_string('block:speichern', 'local_berufsbildung'));
     }
 

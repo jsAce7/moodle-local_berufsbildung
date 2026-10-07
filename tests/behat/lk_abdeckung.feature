@@ -36,6 +36,8 @@ Feature: Leistungskriterien je Block
     And "PM_EFZ" "heading" should appear before "Cross-occupation" "heading"
     And "B2" "table_row" should appear before "B10" "table_row"
     And I should see "1 criteria in no block"
+    And I should see "Check the setup"
+    And I should see "No competency framework assigned"
 
   Scenario: Die LK-Uebersicht zeigt je LK die Bloecke und filtert die offenen
     Given I log in as "admin"

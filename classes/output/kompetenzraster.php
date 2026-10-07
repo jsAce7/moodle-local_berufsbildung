@@ -70,12 +70,16 @@ class kompetenzraster {
      * @param wahlpflicht_gruppe[] $wahlpflichtgruppen Wie viele Wahlpflicht-HK der Bildungsplan
      *                      aus welchen Bereichen verlangt, siehe api::get_wahlpflicht_gruppen_for_beruf();
      *                      leer blendet die Angabe aus
+     * @param array $vorschlaege Planungshilfe: je Kompetenz die Bloecke, in denen sie vorkaeme,
+     *                      siehe api::get_bloecke_je_kompetenz(); genannt bei LK, die im Plan
+     *                      fehlen. Leer blendet die Angabe aus
      */
     public static function render(
         array $raster,
         ?int $horizont = null,
         bool $kompakt = false,
-        array $wahlpflichtgruppen = []
+        array $wahlpflichtgruppen = [],
+        array $vorschlaege = []
     ): string {
         global $OUTPUT, $PAGE;
 
@@ -122,7 +126,7 @@ class kompetenzraster {
                 if (!$kompetenz->istwahlpflicht) {
                     $pflichtstaende[$anzeige]++;
                 }
-                $zellen[] = self::zelle($kompetenz, $kompetenzen, $einsaetze, $kompakt);
+                $zellen[] = self::zelle($kompetenz, $kompetenzen, $einsaetze, $kompakt, $vorschlaege);
             }
             for ($leer = count($zellen); $leer < $spalten; $leer++) {
                 $zellen[] = ['istleer' => true];
@@ -271,13 +275,15 @@ class kompetenzraster {
      * @param array $kompetenzen Bezeichnungen aus lade_kompetenzen(), nach competencyid
      * @param array $einsaetze Einsaetze aus lade_einsaetze(), nach einsatz-id
      * @param bool $kompakt Ohne LK-Liste - in der Roster-Kachel fehlt der Platz
+     * @param array $vorschlaege Bloecke je Kompetenz, siehe render()
      * @return array Template-Kontext
      */
     private static function zelle(
         raster_kompetenz $kompetenz,
         array $kompetenzen,
         array $einsaetze,
-        bool $kompakt
+        bool $kompakt,
+        array $vorschlaege = []
     ): array {
         $bezeichnung = $kompetenzen[$kompetenz->competencyid] ?? null;
         $anzeige = $kompetenz->anzeigestand();
@@ -313,7 +319,33 @@ class kompetenzraster {
             // Titel traegt dort die ganze Information nach.
             'titel' => $name . ' · ' . $art . ' · ' . $darstellung['text'],
             'dialogtitel' => trim($idnumber . ' ' . $name),
-        ] + self::leistungskriterien($kompetenz, $kompetenzen, $einsaetze, $kompakt);
+            // Eine HK ohne LK hat keinen Dialog; fehlt sie im Plan, steht
+            // der Vorschlag direkt in der Zelle.
+            'vorschlag' => !$kompakt && empty($kompetenz->leistungskriterien)
+                && $anzeige === raster_kompetenz::ANZEIGE_OFFEN
+                ? self::vorschlag($vorschlaege[$kompetenz->competencyid] ?? [])
+                : '',
+        ] + self::leistungskriterien($kompetenz, $kompetenzen, $einsaetze, $kompakt, $vorschlaege);
+    }
+
+    /**
+     * Planungshilfe: die Bloecke, in denen eine fehlende Kompetenz vorkaeme,
+     * z. B. "Kommt vor in: B4 Werkstatt, B7 Montage".
+     *
+     * @param block[] $bloecke
+     * @return string Leer ohne Bloecke
+     */
+    private static function vorschlag(array $bloecke): string {
+        if (empty($bloecke)) {
+            return '';
+        }
+
+        $namen = array_map(
+            static fn (block $block): string => format_string(trim($block->get('nummer') . ' ' . $block->get('name'))),
+            $bloecke
+        );
+
+        return get_string('raster:vorschlag', 'local_berufsbildung', implode(', ', $namen));
     }
 
     /**
@@ -328,13 +360,15 @@ class kompetenzraster {
      * @param array $kompetenzen Bezeichnungen aus lade_kompetenzen(), nach competencyid
      * @param array $einsaetze Einsaetze aus lade_einsaetze(), nach einsatz-id
      * @param bool $kompakt
+     * @param array $vorschlaege Bloecke je Kompetenz, siehe render()
      * @return array Template-Kontext: haslk, lktext, lkgruppen
      */
     private static function leistungskriterien(
         raster_kompetenz $kompetenz,
         array $kompetenzen,
         array $einsaetze,
-        bool $kompakt
+        bool $kompakt,
+        array $vorschlaege = []
     ): array {
         $anzahl = count($kompetenz->leistungskriterien);
         if ($kompakt || $anzahl === 0) {
@@ -383,6 +417,10 @@ class kompetenzraster {
                     'hatbeschreibung' => $beschreibung !== '',
                     'hatorte' => !empty($orte),
                     'orte' => implode(' · ', $orte),
+                    // Fehlt das LK im Plan, die Bloecke, in denen es vorkaeme.
+                    'vorschlag' => $status === raster_kompetenz::STATUS_OFFEN
+                        ? self::vorschlag($vorschlaege[$lkid] ?? [])
+                        : '',
                 ];
             }
             if (empty($eintraege)) {

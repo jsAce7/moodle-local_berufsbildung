@@ -468,14 +468,6 @@
     }
 }
 
-.local-berufsbildung-luecken-bereiche > .local-berufsbildung-luecken-bereich {
-    padding-bottom: 0.15rem;
-}
-
-.local-berufsbildung-luecken-bereich > .local-berufsbildung-luecken-liste {
-    margin-left: 1.1rem;
-}
-
 /*
  * Kompetenzauswahl eines Ausbildungsblocks: die Gliederung des
  * Bildungsplans als verschachtelte <details>. Die nativen Marker bleiben
@@ -1090,18 +1082,6 @@
     transition: transform 0.15s ease;
 }
 
-/*
- * Die offenen Kompetenzen stehen nach Bereich gruppiert. Bei voller
- * Breite nebeneinander statt in einer Spalte untereinander - vier kurze
- * Bloecke liest man auf einen Blick, zwanzig Zeilen nicht.
- */
-.local-berufsbildung-luecken-bereiche {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-    gap: 0.25rem 1.5rem;
-    align-items: start;
-}
-
 .local-berufsbildung-kachel[open] .local-berufsbildung-kachel-chevron {
     transform: rotate(180deg);
 }
@@ -1122,4 +1102,14 @@
 
 .local-berufsbildung-lkabdeckung-tabelle td {
     overflow-wrap: anywhere;
+}
+
+/*
+ * Planungshilfe im Kompetenzraster: bei fehlenden LK die Bloecke, in denen
+ * sie vorkaemen. Kursiv, damit sie sich von den Orten der bereits
+ * geplanten Einsaetze abhebt - ein Vorschlag, kein Plan.
+ */
+.local-berufsbildung-raster-vorschlag {
+    display: block;
+    font-style: italic;
 }

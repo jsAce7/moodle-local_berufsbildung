@@ -28,6 +28,7 @@ require_once($CFG->libdir . '/adminlib.php');
 use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\block_lk;
 use local_berufsbildung\api;
+use local_berufsbildung\service\einrichtung_pruefung;
 use local_berufsbildung\service\lk_abdeckung_service;
 
 admin_externalpage_setup('local_berufsbildung_bloecke');
@@ -46,6 +47,34 @@ echo html_writer::div($OUTPUT->single_button(
     get_string('bloecke:neu', 'local_berufsbildung'),
     'get'
 ), 'mb-3');
+
+// Was dem Kompetenzraster der Lernenden fehlt, steht zuoberst: von der
+// lernenden Person aus ist nicht zu erkennen, ob der Rahmen, die Bloecke oder
+// deren Kompetenzen fehlen.
+$befunde = get_config('core_competency', 'enabled') ? (new einrichtung_pruefung())->pruefe() : [];
+if (!empty($befunde)) {
+    $warnung = false;
+    $punkte = '';
+    foreach ($befunde as $beruf => $liste) {
+        $texte = [];
+        foreach ($liste as $befund) {
+            $warnung = $warnung || $befund['stufe'] === einrichtung_pruefung::STUFE_WARNUNG;
+            $a = is_string($befund['a']) ? s($befund['a']) : null;
+            $texte[] = get_string('einrichtung:' . $befund['code'], 'local_berufsbildung', $a);
+        }
+        $punkte .= html_writer::tag('li', html_writer::tag('strong', s((string) $beruf)) . ': ' . implode(' ', $texte));
+    }
+    echo $OUTPUT->notification(
+        html_writer::tag('p', get_string('einrichtung:titel', 'local_berufsbildung'), ['class' => 'mb-1 local-berufsbildung-fett'])
+            . html_writer::tag('ul', $punkte, ['class' => 'mb-1'])
+            . html_writer::link(
+                new moodle_url('/local/berufsbildung/beruf_rahmen.php'),
+                get_string('einrichtung:link_rahmen', 'local_berufsbildung')
+            ),
+        $warnung ? 'warning' : 'info',
+        false
+    );
+}
 
 $bloecke = block::get_records([], 'nummer', 'ASC');
 
@@ -137,6 +166,10 @@ if (empty($bloecke)) {
                 ) . html_writer::link(
                     $bearbeitenurl,
                     get_string('block:bearbeiten', 'local_berufsbildung'),
+                    ['class' => 'btn btn-sm btn-secondary']
+                ) . html_writer::link(
+                    new moodle_url('/local/berufsbildung/block_bearbeiten.php', ['kopie' => $blockid]),
+                    get_string('block:kopieren', 'local_berufsbildung'),
                     ['class' => 'btn btn-sm btn-secondary']
                 ),
                 'local-berufsbildung-tabelle-aktionen'

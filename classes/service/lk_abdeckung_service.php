@@ -149,6 +149,38 @@ class lk_abdeckung_service {
     }
 
     /**
+     * Je Leistungskriterium die zaehlenden Bloecke (aktiv und betrieblich),
+     * die es selbst oder ueber seine ganze HK abdecken - fuer die
+     * Planungshilfe im Kompetenzraster. Eine HK ohne LK steht unter ihrer
+     * eigenen ID.
+     *
+     * @param string $beruf
+     * @return array competencyid => block[], nach Nummer sortiert; nur
+     *               Kompetenzen mit mindestens einem Block
+     */
+    public function zaehlende_bloecke(string $beruf): array {
+        $abdeckung = $this->fuer_beruf($beruf);
+        if ($abdeckung === null) {
+            return [];
+        }
+
+        $ergebnis = [];
+        foreach ($abdeckung['bereiche'] as $bereich) {
+            foreach ($bereich['handlungskompetenzen'] as $hk) {
+                foreach ($hk['leistungskriterien'] as $lk) {
+                    foreach ($lk['bloecke'] as $eintrag) {
+                        if ($eintrag['zaehlt']) {
+                            $ergebnis[(int) $lk['kompetenz']->get('id')][] = $eintrag['block'];
+                        }
+                    }
+                }
+            }
+        }
+
+        return $ergebnis;
+    }
+
+    /**
      * Die Zuordnungen aller Bloecke eines Berufs, nach Kompetenz.
      *
      * Die Schluessel der inneren Arrays sind die Block-IDs.

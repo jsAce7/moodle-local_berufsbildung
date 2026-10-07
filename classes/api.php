@@ -32,6 +32,7 @@ use local_berufsbildung\persistent\einsatz;
 use local_berufsbildung\persistent\teilnahmeprofil;
 use local_berufsbildung\persistent\zuordnung;
 use local_berufsbildung\service\beruf_katalog;
+use local_berufsbildung\service\lk_abdeckung_service;
 use local_berufsbildung\service\kompetenz_baum;
 use local_berufsbildung\service\lehrdauer_resolver;
 use local_berufsbildung\service\rahmen_resolver;
@@ -819,6 +820,25 @@ class api {
         $konfiguration = $konfiguration !== false ? (string) $konfiguration : '';
 
         return (new rahmen_resolver())->loese_auf($beruf, $konfiguration);
+    }
+
+    /**
+     * Je Leistungskriterium die aktiven betrieblichen Bloecke eines Berufs,
+     * die es vermitteln - selbst oder ueber die ganze Handlungskompetenz.
+     * Fuer die Planungshilfe: Zu einem LK, das im Plan einer Person fehlt,
+     * nennt das Kompetenzraster die Bloecke, in denen es vorkaeme. Nur ein
+     * Vorschlag (Architekturregel 6); welcher Einsatz geplant wird,
+     * entscheidet die Ausbildungsplanung.
+     *
+     * Unabhaengig von Person und Stichtag: Die Kompetenzzuordnung der
+     * Bloecke hat keine Gueltigkeitsdauer.
+     *
+     * @param string $beruf Beruf-Code
+     * @return array competencyid => block[], nach Nummer
+     *               sortiert. Leer ohne Rahmen; eine HK ohne LK steht unter ihrer eigenen ID.
+     */
+    public static function get_bloecke_je_kompetenz(string $beruf): array {
+        return (new lk_abdeckung_service())->zaehlende_bloecke($beruf);
     }
 
     /**

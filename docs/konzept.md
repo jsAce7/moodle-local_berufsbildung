@@ -60,9 +60,15 @@ local_berufsbildung_zuordnung
   INDEX (berufsbildnerid, gueltig_bis)
 ```
 
-**Zuordnungen werden nie gelöscht**, nur mit `gueltig_bis` beendet. Sonst ist später nicht mehr nachvollziehbar, wer in einem vergangenen Semester zuständig war — und genau das ist bei einer Rückfrage der kantonalen Ausbildungsberatung die entscheidende Information.
+**Zuordnungen werden grundsätzlich beendet, nicht gelöscht**: Eine Zuständigkeit endet mit `gueltig_bis`. Sonst ist später nicht mehr nachvollziehbar, wer in einem vergangenen Semester zuständig war — und genau das ist bei einer Rückfrage der kantonalen Ausbildungsberatung die entscheidende Information.
 
-*Ausnahme seit dem Retention-Feature*: `retention_monate` (Standard 12) nach dem berechneten Ausbildungsabschluss werden alle Zuordnungen einer Person automatisch endgültig gelöscht, ausser eine Aufbewahrungspflicht ist dokumentiert — siehe Abschnitt 13 Punkt 4 und `CLAUDE.md` Architekturregel 2.
+Endgültig gelöscht wird eine Zuordnung nur in drei Fällen (`CLAUDE.md` Architekturregel 2):
+
+- **Falsch erfasst**: Eine berechtigte Verwaltung entfernt eine nachweislich falsch erfasste Zuordnung über `api::loesche_zuordnung()`, nach Bestätigung in der Zuordnungsübersicht.
+- **Aufbewahrungsfrist abgelaufen**: `retention_monate` (Standard 12) nach dem berechneten Ausbildungsabschluss (`api::get_ausbildungsende()`) löscht `zuordnung_retention_service` alle Zuordnungen einer Person, ausser eine Aufbewahrungspflicht ist dokumentiert (`api::hat_aufbewahrungspflicht()`), siehe Abschnitt 13 Punkt 4.
+- **Konto der lernenden Person gelöscht**: Ihre Zuordnungen verschwinden sofort und unbedingt, unabhängig vom Ausbildungsstand (`privacy\provider`). Wird dagegen das Konto einer Berufsbildner/in gelöscht, enden ihre laufenden Zuordnungen nur, noch nicht begonnene werden gelöscht (`zuordnung_service::beende_fuer_geloeschtes_konto()`). Beendete bleiben als Ausbildungshistorie der lernenden Person, bis deren Aufbewahrungsfrist abläuft.
+
+Früher, auf eine Löschanfrage hin, wird nur gelöscht, wenn die Ausbildung abgeschlossen und keine Aufbewahrungspflicht dokumentiert ist (`api::darf_personendaten_geloescht_werden()`).
 
 **Feld `rolle`**: `hauptverantwortlich` ist der Normalfall, `stellvertretung` eine zusätzliche Zuständigkeit, etwa während einer Ferienabwesenheit. Je Lernende/r und Rolle läuft höchstens eine Zuordnung, verschiedene Rollen dürfen gleichzeitig laufen. Weitere Werte, etwa für Fachvorgesetzte (Arbeitsplatzberichte), brauchen keine Schema-Migration. Aufrufende Plugins müssen den Wert abfragen, nicht annehmen.
 
@@ -372,6 +378,10 @@ public static function get_wahlpflicht_hk_for_beruf(string $beruf): array; // st
 /** Verlangte Wahlpflicht-HK je Gruppe von Bereichen. Leer, wenn nichts hinterlegt ist. */
 public static function get_wahlpflicht_gruppen_for_beruf(string $beruf): array; // wahlpflicht_gruppe[]
 
+/** Planungshilfe: je LK die aktiven betrieblichen Blöcke des Berufs, die es vermitteln
+ *  (auch über die ganze HK). Ohne Stichtag - die Blockzuordnung hat keine Gültigkeitsdauer. */
+public static function get_bloecke_je_kompetenz(string $beruf): array; // competencyid => block[]
+
 /** ID-Nummer des Kompetenzrahmens eines Berufs, aus beruf_rahmen_mapping. */
 public static function get_kompetenzrahmen_for_beruf(string $beruf): ?string;
 
@@ -534,6 +544,12 @@ Je Beruf eine Tabelle, nach Nummer natürlich sortiert (B2 vor B10); berufsüber
 
 **Leistungskriterien je Block** `local/berufsbildung/lk_abdeckung.php?beruf=…`
 Die Blockzuordnung vom Kompetenzrahmen her gesehen: je Leistungskriterium die Blöcke des Berufs, die es selbst oder über seine ganze Handlungskompetenz abdecken, mit Filter auf die LK in keinem Block (`service\lk_abdeckung_service`). Es zählt dieselbe Regel wie im Kompetenzraster: nur aktive betriebliche Blöcke. Inaktive und nicht betriebliche Blöcke stehen gekennzeichnet daneben, damit sichtbar ist, warum eine Zuordnung nicht zählt.
+
+**Block kopieren**
+Legt einen neuen Block mit den Angaben eines bestehenden an; die Nummer wird neu vergeben. Übernommen werden die Kompetenzzuordnungen, die im Rahmen des Berufs des neuen Blocks stehen (`service\block_kopie_service`). Für einen Beruf mit anderem Rahmen fallen die übrigen weg, mit Hinweis.
+
+**Einrichtungsprüfung**
+Oberhalb der Blöcke je Beruf, was dem Kompetenzraster der Lernenden fehlt (`service\einrichtung_pruefung`): kein oder ein nicht vorhandener Rahmen, keine Blöcke, kein aktiver betrieblicher Block mit Kompetenzen. Als Hinweis: Kompetenzen in inaktiven oder nicht betrieblichen Blöcken, Wahlpflicht-HK ohne verlangte Anzahl. Geprüft werden die Berufe mit Blöcken oder Rahmen, nicht jede Option des Profilfelds.
 
 ---
 

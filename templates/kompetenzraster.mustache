@@ -35,10 +35,12 @@
     * bereiche - array of {name, abdeckung, hatsoll, zellen}
     * zellen - array of {istleer} oder
                {istleer, name, hascode, code, farbklasse, statusklasse, hatzeichen, icon, statustext, titel,
-                dialogtitel, haslk, lktext, lkgruppen}
+                dialogtitel, vorschlag, haslk, lktext, lkgruppen}
+      vorschlag - string, bei einer HK ohne LK, die im Plan fehlt: die Bloecke, in denen sie vorkaeme
     * lkgruppen - array of {titel, statusklasse, icon, leistungskriterien}, das Fehlende zuerst
-    * leistungskriterien - array of {name, beschreibung, hatbeschreibung, hatorte, orte}
+    * leistungskriterien - array of {name, beschreibung, hatbeschreibung, hatorte, orte, vorschlag}
       orte - Block und Zeitraum der Einsaetze, in denen das LK vorkam oder geplant ist
+      vorschlag - string, bei einem LK, das im Plan fehlt: die Bloecke, in denen es vorkaeme
     * kompakt - bool, nur Kuerzel und Symbol statt der vollen Bezeichnung
     * haszusammenfassung - bool
     * zusammenfassung - string, Pflicht-HK je Stand ueber alle Bereiche
@@ -93,7 +95,8 @@
                             {"titel": "Fehlt noch (1)", "statusklasse": "local-berufsbildung-raster-lk-offen",
                              "icon": "fa-times",
                              "leistungskriterien": [{"name": "AU a1 02", "beschreibung": "Sie zeichnen Skizzen.",
-                                                     "hatbeschreibung": true, "hatorte": false, "orte": ""}]},
+                                                     "hatbeschreibung": true, "hatorte": false, "orte": "",
+                                                     "vorschlag": "Kommt vor in: B4 Montage"}]},
                             {"titel": "Bereits vorgekommen (1)", "statusklasse": "local-berufsbildung-raster-lk-abgedeckt",
                              "icon": "fa-check",
                              "leistungskriterien": [{"name": "AU a1 01", "beschreibung": "Sie erstellen Stücklisten.",
@@ -193,6 +196,9 @@
                                             weil die Klasse zwischen Bootstrap 4 (Moodle 4.5) und 5 (Moodle 5.x)
                                             den Namen wechselt. }}
                                         <span class="local-berufsbildung-raster-status small{{^hatzeichen}} local-berufsbildung-nurtext{{/hatzeichen}}">{{statustext}}</span>
+                                        {{#vorschlag}}
+                                            <span class="local-berufsbildung-raster-vorschlag small">{{vorschlag}}</span>
+                                        {{/vorschlag}}
                                         {{#haslk}}
                                             {{! Mit JavaScript oeffnet der Kopf einen Dialog mit dem Inhalt
                                                 (amd/src/kompetenzraster.js) - bei zehn und mehr LK waere die
@@ -219,6 +225,11 @@
                                                                         {{#hatorte}}
                                                                             <span class="local-berufsbildung-raster-lkorte small">{{#pix}}i/location, core{{/pix}}{{orte}}</span>
                                                                         {{/hatorte}}
+                                                                        {{#vorschlag}}
+                                                                            <span class="local-berufsbildung-raster-lkorte local-berufsbildung-raster-vorschlag small">
+                                                                                {{vorschlag}}
+                                                                            </span>
+                                                                        {{/vorschlag}}
                                                                     </li>
                                                                 {{/leistungskriterien}}
                                                             </ul>

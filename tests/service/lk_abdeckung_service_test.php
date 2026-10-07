@@ -168,6 +168,31 @@ final class lk_abdeckung_service_test extends advanced_testcase {
     }
 
     /**
+     * Fuer die Planungshilfe nur die zaehlenden Bloecke je LK, auch ueber
+     * die HK; eine HK ohne LK steht unter ihrer eigenen ID.
+     */
+    public function test_zaehlende_bloecke(): void {
+        $this->resetAfterTest();
+        $this->lege_rahmen_an();
+        $this->block(['nummer' => 'B2'], ['7777BE a.01', '7777BE a.02']);
+        $this->block(['nummer' => 'B1'], ['lk-a1-01']);
+        $this->block(['nummer' => 'B5', 'aktiv' => 0], ['lk-a1-02']);
+
+        $bloecke = (new lk_abdeckung_service())->zaehlende_bloecke('AU_EFZ');
+        $nummern = array_map(
+            static fn (array $liste): array => array_map(static fn (block $b): string => $b->get('nummer'), $liste),
+            $bloecke
+        );
+
+        $this->assertSame([
+            (int) $this->kompetenzen['lk-a1-01']->get('id') => ['B1', 'B2'],
+            (int) $this->kompetenzen['lk-a1-02']->get('id') => ['B2'],
+            (int) $this->kompetenzen['7777BE a.02']->get('id') => ['B2'],
+        ], $nummern);
+        $this->assertSame([], (new lk_abdeckung_service())->zaehlende_bloecke('PM_EFZ'));
+    }
+
+    /**
      * Ohne konfigurierten oder vorhandenen Rahmen gibt es keine Abdeckung.
      */
     public function test_ohne_rahmen_null(): void {

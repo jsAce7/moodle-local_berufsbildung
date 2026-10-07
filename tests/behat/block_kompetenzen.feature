@@ -86,3 +86,18 @@ Feature: Kompetenzen einem Ausbildungsblock zuordnen
     And I press "Save selection"
     Then I should see "Competency coverage saved (1 newly assigned, 0 removed)."
     And I should see "Assigned competencies (2)"
+
+  Scenario: Einen Block samt Kompetenzzuordnung kopieren
+    Given the following "local_berufsbildung > block competencies" exist:
+      | block | competency  |
+      | B1    | 7777BE c.02 |
+      | B1    | lk-c1-01    |
+    And I log in as "admin"
+    When I visit "/local/berufsbildung/bloecke.php"
+    And I click on "Copy" "link" in the "B1" "table_row"
+    Then the field "Name" matches value "Instandhaltung"
+    And I set the field "Number" to "B7"
+    And I press "Save"
+    And I should see "Block copied. 2 competency assignments carried over."
+    And I click on "Assign competencies" "link" in the "B7" "table_row"
+    And I should see "Assigned competencies (2)"
