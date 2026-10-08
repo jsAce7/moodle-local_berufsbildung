@@ -6,7 +6,7 @@ Basis-Plugin für die betriebliche Berufsbildung in Moodle. Beantwortet zwei Fra
 
 Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentation (`local_lerndokumentation`), üK-Kompetenznachweise (`local_uekkn`) und Bildungsbericht (`local_bildungsbericht`) — baut über `\local_berufsbildung\api` darauf auf.
 
-> **Status:** Version 0.8.6, `MATURITY_BETA`. Funktional vollständig und automatisiert getestet. Freigegeben für einen begleiteten Pilotbetrieb mit echten Personendaten, noch nicht für den allgemeinen Betrieb, siehe [CHANGELOG.md](CHANGELOG.md).
+> **Status:** Version 0.9.1, `MATURITY_BETA`. Funktional vollständig und automatisiert getestet. Freigegeben für einen begleiteten Pilotbetrieb mit echten Personendaten, noch nicht für den allgemeinen Betrieb, siehe [CHANGELOG.md](CHANGELOG.md).
 
 ## Inhalt
 
@@ -63,6 +63,7 @@ Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentati
 | Profilfeld: Beruf | `beruf` | Welches Profilfeld den Beruf enthält (z. B. `AU_EFZ`) |
 | Profilfeld: Jahrgang | `jahrgang` | Profilfeld mit dem Jahr des Lehrbeginns. „2026" genügt, ein kombiniertes Feld wie „AU 2026" wird ebenfalls erkannt — gelesen wird nur die Jahreszahl. |
 | Profilfeld: Lehrbeginn (optional) | keines | Profilfeld (am besten ein Datumsfeld) mit einem abweichenden Lehrbeginn je Person, z. B. 15. August, Februar oder Einstieg in ein späteres Semester. Leer = 1. des Startmonats im Jahrgang. Bestimmt nur den Beginn der Probezeit (`api::get_lehrbeginn()`), nicht die Semester. |
+| Kohorten mit Lerndokumentation (optional) | keine | Nur Mitglieder dieser Kohorten (globalen Gruppen) führen eine Lerndokumentation, eine Mitgliedschaft genügt (`api::ist_lerndokumentation_erforderlich()`). Wer in keiner ist, etwa höhere Lehrjahre nur mit Bildungsbericht, hat keine Lerndokumentation; Bildungsbericht und üK-Noten laufen unverändert. Massgebend ist die Mitgliedschaft heute. Leer = alle Lernenden ausser externen üK-Teilnehmenden. |
 | Startmonat der Lehre | 8 (August) | Monat, in dem alle Lehren starten |
 | Lehrdauer in Semestern (Standard) | 8 | Standard-Lehrdauer (1 bis 8 Semester), überschreibbar je Beruf |
 | Lehrdauer je Beruf | leer | Abweichende Lehrdauer, eine Zeile je Beruf im Format `CODE=Semester`, z. B. `PM_EFZ=6` |

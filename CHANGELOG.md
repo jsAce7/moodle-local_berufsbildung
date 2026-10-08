@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.1] — 2026-10-08
+
+### Geändert
+
+- **Kohorten mit Lerndokumentation zuweisen statt eine ausschliessen** (Einstellung `kohorten_lerndokumentation`, `api::ist_lerndokumentation_erforderlich()`, neu `api::get_kohorten_lerndokumentation()`): Statt einer Kohorte „ohne Lerndokumentation“ werden jetzt die Kohorten gewählt, deren Mitglieder eine Lerndokumentation führen; die Mitgliedschaft in einer davon genügt. Wer in keiner ist, hat keinen Lerndokumentations-Tab, keine Erinnerungen und keine Fälligkeiten; Bildungsbericht und üK-Noten laufen unverändert. Ohne Auswahl (Standard) führen weiterhin alle eine Lerndokumentation, ausser externen üK-Teilnehmenden. Massgebend bleibt die Mitgliedschaft heute.
+- **Upgrade**: Die alte Einstellung `kohorte_ohne_lerndokumentation` entfällt. Sie lässt sich nicht umrechnen, weil das Gegenteil einer Kohorte keine Kohorte ist. War sie gesetzt, die Kohorten mit Lerndokumentation nach dem Upgrade neu zuweisen; bis dahin führen alle eine.
+
 ## [0.9.0] — 2026-10-08
 
 ### Hinzugefügt

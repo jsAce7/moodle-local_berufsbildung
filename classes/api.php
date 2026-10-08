@@ -80,29 +80,42 @@ class api {
 
     /**
      * Prüft, ob eine Lerndokumentation für die Person erforderlich ist:
-     * nicht für externe üK-Teilnehmende und nicht für Mitglieder der
-     * Kohorte aus der Einstellung kohorte_ohne_lerndokumentation (etwa
-     * höhere Lehrjahre, die nur mit dem Bildungsbericht einsteigen). Die
-     * Kohorte gilt, wie sie heute ist - sie kennt keine Historie, deshalb
-     * ohne Stichtag.
+     * nicht für externe üK-Teilnehmende, und sind in der Einstellung
+     * kohorten_lerndokumentation Kohorten zugewiesen, nur für deren
+     * Mitglieder. Ohne zugewiesene Kohorte führen alle eine. Die
+     * Kohorten gelten, wie sie heute sind - sie kennen keine Historie,
+     * deshalb ohne Stichtag.
      *
      * @param int $userid
      * @return bool
      */
     public static function ist_lerndokumentation_erforderlich(int $userid): bool {
-        global $CFG;
+        global $DB;
 
         if (self::ist_uek_extern($userid)) {
             return false;
         }
 
-        $kohorte = (int) get_config('local_berufsbildung', 'kohorte_ohne_lerndokumentation');
-        if ($kohorte <= 0) {
+        $kohorten = self::get_kohorten_lerndokumentation();
+        if ($kohorten === []) {
             return true;
         }
-        require_once($CFG->dirroot . '/cohort/lib.php');
+        [$insql, $params] = $DB->get_in_or_equal($kohorten, SQL_PARAMS_NAMED);
+        $params['userid'] = $userid;
 
-        return !cohort_is_member($kohorte, $userid);
+        return $DB->record_exists_select('cohort_members', "userid = :userid AND cohortid $insql", $params);
+    }
+
+    /**
+     * Kohorten, deren Mitglieder eine Lerndokumentation führen
+     * (Einstellung kohorten_lerndokumentation); leer heisst: alle.
+     *
+     * @return int[]
+     */
+    public static function get_kohorten_lerndokumentation(): array {
+        $wert = (string) get_config('local_berufsbildung', 'kohorten_lerndokumentation');
+
+        return array_values(array_filter(array_map('intval', explode(',', $wert)), fn(int $id) => $id > 0));
     }
 
     /**

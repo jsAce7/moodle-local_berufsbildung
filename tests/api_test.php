@@ -262,32 +262,47 @@ final class api_test extends advanced_testcase {
     }
 
     /**
-     * Mitglieder der Kohorte "ohne Lerndokumentation" fuehren keine, die
-     * uebrigen schon; ohne Einstellung alle ausser externen uK-Teilnehmenden.
-     * Massgebend ist die Mitgliedschaft heute.
+     * Sind Kohorten zugewiesen, fuehren nur deren Mitglieder eine
+     * Lerndokumentation, eine Mitgliedschaft genuegt; ohne Zuweisung alle
+     * ausser externen uK-Teilnehmenden. Massgebend ist die Mitgliedschaft
+     * heute.
      */
-    public function test_ist_lerndokumentation_erforderlich_mit_ausnahmekohorte(): void {
+    public function test_ist_lerndokumentation_erforderlich_mit_kohorten(): void {
         global $CFG;
         require_once($CFG->dirroot . '/cohort/lib.php');
         $this->resetAfterTest();
 
-        $mitglied = $this->getDataGenerator()->create_user();
+        $mitglieda = $this->getDataGenerator()->create_user();
+        $mitgliedb = $this->getDataGenerator()->create_user();
         $andere = $this->getDataGenerator()->create_user();
         $uekextern = $this->getDataGenerator()->create_user();
         api::set_teilnahmeart((int) $uekextern->id, api::TEILNAHMEART_UEK_EXTERN);
-        $kohorte = $this->getDataGenerator()->create_cohort();
-        cohort_add_member((int) $kohorte->id, (int) $mitglied->id);
+        $kohortea = $this->getDataGenerator()->create_cohort();
+        $kohorteb = $this->getDataGenerator()->create_cohort();
+        $nichtzugewiesen = $this->getDataGenerator()->create_cohort();
+        cohort_add_member((int) $kohortea->id, (int) $mitglieda->id);
+        cohort_add_member((int) $kohorteb->id, (int) $mitgliedb->id);
+        cohort_add_member((int) $kohortea->id, (int) $uekextern->id);
+        cohort_add_member((int) $nichtzugewiesen->id, (int) $andere->id);
 
-        $this->assertTrue(api::ist_lerndokumentation_erforderlich((int) $mitglied->id));
-        $this->assertFalse(api::ist_lerndokumentation_erforderlich((int) $uekextern->id));
-
-        set_config('kohorte_ohne_lerndokumentation', $kohorte->id, 'local_berufsbildung');
-        $this->assertFalse(api::ist_lerndokumentation_erforderlich((int) $mitglied->id));
         $this->assertTrue(api::ist_lerndokumentation_erforderlich((int) $andere->id));
         $this->assertFalse(api::ist_lerndokumentation_erforderlich((int) $uekextern->id));
 
-        cohort_remove_member((int) $kohorte->id, (int) $mitglied->id);
-        $this->assertTrue(api::ist_lerndokumentation_erforderlich((int) $mitglied->id));
+        set_config('kohorten_lerndokumentation', $kohortea->id . ',' . $kohorteb->id, 'local_berufsbildung');
+        $this->assertSame([(int) $kohortea->id, (int) $kohorteb->id], api::get_kohorten_lerndokumentation());
+        $this->assertTrue(api::ist_lerndokumentation_erforderlich((int) $mitglieda->id));
+        $this->assertTrue(api::ist_lerndokumentation_erforderlich((int) $mitgliedb->id));
+        $this->assertFalse(api::ist_lerndokumentation_erforderlich((int) $andere->id));
+        $this->assertFalse(api::ist_lerndokumentation_erforderlich((int) $uekextern->id));
+
+        cohort_add_member((int) $kohorteb->id, (int) $andere->id);
+        $this->assertTrue(api::ist_lerndokumentation_erforderlich((int) $andere->id));
+        cohort_remove_member((int) $kohortea->id, (int) $mitglieda->id);
+        $this->assertFalse(api::ist_lerndokumentation_erforderlich((int) $mitglieda->id));
+
+        set_config('kohorten_lerndokumentation', '', 'local_berufsbildung');
+        $this->assertSame([], api::get_kohorten_lerndokumentation());
+        $this->assertTrue(api::ist_lerndokumentation_erforderlich((int) $mitglieda->id));
     }
 
     public function test_get_berufsbildner_for(): void {

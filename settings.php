@@ -119,19 +119,19 @@ if ($hassiteconfig) {
         )
     ));
 
-    // Optional: Mitglieder dieser Kohorte fuehren keine Lerndokumentation
+    // Optional: Nur Mitglieder dieser Kohorten fuehren eine Lerndokumentation
     // (api::ist_lerndokumentation_erforderlich()), der Bildungsbericht
-    // laeuft fuer sie trotzdem.
+    // laeuft fuer alle. Ohne Auswahl fuehren alle eine.
     require_once($CFG->dirroot . '/cohort/lib.php');
-    $kohorten = [0 => get_string('settings:kohorte_keine', 'local_berufsbildung')];
+    $kohorten = [];
     foreach (cohort_get_all_cohorts(0, 0)['cohorts'] as $cohort) {
         $kohorten[(int) $cohort->id] = format_string($cohort->name);
     }
-    $settings->add(new admin_setting_configselect(
-        'local_berufsbildung/kohorte_ohne_lerndokumentation',
-        new lang_string('settings:kohorte_ohne_lerndokumentation', 'local_berufsbildung'),
-        new lang_string('settings:kohorte_ohne_lerndokumentation_desc', 'local_berufsbildung'),
-        0,
+    $settings->add(new admin_setting_configmultiselect(
+        'local_berufsbildung/kohorten_lerndokumentation',
+        new lang_string('settings:kohorten_lerndokumentation', 'local_berufsbildung'),
+        new lang_string('settings:kohorten_lerndokumentation_desc', 'local_berufsbildung'),
+        [],
         $kohorten
     ));
 

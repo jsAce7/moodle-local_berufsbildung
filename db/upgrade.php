@@ -441,5 +441,16 @@ function xmldb_local_berufsbildung_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026100602, 'local', 'berufsbildung');
     }
 
+    if ($oldversion < 2026100801) {
+        // Statt einer ausgeschlossenen Kohorte ("ohne Lerndokumentation")
+        // werden jetzt die Kohorten zugewiesen, deren Mitglieder eine
+        // Lerndokumentation fuehren. Die alte Auswahl laesst sich nicht
+        // umkehren, weil das Gegenteil einer Kohorte keine Kohorte ist;
+        // sie entfaellt, und ohne neue Auswahl fuehren alle eine.
+        unset_config('kohorte_ohne_lerndokumentation', 'local_berufsbildung');
+
+        upgrade_plugin_savepoint(true, 2026100801, 'local', 'berufsbildung');
+    }
+
     return true;
 }
