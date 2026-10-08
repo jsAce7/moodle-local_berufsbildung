@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.9.0] — 2026-10-08
+
+### Hinzugefügt
+
+- **Aufklappbare Menüs in der Hauptnavigation** (`hook_callbacks::primary_extend()`, `navigation\menuepunkt`): Aufsetzende Plugins melden Menüpunkte über den Callback `<plugin>_berufsbildung_navigation()` in ihrer `lib.php`, nur solche, die die angemeldete Person öffnen darf. *Meine Lehre* und *Meine Lernenden* werden aufklappbar, sobald es Unterpunkte gibt; ihr erster Punkt führt auf die bisherige Seite. Neu ist das Menü *Berufsbildung* mit den Übersichten über alle Lernenden für die Leitung. Es erscheint nur, wenn mindestens ein Punkt gemeldet wird. Scheitert der Callback eines Plugins, fehlen nur dessen Punkte.
+
 ## [0.8.6] — 2026-10-07
 
 ### Geändert

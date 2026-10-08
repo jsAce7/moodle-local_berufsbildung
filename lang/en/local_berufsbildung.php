@@ -236,6 +236,7 @@ $string['nachweis:ergebnis'] = 'Result {$a}';
 $string['nachweis:ohne_semester'] = 'Outside the apprenticeship period';
 $string['nachweis:semester'] = 'Semester {$a}';
 $string['nachweis:titel'] = 'Activities';
+$string['nav:berufsbildung'] = 'Vocational training';
 $string['nav:meine_lehre'] = 'My apprenticeship';
 $string['nav:meine_lernenden'] = 'My trainees';
 $string['pdf:seite'] = 'Page {$a->nr} of {$a->gesamt}';

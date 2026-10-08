@@ -137,7 +137,13 @@ Die Trennung der beiden Rollen ist ebenso beabsichtigt: `berufsbildner` hängt a
 
 ### Navigation
 
-Die primäre Navigationsleiste trägt bewusst nur die beiden täglichen Einstiege *Meine Lehre* und *Meine Lernenden*, vor der Website-Administration. *Meine Lehre* erscheint dort für alle mit Beruf und Jahrgang im Profil, auch vor Lehrbeginn und nach dem Abschluss (dann als Rückblick), nicht aber für externe üK-Teilnehmende; *Meine Lernenden* nur, wer heute mindestens eine laufende Zuordnung hat.
+Die primäre Navigationsleiste trägt bis zu drei Einstiege, vor der Website-Administration:
+
+- *Meine Lehre* für alle mit Beruf und Jahrgang im Profil, auch vor Lehrbeginn und nach dem Abschluss (dann als Rückblick), nicht aber für externe üK-Teilnehmende.
+- *Meine Lernenden* für alle, die heute mindestens eine laufende Zuordnung haben.
+- *Berufsbildung* mit den Übersichten über alle Lernenden, etwa *üK-Noten* aus `local_uekkn` oder *Rückmeldungen der Lernenden* aus `local_bildungsbericht`. Erscheint nur, wenn ein Plugin der Person mindestens einen Punkt meldet; dieses Plugin selbst meldet keinen. So erreicht die Leitung ihre Seiten ohne Zugang zur Website-Administration.
+
+**Menüpunkte aus anderen Plugins:** Ein aufsetzendes Plugin definiert in seiner `lib.php` die Funktion `<plugin>_berufsbildung_navigation()` und liefert eine Liste von `local_berufsbildung\navigation\menuepunkt` (Menü, Text, URL, Schlüssel). Es liefert nur, was die angemeldete Person öffnen darf; dieses Plugin prüft keine fremden Rechte. Hat *Meine Lehre* oder *Meine Lernenden* Unterpunkte, wird der Eintrag aufklappbar, und der erste Punkt führt auf die bisherige Seite. Scheitert der Callback eines Plugins, fehlen nur dessen Punkte (`hook_callbacks::gemeldete_menuepunkte()`).
 
 Berufsbildner/innen erreichen die Blockverwaltung über den Button **Ausbildungsblöcke verwalten** auf *Meine Lernenden*. Die Blockpflege ist Stammdatenarbeit und hängt deshalb als Nebeneingang daran. Wer `manageblocks` ohne eigene Lernende hat — eine von Hand zugewiesene *Ausbildungsplanung* —, nimmt den Weg über *Website-Administration ▸ Berufsbildung ▸ Ausbildungsplanung ▸ Ausbildungsblöcke*. Änderungen wirken systemweit für alle Berufe, und `local_berufsbildung_block_lk` führt keine Änderungshistorie — nachvollziehbar ist über `usermodified`/`timemodified` nur die jeweils letzte Änderung eines noch bestehenden Eintrags, Entfernungen sind spurlos. Wer die Pflege einem kleineren Kreis vorbehalten will, entzieht der Rolle *Ausbildungsplanung* die Capability `local/berufsbildung:manageblocks` und weist sie gezielt einer eigenen Rolle zu; der Zugang über die Navigation und den Admin-Baum richtet sich allein nach dieser Capability.
 
@@ -207,7 +213,7 @@ Aus der Entwicklungsumgebung `~/moodle-dev/`:
 ./scripts/lint.sh local/berufsbildung    # phpcs (moodle-cs)
 ```
 
-Es gibt 379 PHPUnit-Tests in 38 Dateien. Behat deckt mit 15 Szenarien Zuordnungen, die Kompetenzauswahl und das Kopieren von Blöcken, die LK-Übersicht, das Kompetenzraster auf „Meine Lehre“ und „Meine Lernenden“ ab, nicht jede Seite. Die CI ([.github/workflows/ci.yml](.github/workflows/ci.yml), `moodle-plugin-ci`) läuft bei jedem Push und Pull Request auf GitHub Actions, mit Moodle 4.5 / PHP 8.1 / PostgreSQL und Moodle 5.2 / PHP 8.4 / MariaDB; Moodle 5.0 und 5.1 laufen nicht eigens mit.
+Es gibt 383 PHPUnit-Tests in 39 Dateien. Behat deckt mit 15 Szenarien Zuordnungen, die Kompetenzauswahl und das Kopieren von Blöcken, die LK-Übersicht, das Kompetenzraster auf „Meine Lehre“ und „Meine Lernenden“ ab, nicht jede Seite. Die CI ([.github/workflows/ci.yml](.github/workflows/ci.yml), `moodle-plugin-ci`) läuft bei jedem Push und Pull Request auf GitHub Actions, mit Moodle 4.5 / PHP 8.1 / PostgreSQL und Moodle 5.2 / PHP 8.4 / MariaDB; Moodle 5.0 und 5.1 laufen nicht eigens mit.
 
 **JavaScript** liegt als AMD-Modul in `amd/src`, das gebaute `amd/build` gehört mit ins Repository. Nach einer Änderung neu bauen. Weil das Plugin ausserhalb des Moodle-Baums liegt und dort nur im Container eingehängt ist, wird es für Grunt vorübergehend eingebunden (Node und `node_modules` im Moodle-Verzeichnis vorausgesetzt):
 

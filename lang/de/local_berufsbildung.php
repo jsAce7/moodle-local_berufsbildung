@@ -236,6 +236,7 @@ $string['nachweis:ergebnis'] = 'Ergebnis {$a}';
 $string['nachweis:ohne_semester'] = 'Ausserhalb der Lehrzeit';
 $string['nachweis:semester'] = '{$a}. Semester';
 $string['nachweis:titel'] = 'Tätigkeiten';
+$string['nav:berufsbildung'] = 'Berufsbildung';
 $string['nav:meine_lehre'] = 'Meine Lehre';
 $string['nav:meine_lernenden'] = 'Meine Lernenden';
 $string['pdf:seite'] = 'Seite {$a->nr} von {$a->gesamt}';
