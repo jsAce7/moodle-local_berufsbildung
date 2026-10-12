@@ -70,29 +70,35 @@ final class hook_callbacks_test extends \advanced_testcase {
         return $schluessel;
     }
 
-    public function test_meine_lehre_ist_aufklappbar_genau_dann_wenn_punkte_gemeldet_sind(): void {
+    public function test_meine_lehre_ist_nie_aufklappbar(): void {
         $this->resetAfterTest();
         $lernende = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_lernende();
         $this->setUser($lernende);
 
-        $gemeldet = hook_callbacks::gemeldete_menuepunkte()[menuepunkt::MEINE_LEHRE] ?? [];
+        // Gemeldete Punkte stehen als Reiter auf der Seite
+        // (output\seitennavigation), der Eintrag bleibt ein direkter Link.
         $knoten = $this->primaere_navigation()->find('local_berufsbildung_meine_lehre', null);
 
         $this->assertNotFalse($knoten);
-        if (empty($gemeldet)) {
-            $this->assertSame([], $this->kinder($knoten));
-            $this->assertStringContainsString('/local/berufsbildung/meine_lehre.php', $knoten->action->out(false));
-            return;
-        }
+        $this->assertSame([], $this->kinder($knoten));
+        $this->assertStringContainsString('/local/berufsbildung/meine_lehre.php', $knoten->action->out(false));
+    }
 
-        // Erster Punkt: die bisherige Seite, danach die gemeldeten.
-        $erwartet = array_merge(
-            ['local_berufsbildung_meine_lehre_seite'],
-            array_map(static fn(menuepunkt $p): string => $p->schluessel, $gemeldet)
-        );
-        $this->assertSame($erwartet, $this->kinder($knoten));
-        $erster = $knoten->get('local_berufsbildung_meine_lehre_seite');
-        $this->assertStringContainsString('/local/berufsbildung/meine_lehre.php', $erster->action->out(false));
+    public function test_meine_lernenden_ist_nie_aufklappbar(): void {
+        $this->resetAfterTest();
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung');
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $generator->create_zuordnung([
+            'berufsbildnerid' => (int) $berufsbildner->id,
+            'lernendeid' => (int) $generator->create_lernende()->id,
+        ]);
+        $this->setUser($berufsbildner);
+
+        $knoten = $this->primaere_navigation()->find('local_berufsbildung_meine_lernenden', null);
+
+        $this->assertNotFalse($knoten);
+        $this->assertSame([], $this->kinder($knoten));
+        $this->assertStringContainsString('/local/berufsbildung/meine_lernenden.php', $knoten->action->out(false));
     }
 
     public function test_menue_berufsbildung_nur_mit_gemeldeten_punkten(): void {

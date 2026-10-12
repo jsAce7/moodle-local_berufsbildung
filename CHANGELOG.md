@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0] — 2026-10-12
+
+### Geändert
+
+- **Reiter statt Aufklappmenü** (neu `output\seitennavigation`): *Meine Lehre* und *Meine Lernenden* sind in der Hauptleiste wieder direkte Links. Was aufsetzende Plugins darunter melden, etwa „Verlauf über die Lehre“, steht als Reiter oben auf der Seite, neben dem Reiter „Übersicht“. Nur *Berufsbildung* bleibt aufklappbar, weil es keine eigene Seite hat. Aufsetzende Plugins zeigen dieselben Reiter auf ihren Zielseiten mit `seitennavigation::render()` und halten mit `seitennavigation::markiere_hauptleiste()` den Eintrag in der Hauptleiste aktiv.
+- **Ausbildungsblöcke als Reiter** auf *Meine Lernenden* statt als Schaltfläche in der Filterzeile, für alle mit `local/berufsbildung:manageblocks`. `bloecke.php` zeigt die Reiter ebenfalls, wenn die Person eigene Lernende hat; sonst bleibt es die Seite aus dem Admin-Baum. Der Sprachstring `meine_lernenden:bloecke` entfällt.
+
 ## [0.9.1] — 2026-10-08
 
 ### Geändert

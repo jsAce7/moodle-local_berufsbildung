@@ -39,16 +39,21 @@ use navigation_node;
  *
  * Drei Eintraege, je nach Rolle: "Meine Lehre" fuer Lernende, "Meine
  * Lernenden" fuer ausbildende Personen, "Berufsbildung" fuer die Leitung.
- * Aufsetzende Plugins haengen Unterpunkte an ueber den Callback
- * <plugin>_berufsbildung_navigation() (navigation\menuepunkt). Hat ein
- * Eintrag Unterpunkte, wird er aufklappbar und sein erster Punkt fuehrt
- * auf die bisherige Seite. "Berufsbildung" besteht nur aus Unterpunkten
- * und erscheint nur, wenn mindestens einer geliefert wird.
+ * Aufsetzende Plugins melden Unterpunkte ueber den Callback
+ * <plugin>_berufsbildung_navigation() (navigation\menuepunkt). Unter
+ * "Meine Lehre" und "Meine Lernenden" erscheinen sie als Reiter auf der
+ * Seite (output\seitennavigation), die Eintraege hier bleiben direkte
+ * Links. "Berufsbildung" hat keine eigene Seite, besteht nur aus
+ * Unterpunkten und ist deshalb aufklappbar; es erscheint nur, wenn
+ * mindestens einer geliefert wird.
  *
  * Die Blockverwaltung ist Pflege von Stammdaten und haengt deshalb als
- * Nebeneingang an "Meine Lernenden" (siehe meine_lernenden.php).
+ * Reiter an "Meine Lernenden".
  */
 class hook_callbacks {
+    /** Praefix der Knoten-Schluessel; dahinter steht das Menue (menuepunkt::MEINE_LEHRE usw.). */
+    public const KNOTEN_PRAEFIX = 'local_berufsbildung_';
+
     /** Key des Core-Knotens "Website-Administration" in der primaeren Navigation. */
     private const SITEADMIN_KEY = 'siteadminnode';
 
@@ -72,26 +77,25 @@ class hook_callbacks {
         $unterpunkte = self::gemeldete_menuepunkte();
 
         // Key => [Sprachstring, Seite oder null, Unterpunkte]. Die Reihenfolge
-        // hier ist die Reihenfolge in der Leiste.
+        // hier ist die Reihenfolge in der Leiste. Die Unterpunkte von "Meine
+        // Lehre" und "Meine Lernenden" stehen als Reiter auf deren Seite.
         $eintraege = [];
 
         // Vor Lehrbeginn und nach dem Abschluss ebenfalls: die Seite zeigt dann
         // "Lehre beginnt erst" bzw. den Rueckblick. Ohne Beruf und Jahrgang
         // (PHASE_UNBEKANNT, etwa bei Berufsbildner/innen) gibt es nichts zu zeigen.
         if (!api::ist_uek_extern($userid) && api::get_ausbildungsphase($userid) !== api::PHASE_UNBEKANNT) {
-            $eintraege['local_berufsbildung_meine_lehre'] = [
-                'nav:meine_lehre', 'meine_lehre.php', $unterpunkte[menuepunkt::MEINE_LEHRE] ?? [],
-            ];
+            $eintraege[self::KNOTEN_PRAEFIX . menuepunkt::MEINE_LEHRE] = ['nav:meine_lehre', 'meine_lehre.php', []];
         }
 
         if (!empty(api::get_lernende_for($userid))) {
-            $eintraege['local_berufsbildung_meine_lernenden'] = [
-                'nav:meine_lernenden', 'meine_lernenden.php', $unterpunkte[menuepunkt::MEINE_LERNENDEN] ?? [],
+            $eintraege[self::KNOTEN_PRAEFIX . menuepunkt::MEINE_LERNENDEN] = [
+                'nav:meine_lernenden', 'meine_lernenden.php', [],
             ];
         }
 
         if (!empty($unterpunkte[menuepunkt::BERUFSBILDUNG])) {
-            $eintraege['local_berufsbildung_berufsbildung'] = [
+            $eintraege[self::KNOTEN_PRAEFIX . menuepunkt::BERUFSBILDUNG] = [
                 'nav:berufsbildung', null, $unterpunkte[menuepunkt::BERUFSBILDUNG],
             ];
         }
@@ -118,15 +122,12 @@ class hook_callbacks {
             }
 
             // Aufklappbar: Moodle zeigt einen Knoten mit Kindern als Menue,
-            // seine eigene URL ist dann nicht mehr anklickbar. Die bisherige
-            // Seite steht deshalb als erster Punkt im Menue.
+            // seine eigene URL waere dann nicht anklickbar. Deshalb nur fuer
+            // "Berufsbildung", das keine eigene Seite hat.
             $knoten = $primaryview->add_node(
                 navigation_node::create($text, null, navigation_node::TYPE_CUSTOM, null, $schluessel),
                 $vor
             );
-            if ($url !== null) {
-                $knoten->add($text, $url, navigation_node::TYPE_CUSTOM, null, $schluessel . '_seite');
-            }
             foreach ($punkte as $punkt) {
                 $knoten->add($punkt->text, $punkt->url, navigation_node::TYPE_CUSTOM, null, $punkt->schluessel);
             }

@@ -28,6 +28,8 @@ require_once($CFG->libdir . '/adminlib.php');
 use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\block_lk;
 use local_berufsbildung\api;
+use local_berufsbildung\navigation\menuepunkt;
+use local_berufsbildung\output\seitennavigation;
 use local_berufsbildung\service\einrichtung_pruefung;
 use local_berufsbildung\service\lk_abdeckung_service;
 
@@ -38,7 +40,20 @@ $titel = get_string('bloecke:uebersicht', 'local_berufsbildung');
 $PAGE->set_title($titel);
 $PAGE->set_heading($titel);
 
+// Wer eigene Lernende betreut, kommt ueber den Reiter auf "Meine Lernenden"
+// hierher und sieht dieselben Reiter samt Rueckweg. Ohne eigene Lernende -
+// Administration oder eine von Hand zugewiesene Ausbildungsplanung - bleibt
+// es die Seite aus dem Admin-Baum.
+$mitreitern = !empty(api::get_lernende_for((int) $USER->id));
+if ($mitreitern) {
+    seitennavigation::markiere_hauptleiste(menuepunkt::MEINE_LERNENDEN);
+}
+
 echo $OUTPUT->header();
+
+if ($mitreitern) {
+    echo seitennavigation::render(menuepunkt::MEINE_LERNENDEN, seitennavigation::BLOECKE);
+}
 
 echo html_writer::tag('p', get_string('bloecke:einleitung', 'local_berufsbildung'));
 

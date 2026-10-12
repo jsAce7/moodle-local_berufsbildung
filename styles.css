@@ -840,9 +840,7 @@
 }
 
 /*
- * Kopfbereich auf "Meine Lernenden": Filter links, Blockverwaltung rechts
- * in derselben Zeile. Auf schmalen Fenstern rutscht die Verwaltung unter
- * die Filter, statt sie zu quetschen.
+ * Kopfbereich auf "Meine Lernenden": die Filterzeile.
  */
 .local-berufsbildung-roster-toolbar {
     display: flex;
@@ -850,13 +848,6 @@
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 0.6rem 1rem;
-}
-
-.local-berufsbildung-roster-aktionen {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-    margin-left: auto;
 }
 
 /*

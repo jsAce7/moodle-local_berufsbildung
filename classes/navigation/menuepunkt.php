@@ -29,20 +29,24 @@ namespace local_berufsbildung\navigation;
 use moodle_url;
 
 /**
- * Ein Eintrag in einem der drei Menues der primaeren Navigation. Ein
+ * Ein Eintrag unter einem der drei Einstiege der primaeren Navigation. Ein
  * aufsetzendes Plugin liefert seine Eintraege ueber den Callback
  * <plugin>_berufsbildung_navigation() in seiner lib.php, und zwar nur die,
  * deren Seite die angemeldete Person oeffnen darf - dieses Plugin prueft
  * keine fremden Rechte (siehe hook_callbacks::primary_extend()).
  *
+ * Unter "Meine Lehre" und "Meine Lernenden" erscheint der Eintrag als Reiter
+ * auf der Seite (output\seitennavigation), unter "Berufsbildung" im
+ * Aufklappmenue der primaeren Navigation.
+ *
  * Einzelne readonly-Properties statt einer readonly-Klasse, damit die
  * Klasse auch unter PHP 8.1 (Moodle 4.5) funktioniert.
  */
 class menuepunkt {
-    /** Unter "Meine Lehre", nur fuer Personen, denen "Meine Lehre" erscheint. */
+    /** Reiter auf "Meine Lehre", nur fuer Personen, denen "Meine Lehre" erscheint. */
     public const MEINE_LEHRE = 'meine_lehre';
 
-    /** Unter "Meine Lernenden", nur fuer Personen mit eigenen Lernenden. */
+    /** Reiter auf "Meine Lernenden", nur fuer Personen mit eigenen Lernenden. */
     public const MEINE_LERNENDEN = 'meine_lernenden';
 
     /** Unter "Berufsbildung": Uebersichten ueber alle Lernenden, fuer die Leitung. */

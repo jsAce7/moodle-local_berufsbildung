@@ -28,11 +28,13 @@ require_once(__DIR__ . '/../../config.php');
 
 use local_berufsbildung\api;
 use local_berufsbildung\nachweis\collector;
+use local_berufsbildung\navigation\menuepunkt;
 use local_berufsbildung\output\einsatz_karte;
 use local_berufsbildung\output\einsatz_timeline;
 use local_berufsbildung\output\faelligkeiten_liste;
 use local_berufsbildung\output\kompetenzraster;
 use local_berufsbildung\output\nachweis_liste;
+use local_berufsbildung\output\seitennavigation;
 use local_berufsbildung\output\semester_stepper;
 
 require_login();
@@ -76,6 +78,10 @@ if ($phase === api::PHASE_LAUFEND) {
 }
 
 echo $OUTPUT->header();
+
+// Was aufsetzende Plugins unter "Meine Lehre" melden, etwa den Verlauf
+// ueber die Lehre - als Reiter, nicht als Untermenue in der Hauptleiste.
+echo seitennavigation::render(menuepunkt::MEINE_LEHRE);
 
 // Ein Seitenabschnitt als eigene Karte. Die Seite bestand aus einer
 // einzigen Karte, in der Einordnung, Raster, Zeitstrahl und Taetigkeiten
