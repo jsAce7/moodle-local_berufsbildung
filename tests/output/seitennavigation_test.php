@@ -72,11 +72,14 @@ final class seitennavigation_test extends advanced_testcase {
         $this->resetAfterTest();
         $this->setAdminUser();
 
-        $html = seitennavigation::render(menuepunkt::MEINE_LERNENDEN, seitennavigation::BLOECKE);
-
         // Mit dem Reiter zur Blockverwaltung gibt es immer mindestens zwei.
-        $this->assertStringContainsString('/local/berufsbildung/meine_lernenden.php', $html);
+        // Der aktive Reiter wird ohne Link gerendert, deshalb beide Seiten pruefen.
+        $html = seitennavigation::render(menuepunkt::MEINE_LERNENDEN);
         $this->assertStringContainsString('/local/berufsbildung/bloecke.php', $html);
+        $this->assertStringContainsString(get_string('bloecke:uebersicht', 'local_berufsbildung'), $html);
+
+        $html = seitennavigation::render(menuepunkt::MEINE_LERNENDEN, seitennavigation::BLOECKE);
+        $this->assertStringContainsString('/local/berufsbildung/meine_lernenden.php', $html);
         $this->assertStringContainsString(get_string('bloecke:uebersicht', 'local_berufsbildung'), $html);
     }
 
