@@ -59,7 +59,7 @@ if (api::ist_uek_extern($lernendeid)) {
 
 // Ein Format fuer ausgeschriebene Daten im Fliesstext, eines fuer die
 // kompakten Listen (siehe einsatz_darstellung) - mehr braucht die Seite
-// nicht. Bewusst ohne Wochentag: bei "Ihre Lehre beginnt am ..." ist das
+// nicht. Bewusst ohne Wochentag: bei "Deine Lehre beginnt am ..." ist das
 // Datum die Auskunft, der Wochentag nur Laenge.
 $datumsformat = get_string('strftimedate', 'langconfig');
 $phase = api::get_ausbildungsphase($lernendeid);

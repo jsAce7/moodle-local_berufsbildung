@@ -9,7 +9,7 @@
 
 ### Geändert
 
-- **Hilfe in der Du-Form**: alle Anleitungen und die Texte der Hilfeseite sprechen mit du an, auch die für Berufsbildner/innen, Planung, Leitung und Administration. Der Text der Anleitung „Meine Lehre“ nennt die Meldung „Für Ihr Profil …“ wörtlich, wie sie in der Oberfläche steht.
+- **Hilfe in der Du-Form**: alle Anleitungen und die Texte der Hilfeseite sprechen mit du an, auch die für Berufsbildner/innen, Planung, Leitung und Administration. Ebenso die Oberflächentexte von `local_berufsbildung` und `local_uekkn` (Meldungen, Hinweise, Hilfetexte der Formulare).
 
 ## [0.13.0] — 2026-10-14
 
