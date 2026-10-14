@@ -51,11 +51,15 @@ final class seitennavigation_test extends advanced_testcase {
             $this->assertSame('', $html);
             return;
         }
-        $this->assertStringContainsString('/local/berufsbildung/meine_lehre.php', $html);
+        // Der aktive Reiter wird ohne Link gerendert: die Uebersicht hat
+        // ihren Link nur, wenn ein gemeldeter Punkt aktiv ist.
         foreach ($gemeldet as $punkt) {
             $this->assertStringContainsString($punkt->url->out(), $html);
         }
         $this->assertStringNotContainsString('/local/berufsbildung/bloecke.php', $html);
+
+        $html = seitennavigation::render(menuepunkt::MEINE_LEHRE, $gemeldet[0]->schluessel);
+        $this->assertStringContainsString('/local/berufsbildung/meine_lehre.php', $html);
     }
 
     public function test_meine_lehre_ohne_blockverwaltung_auch_mit_capability(): void {
