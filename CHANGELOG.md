@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.12.0] — 2026-10-14
+
+### Hinzugefügt
+
+- **Ausbildungsblöcke löschen** (`block_loeschen.php`, `service\block_loesch_service`): In der Blockübersicht entfernt „Löschen“ einen falsch, doppelt oder nur vorläufig angelegten Block nach Rückfrage endgültig, samt seiner Kompetenzzuordnungen und seiner geplanten Einsätze. Die Rückfrage nennt, wie viele geplante Einsätze welcher Zahl Lernender mitgehen. Hat in dem Block schon ein Einsatz begonnen (Beginn heute oder früher), ist die Schaltfläche ausgegraut und der Block lässt sich nur deaktivieren; Raster, Lerndokumentation und Einsatzübersicht behalten so ihren Bezug. Enthält der nächste Versetzungsplan den Block noch, legt der Import ihn samt Einsätzen neu an.
+
 ## [0.11.0] — 2026-10-14
 
 ### Geändert

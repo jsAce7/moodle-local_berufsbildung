@@ -30,6 +30,7 @@ use local_berufsbildung\persistent\block_lk;
 use local_berufsbildung\api;
 use local_berufsbildung\navigation\menuepunkt;
 use local_berufsbildung\output\seitennavigation;
+use local_berufsbildung\service\block_loesch_service;
 use local_berufsbildung\service\einrichtung_pruefung;
 use local_berufsbildung\service\lk_abdeckung_service;
 
@@ -121,6 +122,10 @@ if (empty($bloecke)) {
     $abdeckungservice = new lk_abdeckung_service();
     $kompetenzenan = (bool) get_config('core_competency', 'enabled');
 
+    // Bloecke mit begonnenen Einsaetzen lassen sich nur deaktivieren, nicht
+    // loeschen - siehe block_loesch_service. Eine Abfrage fuer alle Bloecke.
+    $begonnen = (new block_loesch_service())->bloecke_mit_begonnenen_einsaetzen();
+
     foreach ($nachberuf as $beruf => $berufsbloecke) {
         $beruf = (string) $beruf;
         usort($berufsbloecke, static fn (block $a, block $b): int => strnatcasecmp(
@@ -186,7 +191,23 @@ if (empty($bloecke)) {
                     new moodle_url('/local/berufsbildung/block_bearbeiten.php', ['kopie' => $blockid]),
                     get_string('block:kopieren', 'local_berufsbildung'),
                     ['class' => 'btn btn-sm btn-secondary']
-                ),
+                ) . (isset($begonnen[$blockid])
+                    // Sichtbar, aber ohne Ziel: so ist klar, dass es das
+                    // Loeschen gibt und warum es hier nicht geht. Ohne die
+                    // Klasse "disabled", die auch den Tooltip abschalten wuerde.
+                    ? html_writer::span(
+                        get_string('block:loeschen', 'local_berufsbildung'),
+                        'btn btn-sm btn-outline-secondary text-muted',
+                        [
+                            'aria-disabled' => 'true',
+                            'title' => get_string('block:loeschen_begonnen', 'local_berufsbildung'),
+                        ]
+                    )
+                    : html_writer::link(
+                        new moodle_url('/local/berufsbildung/block_loeschen.php', ['id' => $blockid]),
+                        get_string('block:loeschen', 'local_berufsbildung'),
+                        ['class' => 'btn btn-sm btn-outline-danger']
+                    )),
                 'local-berufsbildung-tabelle-aktionen'
             );
 

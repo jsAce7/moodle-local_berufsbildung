@@ -560,6 +560,11 @@ Die Blockzuordnung vom Kompetenzrahmen her gesehen: je Leistungskriterium die Bl
 **Block kopieren**
 Legt einen neuen Block mit den Angaben eines bestehenden an; die Nummer wird neu vergeben. Übernommen werden die Kompetenzzuordnungen, die im Rahmen des Berufs des neuen Blocks stehen (`service\block_kopie_service`). Für einen Beruf mit anderem Rahmen fallen die übrigen weg, mit Hinweis.
 
+**Block löschen** `local/berufsbildung/block_loeschen.php?id=…`
+Entfernt einen falsch, doppelt oder nur vorläufig angelegten Block nach Rückfrage endgültig, samt seiner Kompetenzzuordnungen und seiner geplanten Einsätze, in einer Transaktion (`service\block_loesch_service`). Das geht nur, solange in dem Block noch kein Einsatz begonnen hat. Begonnen hat ein Einsatz, dessen Beginn am Stichtag oder davor liegt, dieselbe Grenze wie im Kompetenzraster. Laufende und vergangene Einsätze sperren also: Raster, Lerndokumentation und Einsatzübersicht lösen Name, Kurs und Kompetenzen über den Block des Einsatzes auf, und was vorgekommen ist, bleibt nachvollziehbar. Ein solcher Block wird deaktiviert; in der Übersicht ist „Löschen" dort ausgegraut, mit Begründung im Tooltip. Die Rückfrage nennt die Zahl der geplanten Einsätze und Lernenden, die mitgelöscht werden.
+
+Der Versetzungsplan bleibt ein Spiegel (Architekturregel 5): Enthält die nächste Lieferung den Block noch, legt der Import ihn wie jeden unbekannten Block neu an, samt Einsätzen, ohne Kompetenzzuordnung. Löschen ersetzt also nicht die Korrektur im Versetzungsplan.
+
 **Einrichtungsprüfung**
 Oberhalb der Blöcke je Beruf, was dem Kompetenzraster der Lernenden fehlt (`service\einrichtung_pruefung`): kein oder ein nicht vorhandener Rahmen, keine Blöcke, kein aktiver betrieblicher Block mit Kompetenzen. Als Hinweis: Kompetenzen in inaktiven oder nicht betrieblichen Blöcken, Wahlpflicht-HK ohne verlangte Anzahl. Geprüft werden die Berufe mit Blöcken oder Rahmen, nicht jede Option des Profilfelds.
 
