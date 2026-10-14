@@ -348,14 +348,19 @@ Für die **Anzeige** ergibt das vier Stände (`raster_kompetenz::anzeigestand()`
 
 Die Lückenanalyse (`get_luecken_nach_bereich()`, Badge „x noch offen") bleibt beim Status oben: eine HK ist keine Planungslücke mehr, sobald eines ihrer LK vorkam. Die Zelle zeigt „4 von 12 LK vorgekommen, 2 eingeplant"; ein Klick öffnet die LK-Liste mit Block und Kalenderwochen je LK.
 
-**Pflicht und Wahlpflicht.** Welche HK eines Berufs Wahlpflicht sind, steht in der Einstellung `beruf_wahlpflicht_hk` (`AU_EFZ=a.04,a.05,…`). Wahlpflicht-HK zählen nicht in die Pflicht-Bezugsgrösse („x von 14 Pflicht-HK"). Wie viele davon der Bildungsplan verlangt, steht in `beruf_wahlpflicht_anzahl`, je Gruppe von Bereichen:
+**Pflicht und Wahlpflicht.** Welche HK eines Berufs Wahlpflicht sind, steht in der Einstellung `beruf_wahlpflicht_hk` (`AU_EFZ=a.04,a.05,…`). Wahlpflicht-HK zählen nicht in die Pflicht-Bezugsgrösse („x von 14 Pflicht-HK"). Wie viele davon der Bildungsplan verlangt, steht in `beruf_wahlpflicht_anzahl`, je Gruppe von Bereichen oder einzelnen HK:
 
 ```
-AU_EFZ=a,b,c:1; d:1     eine aus a, b und c zusammen, eine aus d
-AU_EFZ=3                drei aus dem ganzen Beruf
+AU_EFZ=a,b,c:1; d:1             eine aus a, b und c zusammen, eine aus d
+AU_EFZ=3                        drei aus dem ganzen Beruf
+PM_EFZ=d.06:1 | b,c,d:2; d:1    d6, oder zwei aus b, c und d, davon eine aus d
 ```
 
-Ohne Eintrag zeigt das Raster keine Wahlpflicht-Angabe. Eine Gruppe gilt als erfüllt, wenn genügend ihrer Wahlpflicht-HK **vollständig** vorkamen; teilweise und eingeplante zählen dafür noch nicht.
+`;` verbindet Gruppen, die alle erfüllt sein müssen; `|` trennt Wege, von denen einer genügt. Ein Kürzel mit Punkt meint eine einzelne HK (`d.06`), ohne Punkt einen Bereich. Dass `b,c,d` beim Polymechaniker auch d6 umfasst, schadet nicht: Ist d6 vollständig, ist schon Weg 1 erfüllt.
+
+Ohne Eintrag zeigt das Raster keine Wahlpflicht-Angabe. Eine Gruppe gilt als erfüllt, wenn genügend ihrer Wahlpflicht-HK **vollständig** vorkamen; teilweise und eingeplante zählen dafür noch nicht. Ein Weg ist erfüllt, wenn alle seine Gruppen erfüllt sind, die Vorgabe, wenn ein Weg erfüllt ist.
+
+Gruppen eines Wegs liegen ineinander (`d` in `b,c,d`) oder überschneiden sich nicht (`a,b,c` und `d`). Die Zahl offener Wahlpflicht-HK auf der Kachel ist das Minimum über die Wege. Innerhalb eines Wegs braucht eine Gruppe so viele, wie ihr selbst fehlen, oder, wenn das mehr ist, so viele, wie den Gruppen in ihr zusammen fehlen. Gruppen, die in keiner anderen liegen, zählen zusammen. Beim Polymechaniker steht vor dem ersten Einsatz deshalb „1 Wahlpflicht offen": d6 allein würde genügen. Überschneiden sich Gruppen eines Wegs nur teilweise, kann die Zahl zu hoch sein; die Einrichtungsprüfung weist darauf hin.
 
 **API**
 
@@ -375,8 +380,8 @@ public static function get_planungshorizont(int $lernendeid): ?int;
 /** ID-Nummern der Wahlpflicht-HK eines Berufs. */
 public static function get_wahlpflicht_hk_for_beruf(string $beruf): array; // string[]
 
-/** Verlangte Wahlpflicht-HK je Gruppe von Bereichen. Leer, wenn nichts hinterlegt ist. */
-public static function get_wahlpflicht_gruppen_for_beruf(string $beruf): array; // wahlpflicht_gruppe[]
+/** Verlangte Wahlpflicht-HK je Weg und Gruppe. Null, wenn nichts hinterlegt ist. */
+public static function get_wahlpflicht_vorgabe_for_beruf(string $beruf): ?wahlpflicht_vorgabe;
 
 /** Planungshilfe: je LK die aktiven betrieblichen Blöcke des Berufs, die es vermitteln
  *  (auch über die ganze HK). Ohne Stichtag - die Blockzuordnung hat keine Gültigkeitsdauer. */
@@ -405,17 +410,24 @@ class raster_kompetenz {
     public bool $istwahlpflicht;
     public array $leistungskriterien; // competencyid => Status je LK
     public array $lkeinsaetze;        // competencyid => einsatz-ids je LK
+    public string $kuerzel;           // "d.06" - für Wahlpflicht-Gruppen aus einzelnen HK
     // anzeigestand() => vollstaendig | teilweise | eingeplant | offen
 }
 
 class wahlpflicht_gruppe {
-    public array $bereiche;       // Kürzel, leer = ganzer Beruf
+    public array $bereiche;       // Kürzel von Bereichen ("d") oder HK ("d.06"), leer = ganzer Beruf
     public int $anzahl;           // verlangt
     // stand(raster) => [vollstaendig, teilweise, eingeplant]; offen(raster) => noch nicht vollständig
+    // enthaelt(gruppe), ueberschneidet(gruppe) - über die Kürzel, ohne Raster
+}
+
+class wahlpflicht_vorgabe {
+    public array $wege;           // wahlpflicht_gruppe[] je Weg; einer genügt
+    // offen(raster) => Minimum über die Wege; offen_je_weg(raster); hat_ueberschneidungen()
 }
 ```
 
-**Darstellung.** `output\kompetenzraster::render($raster, $horizont, $kompakt, $wahlpflichtgruppen)` zeichnet das Raster. Die Fläche einer Zelle zeigt den Stand, ein Streifen oben Pflicht (gelb) oder Wahlpflicht (grün) wie im Bildungsplan. Verwendet auf „Meine Lehre" und „Meine Lernenden"; auf der Kachel einer lernenden Person stehen die fehlenden Pflicht-HK und die noch offenen Wahlpflicht-HK als Badges.
+**Darstellung.** `output\kompetenzraster::render($raster, $horizont, $kompakt, $wahlpflicht)` zeichnet das Raster. Bei mehreren Wegen steht über den Gruppen „einer der folgenden Wege genügt", je Weg eine Überschrift mit eigenem Häkchen. Die Fläche einer Zelle zeigt den Stand, ein Streifen oben Pflicht (gelb) oder Wahlpflicht (grün) wie im Bildungsplan. Verwendet auf „Meine Lehre" und „Meine Lernenden"; auf der Kachel einer lernenden Person stehen die fehlenden Pflicht-HK und die noch offenen Wahlpflicht-HK als Badges.
 
 **Aufwand.** Das Raster lädt Einsätze, Blöcke und Zuordnungen je in einer Abfrage und leitet übergeordnete Kompetenzen aus dem bereits geladenen Rahmen ab. Die Zahl der Datenbankabfragen hängt nicht von der Zahl der LK ab (Test `raster_analyse_test::test_abfragen_wachsen_nicht_mit_den_leistungskriterien`); „Meine Lernenden" rechnet es für jede Person.
 

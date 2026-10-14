@@ -134,6 +134,7 @@ $string['einrichtung:rahmen_fehlt'] = 'The assigned competency framework "{$a}" 
 $string['einrichtung:titel'] = 'Check the setup';
 $string['einrichtung:ungenutzte_kompetenzen'] = 'Blocks {$a} have competencies assigned but are inactive or not workplace blocks – they do not count in the competency grid.';
 $string['einrichtung:wahlpflicht_ohne_anzahl'] = 'Elective competencies are configured, but not how many are required (setting "Number of elective competency areas per occupation").';
+$string['einrichtung:wahlpflicht_ueberschneidung'] = 'Two groups of the same path in the elective requirement overlap without one lying entirely within the other. The number of open electives may then be too high. Groups should either lie within one another ("b,c,d:2; d:1") or not overlap at all ("a,b,c:1; d:1").';
 $string['einsatz:aktuell'] = 'current';
 $string['einsatz:aktuell_titel'] = 'Current placement';
 $string['einsatz:gruppe_anzahl'] = '{$a} placements';
@@ -331,6 +332,8 @@ $string['raster:wahlpflicht'] = 'Elective';
 $string['raster:wahlpflicht_erfuellt'] = 'fulfilled';
 $string['raster:wahlpflicht_stand'] = 'Electives: required {$a->soll}, complete {$a->vollstaendig}, partly {$a->teilweise}, scheduled later {$a->eingeplant}';
 $string['raster:wahlpflicht_stand_bereiche'] = 'Electives from {$a->bereiche}: required {$a->soll}, complete {$a->vollstaendig}, partly {$a->teilweise}, scheduled later {$a->eingeplant}';
+$string['raster:wahlpflicht_weg'] = 'Path {$a}';
+$string['raster:wahlpflicht_wege'] = 'Electives – one of the following paths is enough:';
 $string['raster:zusammenfassung'] = '{$a->soll} required competency areas: {$a->vollstaendig} complete, {$a->teilweise} partly, {$a->eingeplant} only scheduled, {$a->offen} not in the plan';
 $string['role:berufsbildner'] = 'Trainer';
 $string['role:berufsbildner_desc'] = 'Assigned in a trainee\'s user context once an assignment exists. Carries no capabilities of its own - those come from the plugins built on top.';
@@ -344,7 +347,7 @@ $string['settings:akzentfarbe_desc'] = 'Used for section headings, table header 
 $string['settings:beruf_dauer'] = 'Training length per occupation';
 $string['settings:beruf_dauer_desc'] = 'Overrides the training length for individual occupations, one line per occupation in the format CODE=semesters, e.g. "PM_EFZ=6" for a three-year programme. Occupations not listed here use the default length above.';
 $string['settings:beruf_wahlpflicht_anzahl'] = 'Number of elective competency areas per occupation';
-$string['settings:beruf_wahlpflicht_anzahl_desc'] = 'How many elective competency areas the curriculum requires, per group of areas. The competency grid then shows for each group how many of them have already occurred or are scheduled. One line per occupation: groups separated by semicolons, each group being the areas separated by commas, a colon and the number. "AU_EFZ=a,b,c:1; d:1" requires one from areas a, b and c together and one from d. Without areas the number applies to the whole occupation, e.g. "AU_EFZ=3". Occupations without an entry show no such figure.';
+$string['settings:beruf_wahlpflicht_anzahl_desc'] = 'How many elective competency areas the curriculum requires, per group of areas. The competency grid then shows for each group how many of them have already occurred or are scheduled. One line per occupation: groups separated by semicolons, each group being the areas separated by commas, a colon and the number. "AU_EFZ=a,b,c:1; d:1" requires one from areas a, b and c together and one from d. Without areas the number applies to the whole occupation, e.g. "AU_EFZ=3". Instead of an area, a group may name individual competencies, e.g. "d.06". If the curriculum requires one thing or another, a vertical bar separates the paths; one of them is enough. "PM_EFZ=d.06:1 | b,c,d:2; d:1" means: d6, or two from areas b, c and d, at least one of them from d. Groups of the same path either lie within one another (d within b, c, d) or do not overlap. Occupations without an entry show no such figure.';
 $string['settings:beruf_wahlpflicht_hk'] = 'Elective competency areas per occupation';
 $string['settings:beruf_wahlpflicht_hk_desc'] = 'These competencies are not shown as missing in the gap analysis and carry a green instead of a yellow stripe in the competency grid. One line per occupation in the format CODE=COMPETENCY-ID,COMPETENCY-ID, e.g. "AU_EFZ=a.04,a.05". Use the idnumber of a competency, not of a top-level area. The framework prefix may be left out: "a.04" also matches a competency whose idnumber is "7777BE a.04".';
 $string['settings:einstellungen'] = 'Settings';

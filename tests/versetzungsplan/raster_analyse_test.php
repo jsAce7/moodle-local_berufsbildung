@@ -371,8 +371,9 @@ final class raster_analyse_test extends advanced_testcase {
     }
 
     /**
-     * Jeder Bereich traegt sein Kuerzel aus der ID-Nummer - darueber finden
-     * die Wahlpflicht-Gruppen ("a,b,c:1") ihre Bereiche.
+     * Jeder Bereich und jede HK traegt ihr Kuerzel aus der ID-Nummer -
+     * darueber finden die Wahlpflicht-Gruppen ("a,b,c:1", "d.06:1") ihre
+     * Bereiche und HK.
      */
     public function test_bereich_traegt_sein_kuerzel(): void {
         $this->resetAfterTest();
@@ -383,11 +384,14 @@ final class raster_analyse_test extends advanced_testcase {
         $hkb = $generator->create_competency([
             'competencyframeworkid' => $rahmen->get('id'), 'idnumber' => '7777BE c',
         ]);
-        $generator->create_competency(['competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hkb->get('id')]);
+        $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hkb->get('id'), 'idnumber' => '7777BE c.06',
+        ]);
 
         $raster = (new raster_analyse())->get_raster((int) $lernende->id);
 
         $this->assertSame('c', $raster[0]->kuerzel);
+        $this->assertSame('c.06', $raster[0]->kompetenzen[0]->kuerzel);
     }
 
     /**

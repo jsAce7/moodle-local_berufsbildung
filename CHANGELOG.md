@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.11.0] — 2026-10-14
+
+### Geändert
+
+- **Wahlpflicht mit Wegen und einzelnen Handlungskompetenzen** (Einstellung `beruf_wahlpflicht_anzahl`, neu `wahlpflicht_vorgabe`): Eine Gruppe kann statt eines Bereichs einzelne HK nennen (`d.06`), und `|` trennt Wege, von denen einer genügt. Damit lässt sich die Vorgabe des Polymechanikers hinterlegen: `PM_EFZ=d.06:1 | b,c,d:2; d:1` heisst d6, oder zwei aus b5–b9, c5, c6, d4–d9, davon eine aus d. Gruppen eines Wegs dürfen ineinanderliegen (`d` in `b,c,d`); die Kachel auf *Meine Lernenden* zählt dann nicht mehr einfach zusammen, sondern nennt, was auf dem kürzesten Weg noch fehlt. Das Raster zeigt bei mehreren Wegen je Weg eine Überschrift mit eigenem Häkchen. Bestehende Einträge rechnen unverändert.
+- **API**: `api::get_wahlpflicht_gruppen_for_beruf()` wird durch `api::get_wahlpflicht_vorgabe_for_beruf()` ersetzt (liefert `?wahlpflicht_vorgabe`), `kompetenzraster::render()` nimmt statt `$wahlpflichtgruppen` den Parameter `$wahlpflicht`. Kein aufsetzendes Plugin nutzt die alte Methode. `raster_kompetenz` trägt neu das Kürzel der HK.
+- **Einrichtungsprüfung**: Hinweis, wenn sich zwei Gruppen desselben Wegs überschneiden, ohne dass die eine in der anderen liegt.
+
 ## [0.10.0] — 2026-10-12
 
 ### Geändert

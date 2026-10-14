@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace local_berufsbildung\service;
 
 use local_berufsbildung\wahlpflicht_gruppe;
+use local_berufsbildung\wahlpflicht_vorgabe;
 
 /**
  * Die Bildungspläne kennzeichnen Handlungskompetenzen als P oder W. Die
@@ -61,20 +62,27 @@ class wahlpflicht_resolver {
     }
 
     /**
-     * Wie viele Wahlpflicht-HK der Bildungsplan eines Berufs verlangt, je
-     * Gruppe von Bereichen.
+     * Wie viele Wahlpflicht-HK der Bildungsplan eines Berufs verlangt.
      *
      * Format je Beruf: Gruppen durch Semikolon getrennt, je Gruppe die
      * Kuerzel der Bereiche mit Komma, ein Doppelpunkt und die Anzahl.
      * "AU_EFZ=a,b,c:1; d:1" verlangt eine aus a, b und c zusammen und eine
      * aus d. Ohne Bereiche gilt die Anzahl fuer den ganzen Beruf:
-     * "AU_EFZ=3". Gruppen ohne positive ganze Zahl werden uebersprungen.
+     * "AU_EFZ=3". Ein Kuerzel mit Punkt meint eine einzelne HK ("d.06");
+     * ein Rahmen-Praefix davor ("5555 d.06") stoert nicht.
+     *
+     * Verlangt der Bildungsplan das eine oder das andere, trennt ein
+     * senkrechter Strich die Wege: "PM_EFZ=d.06:1 | b,c,d:2; d:1" heisst
+     * d6, oder zwei aus b, c und d, davon eine aus d.
+     *
+     * Gruppen ohne positive ganze Zahl werden uebersprungen, Wege ohne
+     * gueltige Gruppe ebenso.
      *
      * @param string $beruf Beruf-Code, z. B. AU_EFZ
      * @param string $konfiguration Eine Zeile je Beruf, siehe oben
-     * @return wahlpflicht_gruppe[] Leer, wenn fuer den Beruf nichts hinterlegt ist
+     * @return wahlpflicht_vorgabe|null Null, wenn fuer den Beruf nichts hinterlegt ist
      */
-    public function gruppen(string $beruf, string $konfiguration): array {
+    public function vorgabe(string $beruf, string $konfiguration): ?wahlpflicht_vorgabe {
         foreach (preg_split('/\r\n|\r|\n/', $konfiguration) as $zeile) {
             $zeile = trim($zeile);
             if ($zeile === '' || !str_contains($zeile, '=')) {
@@ -86,26 +94,45 @@ class wahlpflicht_resolver {
                 continue;
             }
 
-            $gruppen = [];
-            foreach (explode(';', $wert) as $teil) {
-                $teil = trim($teil);
-                $bereiche = [];
-                if (str_contains($teil, ':')) {
-                    [$liste, $teil] = array_map('trim', explode(':', $teil, 2));
-                    $bereiche = array_values(array_filter(array_map(
-                        static fn (string $kuerzel): string => \core_text::strtolower(trim($kuerzel)),
-                        explode(',', $liste)
-                    ), static fn (string $kuerzel): bool => $kuerzel !== ''));
+            $wege = [];
+            foreach (explode('|', $wert) as $weg) {
+                $gruppen = $this->gruppen($weg);
+                if ($gruppen !== []) {
+                    $wege[] = $gruppen;
                 }
-                if ($teil === '' || !ctype_digit($teil) || (int) $teil < 1) {
-                    continue;
-                }
-                $gruppen[] = new wahlpflicht_gruppe($bereiche, (int) $teil);
             }
 
-            return $gruppen;
+            return $wege !== [] ? new wahlpflicht_vorgabe($wege) : null;
         }
 
-        return [];
+        return null;
+    }
+
+    /**
+     * Die Gruppen eines Wegs, z. B. aus "b,c,d:2; d:1".
+     *
+     * @param string $weg
+     * @return wahlpflicht_gruppe[]
+     */
+    private function gruppen(string $weg): array {
+        $gruppen = [];
+        foreach (explode(';', $weg) as $teil) {
+            $teil = trim($teil);
+            $bereiche = [];
+            if (str_contains($teil, ':')) {
+                [$liste, $teil] = array_map('trim', explode(':', $teil, 2));
+                $bereiche = array_values(array_filter(array_map(
+                    static fn (string $kuerzel): string =>
+                        \core_text::strtolower(kompetenz_baum::kuerzel_aus_idnumber($kuerzel)),
+                    explode(',', $liste)
+                ), static fn (string $kuerzel): bool => $kuerzel !== ''));
+            }
+            if ($teil === '' || !ctype_digit($teil) || (int) $teil < 1) {
+                continue;
+            }
+            $gruppen[] = new wahlpflicht_gruppe($bereiche, (int) $teil);
+        }
+
+        return $gruppen;
     }
 }

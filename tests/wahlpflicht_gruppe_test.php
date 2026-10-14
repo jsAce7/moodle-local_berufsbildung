@@ -107,4 +107,57 @@ final class wahlpflicht_gruppe_test extends advanced_testcase {
         ], 'a')];
         $this->assertSame(0, (new wahlpflicht_gruppe(['a'], 1))->offen($mehr));
     }
+
+    /**
+     * Eine Gruppe kann eine einzelne HK nennen: gezaehlt wird nur sie, nicht
+     * die anderen HK ihres Bereichs. Gross- und Kleinschreibung im Rahmen
+     * spielt keine Rolle.
+     */
+    public function test_einzelne_hk(): void {
+        $raster = [new raster_bereich(4, [
+            new raster_kompetenz(46, raster_kompetenz::STATUS_ABGEDECKT, true, kuerzel: 'D.06'),
+            new raster_kompetenz(47, raster_kompetenz::STATUS_ABGEDECKT, true, kuerzel: 'd.07'),
+            new raster_kompetenz(48, raster_kompetenz::STATUS_EINGEPLANT, true, kuerzel: 'd.08'),
+        ], 'd')];
+
+        $this->assertSame(
+            ['vollstaendig' => 1, 'teilweise' => 0, 'eingeplant' => 0],
+            (new wahlpflicht_gruppe(['d.06'], 1))->stand($raster)
+        );
+        $this->assertSame(
+            ['vollstaendig' => 1, 'teilweise' => 0, 'eingeplant' => 1],
+            (new wahlpflicht_gruppe(['d.06', 'd.08'], 2))->stand($raster)
+        );
+        $this->assertSame(0, (new wahlpflicht_gruppe(['d.06'], 1))->offen($raster));
+        // Ohne Kuerzel an der HK zaehlt sie nur ueber ihren Bereich.
+        $ohne = [new raster_bereich(4, [new raster_kompetenz(46, raster_kompetenz::STATUS_ABGEDECKT, true)], 'd')];
+        $this->assertSame(1, (new wahlpflicht_gruppe(['d.06'], 1))->offen($ohne));
+    }
+
+    /**
+     * Ineinander liegt eine Gruppe, wenn jedes ihrer Kuerzel - Bereich oder
+     * HK - auch in der anderen liegt; eine HK liegt in ihrem Bereich.
+     */
+    public function test_enthaelt_und_ueberschneidet(): void {
+        $bcd = new wahlpflicht_gruppe(['b', 'c', 'd'], 2);
+        $d = new wahlpflicht_gruppe(['d'], 1);
+        $d06 = new wahlpflicht_gruppe(['d.06'], 1);
+        $abc = new wahlpflicht_gruppe(['a', 'b', 'c'], 1);
+        $alle = new wahlpflicht_gruppe([], 3);
+
+        $this->assertTrue($bcd->enthaelt($d));
+        $this->assertFalse($d->enthaelt($bcd));
+        $this->assertTrue($d->enthaelt($d06));
+        $this->assertTrue($bcd->enthaelt($d06));
+        $this->assertFalse($d06->enthaelt($d));
+        $this->assertTrue($alle->enthaelt($bcd));
+        $this->assertFalse($bcd->enthaelt($alle));
+
+        $this->assertTrue($bcd->ueberschneidet($abc));
+        $this->assertFalse($abc->enthaelt($bcd));
+        $this->assertFalse($abc->ueberschneidet($d));
+        $this->assertFalse($abc->ueberschneidet($d06));
+        $this->assertTrue($d06->ueberschneidet($d));
+        $this->assertTrue($alle->ueberschneidet($d06));
+    }
 }

@@ -590,6 +590,15 @@
 }
 
 /*
+ * Wahlpflicht-Gruppen unter der Ueberschrift ihres Wegs. Eigene Klasse statt
+ * ms-3/ml-3: der Name der Bootstrap-Klasse wechselt zwischen Moodle 4.5
+ * (Bootstrap 4) und 5.x (Bootstrap 5).
+ */
+.local-berufsbildung-raster-wahlpflicht-eingerueckt {
+    padding-inline-start: 1rem;
+}
+
+/*
  * Kompetenzraster: Handlungskompetenzbereiche als Zeilen,
  * Handlungskompetenzen als Spalten - dieselbe Anordnung wie im gedruckten
  * Bildungsplan. table-layout: fixed haelt die Spalten untereinander

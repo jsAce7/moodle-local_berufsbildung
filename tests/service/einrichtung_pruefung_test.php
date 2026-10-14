@@ -110,4 +110,26 @@ final class einrichtung_pruefung_test extends advanced_testcase {
         $this->assertSame('pm-2022', $befunde['PM_EFZ'][0]['a']);
         $this->assertSame(einrichtung_pruefung::STUFE_WARNUNG, $befunde['PM_EFZ'][0]['stufe']);
     }
+
+    /**
+     * Gruppen eines Wegs, die sich nur teilweise ueberschneiden, sind ein
+     * Hinweis; ineinanderliegende wie beim Polymechaniker nicht.
+     */
+    public function test_wahlpflicht_ueberschneidung(): void {
+        $this->resetAfterTest();
+        set_config('beruf_rahmen_mapping', "AU_EFZ=au-2022\nPM_EFZ=au-2022", 'local_berufsbildung');
+        set_config('beruf_wahlpflicht_hk', "AU_EFZ=b.05,c.05,d.05\nPM_EFZ=d.04,d.06", 'local_berufsbildung');
+        set_config('beruf_wahlpflicht_anzahl', "AU_EFZ=b,c:1; c,d:1\nPM_EFZ=d.06:1 | b,c,d:2; d:1", 'local_berufsbildung');
+        $kompetenzid = $this->rahmen('au-2022');
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung');
+        foreach (['AU_EFZ' => 'B1', 'PM_EFZ' => 'B2'] as $beruf => $nummer) {
+            $block = $generator->create_block(['nummer' => $nummer, 'beruf' => $beruf]);
+            $generator->create_block_competency(['blockid' => $block->get('id'), 'competencyid' => $kompetenzid]);
+        }
+
+        $befunde = (new einrichtung_pruefung())->pruefe();
+
+        $this->assertSame(['AU_EFZ' => ['wahlpflicht_ueberschneidung']], $this->codes($befunde));
+        $this->assertSame(einrichtung_pruefung::STUFE_HINWEIS, $befunde['AU_EFZ'][0]['stufe']);
+    }
 }

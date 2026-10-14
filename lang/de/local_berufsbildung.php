@@ -134,6 +134,7 @@ $string['einrichtung:rahmen_fehlt'] = 'Der zugeordnete Kompetenzrahmen "{$a}" ex
 $string['einrichtung:titel'] = 'Einrichtung prüfen';
 $string['einrichtung:ungenutzte_kompetenzen'] = 'Die Blöcke {$a} haben Kompetenzen zugeordnet, sind aber inaktiv oder nicht betrieblich – im Kompetenzraster zählen sie nicht.';
 $string['einrichtung:wahlpflicht_ohne_anzahl'] = 'Wahlpflicht-Handlungskompetenzen sind hinterlegt, aber nicht, wie viele davon verlangt sind (Einstellung „Anzahl Wahlpflicht-Handlungskompetenzen je Beruf“).';
+$string['einrichtung:wahlpflicht_ueberschneidung'] = 'In der Wahlpflicht-Vorgabe überschneiden sich zwei Gruppen desselben Wegs, ohne dass die eine ganz in der anderen liegt. Die Zahl offener Wahlpflicht-Handlungskompetenzen kann dann zu hoch sein. Gruppen sollten ineinanderliegen („b,c,d:2; d:1“) oder sich nicht überschneiden („a,b,c:1; d:1“).';
 $string['einsatz:aktuell'] = 'aktuell';
 $string['einsatz:aktuell_titel'] = 'Aktueller Einsatz';
 $string['einsatz:gruppe_anzahl'] = '{$a} Einsätze';
@@ -331,6 +332,8 @@ $string['raster:wahlpflicht'] = 'Wahlpflicht';
 $string['raster:wahlpflicht_erfuellt'] = 'erfüllt';
 $string['raster:wahlpflicht_stand'] = 'Wahlpflicht: verlangt {$a->soll}, vollständig {$a->vollstaendig}, teilweise {$a->teilweise}, später eingeplant {$a->eingeplant}';
 $string['raster:wahlpflicht_stand_bereiche'] = 'Wahlpflicht aus {$a->bereiche}: verlangt {$a->soll}, vollständig {$a->vollstaendig}, teilweise {$a->teilweise}, später eingeplant {$a->eingeplant}';
+$string['raster:wahlpflicht_weg'] = 'Weg {$a}';
+$string['raster:wahlpflicht_wege'] = 'Wahlpflicht – einer der folgenden Wege genügt:';
 $string['raster:zusammenfassung'] = '{$a->soll} Pflicht-Handlungskompetenzen: {$a->vollstaendig} vollständig, {$a->teilweise} teilweise, {$a->eingeplant} nur eingeplant, {$a->offen} nicht im Plan';
 $string['role:berufsbildner'] = 'Berufsbildner/in';
 $string['role:berufsbildner_desc'] = 'Zugewiesen im Nutzerkontext einer lernenden Person, sobald eine Zuordnung besteht. Traegt selbst keine Capabilities - die vergeben die aufsetzenden Plugins.';
@@ -344,7 +347,7 @@ $string['settings:akzentfarbe_desc'] = 'Trägt die Abschnittstitel, die Kopfzeil
 $string['settings:beruf_dauer'] = 'Lehrdauer je Beruf';
 $string['settings:beruf_dauer_desc'] = 'Abweichende Lehrdauer für einzelne Berufe, eine Zeile pro Beruf im Format CODE=Semester, z. B. "PM_EFZ=6" für eine dreijährige Lehre. Berufe, die hier nicht aufgeführt sind, verwenden die Lehrdauer oben.';
 $string['settings:beruf_wahlpflicht_anzahl'] = 'Anzahl Wahlpflicht-Handlungskompetenzen je Beruf';
-$string['settings:beruf_wahlpflicht_anzahl_desc'] = 'Wie viele Wahlpflicht-Handlungskompetenzen der Bildungsplan verlangt, je Gruppe von Handlungskompetenzbereichen. Das Kompetenzraster zeigt dann je Gruppe, wie viele davon bereits vorkamen oder eingeplant sind. Eine Zeile je Beruf: Gruppen durch Semikolon getrennt, je Gruppe die Bereiche mit Komma, ein Doppelpunkt und die Anzahl. "AU_EFZ=a,b,c:1; d:1" verlangt eine aus den Bereichen a, b und c zusammen und eine aus d. Ohne Bereiche gilt die Anzahl für den ganzen Beruf, z. B. "AU_EFZ=3". Berufe ohne Eintrag zeigen keine solche Angabe.';
+$string['settings:beruf_wahlpflicht_anzahl_desc'] = 'Wie viele Wahlpflicht-Handlungskompetenzen der Bildungsplan verlangt, je Gruppe von Handlungskompetenzbereichen. Das Kompetenzraster zeigt dann je Gruppe, wie viele davon bereits vorkamen oder eingeplant sind. Eine Zeile je Beruf: Gruppen durch Semikolon getrennt, je Gruppe die Bereiche mit Komma, ein Doppelpunkt und die Anzahl. "AU_EFZ=a,b,c:1; d:1" verlangt eine aus den Bereichen a, b und c zusammen und eine aus d. Ohne Bereiche gilt die Anzahl für den ganzen Beruf, z. B. "AU_EFZ=3". Statt eines Bereichs kann eine Gruppe einzelne Handlungskompetenzen nennen, z. B. "d.06". Verlangt der Bildungsplan das eine oder das andere, trennt ein senkrechter Strich die Wege; einer davon genügt. "PM_EFZ=d.06:1 | b,c,d:2; d:1" heisst: d6, oder zwei aus den Bereichen b, c und d, davon mindestens eine aus d. Gruppen desselben Wegs liegen ineinander (d in b, c, d) oder überschneiden sich nicht. Berufe ohne Eintrag zeigen keine solche Angabe.';
 $string['settings:beruf_wahlpflicht_hk'] = 'Wahlpflicht-Handlungskompetenzen je Beruf';
 $string['settings:beruf_wahlpflicht_hk_desc'] = 'Diese Handlungskompetenzen gelten in der Lückenanalyse nicht als fehlend und tragen im Kompetenzraster einen grünen statt eines gelben Streifens. Eine Zeile je Beruf im Format CODE=HK-ID,HK-ID, z. B. "AU_EFZ=a.04,a.05". Gemeint ist die ID-Nummer einer Handlungskompetenz, nicht eines Bereichs. Der Rahmen-Präfix darf weggelassen werden: "a.04" trifft auch eine Kompetenz mit der ID-Nummer "7777BE a.04". In der AU-Datei sind das die mit "W" markierten HK.';
 $string['settings:einstellungen'] = 'Einstellungen';

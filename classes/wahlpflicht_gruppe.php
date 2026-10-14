@@ -28,7 +28,8 @@ namespace local_berufsbildung;
 
 /**
  * Wie viele Wahlpflicht-HK der Bildungsplan aus welchen Bereichen verlangt,
- * z. B. eine aus den Bereichen a, b und c zusammen und eine aus d.
+ * z. B. eine aus den Bereichen a, b und c zusammen und eine aus d. Eine
+ * Gruppe kann statt eines ganzen Bereichs auch einzelne HK nennen ("d.06").
  *
  * Wird aus der Einstellung berechnet, nicht gespeichert - deshalb kein
  * Persistent. Einzelne readonly-Properties statt einer readonly-Klasse,
@@ -38,12 +39,12 @@ class wahlpflicht_gruppe {
     /**
      * Konstruktor.
      *
-     * @param string[] $bereiche Kuerzel der Handlungskompetenzbereiche, klein
-     *                           geschrieben ("a", "b"); leer heisst: alle Bereiche
+     * @param string[] $bereiche Kuerzel der Handlungskompetenzbereiche ("a") oder einzelner
+     *                           HK ("d.06"), klein geschrieben; leer heisst: alle Bereiche
      * @param int $anzahl Wie viele Wahlpflicht-HK aus diesen Bereichen verlangt sind
      */
     public function __construct(
-        /** @var string[] Kuerzel der Bereiche, leer fuer alle. */
+        /** @var string[] Kuerzel der Bereiche oder einzelner HK, leer fuer alle. */
         public readonly array $bereiche,
         /** @var int Verlangte Anzahl Wahlpflicht-HK. */
         public readonly int $anzahl,
@@ -51,18 +52,72 @@ class wahlpflicht_gruppe {
     }
 
     /**
-     * Gehoert ein Bereich mit diesem Kuerzel zur Gruppe?
+     * Nennt die Gruppe dieses Kuerzel, oder gilt sie fuer den ganzen Beruf?
      *
-     * @param string $kuerzel Kuerzel des Bereichs, z. B. "a"
+     * @param string $kuerzel Kuerzel eines Bereichs ("a") oder einer HK ("d.06")
      */
     public function umfasst(string $kuerzel): bool {
         return $this->bereiche === [] || in_array(\core_text::strtolower(trim($kuerzel)), $this->bereiche, true);
     }
 
     /**
-     * Wie viele Wahlpflicht-HK aus den Bereichen dieser Gruppe vollstaendig
-     * vorkamen (alle LK), wie viele teilweise und wie viele erst eingeplant
-     * sind - siehe raster_kompetenz::anzeigestand().
+     * Zaehlt eine HK zu dieser Gruppe - weil die Gruppe ihren Bereich nennt
+     * oder sie selbst?
+     *
+     * @param raster_bereich $bereich Der Bereich, in dem die HK steht
+     * @param raster_kompetenz $kompetenz
+     */
+    public function umfasst_kompetenz(raster_bereich $bereich, raster_kompetenz $kompetenz): bool {
+        return $this->umfasst($bereich->kuerzel)
+            || ($kompetenz->kuerzel !== '' && $this->umfasst($kompetenz->kuerzel));
+    }
+
+    /**
+     * Liegt jede HK der anderen Gruppe auch in dieser? Verglichen werden
+     * die Kuerzel, nicht ein Raster: eine HK "d.06" liegt im Bereich "d".
+     *
+     * @param wahlpflicht_gruppe $andere
+     */
+    public function enthaelt(wahlpflicht_gruppe $andere): bool {
+        if ($andere->bereiche === []) {
+            return $this->bereiche === [];
+        }
+        foreach ($andere->bereiche as $kuerzel) {
+            if (!$this->deckt($kuerzel)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Koennte eine HK in beiden Gruppen liegen?
+     *
+     * @param wahlpflicht_gruppe $andere
+     */
+    public function ueberschneidet(wahlpflicht_gruppe $andere): bool {
+        if ($this->bereiche === [] || $andere->bereiche === []) {
+            return true;
+        }
+        foreach ($andere->bereiche as $kuerzel) {
+            if ($this->deckt($kuerzel)) {
+                return true;
+            }
+        }
+        foreach ($this->bereiche as $kuerzel) {
+            if ($andere->deckt($kuerzel)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Wie viele Wahlpflicht-HK dieser Gruppe vollstaendig vorkamen (alle
+     * LK), wie viele teilweise und wie viele erst eingeplant sind - siehe
+     * raster_kompetenz::anzeigestand().
      *
      * Raster und Kachel auf "Meine Lernenden" zaehlen beide hiermit, damit
      * sie nie auseinanderlaufen.
@@ -77,12 +132,12 @@ class wahlpflicht_gruppe {
             raster_kompetenz::ANZEIGE_EINGEPLANT => 0,
         ];
         foreach ($raster as $bereich) {
-            if (!$this->umfasst($bereich->kuerzel)) {
-                continue;
-            }
             foreach ($bereich->kompetenzen as $kompetenz) {
+                if (!$kompetenz->istwahlpflicht || !$this->umfasst_kompetenz($bereich, $kompetenz)) {
+                    continue;
+                }
                 $anzeige = $kompetenz->anzeigestand();
-                if ($kompetenz->istwahlpflicht && isset($stand[$anzeige])) {
+                if (isset($stand[$anzeige])) {
                     $stand[$anzeige]++;
                 }
             }
@@ -100,5 +155,20 @@ class wahlpflicht_gruppe {
      */
     public function offen(array $raster): int {
         return max(0, $this->anzahl - $this->stand($raster)[raster_kompetenz::ANZEIGE_VOLLSTAENDIG]);
+    }
+
+    /**
+     * Liegt alles, was das Kuerzel meint, in dieser Gruppe? Ein Bereich
+     * nur, wenn die Gruppe ihn nennt; eine HK auch, wenn die Gruppe ihren
+     * Bereich nennt - der Teil vor dem ersten Punkt ("d" bei "d.06").
+     *
+     * @param string $kuerzel Kuerzel eines Bereichs oder einer HK
+     */
+    private function deckt(string $kuerzel): bool {
+        if ($this->bereiche === [] || in_array($kuerzel, $this->bereiche, true)) {
+            return true;
+        }
+
+        return str_contains($kuerzel, '.') && in_array(strstr($kuerzel, '.', true), $this->bereiche, true);
     }
 }

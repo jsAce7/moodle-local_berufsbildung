@@ -566,33 +566,37 @@ final class api_test extends advanced_testcase {
     }
 
     /**
-     * Die verlangten Wahlpflicht-HK je Beruf, nach Gruppen von Bereichen.
+     * Die verlangten Wahlpflicht-HK je Beruf, nach Wegen und Gruppen.
      * Einen Stichtag-Randfall gibt es nicht - die Angabe haengt am Beruf,
      * nicht am Datum.
      */
-    public function test_get_wahlpflicht_gruppen_for_beruf_konfigurierter_beruf(): void {
+    public function test_get_wahlpflicht_vorgabe_for_beruf_konfigurierter_beruf(): void {
         $this->resetAfterTest();
-        set_config('beruf_wahlpflicht_anzahl', "AU_EFZ=a,b,c:1; d:1\nPM_EFZ=2", 'local_berufsbildung');
+        set_config('beruf_wahlpflicht_anzahl', "AU_EFZ=a,b,c:1; d:1\nPM_EFZ=d.06:1 | b,c,d:2; d:1", 'local_berufsbildung');
 
-        $gruppen = api::get_wahlpflicht_gruppen_for_beruf('AU_EFZ');
+        $au = api::get_wahlpflicht_vorgabe_for_beruf('AU_EFZ');
+        $this->assertCount(1, $au->wege);
+        $this->assertCount(2, $au->wege[0]);
+        $this->assertSame(['a', 'b', 'c'], $au->wege[0][0]->bereiche);
+        $this->assertSame(1, $au->wege[0][0]->anzahl);
+        $this->assertSame(['d'], $au->wege[0][1]->bereiche);
 
-        $this->assertCount(2, $gruppen);
-        $this->assertSame(['a', 'b', 'c'], $gruppen[0]->bereiche);
-        $this->assertSame(1, $gruppen[0]->anzahl);
-        $this->assertSame(['d'], $gruppen[1]->bereiche);
+        $pm = api::get_wahlpflicht_vorgabe_for_beruf('PM_EFZ');
+        $this->assertCount(2, $pm->wege);
+        $this->assertSame(['d.06'], $pm->wege[0][0]->bereiche);
     }
 
     /**
      * Randfall: ohne Eintrag fuer den Beruf, oder ganz ohne Einstellung,
-     * gibt es keine Gruppen.
+     * gibt es keine Vorgabe.
      */
-    public function test_get_wahlpflicht_gruppen_for_beruf_ohne_eintrag_ist_leer(): void {
+    public function test_get_wahlpflicht_vorgabe_for_beruf_ohne_eintrag_ist_null(): void {
         $this->resetAfterTest();
 
-        $this->assertSame([], api::get_wahlpflicht_gruppen_for_beruf('AU_EFZ'));
+        $this->assertNull(api::get_wahlpflicht_vorgabe_for_beruf('AU_EFZ'));
 
         set_config('beruf_wahlpflicht_anzahl', 'AU_EFZ=3', 'local_berufsbildung');
-        $this->assertSame([], api::get_wahlpflicht_gruppen_for_beruf('KR_EFZ'));
+        $this->assertNull(api::get_wahlpflicht_vorgabe_for_beruf('KR_EFZ'));
     }
 
     /**

@@ -32,7 +32,7 @@ use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\einsatz;
 use local_berufsbildung\raster_bereich;
 use local_berufsbildung\raster_kompetenz;
-use local_berufsbildung\wahlpflicht_gruppe;
+use local_berufsbildung\wahlpflicht_vorgabe;
 use local_berufsbildung\service\kompetenz_baum;
 
 /**
@@ -67,9 +67,9 @@ class kompetenzraster {
      * @param int|null $horizont Ende des vorliegenden Plans, siehe api::get_planungshorizont()
      * @param bool $kompakt Nur Kuerzel und Symbol statt der vollen Bezeichnung,
      *                      fuer die Roster-Karten in meine_lernenden.php
-     * @param wahlpflicht_gruppe[] $wahlpflichtgruppen Wie viele Wahlpflicht-HK der Bildungsplan
-     *                      aus welchen Bereichen verlangt, siehe api::get_wahlpflicht_gruppen_for_beruf();
-     *                      leer blendet die Angabe aus
+     * @param wahlpflicht_vorgabe|null $wahlpflicht Wie viele Wahlpflicht-HK der Bildungsplan
+     *                      aus welchen Bereichen verlangt, siehe api::get_wahlpflicht_vorgabe_for_beruf();
+     *                      null blendet die Angabe aus
      * @param array $vorschlaege Planungshilfe: je Kompetenz die Bloecke, in denen sie vorkaeme,
      *                      siehe api::get_bloecke_je_kompetenz(); genannt bei LK, die im Plan
      *                      fehlen. Leer blendet die Angabe aus
@@ -78,7 +78,7 @@ class kompetenzraster {
         array $raster,
         ?int $horizont = null,
         bool $kompakt = false,
-        array $wahlpflichtgruppen = [],
+        ?wahlpflicht_vorgabe $wahlpflicht = null,
         array $vorschlaege = []
     ): string {
         global $OUTPUT, $PAGE;
@@ -166,6 +166,7 @@ class kompetenzraster {
         }
         $bloeckelink = $hinweis !== '' && $horizont !== null
             && has_capability('local/berufsbildung:manageblocks', \context_system::instance());
+        $mitwahlpflicht = !$kompakt && $hinweis === '' && $wahlpflicht !== null;
 
         // Die LK-Liste einer Zelle oeffnet sich in einem Dialog statt in der
         // Zelle: bei zehn und mehr LK wuerde die Zeile sonst unuebersichtlich.
@@ -190,9 +191,12 @@ class kompetenzraster {
                 'eingeplant' => $pflichtstaende[raster_kompetenz::ANZEIGE_EINGEPLANT],
                 'offen' => $pflichtstaende[raster_kompetenz::ANZEIGE_OFFEN],
             ]),
-            'wahlpflichtstaende' => (!$kompakt && $hinweis === '')
-                ? self::wahlpflichtstaende($wahlpflichtgruppen, self::mit_kuerzeln($raster, $kompetenzen))
+            'wahlpflichtwege' => $mitwahlpflicht
+                ? self::wahlpflichtwege($wahlpflicht, self::mit_kuerzeln($raster, $kompetenzen))
                 : [],
+            // Nur bei mehreren Wegen: dass einer genuegt, steht sonst nirgends.
+            'hatwahlpflichtwahl' => $mitwahlpflicht && count($wahlpflicht->wege) > 1,
+            'wahlpflichtwahl' => get_string('raster:wahlpflicht_wege', 'local_berufsbildung'),
             'hathinweis' => $hinweis !== '',
             'hinweis' => $hinweis,
             'hatbloeckelink' => $bloeckelink,
@@ -213,43 +217,61 @@ class kompetenzraster {
     }
 
     /**
-     * Je Gruppe von Bereichen eine Zeile: verlangt, vollstaendig, teilweise,
-     * spaeter eingeplant - und ob genug HK vollstaendig vorkamen. Gezaehlt wird
-     * mit wahlpflicht_gruppe::stand(), wie auf der Kachel in
+     * Je Weg die Gruppen, je Gruppe eine Zeile: verlangt, vollstaendig,
+     * teilweise, spaeter eingeplant - und ob genug HK vollstaendig vorkamen.
+     * Gezaehlt wird mit wahlpflicht_gruppe::stand() und
+     * wahlpflicht_vorgabe::offen_je_weg(), wie auf der Kachel in
      * meine_lernenden.php.
      *
-     * @param wahlpflicht_gruppe[] $gruppen
+     * Bei einem einzigen Weg stehen nur die Gruppen da, wie vor den Wegen;
+     * bei mehreren je Weg eine Ueberschrift mit eigenem Haekchen, die
+     * Gruppen darunter eingerueckt.
+     *
+     * @param wahlpflicht_vorgabe $vorgabe
      * @param raster_bereich[] $raster Mit Kuerzeln, siehe mit_kuerzeln()
-     * @return array Template-Kontext: je Zeile text, erfuellt
+     * @return array Template-Kontext: je Weg hattitel, titel, erfuellt, staende
      */
-    private static function wahlpflichtstaende(array $gruppen, array $raster): array {
-        $zeilen = [];
-        foreach ($gruppen as $gruppe) {
-            $stand = $gruppe->stand($raster);
-            $daten = (object) [
-                'bereiche' => implode(', ', $gruppe->bereiche),
-                'soll' => $gruppe->anzahl,
-                'vollstaendig' => $stand[raster_kompetenz::ANZEIGE_VOLLSTAENDIG],
-                'teilweise' => $stand[raster_kompetenz::ANZEIGE_TEILWEISE],
-                'eingeplant' => $stand[raster_kompetenz::ANZEIGE_EINGEPLANT],
-            ];
-            $zeilen[] = [
-                'text' => get_string(
-                    $gruppe->bereiche === [] ? 'raster:wahlpflicht_stand' : 'raster:wahlpflicht_stand_bereiche',
-                    'local_berufsbildung',
-                    $daten
-                ),
-                'erfuellt' => $daten->vollstaendig >= $gruppe->anzahl,
+    private static function wahlpflichtwege(wahlpflicht_vorgabe $vorgabe, array $raster): array {
+        $mehrere = count($vorgabe->wege) > 1;
+        $offen = $vorgabe->offen_je_weg($raster);
+
+        $wege = [];
+        foreach (array_values($vorgabe->wege) as $nummer => $gruppen) {
+            $staende = [];
+            foreach ($gruppen as $gruppe) {
+                $stand = $gruppe->stand($raster);
+                $daten = (object) [
+                    'bereiche' => implode(', ', $gruppe->bereiche),
+                    'soll' => $gruppe->anzahl,
+                    'vollstaendig' => $stand[raster_kompetenz::ANZEIGE_VOLLSTAENDIG],
+                    'teilweise' => $stand[raster_kompetenz::ANZEIGE_TEILWEISE],
+                    'eingeplant' => $stand[raster_kompetenz::ANZEIGE_EINGEPLANT],
+                ];
+                $staende[] = [
+                    'text' => get_string(
+                        $gruppe->bereiche === [] ? 'raster:wahlpflicht_stand' : 'raster:wahlpflicht_stand_bereiche',
+                        'local_berufsbildung',
+                        $daten
+                    ),
+                    'erfuellt' => $daten->vollstaendig >= $gruppe->anzahl,
+                    'eingerueckt' => $mehrere,
+                ];
+            }
+            $wege[] = [
+                'hattitel' => $mehrere,
+                'titel' => get_string('raster:wahlpflicht_weg', 'local_berufsbildung', $nummer + 1),
+                'erfuellt' => $offen[$nummer] === 0,
+                'staende' => $staende,
             ];
         }
 
-        return $zeilen;
+        return $wege;
     }
 
     /**
-     * Das Raster mit dem Kuerzel je Bereich. api::get_kompetenzraster()
-     * liefert es bereits mit; ein von aussen gebautes Raster bekommt es aus
-     * der ID-Nummer des Bereichs.
+     * Das Raster mit dem Kuerzel je Bereich und je HK.
+     * api::get_kompetenzraster() liefert beide bereits mit; ein von aussen
+     * gebautes Raster bekommt sie aus der ID-Nummer.
      *
      * @param raster_bereich[] $raster
      * @param array $kompetenzen Bezeichnungen aus lade_kompetenzen(), nach competencyid
@@ -257,13 +279,25 @@ class kompetenzraster {
      */
     private static function mit_kuerzeln(array $raster, array $kompetenzen): array {
         return array_map(
-            static fn (raster_bereich $bereich): raster_bereich => $bereich->kuerzel !== ''
-                ? $bereich
-                : new raster_bereich(
-                    $bereich->bereichid,
-                    $bereich->kompetenzen,
-                    (string) ($kompetenzen[$bereich->bereichid]['idnumber'] ?? '')
+            static fn (raster_bereich $bereich): raster_bereich => new raster_bereich(
+                $bereich->bereichid,
+                array_map(
+                    static fn (raster_kompetenz $kompetenz): raster_kompetenz => $kompetenz->kuerzel !== ''
+                        ? $kompetenz
+                        : new raster_kompetenz(
+                            competencyid: $kompetenz->competencyid,
+                            status: $kompetenz->status,
+                            istwahlpflicht: $kompetenz->istwahlpflicht,
+                            leistungskriterien: $kompetenz->leistungskriterien,
+                            lkeinsaetze: $kompetenz->lkeinsaetze,
+                            kuerzel: (string) ($kompetenzen[$kompetenz->competencyid]['idnumber'] ?? ''),
+                        ),
+                    $bereich->kompetenzen
                 ),
+                $bereich->kuerzel !== ''
+                    ? $bereich->kuerzel
+                    : (string) ($kompetenzen[$bereich->bereichid]['idnumber'] ?? '')
+            ),
             $raster
         );
     }

@@ -70,6 +70,8 @@ class raster_kompetenz {
      *                           in Rahmenreihenfolge; leer, wenn die HK keine hat
      * @param array $lkeinsaetze competencyid => einsatz-ids je Leistungskriterium: die Einsaetze,
      *                           in denen es vorkam oder vorkommen wird, nach Beginn sortiert
+     * @param string $kuerzel Kuerzel der HK wie im Bildungsplan ("d.06"), fuer Wahlpflicht-Gruppen
+     *                        aus einzelnen HK; leer, wenn die ID-Nummer keines hergibt
      */
     public function __construct(
         /** @var int competencyid der Handlungskompetenz (zweite Ebene). */
@@ -82,6 +84,8 @@ class raster_kompetenz {
         public readonly array $leistungskriterien = [],
         /** @var array<int, int[]> competencyid => einsatz-ids je Leistungskriterium. */
         public readonly array $lkeinsaetze = [],
+        /** @var string Kuerzel der HK wie im Bildungsplan, z. B. "d.06". */
+        public readonly string $kuerzel = '',
     ) {
     }
 

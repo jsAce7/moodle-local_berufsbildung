@@ -151,14 +151,22 @@ class einrichtung_pruefung {
 
     /**
      * Wahlpflicht-HK ohne verlangte Anzahl: das Raster zeigt sie, kann
-     * aber nicht sagen, ob genug davon vorkommen.
+     * aber nicht sagen, ob genug davon vorkommen. Und Gruppen eines Wegs,
+     * die sich ueberschneiden, ohne ineinanderzuliegen: dann zaehlt die
+     * Kachel womoeglich zu viele als offen.
      *
      * @param string $beruf
      * @return array
      */
     private function pruefe_wahlpflicht(string $beruf): array {
-        if (!empty(api::get_wahlpflicht_hk_for_beruf($beruf)) && empty(api::get_wahlpflicht_gruppen_for_beruf($beruf))) {
-            return [$this->befund(self::STUFE_HINWEIS, 'wahlpflicht_ohne_anzahl')];
+        $vorgabe = api::get_wahlpflicht_vorgabe_for_beruf($beruf);
+        if ($vorgabe === null) {
+            return !empty(api::get_wahlpflicht_hk_for_beruf($beruf))
+                ? [$this->befund(self::STUFE_HINWEIS, 'wahlpflicht_ohne_anzahl')]
+                : [];
+        }
+        if ($vorgabe->hat_ueberschneidungen()) {
+            return [$this->befund(self::STUFE_HINWEIS, 'wahlpflicht_ueberschneidung')];
         }
 
         return [];

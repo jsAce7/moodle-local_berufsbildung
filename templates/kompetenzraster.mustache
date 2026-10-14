@@ -44,8 +44,11 @@
     * kompakt - bool, nur Kuerzel und Symbol statt der vollen Bezeichnung
     * haszusammenfassung - bool
     * zusammenfassung - string, Pflicht-HK je Stand ueber alle Bereiche
-    * wahlpflichtstaende - array of {text, erfuellt}, je Gruppe von Bereichen eine Zeile;
-      leer, wenn fuer den Beruf keine Anzahl hinterlegt ist
+    * hatwahlpflichtwahl - bool, mehrere Wege, von denen einer genuegt
+    * wahlpflichtwahl - string, Einleitung dazu
+    * wahlpflichtwege - array of {hattitel, titel, erfuellt, staende}, je Weg; leer, wenn
+      fuer den Beruf keine Anzahl hinterlegt ist. hattitel nur bei mehreren Wegen
+    * staende - array of {text, erfuellt, eingerueckt}, je Gruppe von Bereichen eine Zeile
     * hathinweis - bool, statt der Zusammenfassung, wenn nichts im Plan vorkommt
     * hinweis - string, warum nichts im Plan vorkommt
     * hatbloeckelink - bool, darf die Ausbildungsbloecke pflegen
@@ -60,9 +63,19 @@
         "kompakt": false,
         "haszusammenfassung": true,
         "zusammenfassung": "2 Pflicht-Handlungskompetenzen: 1 bereits vorgekommen, 0 später eingeplant, 1 nicht im Plan",
-        "wahlpflichtstaende": [
-            {"text": "Wahlpflicht aus a, b, c: verlangt 1, bereits vorgekommen 1, später eingeplant 0", "erfuellt": true},
-            {"text": "Wahlpflicht aus d: verlangt 1, bereits vorgekommen 0, später eingeplant 1", "erfuellt": false}
+        "hatwahlpflichtwahl": true,
+        "wahlpflichtwahl": "Wahlpflicht – einer der folgenden Wege genügt:",
+        "wahlpflichtwege": [
+            {"hattitel": true, "titel": "Weg 1", "erfuellt": false, "staende": [
+                {"text": "Wahlpflicht aus d.06: verlangt 1, vollständig 0, teilweise 0, später eingeplant 1",
+                 "erfuellt": false, "eingerueckt": true}
+            ]},
+            {"hattitel": true, "titel": "Weg 2", "erfuellt": true, "staende": [
+                {"text": "Wahlpflicht aus b, c, d: verlangt 2, vollständig 2, teilweise 0, später eingeplant 0",
+                 "erfuellt": true, "eingerueckt": true},
+                {"text": "Wahlpflicht aus d: verlangt 1, vollständig 1, teilweise 0, später eingeplant 0",
+                 "erfuellt": true, "eingerueckt": true}
+            ]}
         ],
         "hathinweis": false,
         "hinweis": "",
@@ -131,14 +144,27 @@
     {{#haszusammenfassung}}
         <p class="local-berufsbildung-raster-zusammenfassung mb-1">{{zusammenfassung}}</p>
     {{/haszusammenfassung}}
-    {{#wahlpflichtstaende}}
-        <p class="local-berufsbildung-raster-zusammenfassung mb-1">
-            {{text}}
-            {{#erfuellt}}
-                <span class="badge bg-success text-white">{{#pix}}i/checked, core{{/pix}}{{#str}} raster:wahlpflicht_erfuellt, local_berufsbildung {{/str}}</span>
-            {{/erfuellt}}
-        </p>
-    {{/wahlpflichtstaende}}
+    {{#hatwahlpflichtwahl}}
+        <p class="local-berufsbildung-raster-zusammenfassung mb-1">{{wahlpflichtwahl}}</p>
+    {{/hatwahlpflichtwahl}}
+    {{#wahlpflichtwege}}
+        {{#hattitel}}
+            <p class="local-berufsbildung-raster-zusammenfassung mb-1">
+                {{titel}}
+                {{#erfuellt}}
+                    <span class="badge bg-success text-white">{{#pix}}i/checked, core{{/pix}}{{#str}} raster:wahlpflicht_erfuellt, local_berufsbildung {{/str}}</span>
+                {{/erfuellt}}
+            </p>
+        {{/hattitel}}
+        {{#staende}}
+            <p class="local-berufsbildung-raster-zusammenfassung mb-1{{#eingerueckt}} local-berufsbildung-raster-wahlpflicht-eingerueckt{{/eingerueckt}}">
+                {{text}}
+                {{#erfuellt}}
+                    <span class="badge bg-success text-white">{{#pix}}i/checked, core{{/pix}}{{#str}} raster:wahlpflicht_erfuellt, local_berufsbildung {{/str}}</span>
+                {{/erfuellt}}
+            </p>
+        {{/staende}}
+    {{/wahlpflichtwege}}
     {{#hathinweis}}
         <div class="alert alert-info py-2 mb-2" role="status">
             {{hinweis}}

@@ -30,6 +30,7 @@ use advanced_testcase;
 use local_berufsbildung\raster_bereich;
 use local_berufsbildung\raster_kompetenz;
 use local_berufsbildung\wahlpflicht_gruppe;
+use local_berufsbildung\wahlpflicht_vorgabe;
 
 #[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\kompetenzraster::class)]
 /**
@@ -329,9 +330,9 @@ final class kompetenzraster_test extends advanced_testcase {
             }
             $raster[] = new raster_bereich((int) $bereich->get('id'), $kompetenzen);
         }
-        $gruppen = [new wahlpflicht_gruppe(['a', 'b', 'c'], 1), new wahlpflicht_gruppe(['d'], 1)];
+        $vorgabe = new wahlpflicht_vorgabe([[new wahlpflicht_gruppe(['a', 'b', 'c'], 1), new wahlpflicht_gruppe(['d'], 1)]]);
 
-        $html = kompetenzraster::render($raster, time(), wahlpflichtgruppen: $gruppen);
+        $html = kompetenzraster::render($raster, time(), wahlpflicht: $vorgabe);
 
         $this->assertStringContainsString(get_string('raster:wahlpflicht_stand_bereiche', 'local_berufsbildung', (object) [
             'bereiche' => 'a, b, c', 'soll' => 1, 'vollstaendig' => 1, 'teilweise' => 0, 'eingeplant' => 0,
@@ -341,9 +342,59 @@ final class kompetenzraster_test extends advanced_testcase {
         ]), $html);
         // Nur die Gruppe a, b, c ist erfuellt.
         $this->assertSame(1, substr_count($html, get_string('raster:wahlpflicht_erfuellt', 'local_berufsbildung')));
+        // Ein einziger Weg: ohne Ueberschrift und ohne Einrueckung.
+        $this->assertStringNotContainsString(get_string('raster:wahlpflicht_wege', 'local_berufsbildung'), $html);
+        $this->assertStringNotContainsString('local-berufsbildung-raster-wahlpflicht-eingerueckt', $html);
 
         $ohne = kompetenzraster::render($raster, time());
         $this->assertSame(1, substr_count($ohne, 'local-berufsbildung-raster-zusammenfassung'));
+    }
+
+    /**
+     * Mehrere Wege: eine Einleitung, je Weg eine Ueberschrift mit eigenem
+     * Haekchen, die Gruppen eingerueckt darunter. Eine Gruppe aus einer
+     * einzelnen HK findet diese ueber die ID-Nummer, auch wenn das Raster
+     * kein Kuerzel mitbringt.
+     */
+    public function test_wahlpflicht_mehrere_wege(): void {
+        $this->resetAfterTest();
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework();
+        $bereich = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id'), 'idnumber' => '5555 d']);
+        $kompetenzen = [];
+        // Polymechaniker: d4 und d5 vollstaendig, d6 eingeplant.
+        $staende = [
+            'd.04' => raster_kompetenz::STATUS_ABGEDECKT,
+            'd.05' => raster_kompetenz::STATUS_ABGEDECKT,
+            'd.06' => raster_kompetenz::STATUS_EINGEPLANT,
+        ];
+        foreach ($staende as $kuerzel => $status) {
+            $kompetenzen[] = new raster_kompetenz((int) $generator->create_competency([
+                'competencyframeworkid' => $rahmen->get('id'),
+                'parentid' => $bereich->get('id'),
+                'idnumber' => '5555 ' . $kuerzel,
+            ])->get('id'), $status, true);
+        }
+        $raster = [new raster_bereich((int) $bereich->get('id'), $kompetenzen)];
+        $vorgabe = new wahlpflicht_vorgabe([
+            [new wahlpflicht_gruppe(['d.06'], 1)],
+            [new wahlpflicht_gruppe(['b', 'c', 'd'], 2), new wahlpflicht_gruppe(['d'], 1)],
+        ]);
+
+        $html = kompetenzraster::render($raster, time(), wahlpflicht: $vorgabe);
+
+        $this->assertStringContainsString(get_string('raster:wahlpflicht_wege', 'local_berufsbildung'), $html);
+        $this->assertStringContainsString(get_string('raster:wahlpflicht_weg', 'local_berufsbildung', 1), $html);
+        $this->assertStringContainsString(get_string('raster:wahlpflicht_weg', 'local_berufsbildung', 2), $html);
+        $this->assertStringContainsString(get_string('raster:wahlpflicht_stand_bereiche', 'local_berufsbildung', (object) [
+            'bereiche' => 'd.06', 'soll' => 1, 'vollstaendig' => 0, 'teilweise' => 0, 'eingeplant' => 1,
+        ]), $html);
+        $this->assertStringContainsString(get_string('raster:wahlpflicht_stand_bereiche', 'local_berufsbildung', (object) [
+            'bereiche' => 'b, c, d', 'soll' => 2, 'vollstaendig' => 2, 'teilweise' => 0, 'eingeplant' => 1,
+        ]), $html);
+        $this->assertSame(3, substr_count($html, 'local-berufsbildung-raster-wahlpflicht-eingerueckt'));
+        // Weg 2 als Ganzes und seine beiden Gruppen; Weg 1 nicht.
+        $this->assertSame(3, substr_count($html, get_string('raster:wahlpflicht_erfuellt', 'local_berufsbildung')));
     }
 
     /**

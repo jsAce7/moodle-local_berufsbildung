@@ -187,6 +187,7 @@ class raster_analyse {
                 istwahlpflicht: isset($wahlpflicht[$this->vergleichsschluessel((string) $kompetenz->get('idnumber'))]),
                 leistungskriterien: $lkjehk[$competencyid] ?? [],
                 lkeinsaetze: $lkeinsaetze[$competencyid] ?? [],
+                kuerzel: kompetenz_baum::kuerzel($kompetenz),
             );
         }
 

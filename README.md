@@ -68,7 +68,7 @@ Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentati
 | Lehrdauer in Semestern (Standard) | 8 | Standard-Lehrdauer (1 bis 8 Semester), überschreibbar je Beruf |
 | Lehrdauer je Beruf | leer | Abweichende Lehrdauer, eine Zeile je Beruf im Format `CODE=Semester`, z. B. `PM_EFZ=6` |
 | Wahlpflicht-Handlungskompetenzen je Beruf | `AU_EFZ=a.04,a.05,…,d.07` | Handlungskompetenzen, die in der Lückenanalyse nicht als fehlend gelten, siehe unten |
-| Anzahl Wahlpflicht-Handlungskompetenzen je Beruf | leer | Wie viele Wahlpflicht-HK der Bildungsplan verlangt, je Gruppe von Bereichen, z. B. `AU_EFZ=a,b,c:1; d:1` (eine aus a, b und c, eine aus d) oder `AU_EFZ=3` für den ganzen Beruf. Ohne Eintrag zeigt das Raster keinen Wahlpflicht-Stand. |
+| Anzahl Wahlpflicht-Handlungskompetenzen je Beruf | leer | Wie viele Wahlpflicht-HK der Bildungsplan verlangt, je Gruppe von Bereichen, z. B. `AU_EFZ=a,b,c:1; d:1` (eine aus a, b und c, eine aus d) oder `AU_EFZ=3` für den ganzen Beruf. Eine Gruppe kann einzelne HK nennen (`d.06`), `|` trennt Wege, von denen einer genügt: `PM_EFZ=d.06:1 \| b,c,d:2; d:1` (d6, oder zwei aus b, c und d, davon eine aus d). Ohne Eintrag zeigt das Raster keinen Wahlpflicht-Stand. |
 | Schwelle für unvollständige Lieferungen (%) | 20 | Vollständigkeitsschutz beim Versetzungsplan-Import: Enthält eine Lieferung deutlich weniger Personen als die vorherige, wird sie abgewiesen |
 | Alterungshinweis nach (Tagen) | 10 | Alterungshinweis, wenn der letzte Import zu lange zurückliegt |
 | Aufbewahrungsfrist nach Ausbildungsabschluss (Monate) | 12 | Frist bis zur automatischen Löschung von Zuordnungen (und, über die aufsetzenden Plugins, ihrer Inhalte) nach Lehrabschluss. Wirksam sind Werte von 1 bis 120. |
@@ -177,7 +177,7 @@ api::get_ausgebildete_kompetenzen(int $lernendeid, int $von, int $bis): array
 api::get_luecken(int $lernendeid, ?int $stichtag = null): array
 api::get_kompetenzraster(int $lernendeid, ?int $stichtag = null): array
 api::get_luecken_nach_bereich(int $lernendeid, ?int $stichtag = null): array
-api::get_wahlpflicht_gruppen_for_beruf(string $beruf): array
+api::get_wahlpflicht_vorgabe_for_beruf(string $beruf): ?wahlpflicht_vorgabe
 api::get_bloecke_je_kompetenz(string $beruf): array
 api::get_block_name(int $blockid): ?string
 api::get_berufe(): array

@@ -47,11 +47,13 @@ final class wahlpflicht_resolver_test extends advanced_testcase {
 
     /**
      * Gruppen von Bereichen mit ihrer Anzahl - Kuerzel klein geschrieben,
-     * Leerzeichen egal.
+     * Leerzeichen egal. Ohne senkrechten Strich gibt es einen einzigen Weg.
      */
     public function test_gruppen_nach_bereichen(): void {
-        $gruppen = (new wahlpflicht_resolver())->gruppen('AU_EFZ', "PM_EFZ=2\r\nAU_EFZ = A, b ,c : 1 ; d:2");
+        $vorgabe = (new wahlpflicht_resolver())->vorgabe('AU_EFZ', "PM_EFZ=2\r\nAU_EFZ = A, b ,c : 1 ; d:2");
 
+        $this->assertCount(1, $vorgabe->wege);
+        $gruppen = $vorgabe->wege[0];
         $this->assertCount(2, $gruppen);
         $this->assertSame(['a', 'b', 'c'], $gruppen[0]->bereiche);
         $this->assertSame(1, $gruppen[0]->anzahl);
@@ -66,7 +68,7 @@ final class wahlpflicht_resolver_test extends advanced_testcase {
      * umfasst jeden Bereich.
      */
     public function test_gruppe_ohne_bereiche_gilt_fuer_den_ganzen_beruf(): void {
-        $gruppen = (new wahlpflicht_resolver())->gruppen('AU_EFZ', 'AU_EFZ=3');
+        $gruppen = (new wahlpflicht_resolver())->vorgabe('AU_EFZ', 'AU_EFZ=3')->wege[0];
 
         $this->assertCount(1, $gruppen);
         $this->assertSame([], $gruppen[0]->bereiche);
@@ -75,17 +77,37 @@ final class wahlpflicht_resolver_test extends advanced_testcase {
     }
 
     /**
+     * Der senkrechte Strich trennt Wege; eine Gruppe kann einzelne HK
+     * nennen, auch mit Rahmen-Praefix. Die Vorgabe des Polymechanikers.
+     */
+    public function test_wege_und_einzelne_hk(): void {
+        $vorgabe = (new wahlpflicht_resolver())->vorgabe('PM_EFZ', 'PM_EFZ=5555 D.06:1 | b,c,d:2; d:1');
+
+        $this->assertCount(2, $vorgabe->wege);
+        $this->assertCount(1, $vorgabe->wege[0]);
+        $this->assertSame(['d.06'], $vorgabe->wege[0][0]->bereiche);
+        $this->assertSame(1, $vorgabe->wege[0][0]->anzahl);
+        $this->assertCount(2, $vorgabe->wege[1]);
+        $this->assertSame(['b', 'c', 'd'], $vorgabe->wege[1][0]->bereiche);
+        $this->assertSame(2, $vorgabe->wege[1][0]->anzahl);
+        $this->assertSame(['d'], $vorgabe->wege[1][1]->bereiche);
+    }
+
+    /**
      * Randfall: ohne Eintrag, mit leerem, nicht-numerischem oder Null-Wert
      * gibt es keine Gruppe - eine verlangte Null waere keine Aussage. Eine
-     * ungueltige Gruppe faellt weg, die gueltigen daneben bleiben.
+     * ungueltige Gruppe faellt weg, die gueltigen daneben bleiben; ein Weg
+     * ohne gueltige Gruppe faellt ganz weg.
      *
      * @dataProvider ungueltige_gruppen
      * @param string $konfiguration
-     * @param int $erwartet Anzahl gueltiger Gruppen
+     * @param int[] $erwartet Anzahl gueltiger Gruppen je Weg, leer fuer keine Vorgabe
      */
     #[\PHPUnit\Framework\Attributes\DataProvider('ungueltige_gruppen')]
-    public function test_ungueltige_gruppen_fallen_weg(string $konfiguration, int $erwartet): void {
-        $this->assertCount($erwartet, (new wahlpflicht_resolver())->gruppen('AU_EFZ', $konfiguration));
+    public function test_ungueltige_gruppen_fallen_weg(string $konfiguration, array $erwartet): void {
+        $vorgabe = (new wahlpflicht_resolver())->vorgabe('AU_EFZ', $konfiguration);
+
+        $this->assertSame($erwartet, $vorgabe === null ? [] : array_map('count', $vorgabe->wege));
     }
 
     /**
@@ -95,13 +117,15 @@ final class wahlpflicht_resolver_test extends advanced_testcase {
      */
     public static function ungueltige_gruppen(): array {
         return [
-            'leer' => ['', 0],
-            'anderer beruf' => ['PM_EFZ=2', 0],
-            'ohne wert' => ['AU_EFZ=', 0],
-            'keine zahl' => ['AU_EFZ=drei', 0],
-            'null' => ['AU_EFZ=a:0', 0],
-            'negativ' => ['AU_EFZ=-1', 0],
-            'eine von zwei gueltig' => ['AU_EFZ=a,b:x; d:1', 1],
+            'leer' => ['', []],
+            'anderer beruf' => ['PM_EFZ=2', []],
+            'ohne wert' => ['AU_EFZ=', []],
+            'keine zahl' => ['AU_EFZ=drei', []],
+            'null' => ['AU_EFZ=a:0', []],
+            'negativ' => ['AU_EFZ=-1', []],
+            'eine von zwei gueltig' => ['AU_EFZ=a,b:x; d:1', [1]],
+            'leerer weg' => ['AU_EFZ=a:1 | ', [1]],
+            'ungueltiger weg' => ['AU_EFZ=a:0 | d:1; c:2', [2]],
         ];
     }
 }

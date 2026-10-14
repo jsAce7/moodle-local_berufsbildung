@@ -126,9 +126,9 @@ if (empty($eintraege)) {
     $raster = [];
     $anzahlluecken = [];
     // Verlangte Wahlpflicht-HK, die noch nicht vorkamen - je Person, aber
-    // die Gruppen nur einmal je Beruf aus der Einstellung gelesen.
+    // die Vorgabe nur einmal je Beruf aus der Einstellung gelesen.
     $anzahlwahlpflichtoffen = [];
-    $wahlpflichtgruppen = [];
+    $wahlpflicht = [];
     $vorschlaege = [];
     foreach ($eintraege as $eintrag) {
         $stand = $eintrag['stand'];
@@ -146,10 +146,12 @@ if (empty($eintraege)) {
 
         $wahlpflichtoffen = 0;
         if ($mitraster) {
-            $wahlpflichtgruppen[$stand->beruf] ??= api::get_wahlpflicht_gruppen_for_beruf($stand->beruf);
-            foreach ($wahlpflichtgruppen[$stand->beruf] as $gruppe) {
-                $wahlpflichtoffen += $gruppe->offen($raster[$eintrag['id']]);
+            // array_key_exists statt ??=: null heisst "nichts hinterlegt"
+            // und soll nicht je Person neu gelesen werden.
+            if (!array_key_exists($stand->beruf, $wahlpflicht)) {
+                $wahlpflicht[$stand->beruf] = api::get_wahlpflicht_vorgabe_for_beruf($stand->beruf);
             }
+            $wahlpflichtoffen = $wahlpflicht[$stand->beruf]?->offen($raster[$eintrag['id']]) ?? 0;
         }
         $anzahlwahlpflichtoffen[$eintrag['id']] = $wahlpflichtoffen;
     }
@@ -253,7 +255,7 @@ if (empty($eintraege)) {
                 kompetenzraster::render(
                     $raster[$lernendeid],
                     api::get_planungshorizont($lernendeid),
-                    wahlpflichtgruppen: $stand !== null ? ($wahlpflichtgruppen[$stand->beruf] ?? []) : [],
+                    wahlpflicht: $stand !== null ? ($wahlpflicht[$stand->beruf] ?? null) : null,
                     // Je Beruf einmal geladen, nicht je Person.
                     vorschlaege: $stand !== null
                         ? ($vorschlaege[$stand->beruf] ??= api::get_bloecke_je_kompetenz($stand->beruf))
