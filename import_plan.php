@@ -27,6 +27,7 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 
 use local_berufsbildung\form\plan_import_form;
+use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\persistent\plan_import;
 use local_berufsbildung\versetzungsplan\import_service;
 
@@ -36,6 +37,7 @@ $PAGE->set_url(new moodle_url('/local/berufsbildung/import_plan.php'));
 $titel = get_string('planimport:titel', 'local_berufsbildung');
 $PAGE->set_title($titel);
 $PAGE->set_heading($titel);
+hilfe_link::fuer_seite('berufsbildung-planimport');
 
 $form = new plan_import_form();
 $ergebnis = null;

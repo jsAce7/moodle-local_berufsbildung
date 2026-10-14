@@ -1113,3 +1113,51 @@
     display: block;
     font-style: italic;
 }
+
+/*
+ * Hilfeseite (hilfe.php): das Inhaltsverzeichnis bleibt beim Lesen links
+ * stehen, und eine angesprungene Ueberschrift verschwindet nicht unter der
+ * fixierten Navigationsleiste von Boost. Unter lg steht das Verzeichnis
+ * ueber dem Text und scrollt mit. Ein eigenes Grid statt .row/.col: die
+ * negativen Raender von .row ragten auf dem Handy ueber den Seitenrand und
+ * machten die Seite seitlich scrollbar.
+ */
+.local-berufsbildung-hilfe {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+}
+
+.local-berufsbildung-hilfe [id] {
+    scroll-margin-top: 5rem;
+}
+
+@media (min-width: 992px) {
+    .local-berufsbildung-hilfe {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+        align-items: start;
+    }
+
+    .local-berufsbildung-hilfe-inhalt {
+        position: sticky;
+        top: 5rem;
+    }
+}
+
+/*
+ * Lesbare Zeilenlaenge und Luft zwischen den Teilen einer Anleitung; die
+ * Zwischentitel sind kleiner als der Titel des Abschnitts.
+ */
+.local-berufsbildung-hilfe-text {
+    max-width: 48rem;
+}
+
+.local-berufsbildung-hilfe-text h4 {
+    font-size: 1.05rem;
+    margin-top: 1.25rem;
+}
+
+.local-berufsbildung-hilfe-text ol li,
+.local-berufsbildung-hilfe-text ul li {
+    margin-bottom: 0.25rem;
+}

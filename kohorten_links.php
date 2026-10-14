@@ -25,6 +25,7 @@
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 
+use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\persistent\kohorten_link;
 use local_berufsbildung\service\kohorten_resolver;
 
@@ -34,6 +35,7 @@ $PAGE->set_url(new moodle_url('/local/berufsbildung/kohorten_links.php'));
 $titel = get_string('kohortenlink:uebersicht', 'local_berufsbildung');
 $PAGE->set_title($titel);
 $PAGE->set_heading($titel);
+hilfe_link::fuer_seite('berufsbildung-globale-gruppen');
 
 echo $OUTPUT->header();
 

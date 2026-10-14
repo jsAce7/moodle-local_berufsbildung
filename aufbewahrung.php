@@ -25,6 +25,7 @@
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 
+use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\persistent\aufbewahrung;
 
 admin_externalpage_setup('local_berufsbildung_aufbewahrung');
@@ -33,6 +34,7 @@ $PAGE->set_url(new moodle_url('/local/berufsbildung/aufbewahrung.php'));
 $titel = get_string('aufbewahrung:uebersicht', 'local_berufsbildung');
 $PAGE->set_title($titel);
 $PAGE->set_heading($titel);
+hilfe_link::fuer_seite('berufsbildung-aufbewahrung');
 
 echo $OUTPUT->header();
 

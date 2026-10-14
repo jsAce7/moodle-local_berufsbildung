@@ -26,6 +26,7 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 
 use core_reportbuilder\system_report_factory;
+use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\reportbuilder\local\systemreports\zuordnungen;
 
 admin_externalpage_setup('local_berufsbildung_zuordnung');
@@ -33,6 +34,7 @@ admin_externalpage_setup('local_berufsbildung_zuordnung');
 $context = context_system::instance();
 $titel = get_string('zuordnung:uebersicht', 'local_berufsbildung');
 $PAGE->set_heading($titel);
+hilfe_link::fuer_seite('berufsbildung-zuordnungen');
 
 echo $OUTPUT->header();
 

@@ -32,6 +32,7 @@ use local_berufsbildung\navigation\menuepunkt;
 use local_berufsbildung\output\einsatz_karte;
 use local_berufsbildung\output\einsatz_timeline;
 use local_berufsbildung\output\faelligkeiten_liste;
+use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\output\kompetenzraster;
 use local_berufsbildung\output\nachweis_liste;
 use local_berufsbildung\output\seitennavigation;
@@ -70,6 +71,11 @@ $phase = api::get_ausbildungsphase($lernendeid);
 $istbeendet = $phase === api::PHASE_BEENDET;
 $ausbildungsende = $istbeendet ? api::get_ausbildungsende($lernendeid) : null;
 $stand = null;
+
+// Ohne Beruf und Jahrgang meldet die Hilfe keinen Abschnitt zu dieser Seite.
+if ($phase !== api::PHASE_UNBEKANNT) {
+    hilfe_link::fuer_seite('berufsbildung-meine-lehre');
+}
 
 if ($phase === api::PHASE_LAUFEND) {
     $stand = api::get_ausbildungsstand($lernendeid);

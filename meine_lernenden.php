@@ -38,6 +38,7 @@ use local_berufsbildung\api;
 use local_berufsbildung\nachweis\collector;
 use local_berufsbildung\navigation\menuepunkt;
 use local_berufsbildung\output\faelligkeiten_liste;
+use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\output\kompetenzraster;
 use local_berufsbildung\output\lernenden_kachel;
 use local_berufsbildung\output\lernenden_roster;
@@ -67,6 +68,11 @@ foreach (api::get_lernende_for($berufsbildnerid) as $lernendeid) {
     $namen[$lernendeid] = fullname($nutzer[$lernendeid]);
 }
 core_collator::asort($namen);
+
+// Ohne eigene Lernende meldet die Hilfe keinen Abschnitt zu dieser Seite.
+if (!empty($nutzer)) {
+    hilfe_link::fuer_seite('berufsbildung-meine-lernenden');
+}
 
 $eintraege = [];
 foreach ($namen as $lernendeid => $name) {

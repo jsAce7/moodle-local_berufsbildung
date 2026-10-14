@@ -27,6 +27,8 @@ declare(strict_types=1);
 namespace local_berufsbildung;
 
 use core\hook\navigation\primary_extend;
+use core_user\hook\extend_user_menu;
+use local_berufsbildung\hilfe\sammlung;
 use local_berufsbildung\navigation\menuepunkt;
 use moodle_url;
 use navigation_node;
@@ -49,6 +51,9 @@ use navigation_node;
  *
  * Die Blockverwaltung ist Pflege von Stammdaten und haengt deshalb als
  * Reiter an "Meine Lernenden".
+ *
+ * Die Hilfeseite steht nicht in der primaeren Leiste, sondern im
+ * Benutzermenue: sie ist Nachschlagen, kein Arbeitsort.
  */
 class hook_callbacks {
     /** Praefix der Knoten-Schluessel; dahinter steht das Menue (menuepunkt::MEINE_LEHRE usw.). */
@@ -81,14 +86,11 @@ class hook_callbacks {
         // Lehre" und "Meine Lernenden" stehen als Reiter auf deren Seite.
         $eintraege = [];
 
-        // Vor Lehrbeginn und nach dem Abschluss ebenfalls: die Seite zeigt dann
-        // "Lehre beginnt erst" bzw. den Rueckblick. Ohne Beruf und Jahrgang
-        // (PHASE_UNBEKANNT, etwa bei Berufsbildner/innen) gibt es nichts zu zeigen.
-        if (!api::ist_uek_extern($userid) && api::get_ausbildungsphase($userid) !== api::PHASE_UNBEKANNT) {
+        if (self::sieht_meine_lehre($userid)) {
             $eintraege[self::KNOTEN_PRAEFIX . menuepunkt::MEINE_LEHRE] = ['nav:meine_lehre', 'meine_lehre.php', []];
         }
 
-        if (!empty(api::get_lernende_for($userid))) {
+        if (self::sieht_meine_lernenden($userid)) {
             $eintraege[self::KNOTEN_PRAEFIX . menuepunkt::MEINE_LERNENDEN] = [
                 'nav:meine_lernenden', 'meine_lernenden.php', [],
             ];
@@ -132,6 +134,51 @@ class hook_callbacks {
                 $knoten->add($punkt->text, $punkt->url, navigation_node::TYPE_CUSTOM, null, $punkt->schluessel);
             }
         }
+    }
+
+    /**
+     * Haengt "Hilfe zur Berufsbildung" ins Benutzermenue, damit die
+     * Hilfeseite von jeder Seite aus erreichbar ist - nur fuer Personen,
+     * fuer die sie etwas enthaelt.
+     *
+     * @param extend_user_menu $hook
+     */
+    public static function extend_user_menu(extend_user_menu $hook): void {
+        if (!isloggedin() || isguestuser() || !sammlung::hat_abschnitte()) {
+            return;
+        }
+
+        $hook->add_navitem((object) [
+            'itemtype' => 'link',
+            'url' => new moodle_url('/local/berufsbildung/hilfe.php'),
+            'title' => get_string('hilfe:titel', 'local_berufsbildung'),
+            'titleidentifier' => 'hilfe:titel,local_berufsbildung',
+        ]);
+    }
+
+    /**
+     * Ob "Meine Lehre" erscheint: fuer alle mit Beruf und Jahrgang, auch vor
+     * Lehrbeginn und nach dem Abschluss - die Seite zeigt dann "Lehre
+     * beginnt erst" bzw. den Rueckblick. Ohne Beruf und Jahrgang
+     * (PHASE_UNBEKANNT, etwa bei Berufsbildner/innen) gibt es nichts zu
+     * zeigen, externen üK-Teilnehmenden ebenso wenig.
+     *
+     * @param int $userid
+     * @return bool
+     */
+    public static function sieht_meine_lehre(int $userid): bool {
+        return !api::ist_uek_extern($userid) && api::get_ausbildungsphase($userid) !== api::PHASE_UNBEKANNT;
+    }
+
+    /**
+     * Ob "Meine Lernenden" erscheint: fuer alle, die heute mindestens eine
+     * laufende Zuordnung haben.
+     *
+     * @param int $userid
+     * @return bool
+     */
+    public static function sieht_meine_lernenden(int $userid): bool {
+        return !empty(api::get_lernende_for($userid));
     }
 
     /**

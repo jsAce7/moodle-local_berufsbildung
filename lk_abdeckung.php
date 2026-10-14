@@ -25,6 +25,7 @@
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 
+use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\output\lk_abdeckung;
 use local_berufsbildung\service\lk_abdeckung_service;
 
@@ -41,6 +42,7 @@ $PAGE->set_url(new moodle_url($seitenurl, $nuroffen ? ['nuroffen' => 1] : []));
 $titel = get_string('lkabdeckung:titel', 'local_berufsbildung', $beruf);
 $PAGE->set_title($titel);
 $PAGE->set_heading(get_string('lkabdeckung:titel', 'local_berufsbildung', s($beruf)));
+hilfe_link::fuer_seite('berufsbildung-ausbildungsbloecke');
 $PAGE->navbar->add(get_string('bloecke:uebersicht', 'local_berufsbildung'), $bloeckeurl);
 $PAGE->navbar->add($titel);
 

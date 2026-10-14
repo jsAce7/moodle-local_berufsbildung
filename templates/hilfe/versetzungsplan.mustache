@@ -1,0 +1,31 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_berufsbildung/hilfe/versetzungsplan
+
+    Hilfeseite, Grundbegriffe: Versetzungsplan, Einsaetze und Ausbildungsbloecke.
+
+    Example context (json):
+    {}
+}}
+<p>Der <strong>Versetzungsplan</strong> legt fest, wann eine lernende Person in welcher Abteilung, Schule oder in welchem überbetrieblichen Kurs (üK) ist. Er wird aus der betrieblichen Planung übernommen, normalerweise einmal pro Woche automatisch.</p>
+<ul>
+    <li>Jeder Eintrag ist ein <strong>Einsatz</strong>: ein Zeitraum in Kalenderwochen in einem <strong>Ausbildungsblock</strong>.</li>
+    <li>Ein Ausbildungsblock ist eine Station des Plans, etwa eine Abteilung, die Berufsfachschule, ein üK oder die Ferien. Für jeden betrieblichen Block ist hinterlegt, welche Kompetenzen dort vermittelt werden.</li>
+    <li>Ist der Block mit einem Moodle-Kurs verknüpft, steht während des Einsatzes ein Link zum Kurs bei „Aktueller Einsatz“.</li>
+</ul>
+<div class="alert alert-info mb-0">In Moodle lässt sich der Versetzungsplan nicht bearbeiten. Er zeigt den Stand der letzten Übernahme. Ist ein Einsatz falsch, muss er in der betrieblichen Planung korrigiert werden; die Korrektur erscheint mit der nächsten Übernahme.</div>

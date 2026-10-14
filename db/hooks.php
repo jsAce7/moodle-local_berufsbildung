@@ -29,4 +29,8 @@ $callbacks = [
         'hook' => \core\hook\navigation\primary_extend::class,
         'callback' => [\local_berufsbildung\hook_callbacks::class, 'primary_extend'],
     ],
+    [
+        'hook' => \core_user\hook\extend_user_menu::class,
+        'callback' => [\local_berufsbildung\hook_callbacks::class, 'extend_user_menu'],
+    ],
 ];

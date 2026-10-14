@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.13.0] — 2026-10-14
+
+### Hinzugefügt
+
+- **Hilfe zur Berufsbildung** (`hilfe.php`, `hilfe\sammlung`, `hilfe\abschnitt`): eine Seite mit den Anleitungen aller Plugins der Berufsbildung, gegliedert nach Zielgruppe, und jede Person sieht nur die Anleitungen zu dem, was sie öffnen kann. Dieses Plugin bringt zwölf Anleitungen mit, unter anderem zu Lehrjahr und Semester, zum Versetzungsplan, zum Kompetenzraster, zu *Meine Lehre*, *Meine Lernenden*, Ausbildungsblöcken, Zuordnungen und Aufbewahrungspflichten. Die Texte gibt es nur auf Deutsch und sie stehen als Templates unter `templates/hilfe/`.
+- **Einstiege**: *Hilfe zur Berufsbildung* im Benutzermenü (Hook `core_user\hook\extend_user_menu`), sobald die Seite für die Person etwas enthält, dazu eine Schaltfläche *Hilfe* neben der Überschrift der Seiten dieses Plugins, die zum passenden Abschnitt springt (`output\hilfe_link`).
+- **Callback für aufsetzende Plugins**: `<plugin>_berufsbildung_hilfe()` liefert weitere Abschnitte, siehe README, Abschnitt *Hilfe für Benutzer/innen*.
+
+### Geändert
+
+- `hook_callbacks::sieht_meine_lehre()` und `hook_callbacks::sieht_meine_lernenden()` fassen die Bedingungen der beiden Einstiege zusammen, damit Navigation und Hilfe dieselbe Regel nutzen.
+
 ## [0.12.0] — 2026-10-14
 
 ### Hinzugefügt

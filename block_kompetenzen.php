@@ -28,6 +28,7 @@ require_once($CFG->libdir . '/adminlib.php');
 use core_competency\competency;
 use core_competency\competency_framework;
 use local_berufsbildung\api;
+use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\output\kompetenz_auswahl;
 use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\block_lk;
@@ -54,6 +55,7 @@ $PAGE->set_url($returnurl);
 $titel = get_string('blocklk:uebersicht', 'local_berufsbildung', $block->get('nummer'));
 $PAGE->set_title($titel);
 $PAGE->set_heading($titel);
+hilfe_link::fuer_seite('berufsbildung-ausbildungsbloecke');
 $PAGE->navbar->add(get_string('bloecke:uebersicht', 'local_berufsbildung'), $bloeckeurl);
 $PAGE->navbar->add($titel);
 

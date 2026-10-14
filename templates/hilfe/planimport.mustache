@@ -1,0 +1,37 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_berufsbildung/hilfe/planimport
+
+    Hilfeseite, Ausbildungsplanung: den Versetzungsplan von Hand uebernehmen.
+
+    Example context (json):
+    {}
+}}
+<p>Normalerweise übernimmt ein Skript den Versetzungsplan wöchentlich über den Webservice. Die Seite <em>Website-Administration ▸ Berufsbildung ▸ Ausbildungsplanung ▸ Versetzungsplan-Import</em> ist der Rückfallweg, falls das nicht läuft oder ausserplanmässig etwas nachgezogen werden muss.</p>
+<ol>
+    <li>Dieselbe CSV-Datei wie für den Webservice wählen.</li>
+    <li>Zuerst mit <em>Testlauf</em> hochladen: geprüft wird alles, geschrieben nichts.</li>
+    <li>Stimmt das Protokoll, ohne Testlauf erneut hochladen.</li>
+</ol>
+<h4>Schutz vor unvollständigen Lieferungen</h4>
+<ul>
+    <li>Enthält eine Lieferung deutlich weniger Personen als die letzte, wird sie <strong>abgewiesen</strong>. Ist der Rückgang beabsichtigt, etwa nach Lehrabschlüssen, bestätigen Sie ihn und laden erneut hoch.</li>
+    <li>Eine fehlerhafte Lieferung lässt den bisherigen Plan unangetastet.</li>
+    <li>Liegt der letzte erfolgreiche Import zu lange zurück, erscheint ein Alterungshinweis. Dann prüfen, ob das Skript noch läuft.</li>
+</ul>
+<p class="mb-0">Personen ohne aktive Zuordnung werden übersprungen.</p>

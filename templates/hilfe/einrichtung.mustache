@@ -1,0 +1,39 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_berufsbildung/hilfe/einrichtung
+
+    Hilfeseite, Systemadministration: die Berufsbildung einrichten.
+
+    Example context (json):
+    {}
+}}
+<p>Die Grundeinrichtung in dieser Reihenfolge:</p>
+<ol>
+    <li><strong>Profilfelder</strong>: zwei benutzerdefinierte Profilfelder für Beruf (etwa <code>AU_EFZ</code>) und Jahrgang (etwa <code>2026</code>) anlegen, optional ein Datumsfeld für einen abweichenden Lehrbeginn. Unter <em>Website-Administration ▸ Berufsbildung ▸ Einstellungen und Datenschutz ▸ Einstellungen</em> zuordnen.</li>
+    <li><strong>Ausbildungsdauer</strong>: am selben Ort Startmonat und Lehrdauer, je Beruf abweichend.</li>
+    <li><strong>Kompetenzen</strong>: die Kompetenzverwaltung von Moodle aktivieren, die Kompetenzrahmen anlegen und jedem Beruf seinen Rahmen zuordnen (<a href="#berufsbildung-kompetenzrahmen">Kompetenzrahmen je Beruf</a>). Wahlpflicht-Handlungskompetenzen und ihre verlangte Anzahl stehen ebenfalls in den Einstellungen.</li>
+    <li><strong>Zuordnungen</strong> anlegen, siehe <a href="#berufsbildung-zuordnungen">Zuordnungen verwalten</a>.</li>
+    <li><strong>Versetzungsplan</strong>: Webservice und Dienstkonto einrichten oder die erste Lieferung von Hand übernehmen.</li>
+</ol>
+<h4>Rollen</h4>
+<ul>
+    <li><strong>Berufsbildner/in</strong> und <strong>Ausbildungsplanung</strong> vergibt Moodle selbst, sobald jemand eine laufende Zuordnung hat.</li>
+    <li><strong>Leitung Berufsbildung</strong> wird nie automatisch vergeben. Sie wird von Hand als globale Rolle zugewiesen und öffnet die Übersichten über alle Lernenden im Menü „Berufsbildung“.</li>
+</ul>
+<h4>Lehrverlängerung und Wiederholung</h4>
+<p class="mb-0">Es gibt kein eigenes Korrekturfeld. Den Jahrgang im Profil anpassen und den Lehrbeginn auf das tatsächliche Startdatum setzen, damit die Probezeit am ursprünglichen Beginn bleibt. Technische Details stehen in der README des Plugins.</p>

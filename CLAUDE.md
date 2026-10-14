@@ -8,7 +8,7 @@ Basis-Plugin für die betriebliche Berufsbildung in Moodle. Besitzt die Zuordnun
 
 Das Konzept mit Datenmodell, API und Begründungen liegt in `docs/konzept.md`. Bei Widersprüchen zwischen dieser Datei und dem Konzept gilt das Konzept. Für Schnitt 1 gilt zusätzlich `docs/schnitt1.md` (liegt im Repo von `local_lerndokumentation`, das darauf aufsetzt) — dort steht die aktuelle Reihenfolge und der reduzierte Umfang.
 
-Aufsetzende Plugins: `local_lerndokumentation`, `local_bildungsbericht` und `local_uekkn`. Sie greifen nie direkt auf die Tabellen dieses Plugins zu, sondern über dessen öffentliche Schnittstellen: `\local_berufsbildung\api`, den Nachweis-Collector (`nachweis\…`), die PDF-Grundlage (`pdf\…`), die Menüpunkte der Hauptnavigation (`navigation\menuepunkt` über den Callback `<plugin>_berufsbildung_navigation()`) und einzelne Darstellungs- und Hilfsklassen (`output\nachweis_liste`, `service\kompetenz_baum`).
+Aufsetzende Plugins: `local_lerndokumentation`, `local_bildungsbericht` und `local_uekkn`. Sie greifen nie direkt auf die Tabellen dieses Plugins zu, sondern über dessen öffentliche Schnittstellen: `\local_berufsbildung\api`, den Nachweis-Collector (`nachweis\…`), die PDF-Grundlage (`pdf\…`), die Menüpunkte der Hauptnavigation (`navigation\menuepunkt` über den Callback `<plugin>_berufsbildung_navigation()`), die Abschnitte der Hilfeseite (`hilfe\abschnitt` über den Callback `<plugin>_berufsbildung_hilfe()`) und einzelne Darstellungs- und Hilfsklassen (`output\nachweis_liste`, `service\kompetenz_baum`).
 
 ## Zielumgebung
 
@@ -65,6 +65,7 @@ Nach jeder Aufgabe: Abnahmekriterien aus `docs/schnitt1.md` mit diesen Befehlen 
 - **Neue Capability**: `db/access.php` + Sprachstring `berufsbildung:<name>` + `version.php` hochzählen.
 - **Neuer Sprachstring**: immer in `de` *und* `en`, alphabetisch nach Schlüssel einsortiert, keine Kommentare zwischen den Strings (sonst meldet der Code-Checker die Reihenfolge).
 - **JavaScript**: nur in `amd/src` ändern, danach `amd/build` neu bauen (README, Abschnitt Entwicklung); die CI prüft das mit `moodle-plugin-ci grunt`.
+- **Neue Seite oder geänderter Ablauf**: die Anleitung unter `templates/hilfe/` nachführen und auf der Seite `output\hilfe_link::fuer_seite()` setzen. Die Hilfetexte gibt es nur auf Deutsch, deshalb stehen sie in Templates und nicht in `lang/`.
 - **Neue API-Methode**: Unit-Test für den Normalfall *und* für den Stichtag-Randfall (Zuordnung endet genau am Stichtag, beginnt genau danach).
 
 ## Testanforderungen (Schnitt 1)

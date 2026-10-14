@@ -1,0 +1,83 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_berufsbildung/hilfe_seite
+
+    Die Hilfeseite: links das Inhaltsverzeichnis, das beim Lesen stehen
+    bleibt, rechts je Zielgruppe die Abschnitte als Karten. Bei nur einer
+    Zielgruppe ist deren Ueberschrift ueber den Karten nur fuer Screenreader
+    da - sichtbar wiederholte sie bloss den Seitentitel. sr-only fuer
+    Bootstrap 4 (Moodle 4.5), visually-hidden fuer Bootstrap 5.
+
+    Context variables required for this template:
+    * gruppen - array of {anker, titel, abschnitte: [{anker, titel, inhalt}]}
+    * mehrere - bool, mehr als eine Zielgruppe
+
+    Example context (json):
+    {
+        "mehrere": true,
+        "gruppen": [
+            {
+                "anker": "zielgruppe-grundlagen",
+                "titel": "Grundbegriffe",
+                "abschnitte": [
+                    {"anker": "berufsbildung-ausbildungsstand", "titel": "Lehrjahr und Semester", "inhalt": "<p>Text</p>"}
+                ]
+            },
+            {
+                "anker": "zielgruppe-lernende",
+                "titel": "Für Lernende",
+                "abschnitte": [
+                    {"anker": "berufsbildung-meine-lehre", "titel": "Meine Lehre", "inhalt": "<p>Text</p>"}
+                ]
+            }
+        ]
+    }
+}}
+<div class="local-berufsbildung-hilfe">
+    <nav aria-labelledby="local-berufsbildung-hilfe-inhalt-titel">
+        <div class="local-berufsbildung-hilfe-inhalt card">
+            <div class="card-body">
+                <h2 class="h5" id="local-berufsbildung-hilfe-inhalt-titel">{{#str}} hilfe:inhalt, local_berufsbildung {{/str}}</h2>
+                {{#gruppen}}
+                    <p class="small text-muted text-uppercase mt-3 mb-1"><a class="text-reset" href="#{{anker}}">{{titel}}</a></p>
+                    <ul class="list-unstyled mb-0">
+                        {{#abschnitte}}
+                            <li class="mb-1"><a href="#{{anker}}">{{titel}}</a></li>
+                        {{/abschnitte}}
+                    </ul>
+                {{/gruppen}}
+            </div>
+        </div>
+    </nav>
+    <div class="local-berufsbildung-hilfe-haupt">
+        <p class="lead">{{#str}} hilfe:einleitung, local_berufsbildung {{/str}}</p>
+        {{#gruppen}}
+            <section id="{{anker}}" class="mb-4" aria-labelledby="{{anker}}-titel">
+                <h2 id="{{anker}}-titel" class="h3 mb-3{{^mehrere}} visually-hidden sr-only{{/mehrere}}">{{titel}}</h2>
+                {{#abschnitte}}
+                    <article id="{{anker}}" class="card mb-3" aria-labelledby="{{anker}}-titel">
+                        <div class="card-body local-berufsbildung-hilfe-text">
+                            <h3 id="{{anker}}-titel" class="h4">{{titel}}</h3>
+                            {{{inhalt}}}
+                        </div>
+                    </article>
+                {{/abschnitte}}
+            </section>
+        {{/gruppen}}
+    </div>
+</div>

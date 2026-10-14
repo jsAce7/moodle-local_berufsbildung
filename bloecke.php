@@ -25,11 +25,12 @@
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 
-use local_berufsbildung\persistent\block;
-use local_berufsbildung\persistent\block_lk;
 use local_berufsbildung\api;
 use local_berufsbildung\navigation\menuepunkt;
+use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\output\seitennavigation;
+use local_berufsbildung\persistent\block;
+use local_berufsbildung\persistent\block_lk;
 use local_berufsbildung\service\block_loesch_service;
 use local_berufsbildung\service\einrichtung_pruefung;
 use local_berufsbildung\service\lk_abdeckung_service;
@@ -40,6 +41,7 @@ $PAGE->set_url(new moodle_url('/local/berufsbildung/bloecke.php'));
 $titel = get_string('bloecke:uebersicht', 'local_berufsbildung');
 $PAGE->set_title($titel);
 $PAGE->set_heading($titel);
+hilfe_link::fuer_seite('berufsbildung-ausbildungsbloecke');
 
 // Wer eigene Lernende betreut, kommt ueber den Reiter auf "Meine Lernenden"
 // hierher und sieht dieselben Reiter samt Rueckweg. Ohne eigene Lernende -

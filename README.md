@@ -14,6 +14,7 @@ Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentati
 - [Installation](#installation)
 - [Einstellungen](#einstellungen)
 - [Rollen und Zugang](#rollen-und-zugang)
+- [Hilfe für Benutzer/innen](#hilfe-für-benutzerinnen)
 - [Geplante Aufgaben](#geplante-aufgaben)
 - [Öffentliche API](#öffentliche-api)
 - [Datenschutz und Aufbewahrung](#datenschutz-und-aufbewahrung)
@@ -148,6 +149,35 @@ Die primäre Navigationsleiste trägt bis zu drei Einstiege, vor der Website-Adm
 
 Berufsbildner/innen erreichen die Blockverwaltung über den Reiter **Ausbildungsblöcke** auf *Meine Lernenden*. Die Blockpflege ist Stammdatenarbeit, gehört aber zum selben Arbeitsgang wie die Betreuung und steht deshalb als letzter Reiter dort. Wer `manageblocks` ohne eigene Lernende hat — eine von Hand zugewiesene *Ausbildungsplanung* —, nimmt den Weg über *Website-Administration ▸ Berufsbildung ▸ Ausbildungsplanung ▸ Ausbildungsblöcke*. Änderungen wirken systemweit für alle Berufe, und `local_berufsbildung_block_lk` führt keine Änderungshistorie — nachvollziehbar ist über `usermodified`/`timemodified` nur die jeweils letzte Änderung eines noch bestehenden Eintrags, Entfernungen sind spurlos. Wer die Pflege einem kleineren Kreis vorbehalten will, entzieht der Rolle *Ausbildungsplanung* die Capability `local/berufsbildung:manageblocks` und weist sie gezielt einer eigenen Rolle zu; der Zugang über die Navigation und den Admin-Baum richtet sich allein nach dieser Capability.
 
+## Hilfe für Benutzer/innen
+
+*Hilfe zur Berufsbildung* (`hilfe.php`) bündelt die Anleitungen aller Plugins der Berufsbildung auf einer Seite, nur auf Deutsch. Gegliedert ist sie nach Zielgruppe: Grundbegriffe, Lernende, Berufsbildner/innen, Ausbildungsplanung, Leitung und Ausbildungsadministration, Systemadministration. Jede Person sieht nur die Anleitungen zu dem, was sie öffnen kann. Für Lernende bleibt die Seite deshalb kurz, und die Anleitungen eines deinstallierten Plugins fallen von selbst weg.
+
+Erreichbar ist die Seite über *Hilfe zur Berufsbildung* im Benutzermenü, sobald sie für die Person etwas enthält, und über die Schaltfläche *Hilfe* neben der Überschrift jeder Seite, die direkt zum passenden Abschnitt springt.
+
+Diese README bleibt die Dokumentation für Administration und Entwicklung; die Hilfeseite richtet sich an die Personen, die mit den Plugins arbeiten.
+
+**Abschnitte aus anderen Plugins:** Ein aufsetzendes Plugin definiert in seiner `lib.php` die Funktion `<plugin>_berufsbildung_hilfe()` und liefert eine Liste von `local_berufsbildung\hilfe\abschnitt`:
+
+```php
+function local_bildungsbericht_berufsbildung_hilfe(): array {
+    $abschnitt = \local_berufsbildung\hilfe\abschnitt::class;
+    $abschnitte = [];
+    if (/* die Person darf Bildungsberichte erfassen */) {
+        $abschnitte[] = new $abschnitt(
+            $abschnitt::BERUFSBILDNER,                 // Zielgruppe
+            'bildungsbericht-erfassen',                // Anker, mit dem Plugin als Präfix
+            get_string('hilfe:erfassen', 'local_bildungsbericht'),
+            'local_bildungsbericht/hilfe/erfassen',    // Template mit dem Text
+            []                                         // Daten für das Template
+        );
+    }
+    return $abschnitte;
+}
+```
+
+Wie bei den Menüpunkten liefert das Plugin nur, was die angemeldete Person öffnen darf; dieses Plugin prüft keine fremden Rechte. Der Text steht in einem Mustache-Template des liefernden Plugins, nicht in Sprach-Strings. Abschnitte einer Zielgruppe folgen auf die dieses Plugins. Ein doppelter Anker wird verworfen, ein scheiternder Callback lässt nur die Abschnitte dieses Plugins wegfallen. Den Link im Seitenkopf setzt die Zielseite vor `$OUTPUT->header()` mit `output\hilfe_link::fuer_seite('bildungsbericht-erfassen')`.
+
 ## Geplante Aufgaben
 
 Drei geplante Aufgaben (*Website-Administration ▸ Server ▸ Geplante Aufgaben*):
@@ -214,7 +244,7 @@ Aus der Entwicklungsumgebung `~/moodle-dev/`:
 ./scripts/lint.sh local/berufsbildung    # phpcs (moodle-cs)
 ```
 
-Es gibt 383 PHPUnit-Tests in 39 Dateien. Behat deckt mit 15 Szenarien Zuordnungen, die Kompetenzauswahl und das Kopieren von Blöcken, die LK-Übersicht, das Kompetenzraster auf „Meine Lehre“ und „Meine Lernenden“ ab, nicht jede Seite. Die CI ([.github/workflows/ci.yml](.github/workflows/ci.yml), `moodle-plugin-ci`) läuft bei jedem Push und Pull Request auf GitHub Actions, mit Moodle 4.5 / PHP 8.1 / PostgreSQL und Moodle 5.2 / PHP 8.4 / MariaDB; Moodle 5.0 und 5.1 laufen nicht eigens mit.
+Es gibt 434 PHPUnit-Tests in 43 Dateien. Behat deckt mit 15 Szenarien Zuordnungen, die Kompetenzauswahl und das Kopieren von Blöcken, die LK-Übersicht, das Kompetenzraster auf „Meine Lehre“ und „Meine Lernenden“ ab, nicht jede Seite. Die CI ([.github/workflows/ci.yml](.github/workflows/ci.yml), `moodle-plugin-ci`) läuft bei jedem Push und Pull Request auf GitHub Actions, mit Moodle 4.5 / PHP 8.1 / PostgreSQL und Moodle 5.2 / PHP 8.4 / MariaDB; Moodle 5.0 und 5.1 laufen nicht eigens mit.
 
 **JavaScript** liegt als AMD-Modul in `amd/src`, das gebaute `amd/build` gehört mit ins Repository. Nach einer Änderung neu bauen. Weil das Plugin ausserhalb des Moodle-Baums liegt und dort nur im Container eingehängt ist, wird es für Grunt vorübergehend eingebunden (Node und `node_modules` im Moodle-Verzeichnis vorausgesetzt):
 

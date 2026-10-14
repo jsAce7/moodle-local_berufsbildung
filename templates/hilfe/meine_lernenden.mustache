@@ -1,0 +1,42 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_berufsbildung/hilfe/meine_lernenden
+
+    Hilfeseite, fuer Berufsbildner/innen: die Seite Meine Lernenden. bloecke - bool, die
+    Person pflegt die Ausbildungsbloecke; nur dann gibt es deren Abschnitt.
+
+    Example context (json):
+    {"bloecke": true}
+}}
+<p>„Meine Lernenden“ in der oberen Navigationsleiste zeigt alle Lernenden, für die Sie heute zuständig sind, als Haupt- oder Stellvertretung. Wer Ihnen zugeordnet ist, legt die Ausbildungsadministration fest.</p>
+<h4>Die Liste</h4>
+<ul>
+    <li>Oben suchen Sie nach Namen und filtern nach Beruf. Die Zusammenfassung zählt, wie viele Ihrer Lernenden offene Lücken haben.</li>
+    <li>Jede Zeile zeigt die Semesterleiste und den laufenden Ausbildungsblock.</li>
+    <li>Die Abzeichen rechts melden, was Aufmerksamkeit braucht: rot die <strong>überfälligen</strong> Aufgaben, daneben die Zahl der <strong>offenen Pflicht- und Wahlpflicht-Handlungskompetenzen</strong> und die Zahl der Tätigkeiten.</li>
+    <li>Schaltflächen in der Zeile, etwa für eine Notiz, sind jederzeit ohne Aufklappen erreichbar.</li>
+</ul>
+<h4>Aufgeklappt</h4>
+<p>Ein Klick auf eine Zeile öffnet die Details der Person:</p>
+<ol>
+    <li>Was Sie als Nächstes für sie tun können, etwa den fälligen Bildungsbericht schreiben.</li>
+    <li>Das Kompetenzraster, siehe <a href="#berufsbildung-kompetenzraster">Das Kompetenzraster lesen</a>.</li>
+    <li>Alle Fälligkeiten der Person, auch die noch nicht überfälligen.</li>
+    <li>Die Tätigkeiten aus allen Bereichen, und der Link zum Profil mit der Lerndokumentation.</li>
+</ol>
+<p class="mb-0">Weitere Reiter oben führen zu Auswertungen über Ihre Lernenden{{#bloecke}} und zu den <a href="#berufsbildung-ausbildungsbloecke">Ausbildungsblöcken</a>{{/bloecke}}.</p>

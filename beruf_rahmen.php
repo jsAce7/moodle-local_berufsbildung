@@ -28,6 +28,7 @@ require_once($CFG->libdir . '/adminlib.php');
 
 use core_competency\competency_framework;
 use local_berufsbildung\form\beruf_rahmen_form;
+use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\service\beruf_katalog;
 use local_berufsbildung\service\rahmen_resolver;
 
@@ -37,6 +38,7 @@ $PAGE->set_url(new moodle_url('/local/berufsbildung/beruf_rahmen.php'));
 $titel = get_string('berufrahmen:uebersicht', 'local_berufsbildung');
 $PAGE->set_title($titel);
 $PAGE->set_heading($titel);
+hilfe_link::fuer_seite('berufsbildung-kompetenzrahmen');
 $PAGE->navbar->add($titel);
 
 $returnurl = new moodle_url('/local/berufsbildung/beruf_rahmen.php');

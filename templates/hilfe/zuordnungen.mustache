@@ -1,0 +1,46 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_berufsbildung/hilfe/zuordnungen
+
+    Hilfeseite, Leitung: Berufsbildner/innen und Lernende einander zuordnen. Ohne Aenderungsrecht nur die Uebersicht.
+
+    Example context (json):
+    {"darfaendern": true}
+}}
+<p>Eine <strong>Zuordnung</strong> legt fest, welche Berufsbildnerin oder welcher Berufsbildner für welche lernende Person zuständig ist, und ab wann bis wann. Nur wer zugeordnet ist, sieht die Person unter „Meine Lernenden“ und darf ihre Berichte und Einträge bearbeiten. Die Übersicht liegt unter <em>Website-Administration ▸ Berufsbildung ▸ Zuordnungen und Gruppen ▸ Zuordnungen</em>, mit Filtern und Export.</p>
+{{#darfaendern}}
+<h4>Zuordnung anlegen</h4>
+<ol>
+    <li><em>Neue Zuordnung</em> wählen.</li>
+    <li>Berufsbildner/in wählen und eine oder mehrere Lernende, oder ganze globale Gruppen (einmalig übernommen, siehe <a href="#berufsbildung-globale-gruppen">Globale Gruppen verknüpfen</a> für laufenden Abgleich).</li>
+    <li><strong>Rolle</strong>: Hauptverantwortlich oder Stellvertretung. Je Rolle hat eine Person nur eine laufende Zuordnung. Eine neue Zuordnung derselben Rolle beendet die bisherige automatisch am Vortag.</li>
+    <li><strong>Gültig ab</strong> setzen. <strong>Beruf</strong> leer lassen, dann gilt der Beruf aus dem Profil.</li>
+</ol>
+<h4>Zuordnung beenden oder löschen</h4>
+<ul>
+    <li><strong>Beenden</strong> ist der Normalfall, etwa bei einem Wechsel: <em>Gültig bis</em> setzen. Frühere Berichte bleiben der damals zuständigen Person zugeordnet. Ohne Datum wird eine beendete Zuordnung wieder laufend.</li>
+    <li><strong>Löschen</strong> nur für eindeutig falsch erfasste Zuordnungen. Es entfernt sie endgültig.</li>
+</ul>
+<h4>Jahreswechsel: CSV-Import</h4>
+<p>Für einen ganzen Jahrgang: <em>CSV-Import</em>, erste Zeile mit den Spalten <code>berufsbildner</code>, <code>lernende</code> (je der Moodle-Benutzername), <code>beruf</code> (leer = aus dem Profil) und <code>gueltig_von</code> (JJJJ-MM-TT). Die Vorschau zeigt jede Zeile; übernommen werden nur die fehlerfreien.</p>
+<h4>Teilnahmeart</h4>
+<p>Personen, die extern nur an überbetrieblichen Kursen teilnehmen, markieren Sie in der Übersicht als <em>Extern · nur üK</em>. Sie bleiben bei ihrer Berufsbildnerin oder ihrem Berufsbildner sichtbar, haben aber weder „Meine Lehre“ noch Kompetenzraster oder Lerndokumentation.</p>
+{{/darfaendern}}
+{{^darfaendern}}
+<p class="mb-0">Sie können die Zuordnungen einsehen, aber nicht ändern. Änderungen nimmt die Ausbildungsadministration vor.</p>
+{{/darfaendern}}
