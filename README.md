@@ -151,7 +151,7 @@ Berufsbildner/innen erreichen die Blockverwaltung über den Reiter **Ausbildungs
 
 ## Hilfe für Benutzer/innen
 
-*Hilfe zur Berufsbildung* (`hilfe.php`) bündelt die Anleitungen aller Plugins der Berufsbildung auf einer Seite, nur auf Deutsch. Gegliedert ist sie nach Zielgruppe: Grundbegriffe, Lernende, Berufsbildner/innen, üK-Kursleitungen, Ausbildungsplanung, Leitung und Ausbildungsadministration, Systemadministration. Lernende werden darin wie in Lerndokumentation und Bildungsbericht geduzt, alle anderen gesiezt. Jede Person sieht nur die Anleitungen zu dem, was sie öffnen kann. Für Lernende bleibt die Seite deshalb kurz, und die Anleitungen eines deinstallierten Plugins fallen von selbst weg.
+*Hilfe zur Berufsbildung* (`hilfe.php`) bündelt die Anleitungen aller Plugins der Berufsbildung auf einer Seite, nur auf Deutsch. Gegliedert ist sie nach Zielgruppe: Grundbegriffe, Lernende, Berufsbildner/innen, üK-Kursleitungen, Ausbildungsplanung, Leitung und Ausbildungsadministration, Systemadministration. Alle werden darin geduzt. Jede Person sieht nur die Anleitungen zu dem, was sie öffnen kann. Für Lernende bleibt die Seite deshalb kurz, und die Anleitungen eines deinstallierten Plugins fallen von selbst weg.
 
 Erreichbar ist die Seite über *Hilfe zur Berufsbildung* im Benutzermenü, sobald sie für die Person etwas enthält, und über die Schaltfläche *Hilfe* neben der Überschrift jeder Seite, die direkt zum passenden Abschnitt springt.
 

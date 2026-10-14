@@ -9,7 +9,7 @@
 
 ### Geändert
 
-- **Hilfe für Lernende in der Du-Form**, wie Lerndokumentation und Bildungsbericht sie ansprechen. Die Grundbegriffe kommen ohne direkte Anrede aus, alle übrigen Anleitungen bleiben beim Sie.
+- **Hilfe in der Du-Form**: alle Anleitungen und die Texte der Hilfeseite sprechen mit du an, auch die für Berufsbildner/innen, Planung, Leitung und Administration. Der Text der Anleitung „Meine Lehre“ nennt die Meldung „Für Ihr Profil …“ wörtlich, wie sie in der Oberfläche steht.
 
 ## [0.13.0] — 2026-10-14
 
