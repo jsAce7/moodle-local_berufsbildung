@@ -44,8 +44,8 @@ final class sammlung_test extends \advanced_testcase {
     /**
      * Die Anker je Zielgruppe.
      *
-     * @param array<string, abschnitt[]> $je
-     * @return array<string, string[]>
+     * @param array $je Abschnitte je Zielgruppe (Zielgruppe => abschnitt[])
+     * @return array Anker je Zielgruppe (Zielgruppe => string[])
      */
     private function anker(array $je): array {
         return array_map(

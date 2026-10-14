@@ -24,11 +24,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['admin:lernbegleitung'] = 'Learning support';
-$string['admin:organisation'] = 'Assignments and groups';
+$string['admin:organisation'] = 'Apprentices and assignments';
 $string['admin:planung'] = 'Training planning';
-$string['admin:system'] = 'Settings and data protection';
+$string['admin:system'] = 'General';
 $string['admin:uebersicht'] = 'Vocational training administration';
+$string['admin:zuordnungen'] = 'Trainer assignments';
 $string['aufbewahrung:bearbeiten'] = 'Edit';
 $string['aufbewahrung:gespeichert'] = 'Retention obligation saved.';
 $string['aufbewahrung:grund'] = 'Reason';

@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.14.1] — 2026-10-14
+
+### Hinzugefügt
+
+- **`admin\bereiche`**: legt die Bereiche unter *Website-Administration ▸ Berufsbildung* an, für dieses Plugin und die aufsetzenden, und hält ihre Reihenfolge fest. Moodle lädt die `settings.php` der lokalen Plugins nach ihrem übersetzten Namen sortiert; bisher hing die Reihenfolge der Bereiche deshalb von der Sprache ab.
+
+### Geändert
+
+- **Website-Administration ▸ Berufsbildung neu gegliedert**: ein Bereich je Fachthema, darin zuerst die Konfiguration, dann die Arbeitsansichten. Jedes „Einstellungen“ ist so durch seinen Bereich eindeutig.
+  - *Einstellungen und Datenschutz* heisst neu **Allgemein** und steht zuoberst.
+  - *Zuordnungen und Gruppen* heisst neu **Lernende und Zuordnungen**; der Eintrag *Zuordnungen* heisst dort **Zuordnungen zu Berufsbildner/innen** (`admin:zuordnungen`, der Seitentitel bleibt).
+  - Der Bereich *Lernbegleitung* entfällt (`admin:lernbegleitung` entfernt). Bildungsbericht und Lerndokumentation legen ab ihren Versionen 0.14.1 bzw. 0.3.1 über `admin\bereiche` je einen eigenen Bereich an, die Probezeiten wandern in den Bereich Bildungsbericht.
+  - Die Kategorie-IDs `ausbildungsverwaltung_system`, `_organisation` und `_planung` bleiben, Links auf die Seiten ändern sich nicht.
+
 ## [0.14.0] — 2026-10-14
 
 ### Hinzugefügt

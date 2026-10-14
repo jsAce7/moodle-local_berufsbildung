@@ -48,26 +48,16 @@ foreach ($verwaltungscaps as $verwaltungscap) {
 }
 
 if ($hatverwaltung) {
-    if (!$ADMIN->locate('ausbildungsverwaltung')) {
-        $ADMIN->add('root', new admin_category(
-            'ausbildungsverwaltung',
-            new lang_string('admin:uebersicht', 'local_berufsbildung')
-        ), 'ai');
-    }
-
+    // Bildungsbericht, Lerndokumentation und uek legen ihre Bereiche selbst
+    // an; die Reihenfolge haelt admin\bereiche fest, unabhaengig davon, in
+    // welcher Reihenfolge Moodle die Plugins laedt.
     $adminbereiche = [
-        'ausbildungsverwaltung_organisation' => 'admin:organisation',
-        'ausbildungsverwaltung_planung' => 'admin:planung',
-        'ausbildungsverwaltung_lernbegleitung' => 'admin:lernbegleitung',
-        'ausbildungsverwaltung_system' => 'admin:system',
+        \local_berufsbildung\admin\bereiche::ALLGEMEIN => 'admin:system',
+        \local_berufsbildung\admin\bereiche::ZUORDNUNGEN => 'admin:organisation',
+        \local_berufsbildung\admin\bereiche::PLANUNG => 'admin:planung',
     ];
     foreach ($adminbereiche as $name => $string) {
-        if (!$ADMIN->locate($name)) {
-            $ADMIN->add('ausbildungsverwaltung', new admin_category(
-                $name,
-                new lang_string($string, 'local_berufsbildung')
-            ));
-        }
+        \local_berufsbildung\admin\bereiche::anlegen($ADMIN, $name, new lang_string($string, 'local_berufsbildung'));
     }
 }
 
@@ -233,7 +223,7 @@ if ($hassiteconfig) {
 if ($hatverwaltung) {
     $ADMIN->add('ausbildungsverwaltung_organisation', new admin_externalpage(
         'local_berufsbildung_zuordnung',
-        new lang_string('zuordnung:uebersicht', 'local_berufsbildung'),
+        new lang_string('admin:zuordnungen', 'local_berufsbildung'),
         new moodle_url('/local/berufsbildung/zuordnung.php'),
         'local/berufsbildung:viewzuordnung'
     ));

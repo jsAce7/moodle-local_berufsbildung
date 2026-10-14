@@ -51,13 +51,13 @@ Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentati
 2. Das Upgrade ausführen, über *Website-Administration ▸ Mitteilungen* oder per CLI:
    `php admin/cli/upgrade.php --non-interactive`
    Dabei entstehen die Rollen `berufsbildner`, `berufsbildung_planung` und `berufsbildung_leitung`, siehe [Rollen und Zugang](#rollen-und-zugang).
-3. Zwei benutzerdefinierte Profilfelder anlegen (Beruf, Jahrgang) und unter *Website-Administration ▸ Berufsbildung ▸ Einstellungen und Datenschutz ▸ Einstellungen* zuordnen. Die Auswahl bietet nur bereits vorhandene Profilfelder an; voreingestellt sind die Kurznamen `beruf` und `jahrgang`. Optional ein drittes Feld für einen abweichenden Lehrbeginn, am besten vom Typ Datum.
+3. Zwei benutzerdefinierte Profilfelder anlegen (Beruf, Jahrgang) und unter *Website-Administration ▸ Berufsbildung ▸ Allgemein ▸ Einstellungen* zuordnen. Die Auswahl bietet nur bereits vorhandene Profilfelder an; voreingestellt sind die Kurznamen `beruf` und `jahrgang`. Optional ein drittes Feld für einen abweichenden Lehrbeginn, am besten vom Typ Datum.
 4. Optional: unter *Website-Administration ▸ Berufsbildung ▸ Ausbildungsplanung ▸ Kompetenzrahmen je Beruf* jedem Beruf seinen Kompetenzrahmen zuordnen, siehe [Einstellungen](#einstellungen).
 5. Optional, für den Versetzungsplan-Webservice: Dienst *Berufsbildung: Versetzungsplan-Import* unter *Website-Administration ▸ Server ▸ Webservices ▸ Externe Webservices* aktivieren, Dienstkonto mit der Capability `local/berufsbildung:importplan` anlegen, als autorisierte Person beim Dienst eintragen und Token ausstellen. Der Dienst ist standardmässig deaktiviert und auf autorisierte Personen beschränkt. Details in [docs/schnittstelle_versetzungsplan.md](https://github.com/jsAce7/moodle-local_berufsbildung/blob/main/docs/schnittstelle_versetzungsplan.md), Abschnitt 4.
 
 ## Einstellungen
 
-*Website-Administration ▸ Berufsbildung ▸ Einstellungen und Datenschutz ▸ Einstellungen* (nur mit `moodle/site:config`):
+*Website-Administration ▸ Berufsbildung ▸ Allgemein ▸ Einstellungen* (nur mit `moodle/site:config`):
 
 | Einstellung | Standard | Bedeutung |
 |---|---|---|
@@ -86,7 +86,7 @@ Welcher Rahmen zu welchem Beruf gehört, steht nicht in den Einstellungen, sonde
 
 Der Rahmen muss der lernenden Person dafür **nicht zusätzlich zugewiesen** werden (kein Lernplan, keine Kurs-Verknüpfung nötig) — `\core_competency\api::add_evidence()` legt den `user_competency`-Datensatz beim ersten Kompetenznachweis automatisch an.
 
-Dokumentierte Aufbewahrungspflichten (Ausnahmen von der automatischen Löschung) werden auf einer eigenen Seite verwaltet: *Website-Administration ▸ Berufsbildung ▸ Einstellungen und Datenschutz ▸ Aufbewahrungspflichten*, Capability `local/berufsbildung:manageaufbewahrung`.
+Dokumentierte Aufbewahrungspflichten (Ausnahmen von der automatischen Löschung) werden auf einer eigenen Seite verwaltet: *Website-Administration ▸ Berufsbildung ▸ Allgemein ▸ Aufbewahrungspflichten*, Capability `local/berufsbildung:manageaufbewahrung`.
 
 ## Rollen und Zugang
 
@@ -112,11 +112,11 @@ Alle im Systemkontext. Die Verwaltungsseiten hängen unter *Website-Administrati
 
 | Capability | Standardmässig bei | Öffnet |
 |---|---|---|
-| `local/berufsbildung:viewzuordnung` | Manager | *Zuordnungen und Gruppen ▸ Zuordnungen* (Übersicht, ohne zu ändern) |
-| `local/berufsbildung:managezuordnung` | Manager | in der Zuordnungsübersicht die Aktionen Anlegen, Importieren, Beenden, Löschen und Teilnahmeart setzen, dazu *Zuordnungen und Gruppen ▸ Verknüpfungen mit globalen Gruppen* |
+| `local/berufsbildung:viewzuordnung` | Manager | *Lernende und Zuordnungen ▸ Zuordnungen zu Berufsbildner/innen* (Übersicht, ohne zu ändern) |
+| `local/berufsbildung:managezuordnung` | Manager | in der Zuordnungsübersicht die Aktionen Anlegen, Importieren, Beenden, Löschen und Teilnahmeart setzen, dazu *Lernende und Zuordnungen ▸ Verknüpfungen mit globalen Gruppen* |
 | `local/berufsbildung:manageblocks` | Manager, Ausbildungsplanung | *Ausbildungsplanung ▸ Ausbildungsblöcke* samt Kompetenzzuordnung, Kopieren und LK-Übersicht je Beruf, dazu *Kompetenzrahmen je Beruf* |
 | `local/berufsbildung:importplan` | niemand | *Ausbildungsplanung ▸ Versetzungsplan-Import* und der Webservice. Wird gezielt dem Dienstkonto zugewiesen. |
-| `local/berufsbildung:manageaufbewahrung` | Manager | *Einstellungen und Datenschutz ▸ Aufbewahrungspflichten* |
+| `local/berufsbildung:manageaufbewahrung` | Manager | *Allgemein ▸ Aufbewahrungspflichten* |
 
 Die Systemeinstellungen bleiben Sache von `moodle/site:config`.
 

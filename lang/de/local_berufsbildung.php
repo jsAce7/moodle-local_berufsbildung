@@ -24,11 +24,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['admin:lernbegleitung'] = 'Lernbegleitung';
-$string['admin:organisation'] = 'Zuordnungen und Gruppen';
+$string['admin:organisation'] = 'Lernende und Zuordnungen';
 $string['admin:planung'] = 'Ausbildungsplanung';
-$string['admin:system'] = 'Einstellungen und Datenschutz';
+$string['admin:system'] = 'Allgemein';
 $string['admin:uebersicht'] = 'Berufsbildung';
+$string['admin:zuordnungen'] = 'Zuordnungen zu Berufsbildner/innen';
 $string['aufbewahrung:bearbeiten'] = 'Bearbeiten';
 $string['aufbewahrung:gespeichert'] = 'Aufbewahrungspflicht gespeichert.';
 $string['aufbewahrung:grund'] = 'Begründung';
