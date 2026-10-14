@@ -146,8 +146,8 @@ if (empty($eintraege)) {
 
         $wahlpflichtoffen = 0;
         if ($mitraster) {
-            // array_key_exists statt ??=: null heisst "nichts hinterlegt"
-            // und soll nicht je Person neu gelesen werden.
+            // Mit array_key_exists statt ??=: null heisst "nichts
+            // hinterlegt" und soll nicht je Person neu gelesen werden.
             if (!array_key_exists($stand->beruf, $wahlpflicht)) {
                 $wahlpflicht[$stand->beruf] = api::get_wahlpflicht_vorgabe_for_beruf($stand->beruf);
             }
