@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.14.0] — 2026-10-14
+
+### Hinzugefügt
+
+- **Hilfe: Zielgruppe üK-Kursleitungen** (`hilfe\abschnitt::KURSLEITUNG`) für die Anleitungen von `local_uekkn`, die im Moodle-Kurs arbeiten. Sie steht zwischen Berufsbildner/innen und Ausbildungsplanung.
+- **Hilfe: Reihenfolge innerhalb einer Zielgruppe** (`hilfe\abschnitt::$reihenfolge`, optional, Standard 0), damit Lernende die Anleitungen in der Reihenfolge ihres Alltags lesen: Meine Lehre, Lerndokumentation, Bildungsbericht, üK.
+
+### Geändert
+
+- **Hilfe für Lernende in der Du-Form**, wie Lerndokumentation und Bildungsbericht sie ansprechen. Die Grundbegriffe kommen ohne direkte Anrede aus, alle übrigen Anleitungen bleiben beim Sie.
+
 ## [0.13.0] — 2026-10-14
 
 ### Hinzugefügt

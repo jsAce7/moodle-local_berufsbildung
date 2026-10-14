@@ -179,6 +179,7 @@ $string['hilfe:versetzungsplan'] = 'Versetzungsplan und Ausbildungsblöcke';
 $string['hilfe:zielgruppe_administration'] = 'Für die Systemadministration';
 $string['hilfe:zielgruppe_berufsbildner'] = 'Für Berufsbildner/innen';
 $string['hilfe:zielgruppe_grundlagen'] = 'Grundbegriffe';
+$string['hilfe:zielgruppe_kursleitung'] = 'Für üK-Kursleitungen';
 $string['hilfe:zielgruppe_leitung'] = 'Für Leitung und Ausbildungsadministration';
 $string['hilfe:zielgruppe_lernende'] = 'Für Lernende';
 $string['hilfe:zielgruppe_planung'] = 'Ausbildungsplanung';

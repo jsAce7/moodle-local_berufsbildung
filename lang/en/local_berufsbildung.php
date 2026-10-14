@@ -179,6 +179,7 @@ $string['hilfe:versetzungsplan'] = 'Rotation plan and training blocks';
 $string['hilfe:zielgruppe_administration'] = 'For system administrators';
 $string['hilfe:zielgruppe_berufsbildner'] = 'For vocational trainers';
 $string['hilfe:zielgruppe_grundlagen'] = 'Basics';
+$string['hilfe:zielgruppe_kursleitung'] = 'For inter-company course instructors';
 $string['hilfe:zielgruppe_leitung'] = 'For management and training administration';
 $string['hilfe:zielgruppe_lernende'] = 'For apprentices';
 $string['hilfe:zielgruppe_planung'] = 'Training planning';

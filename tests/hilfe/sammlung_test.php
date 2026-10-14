@@ -152,6 +152,24 @@ final class sammlung_test extends \advanced_testcase {
         $this->assertSame(['fremd-leitung'], $je[abschnitt::LEITUNG]);
     }
 
+    public function test_reihenfolge_ordnet_innerhalb_der_zielgruppe(): void {
+        $this->resetAfterTest();
+        $this->setUser($this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_lernende());
+
+        $je = $this->anker(sammlung::je_zielgruppe([
+            new abschnitt(abschnitt::LERNENDE, 'uek', 'üK', 'local_fremd/hilfe/uek', [], 300),
+            new abschnitt(abschnitt::KURSLEITUNG, 'kurs', 'Kurs', 'local_fremd/hilfe/kurs', [], 300),
+            new abschnitt(abschnitt::LERNENDE, 'lerndoku-a', 'A', 'local_fremd/hilfe/a', [], 100),
+            new abschnitt(abschnitt::LERNENDE, 'lerndoku-b', 'B', 'local_fremd/hilfe/b', [], 100),
+        ]));
+
+        $this->assertSame(['berufsbildung-meine-lehre', 'lerndoku-a', 'lerndoku-b', 'uek'], $je[abschnitt::LERNENDE]);
+        $this->assertSame(
+            [abschnitt::GRUNDLAGEN, abschnitt::LERNENDE, abschnitt::KURSLEITUNG],
+            array_keys($je)
+        );
+    }
+
     public function test_doppelter_anker_wird_verworfen(): void {
         $this->resetAfterTest();
         $this->setUser($this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_lernende());

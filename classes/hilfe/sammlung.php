@@ -32,8 +32,8 @@ use local_berufsbildung\hook_callbacks;
 /**
  * Eine Hilfeseite fuer alle Plugins der Berufsbildung: zuerst die Abschnitte
  * dieses Plugins, danach die, die aufsetzende Plugins ueber den Callback
- * <plugin>_berufsbildung_hilfe() melden - je Zielgruppe in einer festen
- * Reihenfolge (abschnitt::ZIELGRUPPEN). Wer etwas nicht oeffnen kann,
+ * <plugin>_berufsbildung_hilfe() melden - die Zielgruppen in fester
+ * Reihenfolge (abschnitt::ZIELGRUPPEN), darin nach abschnitt::$reihenfolge. Wer etwas nicht oeffnen kann,
  * bekommt dessen Anleitung nicht zu sehen; so bleibt die Seite fuer
  * Lernende kurz, und ein deinstalliertes Plugin faellt von selbst weg.
  */
@@ -64,17 +64,27 @@ final class sammlung {
             $je[$einzel->zielgruppe][] = $einzel;
         }
 
+        // Ab PHP 8.0 ist usort stabil: bei gleicher Reihenfolge bleibt die
+        // Folge der Meldung, die eigenen Abschnitte also vorne.
+        foreach ($je as &$abschnitte) {
+            usort($abschnitte, static fn(abschnitt $a, abschnitt $b): int => $a->reihenfolge <=> $b->reihenfolge);
+        }
+        unset($abschnitte);
+
         return array_filter($je);
     }
 
     /**
      * Ob die Hilfeseite fuer die angemeldete Person etwas enthaelt - nur
-     * dann erscheint sie im Benutzermenue.
+     * dann erscheint sie im Benutzermenue. Laeuft auf jeder Seite, deshalb
+     * zuerst die eigenen Abschnitte: Wer welche hat (Lernende,
+     * Berufsbildner/innen, Verwaltung), loest die Callbacks der anderen
+     * Plugins gar nicht erst aus.
      *
      * @return bool
      */
     public static function hat_abschnitte(): bool {
-        return !empty(self::je_zielgruppe());
+        return !empty(self::eigene()) || !empty(self::gemeldete());
     }
 
     /**

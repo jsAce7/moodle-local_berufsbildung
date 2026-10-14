@@ -50,6 +50,9 @@ class abschnitt {
     /** Fuer Berufsbildner/innen. */
     public const BERUFSBILDNER = 'berufsbildner';
 
+    /** Fuer Kursleitungen der ueberbetrieblichen Kurse, im Moodle-Kurs. */
+    public const KURSLEITUNG = 'kursleitung';
+
     /** Ausbildungsplanung: Bloecke, Kompetenzen, Versetzungsplan. */
     public const PLANUNG = 'planung';
 
@@ -64,6 +67,7 @@ class abschnitt {
         self::GRUNDLAGEN,
         self::LERNENDE,
         self::BERUFSBILDNER,
+        self::KURSLEITUNG,
         self::PLANUNG,
         self::LEITUNG,
         self::ADMINISTRATION,
@@ -78,6 +82,9 @@ class abschnitt {
      * @param string $titel Ueberschrift des Abschnitts
      * @param string $template Template mit dem Text, z.B. 'local_bildungsbericht/hilfe/erfassen'
      * @param array $kontext Daten fuer das Template, etwa URLs
+     * @param int $reihenfolge Platz innerhalb der Zielgruppe, kleinere Zahlen
+     *        zuerst, bei Gleichstand in der Reihenfolge der Meldung. Dieses
+     *        Plugin verwendet 0, damit seine Grundlagen vorne stehen.
      */
     public function __construct(
         /** @var string Zielgruppe. */
@@ -90,6 +97,8 @@ class abschnitt {
         public readonly string $template,
         /** @var array Daten fuer das Template. */
         public readonly array $kontext = [],
+        /** @var int Platz innerhalb der Zielgruppe. */
+        public readonly int $reihenfolge = 0,
     ) {
         if (!in_array($zielgruppe, self::ZIELGRUPPEN, true)) {
             throw new \coding_exception('Unbekannte Zielgruppe: ' . $zielgruppe);
