@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0] — 2026-10-18
+
+### Geändert
+
+- **Stabil**: `MATURITY_STABLE`, freigegeben für den Betrieb. Der Funktionsumfang entspricht 0.14.2; das GitHub-Release erscheint nicht mehr als Vorabversion.
+- **Enthält 0.14.2**: Deren Release-Lauf scheiterte am Test des Benutzermenüs unter Moodle 5.3, ein GitHub-Release für 0.14.2 gibt es deshalb nicht. Der Test holt den Renderer jetzt über `$PAGE->get_renderer('core')`, weil `$OUTPUT` in PHPUnit nur der `bootstrap_renderer` ist und `user_action_menu\link::export_for_template()` ab 5.3 einen `renderer_base` verlangt.
+
 ## [0.14.2] — 2026-10-17
 
 ### Geändert
