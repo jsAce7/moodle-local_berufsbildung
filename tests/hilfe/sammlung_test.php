@@ -292,7 +292,7 @@ final class sammlung_test extends \advanced_testcase {
      * @return string[]
      */
     private function benutzermenue(): array {
-        global $OUTPUT;
+        global $PAGE;
 
         $hook = new extend_user_menu();
         hook_callbacks::extend_user_menu($hook);
@@ -304,9 +304,12 @@ final class sammlung_test extends \advanced_testcase {
             }, $hook->get_navitems());
         }
 
-        return array_map(function ($eintrag) use ($OUTPUT): string {
+        // In PHPUnit ist $OUTPUT nur der bootstrap_renderer, export_for_template()
+        // verlangt aber einen echten Renderer.
+        $output = $PAGE->get_renderer('core');
+        return array_map(function ($eintrag) use ($output): string {
             $this->assertInstanceOf(\core_user\output\user_action_menu\link::class, $eintrag);
-            return $eintrag->export_for_template($OUTPUT)['url'];
+            return $eintrag->export_for_template($output)['url'];
         }, $hook->get_menu_items());
     }
 }
