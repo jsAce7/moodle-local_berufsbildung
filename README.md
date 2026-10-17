@@ -39,7 +39,7 @@ Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentati
 
 **Voraussetzungen**
 
-- Moodle 4.5 LTS bis 5.2 (PHP 8.1 bis 8.4). `version.php` verlangt mindestens Moodle 4.5 (`2024100700`); die CI prüft Moodle 4.5 mit PHP 8.1 und Moodle 5.2 mit PHP 8.4.
+- Moodle 4.5 LTS bis 5.3 LTS (PHP 8.1 bis 8.4). `version.php` verlangt mindestens Moodle 4.5 (`2024100700`); die CI prüft Moodle 4.5 mit PHP 8.1 und Moodle 5.3 mit PHP 8.4.
 - MariaDB (Produktivsystem). PostgreSQL wird in der CI mitgetestet.
 - Keine anderen Plugins (`$plugin->dependencies` ist leer). Für Kompetenzraster, Lückenanalyse und die Kompetenzabdeckung der Blöcke müssen die Kompetenzen von Moodle aktiviert und ein Kompetenzrahmen vorhanden sein. Für den automatischen Versetzungsplan-Import braucht es Webservices mit REST.
 
@@ -245,7 +245,7 @@ Aus der Entwicklungsumgebung `~/moodle-dev/`:
 ./scripts/lint.sh local/berufsbildung    # phpcs (moodle-cs)
 ```
 
-Es gibt 435 PHPUnit-Tests in 43 Dateien. Behat deckt mit 15 Szenarien Zuordnungen, die Kompetenzauswahl und das Kopieren von Blöcken, die LK-Übersicht, das Kompetenzraster auf „Meine Lehre“ und „Meine Lernenden“ ab, nicht jede Seite. Die CI ([.github/workflows/ci.yml](.github/workflows/ci.yml), `moodle-plugin-ci`) läuft bei jedem Push und Pull Request auf GitHub Actions, mit Moodle 4.5 / PHP 8.1 / PostgreSQL und Moodle 5.2 / PHP 8.4 / MariaDB; Moodle 5.0 und 5.1 laufen nicht eigens mit.
+Es gibt 435 PHPUnit-Tests in 43 Dateien. Behat deckt mit 15 Szenarien Zuordnungen, die Kompetenzauswahl und das Kopieren von Blöcken, die LK-Übersicht, das Kompetenzraster auf „Meine Lehre“ und „Meine Lernenden“ ab, nicht jede Seite. Die CI ([.github/workflows/ci.yml](.github/workflows/ci.yml), `moodle-plugin-ci`) läuft bei jedem Push und Pull Request auf GitHub Actions, mit Moodle 4.5 / PHP 8.1 / PostgreSQL und Moodle 5.3 / PHP 8.4 / MariaDB; Moodle 5.0 bis 5.2 laufen nicht eigens mit.
 
 **JavaScript** liegt als AMD-Modul in `amd/src`, das gebaute `amd/build` gehört mit ins Repository. Nach einer Änderung neu bauen. Weil das Plugin ausserhalb des Moodle-Baums liegt und dort nur im Container eingehängt ist, wird es für Grunt vorübergehend eingebunden (Node und `node_modules` im Moodle-Verzeichnis vorausgesetzt):
 

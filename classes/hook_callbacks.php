@@ -148,10 +148,20 @@ class hook_callbacks {
             return;
         }
 
+        $url = new moodle_url('/local/berufsbildung/hilfe.php');
+        $titel = get_string('hilfe:titel', 'local_berufsbildung');
+
+        // Ab Moodle 5.3 nimmt der Hook Menueobjekte entgegen, add_navitem()
+        // meldet dort eine Deprecation. Moodle 4.5 bis 5.2 kennen nur add_navitem().
+        if (method_exists($hook, 'add_menu_item')) {
+            $hook->add_menu_item(new \core_user\output\user_action_menu\link($url, $titel));
+            return;
+        }
+
         $hook->add_navitem((object) [
             'itemtype' => 'link',
-            'url' => new moodle_url('/local/berufsbildung/hilfe.php'),
-            'title' => get_string('hilfe:titel', 'local_berufsbildung'),
+            'url' => $url,
+            'title' => $titel,
             'titleidentifier' => 'hilfe:titel,local_berufsbildung',
         ]);
     }

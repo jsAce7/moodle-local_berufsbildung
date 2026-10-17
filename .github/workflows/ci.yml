@@ -17,13 +17,15 @@ jobs:
             moodle-branch: 'MOODLE_405_STABLE'
             database: 'pgsql'
           - php: '8.4'
-            moodle-branch: 'MOODLE_502_STABLE'
+            moodle-branch: 'MOODLE_503_STABLE'
             database: 'mariadb'
 
     services:
+      # Moodle 5.3 verlangt mindestens PostgreSQL 17 und MariaDB 11.4,
+      # beide decken auch Moodle 4.5 ab. Ab MariaDB 11 fehlt mysqladmin im
+      # Image, der Healthcheck laeuft deshalb ueber healthcheck.sh.
       postgres:
-        # Moodle 5.1 verlangt mindestens PostgreSQL 15; 16 deckt 4.5 bis 5.2 ab.
-        image: postgres:16
+        image: postgres:17
         env:
           POSTGRES_USER: 'postgres'
           POSTGRES_HOST_AUTH_METHOD: 'trust'
@@ -31,13 +33,13 @@ jobs:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 3
       mariadb:
-        image: mariadb:10.11
+        image: mariadb:11.4
         env:
           MYSQL_USER: 'root'
           MYSQL_ALLOW_EMPTY_PASSWORD: "true"
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval 10s --health-timeout 5s --health-retries 3
+        options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval 10s --health-timeout 5s --health-retries 3
 
     steps:
       - name: Checkout

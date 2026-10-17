@@ -12,8 +12,8 @@ Aufsetzende Plugins: `local_lerndokumentation`, `local_bildungsbericht` und `loc
 
 ## Zielumgebung
 
-- Moodle 4.5 LTS bis 5.2, vorbereitet auf 5.3 LTS
-- PHP 8.1 (4.5) bis 8.4 (5.2)
+- Moodle 4.5 LTS bis 5.3 LTS
+- PHP 8.1 (4.5) bis 8.4 (5.3)
 - Datenbank: MariaDB (Produktivsystem), PostgreSQL in CI mitgetestet
 - Sprache der Oberfläche: Deutsch (Schweiz). `lang/en` ist Pflicht, `lang/de` ist die real genutzte Fassung.
 

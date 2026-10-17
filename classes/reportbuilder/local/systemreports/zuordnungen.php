@@ -113,7 +113,8 @@ class zuordnungen extends system_report {
         // Berechnet ueber api::get_ausbildungsstand(), nicht ueber SQL - die
         // Semesterberechnung (inkl. Lehrdauer je Beruf) lebt bewusst nur an
         // dieser einen Stelle, keine zweite Implementierung in einem
-        // Filterausdruck. Deshalb informativ, nicht filterbar.
+        // Filterausdruck. Deshalb informativ, nicht filterbar und nicht
+        // sortierbar (ab Moodle 5.3 sind Spalten ohne Angabe sortierbar).
         $this->add_column((new column(
             'lehrjahr',
             new lang_string('zuordnung:lehrjahr', 'local_berufsbildung'),
@@ -121,6 +122,7 @@ class zuordnungen extends system_report {
         ))
             ->add_fields("{$this->get_entity('zuordnung')->get_table_alias('local_berufsbildung_zuordnung')}.lernendeid")
             ->set_type(column::TYPE_TEXT)
+            ->set_is_sortable(false)
             ->add_callback(static function ($unused, stdClass $row): string {
                 $stand = api::get_ausbildungsstand((int) $row->lernendeid);
 
@@ -136,6 +138,7 @@ class zuordnungen extends system_report {
         ))
             ->add_fields("{$this->get_entity('zuordnung')->get_table_alias('local_berufsbildung_zuordnung')}.lernendeid")
             ->set_type(column::TYPE_TEXT)
+            ->set_is_sortable(false)
             ->add_callback(static function ($unused, stdClass $row): string {
                 return get_string(
                     api::ist_uek_extern((int) $row->lernendeid) ? 'teilnahmeart:uek_extern' : 'teilnahmeart:lehre',

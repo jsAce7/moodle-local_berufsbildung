@@ -269,14 +269,10 @@ final class sammlung_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         $this->setUser($this->getDataGenerator()->create_user());
-        $hook = new extend_user_menu();
-        hook_callbacks::extend_user_menu($hook);
-        $ohne = $hook->get_navitems();
+        $ohne = $this->benutzermenue();
 
         $this->setUser($this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_lernende());
-        $hook = new extend_user_menu();
-        hook_callbacks::extend_user_menu($hook);
-        $mit = $hook->get_navitems();
+        $mit = $this->benutzermenue();
 
         // Ohne Lehre und Lernende koennen nur aufsetzende Plugins etwas
         // melden - in der CI dieses Plugins keines.
@@ -284,7 +280,33 @@ final class sammlung_test extends \advanced_testcase {
             $this->assertSame([], $ohne);
         }
         $this->assertCount(1, $mit);
-        $this->assertSame('link', $mit[0]->itemtype);
-        $this->assertStringContainsString('/local/berufsbildung/hilfe.php', $mit[0]->url->out(false));
+        $this->assertStringContainsString('/local/berufsbildung/hilfe.php', $mit[0]);
+    }
+
+    /**
+     * Fuehrt den Hook fuer das Benutzermenue aus und gibt die URLs der Links zurueck.
+     *
+     * Ab Moodle 5.3 liefert der Hook Menueobjekte ueber get_menu_items(),
+     * davor stdClass-Eintraege ueber get_navitems().
+     *
+     * @return string[]
+     */
+    private function benutzermenue(): array {
+        global $OUTPUT;
+
+        $hook = new extend_user_menu();
+        hook_callbacks::extend_user_menu($hook);
+
+        if (!method_exists($hook, 'get_menu_items')) {
+            return array_map(function (\stdClass $eintrag): string {
+                $this->assertSame('link', $eintrag->itemtype);
+                return $eintrag->url->out(false);
+            }, $hook->get_navitems());
+        }
+
+        return array_map(function ($eintrag) use ($OUTPUT): string {
+            $this->assertInstanceOf(\core_user\output\user_action_menu\link::class, $eintrag);
+            return $eintrag->export_for_template($OUTPUT)['url'];
+        }, $hook->get_menu_items());
     }
 }

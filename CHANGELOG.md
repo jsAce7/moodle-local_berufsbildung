@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.14.2] — 2026-10-17
+
+### Geändert
+
+- **Moodle 5.3 LTS unterstützt**: `$plugin->supported = [405, 503]`.
+- **CI**: Der Test gegen Moodle 5.2 läuft neu gegen Moodle 5.3 (PHP 8.4, MariaDB). Die Datenbank-Services stehen auf PostgreSQL 17 und MariaDB 11.4, den Mindestversionen von Moodle 5.3; der Healthcheck von MariaDB läuft über `healthcheck.sh`, weil das Image ab MariaDB 11 kein `mysqladmin` mehr enthält.
+
+### Behoben
+
+- **Benutzermenü unter Moodle 5.3**: Der Eintrag *Hilfe zur Berufsbildung* entsteht dort über `add_menu_item()` mit `core_user\output\user_action_menu\link`. `add_navitem()` ist ab 5.3 veraltet und meldete eine Deprecation. Moodle 4.5 bis 5.2 nutzen weiter `add_navitem()`.
+- **Zuordnungen (Report)**: Die berechneten Spalten *Lehrjahr* und *Teilnahmeart* sind ausdrücklich nicht sortierbar. Ab Moodle 5.3 sind Spalten ohne Angabe sortierbar, sie hätten sich dort nach der internen ID der lernenden Person sortiert.
+- **`cli/testdaten.php`** legt Personen unter Moodle 5.3 über `\core\user::create_user()` an, weil `user_create_user()` dort veraltet ist.
+
 ## [0.14.1] — 2026-10-14
 
 ### Hinzugefügt

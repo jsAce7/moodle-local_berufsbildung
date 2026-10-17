@@ -120,7 +120,10 @@ function local_berufsbildung_testdaten_nutzer(string $username, string $vorname,
     $user->mnethostid = $CFG->mnet_localhost_id;
     $user->lang = 'de';
 
-    $userid = user_create_user($user, true, false);
+    // Ab Moodle 5.3 ist user_create_user() veraltet.
+    $userid = method_exists(\core\user::class, 'create_user')
+        ? \core\user::create_user($user, true, false)
+        : user_create_user($user, true, false);
     cli_writeln("angelegt:  $username (id $userid)");
 
     return $DB->get_record('user', ['id' => $userid], '*', MUST_EXIST);
