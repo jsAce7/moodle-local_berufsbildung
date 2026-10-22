@@ -112,7 +112,7 @@ if (empty($eintraege)) {
             $zeile = (object) [
                 'bezeichnung' => $faelligkeit->bezeichnung,
                 'datum' => userdate($faelligkeit->datum, $datumsformat),
-                'ueberfaellig' => $faelligkeit->datum < time(),
+                'ueberfaellig' => $faelligkeit->ist_ueberfaellig(),
                 'url' => $faelligkeit->url,
             ];
             $faelligkeitenjelernende[$lernendeid][] = $zeile;

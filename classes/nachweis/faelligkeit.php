@@ -74,4 +74,35 @@ final class faelligkeit {
         $this->fuer_lernende = $fuer_lernende;
     }
     // phpcs:enable moodle.NamingConventions.ValidVariableName.VariableNameUnderscore
+
+    /**
+     * Whether the deadline has passed. The due day itself still counts as
+     * within the deadline, see ueberfaellig_ab().
+     *
+     * @param int|null $jetzt Timestamp, null for now
+     * @return bool
+     */
+    public function ist_ueberfaellig(?int $jetzt = null): bool {
+        return ($jetzt ?? time()) >= self::ueberfaellig_ab($this->datum);
+    }
+
+    /**
+     * When a deadline becomes overdue: at the start of the day after it.
+     * A deadline at midnight (a date without time) would otherwise be
+     * overdue for its whole due day. Calculated in the server's time zone,
+     * so pages and scheduled tasks agree on the day for everyone. A
+     * deadline at the last second of a day becomes overdue one second
+     * later, as before.
+     *
+     * @param int $datum Deadline timestamp
+     * @return int Timestamp
+     */
+    public static function ueberfaellig_ab(int $datum): int {
+        $tag = new \DateTime('@' . $datum);
+        $tag->setTimezone(\core_date::get_server_timezone_object());
+        $tag->setTime(0, 0);
+        $tag->modify('+1 day');
+
+        return $tag->getTimestamp();
+    }
 }

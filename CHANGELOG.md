@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.0.1] — 2026-10-22
+
+### Hinzugefügt
+
+- **`nachweis\faelligkeit::ist_ueberfaellig()` und `::ueberfaellig_ab()`**: eine gemeinsame Regel, ab wann eine Frist überschritten ist, für dieses Plugin und die aufsetzenden. Bildungsbericht und Lerndokumentation brauchen sie beide.
+
+### Geändert
+
+- **Überfällig erst ab dem Tag nach der Frist**, in „Meine Lernenden“ und „Meine Lehre“. Eine Frist auf Mitternacht (ein Datum ohne Uhrzeit, etwa die Frist für den nächsten Lerndoku-Eintrag) galt bisher schon am Fälligkeitstag selbst als überfällig, eine Frist mitten am Tag ab dieser Uhrzeit. Der Fälligkeitstag zählt jetzt ganz zur Frist, in der Zeitzone des Servers. Semesterenden (letzte Sekunde des Tages) verhalten sich wie bisher.
+
 ## [1.0.0] — 2026-10-18
 
 ### Geändert
