@@ -31,12 +31,20 @@ use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
+use local_berufsbildung\nachweis\collector;
+use local_berufsbildung\nachweis\collector_test_faelligkeiten_provider;
+use local_berufsbildung\nachweis\faelligkeit;
 use local_berufsbildung\persistent\aufbewahrung;
 use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\einsatz;
 use local_berufsbildung\persistent\kohorten_link;
 use local_berufsbildung\persistent\plan_import;
 use local_berufsbildung\persistent\zuordnung;
+use local_berufsbildung\service\termin_service;
+
+defined('MOODLE_INTERNAL') || die();
+
+require_once(__DIR__ . '/../fixtures/collector_test_faelligkeiten_provider.php');
 
 #[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\privacy\provider::class)]
 /**
@@ -321,6 +329,36 @@ final class provider_test extends \core_privacy\tests\provider_testcase {
         provider::delete_data_for_user($this->loeschanfrage_fuer($lernende));
 
         $this->assertCount(0, zuordnung::get_records(['lernendeid' => (int) $lernende->id]));
+    }
+
+    /**
+     * Die Kalendertermine zu den Faelligkeiten einer lernenden Person stehen
+     * in ihrem Export, auch der im Kalender der zustaendigen Person, und
+     * verschwinden mit ihren Zuordnungen - sie tragen ihren Namen.
+     */
+    public function test_termine_stehen_im_export_und_verschwinden_mit_dem_account(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_zuordnung([
+            'berufsbildnerid' => (int) $berufsbildner->id,
+            'lernendeid' => (int) $lernende->id,
+        ]);
+        $quelle = new collector_test_faelligkeiten_provider();
+        $quelle->faelligkeiten = [new faelligkeit('test', 'Bericht schreiben', time() + WEEKSECS, 'https://example.org/b')];
+        (new termin_service(new collector([$quelle])))->nachfuehren((int) $lernende->id);
+
+        $this->export_all_data_for_user((int) $lernende->id, 'local_berufsbildung');
+        $writer = writer::with_context(context_user::instance((int) $lernende->id));
+        $termine = $writer->get_data([get_string('privacy:pfad_termine', 'local_berufsbildung')])->termine;
+        $this->assertCount(2, $termine);
+
+        delete_user($lernende);
+        provider::delete_data_for_user($this->loeschanfrage_fuer($lernende));
+
+        $this->assertFalse($DB->record_exists('event', ['component' => termin_service::KOMPONENTE]));
     }
 
     /**

@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.0] — 2026-10-26
+
+### Hinzugefügt
+
+- **Fälligkeiten im Kalender**: Was Bildungsbericht, Lerndokumentation und weitere Quellen als Fälligkeit melden (`nachweis\quelle_mit_faelligkeiten`), steht jetzt auch als Termin im Moodle-Kalender und als Aufgabe in der Zeitleiste des Dashboards, am Ende des Fälligkeitstags (23:59). Anders als die Übersichtsseiten zeigt der Kalender jeder Person nur ihre eigenen Aufgaben: den zuständigen Personen, Haupt- und Stellvertretung, etwa den Bericht ihrer Lernenden mit deren Namen im Titel, den Lernenden etwa ihre Rückmeldung.
+- **`nachweis\faelligkeit`: `$aufgabe` und `$kalenderdatum`** (optional, am Ende des Konstruktors). `$aufgabe` (`AUFGABE_LERNENDE`, `AUFGABE_ZUSTAENDIGE`) sagt, wessen Aufgabe eine Fälligkeit ist, und entscheidet, in wessen Kalender sie steht (`im_kalender_von()`); ohne Angabe sehen sie alle, die sie auf den Übersichtsseiten sehen. `$kalenderdatum` setzt ein vom Fälligkeitsdatum abweichendes Datum für den Kalender, etwa das Probezeitende (`kalenderzeitpunkt()`). Bestehende Quellen funktionieren unverändert.
+- **`service\termin_service`** gleicht die Termine ab: legt fehlende an, verschiebt geänderte und entfernt erledigte, solche ohne Zuständigkeit und, wenn die Anbindung ausgeschaltet ist, alle. Ein Termin trägt den Schlüssel seiner Fälligkeit (Quelle und Bezeichnung), nicht ihre Adresse. „Öffnen“ führt über `termin.php`, das die Adresse beim Klick über die Quelle auflöst, so trifft ein Termin auch nach dem Anlegen eines Berichts die richtige Seite. Eine inzwischen erledigte Fälligkeit führt auf „Meine Lernenden“ bzw. „Meine Lehre“.
+- **`task\sync_termine`** (stündlich) und **`api::termine_nachfuehren()`** für das sofortige Nachführen nach einer Handlung in einer Quelle. Ein Fehler dabei lässt die Handlung nie scheitern.
+- **Einstellung *Fälligkeiten im Kalender*** (`kalender_termine`, Standard an).
+- **Datenschutz**: Die Termine zu den Fälligkeiten einer lernenden Person stehen in ihrem Export und verschwinden mit ihren Zuordnungen (`zuordnung_retention_service::loesche_fuer_lernende()`), direkt aus der Tabelle, damit ihr Name nicht im Protokoll landet. Bei der Deinstallation werden alle Termine entfernt.
+
 ## [1.0.1] — 2026-10-22
 
 ### Hinzugefügt

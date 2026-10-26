@@ -92,6 +92,9 @@ class zuordnung_retention_service {
         foreach (teilnahmeprofil::get_records(['userid' => $lernendeid]) as $profil) {
             $profil->delete();
         }
+        // Die Kalendertermine zu ihren Faelligkeiten tragen ihren Namen, auch
+        // in den Kalendern der zustaendigen Personen.
+        (new termin_service())->loesche_fuer($lernendeid);
 
         // War das die letzte laufende Zuordnung einer betreuenden Person,
         // faellt damit auch ihr systemweiter Zugang zur Blockverwaltung weg -

@@ -194,6 +194,15 @@ if ($hassiteconfig) {
         PARAM_INT
     ));
 
+    // Ausgeschaltet entfernt der naechste Lauf von task\sync_termine alle
+    // Termine wieder, siehe service\termin_service.
+    $settings->add(new admin_setting_configcheckbox(
+        'local_berufsbildung/kalender_termine',
+        new lang_string('settings:kalender_termine', 'local_berufsbildung'),
+        new lang_string('settings:kalender_termine_desc', 'local_berufsbildung'),
+        1
+    ));
+
     // Ein Erscheinungsbild fuer alle PDF-Dokumente der Berufsbildung
     // (üK-Kompetenznachweise, Bildungsberichte), siehe pdf\gestaltung.
     $settings->add(new admin_setting_heading(

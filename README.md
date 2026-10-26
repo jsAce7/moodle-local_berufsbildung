@@ -31,6 +31,7 @@ Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentati
 - **Ausbildungsblöcke und ihre Kompetenzen**: Die Blockverwaltung zeigt je Beruf eine Tabelle. Je Block wird festgelegt, welche Handlungskompetenzen (HK) oder Leistungskriterien (LK) dort vermittelt werden; ein Block lässt sich samt dieser Zuordnung kopieren. Die LK-Übersicht je Beruf zeigt alle LK des Rahmens mit den Blöcken, in denen sie vorkommen, und filtert auf die LK, die noch in keinem Block sind. Oberhalb der Blöcke meldet eine Einrichtungsprüfung je Beruf, was dem Kompetenzraster fehlt: kein Rahmen, keine Blöcke, keine Kompetenzen in aktiven betrieblichen Blöcken oder Wahlpflicht ohne verlangte Anzahl.
 - **Kompetenzraster**: Ist dem Beruf ein Kompetenzrahmen zugeordnet, zeigt das Raster alle Handlungskompetenzen wie im Bildungsplan, jede mit einem von vier Ständen: vollständig (alle LK kamen bis zum Stichtag vor), teilweise, im Plan später eingeplant oder nicht im Plan (`api::get_kompetenzraster()`). Je Zelle öffnet ein Dialog die LK, gruppiert nach „fehlt noch“, „später eingeplant“ und „bereits vorgekommen“, mit Block und Kalenderwochen der Einsätze. Bei fehlenden LK nennt er die Blöcke, in denen sie vorkämen (`api::get_bloecke_je_kompetenz()`). Pflicht und Wahlpflicht stehen als Streifen in den Farben des Bildungsplans; für die Wahlpflicht zeigt das Raster je Gruppe von Bereichen, wie viele HK verlangt und wie viele vollständig sind. Die offenen Pflicht-HK je Bereich liefert `api::get_luecken_nach_bereich()` für aufsetzende Plugins.
 - **Nachweis-Sammlung**: aufsetzende Plugins registrieren sich als Nachweisquelle; „Meine Lernenden" (Berufsbildner/in) und „Meine Lehre" (Lernende) zeigen die eingesammelten Tätigkeiten über Plugin-Grenzen hinweg, gruppiert nach Quelle und mit dem Semester in jeder Zeile. Dazu kommen, was eine Quelle meldet: Fälligkeiten, noch Ausstehendes, Erfassen-Aktionen und Schnellaktionen.
+- **Fälligkeiten im Kalender**: Was die Quellen als Fälligkeit melden, steht auch als Termin im Moodle-Kalender und als Aufgabe in der Zeitleiste des Dashboards, am Ende des Fälligkeitstags. Jede Person sieht dort nur ihre eigenen Aufgaben (`faelligkeit::$aufgabe`): die zuständigen Personen etwa den Bericht ihrer Lernenden mit deren Namen im Titel, die Lernenden etwa ihre Rückmeldung. Ein abweichendes Datum für den Kalender setzt eine Quelle mit `faelligkeit::$kalenderdatum`. Die Termine sind eine Kopie, die stündlich (`task\sync_termine`) und sofort nach einer Handlung in einer Quelle (`api::termine_nachfuehren()`) nachgeführt wird. „Öffnen“ löst die Zieladresse erst beim Klick über die Quelle auf (`termin.php`). Abschaltbar unter *Einstellungen ▸ Fälligkeiten im Kalender*; der nächste Lauf entfernt dann alle Termine.
 - **Übersicht für Berufsbildner/innen**: „Meine Lernenden" zeigt je betreute Person eine Zeile mit Semesterleiste, laufendem Ausbildungsblock und überfälligen Aufgaben, durchsuchbar nach Namen und filterbar nach Beruf. Badges nennen die offenen Pflicht- und Wahlpflicht-Handlungskompetenzen. Aufgeklappt stehen Kompetenzraster und Tätigkeiten.
 - **Eigene Übersicht für Lernende**: „Meine Lehre" zeigt Semesterstand, den laufenden Einsatz aus dem Versetzungsplan, die eigenen Fälligkeiten, das Kompetenzraster, den Versetzungsplan nach Semestern und die eigenen Tätigkeiten. Die Seite trägt die vier Phasen der Ausbildung (`api::get_ausbildungsphase()`): Profil unvollständig, Lehre beginnt erst, laufend, abgeschlossen — nach dem Lehrabschluss wird sie zum Rückblick, statt leer zu werden.
 - **PDF-Grundlage**: `local_berufsbildung\pdf` liefert Schrift, Logo, Akzentfarbe, Laufkopf, Fusszeile und Zeichenbausteine für die PDFs von `local_uekkn`, `local_bildungsbericht` und `local_lerndokumentation`, damit alle Dokumente gleich aussehen.
@@ -181,12 +182,13 @@ Wie bei den Menüpunkten liefert das Plugin nur, was die angemeldete Person öff
 
 ## Geplante Aufgaben
 
-Drei geplante Aufgaben (*Website-Administration ▸ Server ▸ Geplante Aufgaben*):
+Vier geplante Aufgaben (*Website-Administration ▸ Server ▸ Geplante Aufgaben*):
 
 | Task | Wann | Was |
 |---|---|---|
 | `task\sync_kohorten` | stündlich, Minute zufällig | gleicht die Verknüpfungen mit globalen Gruppen ab: neue Mitglieder erhalten eine Zuordnung, die Zuordnung ausgeschiedener Mitglieder wird beendet, nie gelöscht |
 | `task\sync_role_assignments` | stündlich, Minute zufällig | gleicht die Rollen *Berufsbildner/in* und *Ausbildungsplanung* mit den Zuordnungen ab |
+| `task\sync_termine` | stündlich, Minute zufällig | gleicht die Fälligkeiten aller Quellen mit den Terminen im Moodle-Kalender ab |
 | `task\zuordnung_retention` | sonntags 03:30 | löscht Zuordnungen nach Ablauf der Aufbewahrungsfrist |
 
 ## Öffentliche API
@@ -218,6 +220,7 @@ api::ist_ausbildung_beendet(int $lernendeid, ?int $stichtag = null): bool
 api::hat_aufbewahrungspflicht(int $lernendeid, ?int $stichtag = null): bool
 api::darf_personendaten_geloescht_werden(int $lernendeid, ?int $stichtag = null): bool
 api::aufbewahrungsfrist_abgelaufen(int $lernendeid, ?int $stichtag = null): bool
+api::termine_nachfuehren(int $lernendeid): void
 ```
 
 Alle Stichtag-Parameter akzeptieren `null` für "jetzt" — nie stillschweigend annehmen. Die vollständige Liste mit Beschreibungen steht in [classes/api.php](classes/api.php).
@@ -226,7 +229,7 @@ Alle Stichtag-Parameter akzeptieren `null` für "jetzt" — nie stillschweigend 
 
 ## Datenschutz und Aufbewahrung
 
-[classes/privacy/provider.php](classes/privacy/provider.php) implementiert Moodles Datenschutz-API für Export und Löschung. Erfasst sind Zuordnungen (als lernende Person und als Berufsbildner/in), Verknüpfungen mit globalen Gruppen, Einsätze aus dem Versetzungsplan, ausgeführte Versetzungsplan-Importe, dokumentierte Aufbewahrungspflichten und die Teilnahmeart, dazu für Verwaltende, welche Ausbildungsblöcke und Kompetenzzuordnungen sie zuletzt geändert haben.
+[classes/privacy/provider.php](classes/privacy/provider.php) implementiert Moodles Datenschutz-API für Export und Löschung. Erfasst sind Zuordnungen (als lernende Person und als Berufsbildner/in), Verknüpfungen mit globalen Gruppen, Einsätze aus dem Versetzungsplan, ausgeführte Versetzungsplan-Importe, dokumentierte Aufbewahrungspflichten und die Teilnahmeart, dazu für Verwaltende, welche Ausbildungsblöcke und Kompetenzzuordnungen sie zuletzt geändert haben. Die Kalendertermine zu den Fälligkeiten einer lernenden Person stehen in ihrem Export, auch die in fremden Kalendern, und verschwinden mit ihren Zuordnungen.
 
 Einsatz gilt als offizieller Ausbildungsnachweis und wird bei einer Löschanfrage **nicht** gelöscht (Architekturregel 5), ebenso wenig die Verknüpfungen mit globalen Gruppen — nur der ausführende Account eines Versetzungsplan-Imports und die bearbeitende Person eines Ausbildungsblocks werden anonymisiert.
 

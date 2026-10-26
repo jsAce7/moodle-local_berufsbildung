@@ -971,4 +971,26 @@ class api {
     public static function get_block_kurs(int $blockid): ?\stdClass {
         return (new \local_berufsbildung\service\block_kurs_service())->get_kurs($blockid);
     }
+
+    /**
+     * Fuehrt die Kalendertermine einer lernenden Person sofort nach, in
+     * ihrem Kalender und in denen der zustaendigen Personen. Fuer
+     * aufsetzende Plugins nach einer Handlung, die ihre Faelligkeiten
+     * aendert (Bericht freigegeben, Periode eingereicht ...), und erst nach
+     * dem Commit ihrer Transaktion. Ohne Aufruf holt task\sync_termine die
+     * Aenderung beim naechsten stuendlichen Lauf nach.
+     *
+     * Ein Fehler beim Nachfuehren laesst die Handlung nie scheitern: Der
+     * Kalender ist nur eine Kopie der Faelligkeiten, der naechste Lauf
+     * gleicht ihn ohnehin ab.
+     *
+     * @param int $lernendeid
+     */
+    public static function termine_nachfuehren(int $lernendeid): void {
+        try {
+            (new \local_berufsbildung\service\termin_service())->nachfuehren($lernendeid);
+        } catch (\Throwable $e) {
+            debugging('local_berufsbildung: Termine von ' . $lernendeid . ' nicht nachgefuehrt: ' . $e->getMessage());
+        }
+    }
 }

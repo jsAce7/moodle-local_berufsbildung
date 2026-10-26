@@ -1,0 +1,76 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Test-Provider mit Faelligkeiten.
+ *
+ * @package    local_berufsbildung
+ * @copyright  2026 jsAce7
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+declare(strict_types=1);
+
+namespace local_berufsbildung\nachweis;
+
+/**
+ * Test-Provider, dessen Faelligkeiten sich zwischen zwei Abgleichen
+ * aendern lassen - so wird sichtbar, ob der Kalender nachzieht.
+ */
+final class collector_test_faelligkeiten_provider implements provider, quelle_mit_faelligkeiten {
+    /** @var faelligkeit[] Faelligkeiten, die dieser Provider liefert. */
+    public array $faelligkeiten = [];
+
+    /**
+     * Keine Nachweise.
+     *
+     * @param int $lernendeid
+     * @param int $von
+     * @param int $bis
+     * @return array
+     */
+    public function get_nachweise(int $lernendeid, int $von, int $bis): array {
+        return [];
+    }
+
+    /**
+     * Liefert die vorgegebenen Faelligkeiten.
+     *
+     * @param int $lernendeid
+     * @return faelligkeit[]
+     */
+    public function get_faelligkeiten(int $lernendeid): array {
+        return $this->faelligkeiten;
+    }
+
+    /**
+     * Anzeigename der Quelle.
+     *
+     * @return string
+     */
+    public function get_quelle_name(): string {
+        return 'Test-Quelle';
+    }
+
+    /**
+     * Schluessel der Quelle.
+     *
+     * @return string
+     */
+    public function get_quelle_key(): string {
+        return 'test';
+    }
+}

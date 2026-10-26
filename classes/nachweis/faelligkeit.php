@@ -30,6 +30,11 @@ namespace local_berufsbildung\nachweis;
  * A source-independent due item.
  */
 final class faelligkeit {
+    /** @var string The learner's own task, e.g. submitting or giving feedback. */
+    public const AUFGABE_LERNENDE = 'lernende';
+    /** @var string A task of the supervising person, e.g. writing a report or reviewing. */
+    public const AUFGABE_ZUSTAENDIGE = 'zustaendige';
+
     /** @var string Stable source key. */
     public readonly string $quellekey;
     /** @var string Description for a supervising person. */
@@ -45,6 +50,15 @@ final class faelligkeit {
     /** @var bool Whether the learner sees this item among their own due dates. */
     public readonly bool $fuer_lernende;
     // phpcs:enable moodle.NamingConventions.ValidVariableName.MemberNameUnderscore
+    /**
+     * @var string|null Whose task this is (AUFGABE_*), null if the source does
+     *                  not say. Decides whose calendar shows it, see
+     *                  service\termin_service: the overview pages show every
+     *                  due item, the calendar only one's own tasks.
+     */
+    public readonly ?string $aufgabe;
+    /** @var int|null Date for the calendar if it differs from the deadline, e.g. the end of probation. */
+    public readonly ?int $kalenderdatum;
 
     // Preserve the public constructor parameter name for named arguments.
     // phpcs:disable moodle.NamingConventions.ValidVariableName.VariableNameUnderscore
@@ -57,6 +71,8 @@ final class faelligkeit {
      * @param string $url Destination for the action
      * @param string|null $eigene_bezeichnung Optional description for the learner
      * @param bool $fuer_lernende False for tasks of the supervising person only
+     * @param string|null $aufgabe Whose task this is (AUFGABE_*), null if unspecified
+     * @param int|null $kalenderdatum Date for the calendar, null for the deadline
      */
     public function __construct(
         string $quellekey,
@@ -64,14 +80,50 @@ final class faelligkeit {
         int $datum,
         string $url,
         ?string $eigene_bezeichnung = null,
-        bool $fuer_lernende = true
+        bool $fuer_lernende = true,
+        ?string $aufgabe = null,
+        ?int $kalenderdatum = null
     ) {
+        if ($aufgabe !== null && !in_array($aufgabe, [self::AUFGABE_LERNENDE, self::AUFGABE_ZUSTAENDIGE], true)) {
+            throw new \coding_exception('Unbekannte Aufgabe: ' . $aufgabe);
+        }
+
         $this->quellekey = $quellekey;
         $this->bezeichnung = $bezeichnung;
         $this->datum = $datum;
         $this->url = $url;
         $this->eigene_bezeichnung = $eigene_bezeichnung ?? $bezeichnung;
         $this->fuer_lernende = $fuer_lernende;
+        $this->aufgabe = $aufgabe;
+        $this->kalenderdatum = $kalenderdatum;
+    }
+
+    /**
+     * Whether this item belongs in the calendar of the learner (true) or of
+     * a responsible person (false). Without $aufgabe both see it, as on the
+     * overview pages - the learner only if $fuer_lernende.
+     *
+     * @param bool $alslernende
+     * @return bool
+     */
+    public function im_kalender_von(bool $alslernende): bool {
+        if ($alslernende) {
+            return $this->fuer_lernende && $this->aufgabe !== self::AUFGABE_ZUSTAENDIGE;
+        }
+
+        return $this->aufgabe !== self::AUFGABE_LERNENDE;
+    }
+
+    /**
+     * Timestamp of the calendar event: the end of the due day (or of the
+     * calendar date), since a deadline is overdue only from the next day
+     * (ueberfaellig_ab()). A date without time would otherwise appear at
+     * midnight at the start of its day.
+     *
+     * @return int
+     */
+    public function kalenderzeitpunkt(): int {
+        return self::ueberfaellig_ab($this->kalenderdatum ?? $this->datum) - 1;
     }
     // phpcs:enable moodle.NamingConventions.ValidVariableName.VariableNameUnderscore
 

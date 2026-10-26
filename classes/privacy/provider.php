@@ -36,6 +36,7 @@ use core_privacy\local\request\transform;
 use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 use local_berufsbildung\api;
+use local_berufsbildung\service\termin_service;
 use local_berufsbildung\service\zuordnung_retention_service;
 use local_berufsbildung\service\zuordnung_service;
 
@@ -105,6 +106,10 @@ class provider implements
             'usermodified' => 'privacy:metadata:block_lk:usermodified',
         ], 'privacy:metadata:block_lk');
 
+        // Faelligkeitstermine (service\termin_service) liegen in der
+        // Kalendertabelle, mit dem Namen der lernenden Person im Titel.
+        $collection->add_subsystem_link('core_calendar', [], 'privacy:metadata:core_calendar');
+
         return $collection;
     }
 
@@ -131,13 +136,15 @@ class provider implements
                      OR EXISTS (SELECT 1 FROM {local_berufsbildung_teilnahmeprofil} t WHERE t.userid = :uid7)
                      OR EXISTS (SELECT 1 FROM {local_berufsbildung_block} b WHERE b.usermodified = :uid8)
                      OR EXISTS (SELECT 1 FROM {local_berufsbildung_block_lk} bl WHERE bl.usermodified = :uid9)
+                     OR EXISTS (SELECT 1 FROM {event} ev WHERE ev.component = :komponente AND ev.instance = :uid10)
                    )";
 
         $contextlist->add_from_sql($sql, [
             'userlevel' => CONTEXT_USER,
             'userid' => $userid,
             'uid1' => $userid, 'uid2' => $userid, 'uid3' => $userid, 'uid4' => $userid, 'uid5' => $userid,
-            'uid6' => $userid, 'uid7' => $userid, 'uid8' => $userid, 'uid9' => $userid,
+            'uid6' => $userid, 'uid7' => $userid, 'uid8' => $userid, 'uid9' => $userid, 'uid10' => $userid,
+            'komponente' => termin_service::KOMPONENTE,
         ]);
 
         return $contextlist;
@@ -169,7 +176,8 @@ class provider implements
             || $DB->record_exists('local_berufsbildung_aufbewahrung', ['lernendeid' => $userid])
             || $DB->record_exists('local_berufsbildung_teilnahmeprofil', ['userid' => $userid])
             || $DB->record_exists('local_berufsbildung_block', ['usermodified' => $userid])
-            || $DB->record_exists('local_berufsbildung_block_lk', ['usermodified' => $userid]);
+            || $DB->record_exists('local_berufsbildung_block_lk', ['usermodified' => $userid])
+            || $DB->record_exists('event', ['component' => termin_service::KOMPONENTE, 'instance' => $userid]);
 
         if ($hasdata) {
             $userlist->add_user($userid);
@@ -294,6 +302,24 @@ class provider implements
                     'teilnahmeart' => $profil->art,
                     'geaendert_am' => transform::datetime((int) $profil->timemodified),
                 ]
+            );
+        }
+
+        // Termine zu den Faelligkeiten dieser Person, auch die in fremden
+        // Kalendern. Die eigenen exportiert zusaetzlich core_calendar.
+        $termine = array_values($DB->get_records(
+            'event',
+            ['component' => termin_service::KOMPONENTE, 'instance' => $userid],
+            'timestart ASC, id ASC'
+        ));
+        if (!empty($termine)) {
+            writer::with_context($context)->export_data(
+                [get_string('privacy:pfad_termine', 'local_berufsbildung')],
+                (object) ['termine' => array_map(static fn ($t): array => [
+                    'kalender_von' => transform::user((int) $t->userid),
+                    'titel' => $t->name,
+                    'datum' => transform::datetime((int) $t->timestart),
+                ], $termine)]
             );
         }
 

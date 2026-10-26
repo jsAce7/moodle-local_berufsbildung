@@ -90,6 +90,49 @@ final class faelligkeit_test extends advanced_testcase {
     }
 
     /**
+     * Im Kalender stehen Faelligkeiten am Ende ihres Tages, oder des
+     * abweichenden Kalenderdatums.
+     */
+    public function test_kalenderzeitpunkt_am_ende_des_tages(): void {
+        $this->resetAfterTest();
+
+        $this->assertSame($this->am('23:59:59'), $this->faelligkeit($this->am('00:00:00'))->kalenderzeitpunkt());
+        $this->assertSame($this->am('23:59:59'), $this->faelligkeit($this->am('23:59:59'))->kalenderzeitpunkt());
+
+        $mitkalenderdatum = new faelligkeit(
+            'test',
+            'Test',
+            $this->am('00:00:00') - WEEKSECS,
+            'https://example.com',
+            null,
+            false,
+            faelligkeit::AUFGABE_ZUSTAENDIGE,
+            $this->am('10:00:00')
+        );
+        $this->assertSame($this->am('23:59:59'), $mitkalenderdatum->kalenderzeitpunkt());
+    }
+
+    public function test_kalender_zeigt_nur_eigene_aufgaben(): void {
+        $ohneangabe = new faelligkeit('test', 'Test', time(), 'https://example.com');
+        $this->assertTrue($ohneangabe->im_kalender_von(true));
+        $this->assertTrue($ohneangabe->im_kalender_von(false));
+
+        $nurzustaendige = new faelligkeit('test', 'Test', time(), 'https://example.com', null, false);
+        $this->assertFalse($nurzustaendige->im_kalender_von(true));
+
+        $lernende = new faelligkeit('test', 'Test', time(), 'https://example.com', null, true, faelligkeit::AUFGABE_LERNENDE);
+        $this->assertTrue($lernende->im_kalender_von(true));
+        $this->assertFalse($lernende->im_kalender_von(false));
+
+        $zustaendige = new faelligkeit('test', 'Test', time(), 'https://example.com', null, true, faelligkeit::AUFGABE_ZUSTAENDIGE);
+        $this->assertFalse($zustaendige->im_kalender_von(true));
+        $this->assertTrue($zustaendige->im_kalender_von(false));
+
+        $this->expectException(\coding_exception::class);
+        new faelligkeit('test', 'Test', time(), 'https://example.com', null, true, 'beide');
+    }
+
+    /**
      * Am Tag der Zeitumstellung (25. Oktober 2026, 25 Stunden) beginnt der
      * Folgetag trotzdem um Mitternacht.
      */

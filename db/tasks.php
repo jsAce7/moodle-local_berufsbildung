@@ -46,6 +46,16 @@ $tasks = [
         'disabled' => 0,
     ],
     [
+        'classname' => 'local_berufsbildung\task\sync_termine',
+        'blocking' => 0,
+        'minute' => 'R',
+        'hour' => '*',
+        'day' => '*',
+        'month' => '*',
+        'dayofweek' => '*',
+        'disabled' => 0,
+    ],
+    [
         'classname' => 'local_berufsbildung\task\zuordnung_retention',
         'blocking' => 0,
         'minute' => '30',
