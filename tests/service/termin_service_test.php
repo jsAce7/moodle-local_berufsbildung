@@ -396,6 +396,17 @@ final class termin_service_test extends advanced_testcase {
         $this->assertNull(local_berufsbildung_core_calendar_provide_event_action($termin, $factory, (int) $fremd->id));
 
         $this->assertTrue(local_berufsbildung_core_calendar_is_event_visible($termin, (int) $this->berufsbildner->id));
+
+        // Der Kalender reicht ein nachgebautes Ereignis weiter, in dem
+        // instance ohne Aktivitaet 0 ist - die Sichtbarkeit haengt nicht daran.
+        $termin->instance = 0;
+        $this->assertTrue(local_berufsbildung_core_calendar_is_event_visible($termin, (int) $this->berufsbildner->id));
+
+        $fremdertermin = \calendar_event::load((int) $this->termine_von((int) $this->berufsbildner->id)[1]->id);
+        foreach (zuordnung::get_records(['lernendeid' => (int) $this->lernende->id]) as $zuordnung) {
+            $zuordnung->delete();
+        }
+        $this->assertFalse(local_berufsbildung_core_calendar_is_event_visible($fremdertermin, (int) $this->berufsbildner->id));
     }
 
     /**

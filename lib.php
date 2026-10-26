@@ -56,12 +56,13 @@ function local_berufsbildung_core_calendar_provide_event_action(
 /**
  * Ein Faelligkeitstermin erscheint nur, solange die Anbindung
  * eingeschaltet ist und seine Besitzerin oder sein Besitzer heute
- * zustaendig ist (termin_service::ist_sichtbar()).
+ * zustaendig ist (termin_service::ist_termin_sichtbar()). Ueber die id, nicht
+ * $event->instance: das setzt der Kalender nur bei Aktivitaeten.
  *
  * @param calendar_event $event
  * @param int $userid Wer den Termin ansieht, 0 fuer die angemeldete Person
  * @return bool
  */
 function local_berufsbildung_core_calendar_is_event_visible(calendar_event $event, $userid = 0): bool {
-    return termin_service::ist_sichtbar((int) $event->userid, (int) $event->instance);
+    return termin_service::ist_termin_sichtbar((int) $event->id);
 }

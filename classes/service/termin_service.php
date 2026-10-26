@@ -113,6 +113,23 @@ class termin_service {
     }
 
     /**
+     * Wie ist_sichtbar(), fuer einen gespeicherten Termin - fuer den
+     * Kalender-Callback. Der Kalender reicht Callbacks ein nachgebautes
+     * Ereignis weiter, in dem instance nur bei Aktivitaeten gesetzt ist, bei
+     * diesen Terminen also 0; die lernende Person steht nur in der Tabelle.
+     *
+     * @param int $eventid
+     * @return bool
+     */
+    public static function ist_termin_sichtbar(int $eventid): bool {
+        global $DB;
+
+        $termin = $DB->get_record('event', ['id' => $eventid, 'component' => self::KOMPONENTE], 'id, userid, instance');
+
+        return $termin !== false && self::ist_sichtbar((int) $termin->userid, (int) $termin->instance);
+    }
+
+    /**
      * Schluessel einer Faelligkeit, eindeutig je lernende Person: Quelle und
      * Bezeichnung, ohne Datum und Adresse. Verschiebt sich die Frist, wird
      * derselbe Termin verschoben statt ersetzt; wird ein Bericht angelegt,
