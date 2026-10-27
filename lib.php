@@ -25,7 +25,7 @@
 use local_berufsbildung\service\termin_service;
 
 /**
- * Die Schaltflaeche eines Faelligkeitstermins in Kalender und Zeitleiste.
+ * Die Schaltflaeche eines Faelligkeitstermins im Kalender.
  * Sie fuehrt ueber termin.php, das die Adresse erst beim Klick aufloest
  * (termin_service::ziel_fuer()).
  *

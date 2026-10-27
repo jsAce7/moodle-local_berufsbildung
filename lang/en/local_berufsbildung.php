@@ -384,7 +384,7 @@ $string['settings:beruf_wahlpflicht_hk'] = 'Elective competency areas per occupa
 $string['settings:beruf_wahlpflicht_hk_desc'] = 'These competencies are not shown as missing in the gap analysis and carry a green instead of a yellow stripe in the competency grid. One line per occupation in the format CODE=COMPETENCY-ID,COMPETENCY-ID, e.g. "AU_EFZ=a.04,a.05". Use the idnumber of a competency, not of a top-level area. The framework prefix may be left out: "a.04" also matches a competency whose idnumber is "7777BE a.04".';
 $string['settings:einstellungen'] = 'Settings';
 $string['settings:kalender_termine'] = 'Due dates in the calendar';
-$string['settings:kalender_termine_desc'] = 'Adds the due dates from training reports, learning journal and other areas as events to the Moodle calendar, with a button in the dashboard timeline: responsible trainers get the due dates of their trainees with the trainee\'s name in the title, trainees get their own. Anyone who subscribes to the Moodle calendar in Outlook also receives the events, names included, there. When switched off, the next hourly synchronisation removes all events again.';
+$string['settings:kalender_termine_desc'] = 'Adds the due dates from training reports, learning journal and other areas as events to the Moodle calendar, with a button that leads straight to the task: responsible trainers get the due dates of their trainees with the trainee\'s name in the title, trainees get their own. Anyone who subscribes to the Moodle calendar in Outlook also receives the events, names included, there. When switched off, the next hourly synchronisation removes all events again.';
 $string['settings:kohorten_lerndokumentation'] = 'Cohorts with learning journal (optional)';
 $string['settings:kohorten_lerndokumentation_desc'] = 'Only members of the cohorts assigned here keep a learning journal; membership in one of them is enough. Whoever is in none of them, for example higher training years that only start with the training report, gets no learning journal tab, no reminders and no due dates; training reports and inter-company course grades are unaffected. Current membership counts: whoever joins a cohort keeps a learning journal from then on. Entries already recorded remain stored but are hidden while the person is in none of the cohorts. Without a selection, all trainees keep a learning journal.';
 $string['settings:lehrdauer_semester'] = 'Training length in semesters (default)';
@@ -423,6 +423,8 @@ $string['teilnahmeart:titel'] = 'Participation type';
 $string['teilnahmeart:uek_extern'] = 'External · inter-company courses only';
 $string['teilnahmeart:uek_extern_bestaetigung'] = '{$a} will be managed as an external person who only attends inter-company courses. Training status, competency grid and learning journal will no longer be shown for this person. Continue?';
 $string['teilnahmeart:uek_extern_setzen'] = 'Mark as external (inter-company courses only)';
+$string['termin:beschreibung'] = 'Still open: {$a->bezeichnung} ({$a->quelle})';
+$string['termin:beschreibung_frist'] = 'Still open: {$a->bezeichnung}, deadline {$a->frist} ({$a->quelle})';
 $string['termin:nicht_mehr_aktuell'] = 'This task is already done or no longer yours. The calendar has been updated; this page shows what is currently due.';
 $string['termin:oeffnen'] = 'Open';
 $string['termin:titel'] = '{$a->bezeichnung} – {$a->name}';

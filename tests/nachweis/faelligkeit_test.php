@@ -112,6 +112,21 @@ final class faelligkeit_test extends advanced_testcase {
         $this->assertSame($this->am('23:59:59'), $mitkalenderdatum->kalenderzeitpunkt());
     }
 
+    public function test_kalenderbezeichnung_faellt_auf_bezeichnung_zurueck(): void {
+        $this->assertSame('Test', $this->faelligkeit(time())->kalenderbezeichnung);
+
+        $eigene = new faelligkeit(
+            'test',
+            'Test',
+            time(),
+            'https://example.com',
+            kalenderbezeichnung: 'Test bis Ende Probezeit'
+        );
+        $this->assertSame('Test bis Ende Probezeit', $eigene->kalenderbezeichnung);
+        $this->assertSame('Test', $eigene->bezeichnung);
+        $this->assertSame('Test', $eigene->eigene_bezeichnung);
+    }
+
     public function test_kalender_zeigt_nur_eigene_aufgaben(): void {
         $ohneangabe = new faelligkeit('test', 'Test', time(), 'https://example.com');
         $this->assertTrue($ohneangabe->im_kalender_von(true));

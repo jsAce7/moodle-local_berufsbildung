@@ -129,8 +129,8 @@ final class termin_service_test extends advanced_testcase {
         $this->assertEquals(CALENDAR_EVENT_TYPE_ACTION, $termine[0]->type);
         $this->assertEquals(0, $termine[0]->courseid);
         $this->assertEquals($this->lernende->id, $termine[0]->instance);
-        $this->assertEquals($termine[0]->timestart, $termine[0]->timesort);
-        $this->assertSame('Test-Quelle', $termine[0]->description);
+        $this->assertNull($termine[0]->timesort);
+        $this->assertSame('Still open: Rueckmeldung ausstehend (Test-Quelle)', $termine[0]->description);
 
         // Die lernende Person sieht nur, was fuer sie bestimmt ist, mit der
         // eigenen Bezeichnung und ohne ihren Namen.
@@ -165,7 +165,7 @@ final class termin_service_test extends advanced_testcase {
         $nachher = $this->termine_von((int) $this->berufsbildner->id);
         $this->assertSame($vorher[1]->id, $nachher[1]->id);
         $this->assertEquals(faelligkeit::ueberfaellig_ab($neuesdatum) - 1, $nachher[1]->timestart);
-        $this->assertEquals(faelligkeit::ueberfaellig_ab($neuesdatum) - 1, $nachher[1]->timesort);
+        $this->assertNull($nachher[1]->timesort);
     }
 
     /**
@@ -205,7 +205,8 @@ final class termin_service_test extends advanced_testcase {
                 null,
                 false,
                 faelligkeit::AUFGABE_ZUSTAENDIGE,
-                $am('2027-04-02 00:00:00')
+                $am('2027-04-02 00:00:00'),
+                'Probezeitbericht bis Ende Probezeit'
             ),
         ];
 
@@ -220,8 +221,13 @@ final class termin_service_test extends advanced_testcase {
         $this->assertCount(2, $termine);
         $this->assertStringContainsString('Semester kontrollieren', $termine[0]->name);
         $this->assertEquals($am('2027-03-11 23:59:59'), $termine[0]->timestart);
-        $this->assertStringContainsString('Probezeitbericht', $termine[1]->name);
+        $this->assertSame('Still open: Semester kontrollieren (Test-Quelle)', $termine[0]->description);
+        $this->assertSame('Probezeitbericht bis Ende Probezeit – Anna Muster', $termine[1]->name);
         $this->assertEquals($am('2027-04-02 23:59:59'), $termine[1]->timestart);
+
+        // Steht ein Termin nicht an der Frist, nennt die Beschreibung sie -
+        // mit der Bezeichnung der Uebersichtsseiten, nicht der des Kalenders.
+        $this->assertSame('Still open: Probezeitbericht, deadline 12 March 2027 (Test-Quelle)', $termine[1]->description);
 
         // Wer eine fremde Aufgabe oeffnet, findet kein Ziel.
         $this->assertSame('https://example.org/e', $this->service->ziel_fuer((int) $eigene[0]->id, (int) $this->lernende->id));
@@ -423,18 +429,27 @@ final class termin_service_test extends advanced_testcase {
     }
 
     /**
-     * Ende zu Ende ueber die Kalender-API: die Termine stehen in der
-     * Zeitleiste, auch ohne jede Kurseinschreibung, mit der Schaltflaeche.
+     * Ende zu Ende ueber die Kalender-API: die Termine stehen im Kalender,
+     * auch ohne jede Kurseinschreibung, mit der Schaltflaeche - aber nicht
+     * in der Zeitleiste, die ihre Titel leer liesse.
      */
-    public function test_termine_erscheinen_in_der_zeitleiste(): void {
+    public function test_termine_im_kalender_aber_nicht_in_der_zeitleiste(): void {
         $this->service->nachfuehren((int) $this->lernende->id);
         $this->setUser($this->berufsbildner);
 
-        $ereignisse = \core_calendar\local\api::get_action_events_by_timesort(time() - DAYSECS);
+        $ereignisse = \core_calendar\local\api::get_events(
+            time() - DAYSECS,
+            usersfilter: [(int) $this->berufsbildner->id]
+        );
 
         $this->assertCount(2, $ereignisse);
         foreach ($ereignisse as $ereignis) {
+            $this->assertInstanceOf(\core_calendar\local\event\entities\action_event_interface::class, $ereignis);
             $this->assertStringContainsString('/local/berufsbildung/termin.php', $ereignis->get_action()->get_url()->out(false));
         }
+
+        // Die Zeitleiste fragt immer ab einem Zeitpunkt, bei "Alle" und
+        // "Ueberfaellig" ab 14 Tagen vor heute.
+        $this->assertCount(0, \core_calendar\local\api::get_action_events_by_timesort(time() - 14 * DAYSECS));
     }
 }

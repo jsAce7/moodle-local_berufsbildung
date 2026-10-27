@@ -384,7 +384,7 @@ $string['settings:beruf_wahlpflicht_hk'] = 'Wahlpflicht-Handlungskompetenzen je 
 $string['settings:beruf_wahlpflicht_hk_desc'] = 'Diese Handlungskompetenzen gelten in der Lückenanalyse nicht als fehlend und tragen im Kompetenzraster einen grünen statt eines gelben Streifens. Eine Zeile je Beruf im Format CODE=HK-ID,HK-ID, z. B. "AU_EFZ=a.04,a.05". Gemeint ist die ID-Nummer einer Handlungskompetenz, nicht eines Bereichs. Der Rahmen-Präfix darf weggelassen werden: "a.04" trifft auch eine Kompetenz mit der ID-Nummer "7777BE a.04". In der AU-Datei sind das die mit "W" markierten HK.';
 $string['settings:einstellungen'] = 'Einstellungen';
 $string['settings:kalender_termine'] = 'Fälligkeiten im Kalender';
-$string['settings:kalender_termine_desc'] = 'Trägt die Fälligkeiten aus Bildungsbericht, Lerndokumentation und weiteren Bereichen als Termine in den Moodle-Kalender ein, mit einer Schaltfläche in der Zeitleiste des Dashboards: den zuständigen Personen die Fälligkeiten ihrer Lernenden mit deren Namen im Titel, den Lernenden ihre eigenen. Wer den Moodle-Kalender in Outlook abonniert, erhält die Termine samt Namen auch dort. Ausgeschaltet entfernt der nächste stündliche Abgleich alle Termine wieder.';
+$string['settings:kalender_termine_desc'] = 'Trägt die Fälligkeiten aus Bildungsbericht, Lerndokumentation und weiteren Bereichen als Termine in den Moodle-Kalender ein, mit einer Schaltfläche, die direkt zur Aufgabe führt: den zuständigen Personen die Fälligkeiten ihrer Lernenden mit deren Namen im Titel, den Lernenden ihre eigenen. Wer den Moodle-Kalender in Outlook abonniert, erhält die Termine samt Namen auch dort. Ausgeschaltet entfernt der nächste stündliche Abgleich alle Termine wieder.';
 $string['settings:kohorten_lerndokumentation'] = 'Kohorten mit Lerndokumentation (optional)';
 $string['settings:kohorten_lerndokumentation_desc'] = 'Nur Mitglieder der hier zugewiesenen Kohorten führen eine Lerndokumentation; es genügt die Mitgliedschaft in einer davon. Wer in keiner ist, etwa höhere Lehrjahre, die nur mit dem Bildungsbericht einsteigen, bekommt keinen Lerndokumentations-Tab, keine Erinnerungen und keine Fälligkeiten; Bildungsbericht und üK-Noten laufen unverändert. Massgebend ist die Mitgliedschaft heute: Wer neu in eine Kohorte kommt, führt ab dann eine Lerndokumentation. Bereits erfasste Einträge bleiben gespeichert, sind aber nicht sichtbar, solange die Person in keiner Kohorte ist. Ohne Auswahl führen alle Lernenden eine Lerndokumentation.';
 $string['settings:lehrdauer_semester'] = 'Lehrdauer in Semestern (Standard)';
@@ -423,6 +423,8 @@ $string['teilnahmeart:titel'] = 'Teilnahmeart';
 $string['teilnahmeart:uek_extern'] = 'Extern · nur üK';
 $string['teilnahmeart:uek_extern_bestaetigung'] = '{$a} wird als externe Person geführt, die nur an überbetrieblichen Kursen teilnimmt. Ausbildungsstand, Kompetenzraster und Lerndokumentation werden für diese Person nicht mehr angezeigt. Fortfahren?';
 $string['teilnahmeart:uek_extern_setzen'] = 'Als extern (nur üK) markieren';
+$string['termin:beschreibung'] = 'Noch offen: {$a->bezeichnung} ({$a->quelle})';
+$string['termin:beschreibung_frist'] = 'Noch offen: {$a->bezeichnung}, Frist {$a->frist} ({$a->quelle})';
 $string['termin:nicht_mehr_aktuell'] = 'Diese Aufgabe ist bereits erledigt oder nicht mehr deine. Der Kalender ist jetzt nachgeführt, hier siehst du, was aktuell ansteht.';
 $string['termin:oeffnen'] = 'Öffnen';
 $string['termin:titel'] = '{$a->bezeichnung} – {$a->name}';

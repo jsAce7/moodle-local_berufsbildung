@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.1] — 2026-10-27
+
+### Hinzugefügt
+
+- **`nachweis\faelligkeit`: `$kalenderbezeichnung`** (optional, am Ende des Konstruktors): ein eigener Titel für den Kalender der zuständigen Personen, wenn die Bezeichnung der Übersichtsseiten dort missverständlich wäre, etwa „Probezeitbericht bis Ende Probezeit“ für einen Termin am Probezeitende. Ohne Angabe gilt `$bezeichnung`.
+
+### Geändert
+
+- **Beschreibung der Fälligkeitstermine**: Statt nur der Quelle steht dort, was noch offen ist, etwa „Noch offen: Probezeitbericht, Frist 15.10.2026 (Bildungsbericht)“. Die Frist erscheint nur, wenn der Termin auf einem abweichenden Kalenderdatum steht. Ein Termin besteht ohnehin nur, solange seine Fälligkeit offen ist; mit der Erledigung verschwindet er. Bestehende Termine übernimmt der nächste Abgleich.
+
+### Behoben
+
+- **Fälligkeitstermine ohne Titel in der Zeitleiste**: Die Zeitleiste des Dashboards zeigt als Titel nur den Namen einer Aktivität. Die persönlichen Fälligkeitstermine gehören zu keiner Aktivität, deshalb standen sie dort nur als leere Zeilen mit „Öffnen“. Sie erscheinen jetzt nur noch im Kalender, dort weiterhin mit Titel und „Öffnen“. Dafür bleiben sie Aufgaben (nur Aufgaben bekommen die Schaltfläche), aber ohne `timesort`: Die Zeitleiste sucht Aufgaben immer ab einem Zeitpunkt über `timesort` und findet sie so nicht; der Kalender sucht über `timestart`. Das Upgrade entfernt `timesort` bei den bestehenden Terminen.
+
 ## [1.1.0] — 2026-10-26
 
 ### Hinzugefügt

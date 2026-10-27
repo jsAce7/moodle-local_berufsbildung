@@ -452,5 +452,14 @@ function xmldb_local_berufsbildung_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026100801, 'local', 'berufsbildung');
     }
 
+    if ($oldversion < 2026102700) {
+        // Die Faelligkeitstermine verlassen die Zeitleiste des Dashboards:
+        // Sie zeigt nur Aktivitaetsnamen und liess die Titel leer. Ohne
+        // timesort findet sie sie nicht mehr, siehe termin_service::termin().
+        $DB->set_field('event', 'timesort', null, ['component' => 'local_berufsbildung']);
+
+        upgrade_plugin_savepoint(true, 2026102700, 'local', 'berufsbildung');
+    }
+
     return true;
 }

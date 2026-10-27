@@ -59,6 +59,11 @@ final class faelligkeit {
     public readonly ?string $aufgabe;
     /** @var int|null Date for the calendar if it differs from the deadline, e.g. the end of probation. */
     public readonly ?int $kalenderdatum;
+    /**
+     * @var string Description in the calendar of a supervising person,
+     *             e.g. one that names the calendar date. Defaults to $bezeichnung.
+     */
+    public readonly string $kalenderbezeichnung;
 
     // Preserve the public constructor parameter name for named arguments.
     // phpcs:disable moodle.NamingConventions.ValidVariableName.VariableNameUnderscore
@@ -73,6 +78,7 @@ final class faelligkeit {
      * @param bool $fuer_lernende False for tasks of the supervising person only
      * @param string|null $aufgabe Whose task this is (AUFGABE_*), null if unspecified
      * @param int|null $kalenderdatum Date for the calendar, null for the deadline
+     * @param string|null $kalenderbezeichnung Description in the calendar of a supervising person, null for $bezeichnung
      */
     public function __construct(
         string $quellekey,
@@ -82,7 +88,8 @@ final class faelligkeit {
         ?string $eigene_bezeichnung = null,
         bool $fuer_lernende = true,
         ?string $aufgabe = null,
-        ?int $kalenderdatum = null
+        ?int $kalenderdatum = null,
+        ?string $kalenderbezeichnung = null
     ) {
         if ($aufgabe !== null && !in_array($aufgabe, [self::AUFGABE_LERNENDE, self::AUFGABE_ZUSTAENDIGE], true)) {
             throw new \coding_exception('Unbekannte Aufgabe: ' . $aufgabe);
@@ -96,6 +103,7 @@ final class faelligkeit {
         $this->fuer_lernende = $fuer_lernende;
         $this->aufgabe = $aufgabe;
         $this->kalenderdatum = $kalenderdatum;
+        $this->kalenderbezeichnung = $kalenderbezeichnung ?? $bezeichnung;
     }
 
     /**

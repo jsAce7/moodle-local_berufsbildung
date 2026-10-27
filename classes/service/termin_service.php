@@ -41,9 +41,9 @@ use stdClass;
  * etwa den Bericht ihrer Lernenden, der lernenden Person etwa ihre
  * Rueckmeldung. Anders als "Meine Lernenden" zeigt der Kalender also nicht
  * alles, was ansteht - sonst stuende bei jeder zustaendigen Person jeder
- * Lerndoku-Eintrag jeder lernenden Person. Als Aufgabe ("action event")
- * erscheinen die Termine auch in der Zeitleiste des Dashboards, am Ende des
- * Faelligkeitstags (faelligkeit::kalenderzeitpunkt()).
+ * Lerndoku-Eintrag jeder lernenden Person. Die Termine stehen am Ende des
+ * Faelligkeitstags (faelligkeit::kalenderzeitpunkt()) und bleiben bewusst
+ * aus der Zeitleiste des Dashboards, siehe termin().
  *
  * Moodle zeigt nur gespeicherte Termine. Sie sind deshalb eine Kopie, die
  * nachgefuehrt werden muss: stuendlich durch task\sync_termine und sofort,
@@ -285,18 +285,19 @@ class termin_service {
                 $schluessel = self::schluessel($faelligkeit);
                 $quelle = $quellen[$faelligkeit->quellekey] ?? '';
                 $titel = get_string('termin:titel', 'local_berufsbildung', (object) [
-                    'bezeichnung' => $faelligkeit->bezeichnung,
+                    'bezeichnung' => $faelligkeit->kalenderbezeichnung,
                     'name' => $name,
                 ]);
                 $zeitpunkt = $faelligkeit->kalenderzeitpunkt();
                 if ($faelligkeit->im_kalender_von(false)) {
+                    $beschreibung = self::beschreibung($faelligkeit, $faelligkeit->bezeichnung, $quelle);
                     foreach ($berufsbildnerids as $berufsbildnerid) {
                         $soll[$berufsbildnerid . '|' . $schluessel] ??= self::termin(
                             $berufsbildnerid,
                             $lernendeid,
                             $schluessel,
                             $titel,
-                            $quelle,
+                            $beschreibung,
                             $zeitpunkt
                         );
                     }
@@ -307,7 +308,7 @@ class termin_service {
                         $lernendeid,
                         $schluessel,
                         $faelligkeit->eigene_bezeichnung,
-                        $quelle,
+                        self::beschreibung($faelligkeit, $faelligkeit->eigene_bezeichnung, $quelle),
                         $zeitpunkt
                     );
                 }
@@ -320,14 +321,46 @@ class termin_service {
     }
 
     /**
+     * Beschreibung eines Termins: was noch offen ist und aus welcher Quelle.
+     * Ein Termin besteht nur, solange seine Faelligkeit offen ist - mit der
+     * Erledigung verschwindet er (nachfuehren()). Steht er nicht an der
+     * Frist (faelligkeit::$kalenderdatum), nennt sie die Beschreibung, in
+     * der Zeitzone des Servers wie faelligkeit::ueberfaellig_ab().
+     *
+     * @param faelligkeit $faelligkeit
+     * @param string $bezeichnung Wie die Person die Aufgabe kennt
+     * @param string $quelle Anzeigename der Quelle
+     * @return string
+     */
+    private static function beschreibung(faelligkeit $faelligkeit, string $bezeichnung, string $quelle): string {
+        $a = (object) ['bezeichnung' => $bezeichnung, 'quelle' => $quelle];
+        if ($faelligkeit->kalenderdatum === null) {
+            return get_string('termin:beschreibung', 'local_berufsbildung', $a);
+        }
+        $a->frist = userdate(
+            $faelligkeit->datum,
+            get_string('strftimedate', 'langconfig'),
+            \core_date::get_server_timezone()
+        );
+
+        return get_string('termin:beschreibung_frist', 'local_berufsbildung', $a);
+    }
+
+    /**
      * Daten eines Termins fuer calendar_event: persoenlich (ohne Kurs), als
-     * Aufgabe, damit er in der Zeitleiste steht.
+     * Aufgabe, denn nur Aufgaben bekommen im Kalender die Schaltflaeche
+     * "Oeffnen".
+     *
+     * Ohne timesort: Die Zeitleiste zeigt als Titel nur den Namen einer
+     * Aktivitaet und bliebe bei diesen Terminen leer. Sie sucht Aufgaben
+     * immer ab einem Zeitpunkt ueber timesort und findet so keine ohne;
+     * der Kalender geht ueber timestart und sortiert dann nach diesem.
      *
      * @param int $userid In wessen Kalender
      * @param int $lernendeid
      * @param string $schluessel
      * @param string $titel
-     * @param string $quelle Anzeigename der Quelle
+     * @param string $beschreibung siehe beschreibung()
      * @param int $datum faelligkeit::kalenderzeitpunkt()
      * @return stdClass
      */
@@ -336,12 +369,12 @@ class termin_service {
         int $lernendeid,
         string $schluessel,
         string $titel,
-        string $quelle,
+        string $beschreibung,
         int $datum
     ): stdClass {
         return (object) [
             'name' => $titel,
-            'description' => $quelle,
+            'description' => $beschreibung,
             'format' => FORMAT_PLAIN,
             'courseid' => 0,
             'groupid' => 0,
@@ -354,7 +387,7 @@ class termin_service {
             'type' => CALENDAR_EVENT_TYPE_ACTION,
             'uuid' => $schluessel,
             'timestart' => $datum,
-            'timesort' => $datum,
+            'timesort' => null,
             'timeduration' => 0,
             'visible' => 1,
         ];
