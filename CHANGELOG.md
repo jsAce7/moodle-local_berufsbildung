@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.0] — 2026-10-28
+
+### Hinzugefügt
+
+- **Reiter je Quelle mit Stationen auf „Meine Lernenden“** (etwa *Bildungsbericht*): eine Tabelle über alle zugeordneten Lernenden (`stationen.php?quelle=<key>`), eine Zeile je Person, eine Spalte je Station, zuletzt der nächste Schritt mit der Aktion der Quelle. Die Punkte entsprechen der Zeitleiste, die aktuelle Station ist grösser, eine Legende zeigt die vorkommenden Status. Sortiert nach Handlungsbedarf aus dieser Quelle, dann nach Semester und Namen; Personen ohne Stationen der Quelle fehlen. Auf schmalen Fenstern rollt die Tabelle, die Namen bleiben stehen. Gedacht für Berufsbildner/innen mit vielen Lernenden.
+- `nachweis\collector::get_stationen_quellen()`: die Quellen mit Stationen, Schlüssel => Anzeigename.
+- `output\stationen_tabelle` mit `spalten()`: führt die Kurzbezeichnungen aller Personen zusammen, sodass eine nur bei einer Person vorkommende Station (etwa eine Verlängerung der Probezeit) an ihrer Stelle in der Reihenfolge steht.
+- `output\lernenden_roster::handlungsbedarf_aus_stationen()`: der Handlungsbedarf aus den aktuellen Stationen, auch von `meine_lernenden.php` verwendet.
+- `output\seitennavigation::stationen_schluessel()`: Schlüssel des neuen Reiters.
+
 ## [1.2.1] — 2026-10-28
 
 ### Geändert

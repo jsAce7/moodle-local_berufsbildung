@@ -1,0 +1,135 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_berufsbildung/stationen_tabelle
+
+    Die Stationen einer Quelle (etwa die Bildungsberichte) fuer alle
+    Lernenden auf stationen.php: eine Zeile je Person, eine Spalte je
+    Station, zuletzt der naechste Schritt mit der Aktion der Quelle.
+
+    Der Punkt je Zelle ist Schmuck (aria-hidden); was er bedeutet, steht im
+    versteckten Text und im title. Die aktuelle Station ist groesser, wie
+    in der Zeitleiste. Auf schmalen Fenstern rollt die Tabelle waagrecht in
+    ihrem Kasten, die Namen bleiben links stehen.
+
+    Context variables required for this template:
+    * titel - string, Anzeigename der Quelle
+    * spalten - array of {name}
+    * zeilen - array of {name, hasstand, stand, zellen, hasaktion, aktion, hasaktuelle, aktuelle}
+      * zellen - array of {hatstation, station}, station wie ein Eintrag aus stationen_leiste
+        mit zusaetzlich titel
+      * aktion - {label, url}
+      * aktuelle - wie ein Eintrag aus stationen_leiste
+    * haslegende - bool
+    * legende - array of {statustext, hasicon, icon, punktklasse}, nur die vorkommenden Status
+
+    Example context (json):
+    {
+        "titel": "Bildungsbericht",
+        "spalten": [{"name": "Probezeit"}, {"name": "1. Semester"}, {"name": "2. Semester"}],
+        "zeilen": [
+            {"name": "Anna Muster", "hasstand": true, "stand": "AU_EFZ · 1. Semester",
+             "zellen": [
+                {"hatstation": true, "station": {"titel": "Probezeitbericht: überfällig", "kurzbezeichnung": "Probezeit",
+                 "hasurl": true, "url": "/local/bildungsbericht/erfassen.php?id=3", "aktuell": true, "hasicon": true,
+                 "icon": "fa-exclamation", "punktklasse": "bg-danger text-white border-danger"} },
+                {"hatstation": true, "station": {"titel": "Bildungsbericht 1. Semester: geplant", "kurzbezeichnung": "1. Semester",
+                 "hasurl": false, "url": "", "aktuell": false, "hasicon": false, "icon": "", "punktklasse": "bg-white border"} },
+                {"hatstation": false, "station": null}
+             ],
+             "hasaktion": true, "aktion": {"label": "Probezeitbericht weiter erfassen", "url": "/local/bildungsbericht/erfassen.php?id=3"},
+             "hasaktuelle": true, "aktuelle": {"kurzbezeichnung": "Probezeit", "statustext": "überfällig", "hasstand": true,
+             "stand": "Fällig seit 11. Oktober 2026", "istueberfaellig": true} }
+        ],
+        "haslegende": true,
+        "legende": [
+            {"statustext": "erledigt", "hasicon": true, "icon": "fa-check", "punktklasse": "bg-success text-white border-success"},
+            {"statustext": "überfällig", "hasicon": true, "icon": "fa-exclamation", "punktklasse": "bg-danger text-white border-danger"},
+            {"statustext": "geplant", "hasicon": false, "icon": "", "punktklasse": "bg-white border"}
+        ]
+    }
+}}
+<div class="local-berufsbildung-stationen-tabelle-rahmen border rounded">
+    <table class="table mb-0 local-berufsbildung-stationen-tabelle">
+        <caption class="sr-only visually-hidden">{{titel}}</caption>
+        <thead class="bg-light">
+            <tr>
+                <th scope="col" class="local-berufsbildung-stationen-tabelle-name bg-light">{{#str}} stationen:tabelle_lernende, local_berufsbildung {{/str}}</th>
+                {{#spalten}}
+                    <th scope="col" class="text-center small">{{name}}</th>
+                {{/spalten}}
+                <th scope="col">{{#str}} stationen:tabelle_naechster_schritt, local_berufsbildung {{/str}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#zeilen}}
+                <tr>
+                    <th scope="row" class="local-berufsbildung-stationen-tabelle-name bg-white font-weight-normal fw-normal">
+                        <span class="d-block font-weight-bold fw-bold">{{name}}</span>
+                        {{#hasstand}}<span class="d-block small text-muted">{{stand}}</span>{{/hasstand}}
+                    </th>
+                    {{#zellen}}
+                        <td class="text-center align-middle">
+                            {{#hatstation}}
+                                {{#station}}
+                                    {{#hasurl}}<a href="{{url}}" class="local-berufsbildung-stationen-tabelle-zelle" title="{{titel}}">{{/hasurl}}
+                                    {{^hasurl}}<span class="local-berufsbildung-stationen-tabelle-zelle" title="{{titel}}">{{/hasurl}}
+                                        <span class="local-berufsbildung-station-punkt border {{punktklasse}}{{#aktuell}} local-berufsbildung-station-punkt-aktuell{{/aktuell}}" aria-hidden="true">
+                                            {{#hasicon}}<i class="icon fa {{icon}} fa-fw m-0"></i>{{/hasicon}}
+                                        </span>
+                                        <span class="sr-only visually-hidden">{{titel}}</span>
+                                    {{#hasurl}}</a>{{/hasurl}}
+                                    {{^hasurl}}</span>{{/hasurl}}
+                                {{/station}}
+                            {{/hatstation}}
+                            {{^hatstation}}
+                                <span class="text-muted" aria-hidden="true">–</span>
+                                <span class="sr-only visually-hidden">{{#str}} stationen:tabelle_keine, local_berufsbildung {{/str}}</span>
+                            {{/hatstation}}
+                        </td>
+                    {{/zellen}}
+                    <td class="align-middle local-berufsbildung-stationen-tabelle-schritt">
+                        {{#hasaktion}}
+                            {{#aktion}}
+                                <a href="{{url}}" class="btn btn-primary btn-sm">{{label}}</a>
+                            {{/aktion}}
+                        {{/hasaktion}}
+                        {{#hasaktuelle}}
+                            {{#aktuelle}}
+                                {{^hasaktion}}<span class="d-block">{{kurzbezeichnung}}: <span class="{{#istueberfaellig}}text-danger{{/istueberfaellig}}">{{statustext}}</span></span>{{/hasaktion}}
+                                {{#hasstand}}<span class="d-block small {{#istueberfaellig}}text-danger{{/istueberfaellig}}{{^istueberfaellig}}text-muted{{/istueberfaellig}} mt-1">{{stand}}</span>{{/hasstand}}
+                            {{/aktuelle}}
+                        {{/hasaktuelle}}
+                    </td>
+                </tr>
+            {{/zeilen}}
+        </tbody>
+    </table>
+</div>
+{{#haslegende}}
+    <ul class="list-unstyled local-berufsbildung-stationen-tabelle-legende small mt-3 mb-0" aria-label="{{#str}} stationen:tabelle_legende, local_berufsbildung {{/str}}">
+        {{#legende}}
+            <li>
+                <span class="local-berufsbildung-station-punkt local-berufsbildung-station-punkt-klein border {{punktklasse}}" aria-hidden="true">
+                    {{#hasicon}}<i class="icon fa {{icon}} fa-fw m-0"></i>{{/hasicon}}
+                </span>
+                {{statustext}}
+            </li>
+        {{/legende}}
+        <li>{{#str}} stationen:tabelle_legende_aktuell, local_berufsbildung {{/str}}</li>
+    </ul>
+{{/haslegende}}

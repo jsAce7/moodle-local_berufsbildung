@@ -1202,6 +1202,59 @@
 }
 
 /*
+ * Tabelle der Stationen ueber alle Lernenden (stationen_tabelle): rollt
+ * auf schmalen Fenstern in ihrem Kasten, die Spalte mit den Namen bleibt
+ * links stehen. Ihren Hintergrund setzt das Markup (bg-white, bg-light),
+ * sonst schiene beim Rollen die Tabelle durch.
+ */
+.local-berufsbildung-stationen-tabelle-rahmen {
+    overflow-x: auto;
+}
+
+.local-berufsbildung-stationen-tabelle th,
+.local-berufsbildung-stationen-tabelle td {
+    vertical-align: middle;
+}
+
+.local-berufsbildung-stationen-tabelle thead th {
+    border-top: 0;
+    line-height: 1.2;
+}
+
+.local-berufsbildung-stationen-tabelle-name {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    min-width: 11rem;
+}
+
+/* Flaeche zum Antippen groesser als der Punkt (WCAG 2.5.8). */
+.local-berufsbildung-stationen-tabelle-zelle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    text-decoration: none;
+}
+
+.local-berufsbildung-stationen-tabelle-schritt {
+    min-width: 13rem;
+}
+
+.local-berufsbildung-stationen-tabelle-legende {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+}
+
+.local-berufsbildung-stationen-tabelle-legende li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/*
  * Schmale Fenster: die Zeile bricht ohnehin um, feste Spalten wuerden dort
  * nur Leerraum erzeugen. Kennzahlen stehen dann linksbuendig unter dem
  * Namen.

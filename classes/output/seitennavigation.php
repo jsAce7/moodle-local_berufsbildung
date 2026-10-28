@@ -28,6 +28,7 @@ namespace local_berufsbildung\output;
 
 use context_system;
 use local_berufsbildung\hook_callbacks;
+use local_berufsbildung\nachweis\collector;
 use local_berufsbildung\navigation\menuepunkt;
 use moodle_url;
 use tabobject;
@@ -38,8 +39,11 @@ use tabobject;
  * war der Eintrag selbst nicht mehr anklickbar und die eigene Seite stand
  * doppelt im Menue.
  *
- * Erster Reiter ist die Uebersicht (meine_lehre.php bzw. meine_lernenden.php),
- * danach folgen die Punkte, die aufsetzende Plugins ueber
+ * Erster Reiter ist die Uebersicht (meine_lehre.php bzw. meine_lernenden.php).
+ * Unter "Meine Lernenden" folgt je Quelle mit Stationen (etwa dem
+ * Bildungsbericht) ein Reiter mit der Tabelle ueber alle Lernenden
+ * (stationen.php) - sie gehoert zur Uebersicht, nicht zu einer Auswertung.
+ * Danach folgen die Punkte, die aufsetzende Plugins ueber
  * <plugin>_berufsbildung_navigation() melden. Unter "Meine Lernenden" steht
  * zuletzt die Blockverwaltung - Stammdatenpflege, die im selben Arbeitsgang
  * wie die Betreuung anfaellt, aber eine Nebenaktion ist.
@@ -54,6 +58,9 @@ use tabobject;
 final class seitennavigation {
     /** Schluessel des Reiters zur Blockverwaltung. */
     public const BLOECKE = 'local_berufsbildung_bloecke';
+
+    /** Praefix der Reiter mit den Stationen einer Quelle, gefolgt vom Quelle-Key. */
+    private const STATIONEN_PRAEFIX = 'local_berufsbildung_stationen_';
 
     /** Je Menue mit eigener Seite: die Seite der Uebersicht. "Berufsbildung" hat keine. */
     private const SEITEN = [
@@ -110,6 +117,16 @@ final class seitennavigation {
             get_string('seitennavigation:uebersicht', 'local_berufsbildung')
         )];
 
+        if ($menue === menuepunkt::MEINE_LERNENDEN) {
+            foreach ((new collector())->get_stationen_quellen() as $quellekey => $name) {
+                $reiter[] = new tabobject(
+                    self::stationen_schluessel($quellekey),
+                    new moodle_url('/local/berufsbildung/stationen.php', ['quelle' => $quellekey]),
+                    $name
+                );
+            }
+        }
+
         foreach (hook_callbacks::gemeldete_menuepunkte()[$menue] ?? [] as $punkt) {
             $reiter[] = new tabobject($punkt->schluessel, $punkt->url, $punkt->text);
         }
@@ -126,6 +143,17 @@ final class seitennavigation {
         }
 
         return $reiter;
+    }
+
+    /**
+     * Schluessel des Reiters mit den Stationen einer Quelle unter "Meine
+     * Lernenden", fuer render() auf stationen.php.
+     *
+     * @param string $quellekey
+     * @return string
+     */
+    public static function stationen_schluessel(string $quellekey): string {
+        return self::STATIONEN_PRAEFIX . $quellekey;
     }
 
     /**

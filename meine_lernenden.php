@@ -42,7 +42,6 @@ require_once(__DIR__ . '/../../config.php');
 
 use local_berufsbildung\api;
 use local_berufsbildung\nachweis\collector;
-use local_berufsbildung\nachweis\station;
 use local_berufsbildung\navigation\menuepunkt;
 use local_berufsbildung\output\faelligkeiten_liste;
 use local_berufsbildung\output\hilfe_link;
@@ -196,18 +195,12 @@ if (empty($eintraege)) {
     // Station - also das, was die Kachel ohne Aufklappen rot oder blau
     // zeigt. Wer wartet, steht zuoberst.
     foreach ($eintraege as &$eintrag) {
-        $stufe = !empty($anzahlueberfaellig[$eintrag['id']])
-            ? lernenden_roster::HANDLUNGSBEDARF_UEBERFAELLIG
-            : lernenden_roster::HANDLUNGSBEDARF_KEINER;
-        foreach ($stationenjelernende[$eintrag['id']] as $einzelstationen) {
-            $status = $einzelstationen->aktuelle()?->status;
-            if ($status === station::STATUS_UEBERFAELLIG) {
-                $stufe = lernenden_roster::HANDLUNGSBEDARF_UEBERFAELLIG;
-            } else if ($status === station::STATUS_OFFEN) {
-                $stufe = min($stufe, lernenden_roster::HANDLUNGSBEDARF_OFFEN);
-            }
-        }
-        $eintrag['handlungsbedarf'] = $stufe;
+        $eintrag['handlungsbedarf'] = lernenden_roster::handlungsbedarf_aus_stationen(
+            $stationenjelernende[$eintrag['id']],
+            !empty($anzahlueberfaellig[$eintrag['id']])
+                ? lernenden_roster::HANDLUNGSBEDARF_UEBERFAELLIG
+                : lernenden_roster::HANDLUNGSBEDARF_KEINER
+        );
     }
     unset($eintrag);
     $eintraege = lernenden_roster::nach_handlungsbedarf($eintraege);

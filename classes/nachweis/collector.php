@@ -336,6 +336,25 @@ class collector {
     }
 
     /**
+     * Anzeigenamen der Quellen, die `quelle_mit_stationen` implementieren -
+     * je einer ist ein Reiter auf "Meine Lernenden" mit der Tabelle ueber
+     * alle Lernenden (stationen.php). Fragt keine Person ab, deshalb ohne
+     * Zustaendigkeitspruefung.
+     *
+     * @return array<string, string> Quelle-Key => Anzeigename
+     */
+    public function get_stationen_quellen(): array {
+        $namen = [];
+        foreach ($this->providers as $einzelprovider) {
+            if ($einzelprovider instanceof quelle_mit_stationen) {
+                $namen[$einzelprovider->get_quelle_key()] = $einzelprovider->get_quelle_name();
+            }
+        }
+
+        return $namen;
+    }
+
+    /**
      * Stationen aller Quellen, die `quelle_mit_stationen` implementieren -
      * fuer die Kachel und ihr Detail auf "Meine Lernenden" und fuer die
      * eigene Person auf "Meine Lehre".

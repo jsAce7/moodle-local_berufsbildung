@@ -28,6 +28,8 @@ namespace local_berufsbildung\output;
 
 use advanced_testcase;
 use local_berufsbildung\ausbildungsstand;
+use local_berufsbildung\nachweis\station;
+use local_berufsbildung\nachweis\stationen;
 
 #[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\lernenden_roster::class)]
 /**
@@ -207,5 +209,50 @@ final class lernenden_roster_test extends advanced_testcase {
         $this->assertSame([3], array_column(lernenden_roster::filtere($eintraege, '', 'AU_EFZ', true), 'id'));
         // Ohne den Filter bleiben alle.
         $this->assertCount(4, lernenden_roster::filtere($eintraege, '', ''));
+    }
+
+    /**
+     * Stationen einer Quelle, deren aktuelle den Status $status hat.
+     *
+     * @param string $quellekey
+     * @param string|null $status null: keine aktuelle Station
+     * @return stationen
+     */
+    private function stationen_mit_aktueller(string $quellekey, ?string $status): stationen {
+        return new stationen($quellekey, 'Quelle', [
+            new station($quellekey, 'Erste', station::STATUS_ERLEDIGT, 'erledigt'),
+            new station($quellekey, 'Zweite', $status ?? station::STATUS_GEPLANT, 'Text', aktuell: $status !== null),
+        ]);
+    }
+
+    public function test_handlungsbedarf_aus_stationen(): void {
+        $keiner = lernenden_roster::HANDLUNGSBEDARF_KEINER;
+        $offen = lernenden_roster::HANDLUNGSBEDARF_OFFEN;
+        $ueberfaellig = lernenden_roster::HANDLUNGSBEDARF_UEBERFAELLIG;
+
+        $this->assertSame($keiner, lernenden_roster::handlungsbedarf_aus_stationen([]));
+        $this->assertSame($keiner, lernenden_roster::handlungsbedarf_aus_stationen([
+            $this->stationen_mit_aktueller('a', null),
+            $this->stationen_mit_aktueller('b', station::STATUS_ERLEDIGT),
+            $this->stationen_mit_aktueller('c', station::STATUS_GEPLANT),
+        ]));
+        $this->assertSame($offen, lernenden_roster::handlungsbedarf_aus_stationen([
+            $this->stationen_mit_aktueller('a', station::STATUS_GEPLANT),
+            $this->stationen_mit_aktueller('b', station::STATUS_OFFEN),
+        ]));
+        // Ueberfaellig schlaegt offen, in beiden Reihenfolgen.
+        $this->assertSame($ueberfaellig, lernenden_roster::handlungsbedarf_aus_stationen([
+            $this->stationen_mit_aktueller('a', station::STATUS_UEBERFAELLIG),
+            $this->stationen_mit_aktueller('b', station::STATUS_OFFEN),
+        ]));
+        $this->assertSame($ueberfaellig, lernenden_roster::handlungsbedarf_aus_stationen([
+            $this->stationen_mit_aktueller('a', station::STATUS_OFFEN),
+            $this->stationen_mit_aktueller('b', station::STATUS_UEBERFAELLIG),
+        ]));
+        // Vorgegebenes bleibt, auch wenn die Stationen nichts melden.
+        $this->assertSame($ueberfaellig, lernenden_roster::handlungsbedarf_aus_stationen(
+            [$this->stationen_mit_aktueller('a', station::STATUS_OFFEN)],
+            $ueberfaellig
+        ));
     }
 }

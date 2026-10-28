@@ -608,6 +608,13 @@ final class collector_test extends advanced_testcase {
         $this->assertSame($ergebnis->eintraege[1], $ergebnis->aktuelle());
     }
 
+    public function test_get_stationen_quellen_nennt_nur_quellen_mit_stationen(): void {
+        $collector = new collector([new collector_test_provider(), new collector_test_stationen_provider()]);
+
+        $this->assertSame(['teststationen' => 'Test-Quelle mit Stationen'], $collector->get_stationen_quellen());
+        $this->assertSame([], (new collector([new collector_test_provider()]))->get_stationen_quellen());
+    }
+
     public function test_get_stationen_ohne_stationen_laesst_die_quelle_weg(): void {
         $this->resetAfterTest();
 

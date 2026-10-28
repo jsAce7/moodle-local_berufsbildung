@@ -28,7 +28,9 @@ namespace local_berufsbildung\output;
 
 use advanced_testcase;
 use local_berufsbildung\hook_callbacks;
+use local_berufsbildung\nachweis\collector;
 use local_berufsbildung\navigation\menuepunkt;
+use moodle_url;
 
 #[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\seitennavigation::class)]
 /**
@@ -95,9 +97,31 @@ final class seitennavigation_test extends advanced_testcase {
         $html = seitennavigation::render(menuepunkt::MEINE_LERNENDEN);
 
         $this->assertStringNotContainsString('/local/berufsbildung/bloecke.php', $html);
-        if (empty($gemeldet)) {
+        if (empty($gemeldet) && empty((new collector())->get_stationen_quellen())) {
             $this->assertSame('', $html);
         }
+    }
+
+    public function test_meine_lernenden_hat_reiter_je_quelle_mit_stationen(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $quellen = (new collector())->get_stationen_quellen();
+        $html = seitennavigation::render(menuepunkt::MEINE_LERNENDEN);
+        foreach ($quellen as $quellekey => $name) {
+            $url = new moodle_url('/local/berufsbildung/stationen.php', ['quelle' => $quellekey]);
+            $this->assertStringContainsString($url->out(), $html);
+            $this->assertStringContainsString($name, $html);
+        }
+        if (empty($quellen)) {
+            $this->assertStringNotContainsString('/local/berufsbildung/stationen.php', $html);
+        }
+
+        // Unter "Meine Lehre" nie.
+        $this->assertStringNotContainsString(
+            '/local/berufsbildung/stationen.php',
+            seitennavigation::render(menuepunkt::MEINE_LEHRE)
+        );
     }
 
     public function test_berufsbildung_hat_keine_reiter(): void {

@@ -28,6 +28,7 @@ namespace local_berufsbildung\output;
 
 use core_text;
 use local_berufsbildung\ausbildungsstand;
+use local_berufsbildung\nachweis\station;
 
 /**
  * Reine Array-Operationen auf dem Roster (id, name, Ausbildungsstand) -
@@ -99,6 +100,28 @@ class lernenden_roster {
             ($a['handlungsbedarf'] ?? self::HANDLUNGSBEDARF_KEINER) <=> ($b['handlungsbedarf'] ?? self::HANDLUNGSBEDARF_KEINER));
 
         return $eintraege;
+    }
+
+    /**
+     * Handlungsbedarf aus den aktuellen Stationen: ueberfaellig, wenn eine
+     * ueberfaellig ist, sonst offen, wenn eine offen ist. Mehr als $stufe
+     * wird es nie - so laesst sich Ueberfaelliges aus den Faelligkeiten
+     * vorgeben.
+     *
+     * @param \local_berufsbildung\nachweis\stationen[] $stationen
+     * @param int $stufe Handlungsbedarf aus anderen Quellen, sonst HANDLUNGSBEDARF_KEINER
+     * @return int Eine der Konstanten HANDLUNGSBEDARF_*
+     */
+    public static function handlungsbedarf_aus_stationen(array $stationen, int $stufe = self::HANDLUNGSBEDARF_KEINER): int {
+        foreach ($stationen as $einzelstationen) {
+            $stufe = match ($einzelstationen->aktuelle()?->status) {
+                station::STATUS_UEBERFAELLIG => self::HANDLUNGSBEDARF_UEBERFAELLIG,
+                station::STATUS_OFFEN => min($stufe, self::HANDLUNGSBEDARF_OFFEN),
+                default => $stufe,
+            };
+        }
+
+        return $stufe;
     }
 
     /**
