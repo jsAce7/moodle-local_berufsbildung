@@ -19,9 +19,15 @@
  * Ausbildungsstand und ihren Taetigkeiten aus allen registrierten
  * Nachweis-Quellen (siehe classes/nachweis/).
  *
- * Sortiert nach laufendem Semester, dann nach Namen (siehe
- * output\lernenden_roster::sortiere()), durchsuchbar nach Namen und
- * filterbar nach Beruf. Jede Person ist eine Zeile ueber die volle Breite -
+ * Quellen mit festen Stationen ueber die Lehre (etwa der Bildungsbericht,
+ * siehe nachweis\quelle_mit_stationen) zeigen ihre aktuelle Station in
+ * einer eigenen Spalte und alles Weitere als Zeitleiste zuoberst im
+ * Detail - nicht noch einmal unter Faelligkeiten und Taetigkeiten.
+ *
+ * Sortiert nach Handlungsbedarf, dann nach laufendem Semester, dann nach
+ * Namen (siehe output\lernenden_roster::nach_handlungsbedarf() und
+ * sortiere()), durchsuchbar nach Namen und filterbar nach Beruf und
+ * Handlungsbedarf. Jede Person ist eine Zeile ueber die volle Breite -
  * Details (Luecken-Aufschluesselung, Kompetenzraster, Taetigkeitenliste,
  * Profil-Link) stehen erst auf Wunsch (natives <details>-Element, kein
  * JavaScript). Volle Breite, weil das Kompetenzraster ein breiter Inhalt
@@ -36,6 +42,7 @@ require_once(__DIR__ . '/../../config.php');
 
 use local_berufsbildung\api;
 use local_berufsbildung\nachweis\collector;
+use local_berufsbildung\nachweis\station;
 use local_berufsbildung\navigation\menuepunkt;
 use local_berufsbildung\output\faelligkeiten_liste;
 use local_berufsbildung\output\hilfe_link;
@@ -44,12 +51,14 @@ use local_berufsbildung\output\lernenden_kachel;
 use local_berufsbildung\output\lernenden_roster;
 use local_berufsbildung\output\nachweis_liste;
 use local_berufsbildung\output\seitennavigation;
+use local_berufsbildung\output\stationen_leiste;
 
 require_login();
 
 $berufsbildnerid = (int) $USER->id;
 $suchbegriff = optional_param('suche', '', PARAM_TEXT);
 $berufsfilter = optional_param('beruf', '', PARAM_ALPHANUMEXT);
+$nurhandlungsbedarf = optional_param('handlungsbedarf', false, PARAM_BOOL);
 
 // Der Systemkontext zeigt keinen Avatar der betreuenden Person im Moodle-
 // Seitenkopf. Die personenbezogenen Detaildaten bleiben separat geschützt.
@@ -102,6 +111,15 @@ if (empty($eintraege)) {
     $quellennamen = $collector->get_quelle_namen();
     $datumsformat = get_string('strftimedate', 'langconfig');
 
+    // Stationen je Person, vorab fuer alle: ob die Spalte ueberhaupt
+    // steht, haengt davon ab, ob irgendeine Person welche hat - sonst
+    // stuende eine leere Spalte in jeder Zeile.
+    $stationenjelernende = [];
+    foreach ($eintraege as $eintrag) {
+        $stationenjelernende[$eintrag['id']] = $collector->get_stationen($berufsbildnerid, $eintrag['id']);
+    }
+    $mitstationenspalte = !empty(array_filter($stationenjelernende));
+
     // Fälligkeiten gehören zur jeweiligen Person. Im geschlossenen Header
     // wird nur Überfälliges signalisiert; alle Fristen stehen im Detail.
     $faelligkeitenjelernende = [];
@@ -109,6 +127,11 @@ if (empty($eintraege)) {
     foreach ($eintraege as $eintrag) {
         $lernendeid = $eintrag['id'];
         foreach ($collector->get_faelligkeiten($berufsbildnerid, $lernendeid) as $faelligkeit) {
+            // Eine Quelle mit Stationen zeigt ihre Fristen dort, auch die
+            // ueberfaelligen - sie zaehlen nicht noch einmal im Badge.
+            if (isset($stationenjelernende[$lernendeid][$faelligkeit->quellekey])) {
+                continue;
+            }
             $zeile = (object) [
                 'bezeichnung' => $faelligkeit->bezeichnung,
                 'datum' => userdate($faelligkeit->datum, $datumsformat),
@@ -168,6 +191,31 @@ if (empty($eintraege)) {
         static fn (int $id): bool => $anzahlluecken[$id] > 0 || $anzahlwahlpflichtoffen[$id] > 0
     ));
 
+    // Handlungsbedarf je Person: Ueberfaelliges aus den Faelligkeiten oder
+    // eine ueberfaellige aktuelle Station, sonst eine offene aktuelle
+    // Station - also das, was die Kachel ohne Aufklappen rot oder blau
+    // zeigt. Wer wartet, steht zuoberst.
+    foreach ($eintraege as &$eintrag) {
+        $stufe = !empty($anzahlueberfaellig[$eintrag['id']])
+            ? lernenden_roster::HANDLUNGSBEDARF_UEBERFAELLIG
+            : lernenden_roster::HANDLUNGSBEDARF_KEINER;
+        foreach ($stationenjelernende[$eintrag['id']] as $einzelstationen) {
+            $status = $einzelstationen->aktuelle()?->status;
+            if ($status === station::STATUS_UEBERFAELLIG) {
+                $stufe = lernenden_roster::HANDLUNGSBEDARF_UEBERFAELLIG;
+            } else if ($status === station::STATUS_OFFEN) {
+                $stufe = min($stufe, lernenden_roster::HANDLUNGSBEDARF_OFFEN);
+            }
+        }
+        $eintrag['handlungsbedarf'] = $stufe;
+    }
+    unset($eintrag);
+    $eintraege = lernenden_roster::nach_handlungsbedarf($eintraege);
+    $anzahlhandlungsbedarf = count(array_filter(
+        $eintraege,
+        static fn (array $eintrag): bool => $eintrag['handlungsbedarf'] !== lernenden_roster::HANDLUNGSBEDARF_KEINER
+    ));
+
     echo html_writer::start_tag('div', ['class' => 'card mb-3 local-berufsbildung-roster-steuerung']);
     echo html_writer::start_tag('div', ['class' => 'card-body']);
     echo html_writer::start_tag('div', ['class' => 'local-berufsbildung-roster-toolbar']);
@@ -193,6 +241,16 @@ if (empty($eintraege)) {
     // Ohne eigene Klasse: html_writer::select() setzt je nach Moodle-Version
     // custom-select (Bootstrap 4) oder form-select (Bootstrap 5) selbst.
     echo html_writer::select($berufoptions, 'beruf', $berufsfilter, false);
+    echo html_writer::select(
+        [
+            0 => get_string('meine_lernenden:handlungsbedarf_alle', 'local_berufsbildung'),
+            1 => get_string('meine_lernenden:handlungsbedarf_nur', 'local_berufsbildung'),
+        ],
+        'handlungsbedarf',
+        $nurhandlungsbedarf ? 1 : 0,
+        false,
+        ['aria-label' => get_string('meine_lernenden:handlungsbedarf', 'local_berufsbildung')]
+    );
     // Primaerfarbe: hellgrau gefuellt wirkte die Schaltflaeche deaktiviert.
     echo html_writer::tag('button', get_string('meine_lernenden:filtern', 'local_berufsbildung'), [
         'type' => 'submit',
@@ -204,7 +262,7 @@ if (empty($eintraege)) {
         get_string('meine_lernenden:zusammenfassung', 'local_berufsbildung', (object) [
             'anzahl' => count($eintraege),
             'luecken' => $anzahlmitluecken,
-        ]),
+        ]) . ' · ' . get_string('meine_lernenden:handlungsbedarf_anzahl', 'local_berufsbildung', $anzahlhandlungsbedarf),
         'text-muted small local-berufsbildung-roster-toolbar-summary'
     );
     echo html_writer::end_tag('div');
@@ -219,7 +277,7 @@ if (empty($eintraege)) {
     // sie binden sich ueber das data-Attribut an alle ihre Schaltflaechen.
     $schnellaktionsmodule = [];
 
-    $gefiltert = lernenden_roster::filtere($eintraege, $suchbegriff, $berufsfilter);
+    $gefiltert = lernenden_roster::filtere($eintraege, $suchbegriff, $berufsfilter, $nurhandlungsbedarf);
 
     if (empty($gefiltert)) {
         echo $OUTPUT->notification(get_string('meine_lernenden:keine_treffer', 'local_berufsbildung'), 'info');
@@ -238,7 +296,18 @@ if (empty($eintraege)) {
         // classes/nachweis/quelle_mit_zustaendigen_aktion.php. Zuoberst,
         // weil es die Handlung ist, fuer die man die Person aufklappt; ein
         // gestylter Link wie auf meine_lehre.php, der Weg dahin ist ein GET.
-        $aktionen = $collector->get_zustaendigen_aktionen($berufsbildnerid, $lernendeid);
+        // Die Aktion einer Quelle mit Stationen steht bei deren aktueller
+        // Station (stationen_leiste), nicht hier.
+        $stationen = $stationenjelernende[$lernendeid];
+        $aktionen = [];
+        $stationenaktionen = [];
+        foreach ($collector->get_zustaendigen_aktionen($berufsbildnerid, $lernendeid) as $aktion) {
+            if (isset($stationen[$aktion->quellekey])) {
+                $stationenaktionen[$aktion->quellekey] = $aktion;
+            } else {
+                $aktionen[] = $aktion;
+            }
+        }
         if (!empty($aktionen)) {
             echo html_writer::start_tag('div', ['class' => 'local-berufsbildung-roster-erfassen mb-3']);
             foreach ($aktionen as $aktion) {
@@ -250,6 +319,10 @@ if (empty($eintraege)) {
                 echo html_writer::end_tag('div');
             }
             echo html_writer::end_tag('div');
+        }
+
+        foreach ($stationen as $quellekey => $einzelstationen) {
+            echo html_writer::div(stationen_leiste::render($einzelstationen, $stationenaktionen[$quellekey] ?? null), 'mb-4');
         }
 
         if (!empty($raster[$lernendeid])) {
@@ -277,7 +350,12 @@ if (empty($eintraege)) {
             kompakt: true
         );
 
-        $nachweise = $collector->get_nachweise($berufsbildnerid, $lernendeid, 0, time());
+        // Ohne die Nachweise einer Quelle mit Stationen: ein freigegebener
+        // Bildungsbericht steht in deren Zeitleiste und ist keine Taetigkeit.
+        $nachweise = array_values(array_filter(
+            $collector->get_nachweise($berufsbildnerid, $lernendeid, 0, time()),
+            static fn ($nachweis): bool => !isset($stationen[$nachweis->quellekey])
+        ));
         echo nachweis_liste::render(
             $nachweise,
             $quellennamen,
@@ -286,7 +364,7 @@ if (empty($eintraege)) {
             $eintrag['istextern'] ? [] : api::get_semester_grenzen($lernendeid),
             get_string('nachweis:titel', 'local_berufsbildung'),
             $collector->get_zusammenfassungen($nachweise),
-            $collector->get_ausstehende($berufsbildnerid, $lernendeid)
+            array_diff_key($collector->get_ausstehende($berufsbildnerid, $lernendeid), $stationen)
         );
 
         $profilurl = new moodle_url('/user/profile.php', ['id' => $lernendeid]);
@@ -352,7 +430,13 @@ if (empty($eintraege)) {
             istextern: $eintrag['istextern'],
             lernendeid: $lernendeid,
             schnellaktionen: $schnellaktionen,
-            anzahlwahlpflichtoffen: $anzahlwahlpflichtoffen[$lernendeid] ?? 0
+            anzahlwahlpflichtoffen: $anzahlwahlpflichtoffen[$lernendeid] ?? 0,
+            stationen: $mitstationenspalte
+                ? array_values(array_filter(array_map(
+                    static fn ($einzelstationen) => $einzelstationen->aktuelle(),
+                    $stationen
+                )))
+                : null
         );
     }
 

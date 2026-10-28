@@ -336,6 +336,54 @@ class collector {
     }
 
     /**
+     * Stationen aller Quellen, die `quelle_mit_stationen` implementieren -
+     * fuer die Kachel und ihr Detail auf "Meine Lernenden" und fuer die
+     * eigene Person auf "Meine Lehre".
+     *
+     * Fuer die eigene Person ohne Zuordnung, sonst nur fuer eine Person,
+     * fuer die die abrufende Person heute zustaendig ist - wie bei
+     * get_ausstehende(), aber zum Stichtag jetzt wie bei
+     * get_zustaendigen_aktionen(). Welche Sicht gilt, erkennt die Quelle an
+     * $abrufendeid === $lernendeid.
+     *
+     * @param int $abrufendeid Wer fragt ab
+     * @param int $lernendeid Fuer wen
+     * @return array<string, stationen> Quelle-Key => Stationen, nur Quellen mit Stationen
+     */
+    public function get_stationen(int $abrufendeid, int $lernendeid): array {
+        if ($abrufendeid !== $lernendeid && !api::is_zustaendig($abrufendeid, $lernendeid)) {
+            throw new moodle_exception('error:keinezustaendigkeit', 'local_berufsbildung');
+        }
+
+        $ergebnis = [];
+        foreach ($this->providers as $einzelprovider) {
+            if (!$einzelprovider instanceof quelle_mit_stationen) {
+                continue;
+            }
+
+            $quellekey = $einzelprovider->get_quelle_key();
+            // Der Schluessel kommt von der registrierten Quelle, nicht aus
+            // der Station - wie bei den Aktionen.
+            $eintraege = array_map(
+                static fn (station $eintrag): station => $eintrag->mit_quellekey($quellekey),
+                array_values($einzelprovider->get_stationen($abrufendeid, $lernendeid))
+            );
+            if (empty($eintraege)) {
+                continue;
+            }
+
+            $ergebnis[$quellekey] = new stationen(
+                $quellekey,
+                $einzelprovider->get_quelle_name(),
+                $eintraege,
+                $einzelprovider->get_verlauf_url($abrufendeid, $lernendeid)
+            );
+        }
+
+        return $ergebnis;
+    }
+
+    /**
      * Fälligkeiten einer Person aus allen Quellen. Die gleiche
      * Zuständigkeitsgrenze wie bei Leistungsnachweisen gilt auch für
      * Planungsdaten.

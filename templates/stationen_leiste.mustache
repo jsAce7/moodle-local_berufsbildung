@@ -1,0 +1,138 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_berufsbildung/stationen_leiste
+
+    Die Stationen einer Quelle (etwa die Bildungsberichte) zuoberst im
+    Detail einer Person auf "Meine Lernenden": eine Zeitleiste ueber die
+    ganze Lehre, darunter die aktuelle Station mit ihrem Stand und der
+    Aktion, dann die abgeschlossenen Stationen mit Link.
+
+    Die Zeitleiste ist eine geordnete Liste; der Punkt je Station ist
+    Schmuck (aria-hidden), Name und Statustext tragen die Bedeutung. Auf
+    schmalen Fenstern rollt die Leiste waagrecht in ihrem Kasten, statt
+    die Seite zu verbreitern. Den Abstand nach aussen setzt die Seite: auf
+    "Meine Lehre" steht die Leiste in einer eigenen Karte.
+
+    Context variables required for this template:
+    * titel - string, Anzeigename der Quelle
+    * hasverlauf - bool
+    * verlaufurl - string
+    * eintraege - array of {bezeichnung, kurzbezeichnung, statustext, status, hasstand, stand, hasurl, url, aktuell,
+      hasicon, icon, punktklasse, istueberfaellig}
+    * hasaktuelle - bool
+    * aktuelle - wie ein Eintrag in eintraege
+    * hasaktion - bool
+    * aktion - {label, url, klasse}, klasse btn-primary oder btn-outline-primary
+    * hasabgeschlossen - bool
+    * abgeschlossen - wie eintraege, neueste zuerst
+
+    Example context (json):
+    {
+        "titel": "Bildungsbericht",
+        "hasverlauf": true,
+        "verlaufurl": "/local/bildungsbericht/verlauf.php?userid=5",
+        "eintraege": [
+            {"bezeichnung": "Bildungsbericht 1. Semester", "kurzbezeichnung": "1. Semester", "statustext": "freigegeben", "status": "erledigt",
+             "hasstand": true, "stand": "Gespräch am 2. Februar 2026", "hasurl": true,
+             "url": "/local/bildungsbericht/ansicht.php?id=1", "aktuell": false, "hasicon": true,
+             "icon": "fa-check", "punktklasse": "bg-success text-white border-success", "istueberfaellig": false},
+            {"bezeichnung": "Bildungsbericht 2. Semester", "kurzbezeichnung": "2. Semester", "statustext": "in Arbeit", "status": "offen",
+             "hasstand": true, "stand": "Fällig bis 31. August 2026 · in Arbeit, 14 von 22 Angaben erfasst",
+             "hasurl": true, "url": "/local/bildungsbericht/erfassen.php?id=2", "aktuell": true,
+             "hasicon": true, "icon": "fa-edit", "punktklasse": "bg-primary text-white border-primary",
+             "istueberfaellig": false},
+            {"bezeichnung": "Bildungsbericht 3. Semester", "kurzbezeichnung": "3. Semester", "statustext": "geplant", "status": "geplant",
+             "hasstand": true, "stand": "Fällig bis 28. Februar 2027", "hasurl": false, "url": "",
+             "aktuell": false, "hasicon": false, "icon": "", "punktklasse": "bg-white border",
+             "istueberfaellig": false}
+        ],
+        "hasaktuelle": true,
+        "aktuelle": {"bezeichnung": "Bildungsbericht 2. Semester", "kurzbezeichnung": "2. Semester", "statustext": "in Arbeit", "status": "offen",
+            "hasstand": true, "stand": "Fällig bis 31. August 2026 · in Arbeit, 14 von 22 Angaben erfasst",
+            "hasurl": true, "url": "/local/bildungsbericht/erfassen.php?id=2", "aktuell": true,
+            "hasicon": true, "icon": "fa-edit", "punktklasse": "bg-primary text-white border-primary",
+            "istueberfaellig": false},
+        "hasaktion": true,
+        "aktion": {"label": "Bildungsbericht 2. Semester weiter erfassen", "url": "/local/bildungsbericht/erfassen.php?id=2", "klasse": "btn-primary"},
+        "hasabgeschlossen": true,
+        "abgeschlossen": [
+            {"bezeichnung": "Bildungsbericht 1. Semester", "kurzbezeichnung": "1. Semester", "statustext": "freigegeben", "status": "erledigt",
+             "hasstand": true, "stand": "Gespräch am 2. Februar 2026", "hasurl": true,
+             "url": "/local/bildungsbericht/ansicht.php?id=1", "aktuell": false, "hasicon": true,
+             "icon": "fa-check", "punktklasse": "bg-success text-white border-success", "istueberfaellig": false}
+        ]
+    }
+}}
+<section class="local-berufsbildung-stationen" aria-labelledby="{{uniqid}}-stationen-titel">
+    <div class="local-berufsbildung-stationen-kopf mb-2">
+        <h3 class="h5 mb-0" id="{{uniqid}}-stationen-titel">{{titel}}</h3>
+        {{#hasverlauf}}
+            <a href="{{verlaufurl}}" class="small">{{#str}} stationen:verlauf, local_berufsbildung {{/str}}</a>
+        {{/hasverlauf}}
+    </div>
+    <div class="local-berufsbildung-stationen-rollbar">
+        <ol class="local-berufsbildung-stationen-leiste list-unstyled mb-0">
+            {{#eintraege}}
+                <li class="local-berufsbildung-station"{{#aktuell}} aria-current="step"{{/aktuell}}>
+                    <span class="local-berufsbildung-station-linie border-top" aria-hidden="true"></span>
+                    <span class="local-berufsbildung-station-punkt border {{punktklasse}}{{#aktuell}} local-berufsbildung-station-punkt-aktuell{{/aktuell}}" aria-hidden="true">
+                        {{#hasicon}}<i class="icon fa {{icon}} fa-fw m-0"></i>{{/hasicon}}
+                    </span>
+                    <span class="local-berufsbildung-station-name{{#aktuell}} font-weight-bold fw-bold{{/aktuell}}">
+                        {{#hasurl}}<a href="{{url}}">{{kurzbezeichnung}}</a>{{/hasurl}}
+                        {{^hasurl}}{{kurzbezeichnung}}{{/hasurl}}
+                    </span>
+                    <span class="d-block small {{#istueberfaellig}}text-danger{{/istueberfaellig}}{{^istueberfaellig}}text-muted{{/istueberfaellig}}">{{statustext}}</span>
+                </li>
+            {{/eintraege}}
+        </ol>
+    </div>
+    {{#hasaktuelle}}
+        {{#aktuelle}}
+            <div class="local-berufsbildung-stationen-aktuell bg-light border rounded mt-3">
+                <div class="local-berufsbildung-stationen-aktuell-text">
+                    <strong class="d-block">{{bezeichnung}} · <span class="{{#istueberfaellig}}text-danger{{/istueberfaellig}}">{{statustext}}</span></strong>
+                    {{#hasstand}}<span class="d-block small text-muted">{{stand}}</span>{{/hasstand}}
+                </div>
+                {{#hasaktion}}
+                    {{#aktion}}
+                        <a href="{{url}}" class="btn {{klasse}}">{{label}}</a>
+                    {{/aktion}}
+                {{/hasaktion}}
+            </div>
+        {{/aktuelle}}
+    {{/hasaktuelle}}
+    {{^hasaktuelle}}
+        {{#hasaktion}}
+            {{#aktion}}
+                <div class="mt-3"><a href="{{url}}" class="btn {{klasse}}">{{label}}</a></div>
+            {{/aktion}}
+        {{/hasaktion}}
+    {{/hasaktuelle}}
+    {{#hasabgeschlossen}}
+        <h4 class="h6 mt-3 mb-1">{{#str}} stationen:abgeschlossen, local_berufsbildung {{/str}}</h4>
+        <ul class="list-unstyled mb-0">
+            {{#abgeschlossen}}
+                <li class="local-berufsbildung-nachweis border-bottom">
+                    <a href="{{url}}">{{bezeichnung}}</a>
+                    {{#hasstand}}<span class="d-block text-muted small">{{stand}}</span>{{/hasstand}}
+                </li>
+            {{/abgeschlossen}}
+        </ul>
+    {{/hasabgeschlossen}}
+</section>

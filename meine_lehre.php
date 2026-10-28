@@ -17,7 +17,10 @@
 /**
  * "Meine Lehre": eigener Ausbildungsstand, eigener Versetzungsplan und
  * eigene Taetigkeiten aus allen registrierten Nachweis-Quellen (siehe
- * classes/nachweis/).
+ * classes/nachweis/). Quellen mit festen Stationen ueber die Lehre (etwa
+ * der Bildungsbericht, siehe nachweis\quelle_mit_stationen) stehen als
+ * eigene Zeitleiste unter der Kopfkarte, nicht unter Faelligkeiten und
+ * Taetigkeiten.
  *
  * @package    local_berufsbildung
  * @copyright  2026 jsAce7
@@ -37,6 +40,7 @@ use local_berufsbildung\output\kompetenzraster;
 use local_berufsbildung\output\nachweis_liste;
 use local_berufsbildung\output\seitennavigation;
 use local_berufsbildung\output\semester_stepper;
+use local_berufsbildung\output\stationen_leiste;
 
 require_login();
 
@@ -103,6 +107,8 @@ $abschnitt = static function (string $inhalt): string {
 
 if ($stand !== null) {
     $collector = new collector();
+    $stationen = $collector->get_stationen($lernendeid, $lernendeid);
+    $aktionen = [];
 
     // Kopfkarte: wer bin ich, wo stehe ich, was kann ich jetzt tun.
     ob_start();
@@ -122,7 +128,13 @@ if ($stand !== null) {
         ]), ['class' => 'text-muted mb-0']);
     }
 
-    echo semester_stepper::render($stand->semester, $stand->gesamtsemester);
+    // Die Zeitleiste der Stationen darunter zeigt die Semester bereits,
+    // mit dem, was in jedem geschah - zwei Fortschrittsbalken kurz
+    // nacheinander sagten zweimal dasselbe. Ohne Stationen bleibt die
+    // Semesterleiste die einzige Uebersicht ueber die Lehre.
+    if (empty($stationen)) {
+        echo semester_stepper::render($stand->semester, $stand->gesamtsemester);
+    }
 
     if (!$istbeendet) {
         // Wo bin ich gerade? Die unmittelbarste Information des Plans,
@@ -180,6 +192,17 @@ if ($stand !== null) {
         'card local-berufsbildung-herokarte mb-3'
     );
 
+    // Die Erfassen-Aktion einer Quelle mit Stationen, etwa die
+    // Rueckmeldung zum Bildungsbericht, steht oben bei den Aufgaben und
+    // hier noch einmal bei ihrem Bericht - dort zweitrangig.
+    $aktionjequelle = [];
+    foreach ($aktionen as $aktion) {
+        $aktionjequelle[$aktion->quellekey] = $aktion;
+    }
+    foreach ($stationen as $quellekey => $einzelstationen) {
+        echo $abschnitt(stationen_leiste::render($einzelstationen, $aktionjequelle[$quellekey] ?? null, true));
+    }
+
     // Fälligkeiten stehen bei der eigenen Lehre, nicht als dritter Einstieg
     // daneben. Die Erfassungsaktion führt unmittelbar zur zuständigen
     // Quelle; die Liste zeigt zusätzlich auch Fristen von Quellen ohne
@@ -187,7 +210,8 @@ if ($stand !== null) {
     // Bildungsbericht schreiben) sind keine Frist der lernenden Person.
     $faelligkeiten = [];
     foreach ($collector->get_faelligkeiten($lernendeid, $lernendeid) as $faelligkeit) {
-        if (!$faelligkeit->fuer_lernende) {
+        // Fristen einer Quelle mit Stationen stehen in deren Zeitleiste.
+        if (!$faelligkeit->fuer_lernende || isset($stationen[$faelligkeit->quellekey])) {
             continue;
         }
         $faelligkeiten[] = (object) [
@@ -228,14 +252,19 @@ if ($stand !== null) {
     // angezeigt werden, also nur ueber die bereits besprochenen. Darunter
     // steht je Quelle, was noch aussteht - etwa die kommenden ueK. Nach
     // Lehrabschluss steht nichts mehr aus, was sich noch planen liesse.
-    $nachweise = $collector->get_nachweise($lernendeid, $lernendeid, 0, time());
+    // Ohne die Nachweise einer Quelle mit Stationen: ein besprochener
+    // Bildungsbericht steht in deren Zeitleiste und ist keine Taetigkeit.
+    $nachweise = array_values(array_filter(
+        $collector->get_nachweise($lernendeid, $lernendeid, 0, time()),
+        static fn ($nachweis): bool => !isset($stationen[$nachweis->quellekey])
+    ));
     echo $abschnitt(nachweis_liste::render(
         $nachweise,
         $collector->get_quelle_namen(),
         api::get_semester_grenzen($lernendeid),
         get_string('nachweis:titel', 'local_berufsbildung'),
         $collector->get_zusammenfassungen($nachweise),
-        $istbeendet ? [] : $collector->get_ausstehende($lernendeid, $lernendeid)
+        $istbeendet ? [] : array_diff_key($collector->get_ausstehende($lernendeid, $lernendeid), $stationen)
     ));
 } else if ($phase === api::PHASE_VOR_BEGINN) {
     // Die Lehre beginnt erst - kein Semester, aber der Versetzungsplan

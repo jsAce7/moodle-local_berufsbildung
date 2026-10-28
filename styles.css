@@ -998,7 +998,7 @@
  * und Chevron.
  */
 .local-berufsbildung-kachel-info {
-    flex: 1 1 14rem;
+    flex: 1 1 12rem;
     min-width: 0;
     line-height: 1.25;
 }
@@ -1023,19 +1023,19 @@
     justify-content: flex-end;
     gap: 0.35rem;
     flex: 0 0 auto;
-    min-width: 19rem;
+    min-width: 13rem;
 }
 
 /*
- * Der laufende Ausbildungsblock als eigene Spalte fester Breite: so steht
- * er ueber alle Zeilen hinweg untereinander und laesst sich vergleichen.
- * Blockbezeichnungen sind lang ("ueK 3 - Niederspannungssteuerungen und
- * Leiterplattentechnik") und werden deshalb abgeschnitten - vollstaendig
- * stehen sie im Titel.
+ * Der laufende Ausbildungsblock unter der Semesterleiste, in derselben
+ * Spalte: so steht er ueber alle Zeilen hinweg untereinander und laesst
+ * sich vergleichen. Blockbezeichnungen sind lang ("ueK 3 -
+ * Niederspannungssteuerungen und Leiterplattentechnik") und werden
+ * deshalb abgeschnitten - vollstaendig stehen sie im Titel.
  */
 .local-berufsbildung-kachel-einsatz {
-    flex: 0 1 14rem;
-    min-width: 0;
+    display: block;
+    max-width: 100%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1050,8 +1050,12 @@
  */
 .local-berufsbildung-kachel-fortschritt {
     display: flex;
-    align-items: center;
-    flex: 0 0 10rem;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.3rem;
+    flex: 0 0 12rem;
+    min-width: 0;
 }
 
 .local-berufsbildung-kachel-summary .local-berufsbildung-stepper {
@@ -1060,12 +1064,145 @@
 }
 
 /*
+ * Die aktuelle Station je Quelle (etwa der laufende Bildungsbericht) als
+ * eigene Spalte zwischen Semesterleiste und Kennzahlen. Sie darf
+ * schrumpfen, aber nicht unter eine lesbare Breite; Titel und Stand werden
+ * abgeschnitten, vollstaendig stehen sie im title-Attribut.
+ */
+.local-berufsbildung-kachel-stationen {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1 1 14rem;
+    min-width: 12rem;
+    max-width: 22rem;
+}
+
+.local-berufsbildung-kachel-station {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.6rem;
+    min-width: 0;
+    line-height: 1.25;
+}
+
+.local-berufsbildung-kachel-station-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.local-berufsbildung-kachel-station-titel,
+.local-berufsbildung-kachel-station-stand {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.local-berufsbildung-kachel-station-titel {
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+/*
+ * Zeitleiste der Stationen im Detail (stationen_leiste): eine Spalte je
+ * Station, verbunden durch eine Linie hinter den Punkten. Mindestbreite je
+ * Station, damit "Probezeitbericht, Verlaengerung 1" nicht zeichenweise
+ * umbricht; reicht der Platz nicht, rollt die Leiste in ihrem Kasten.
+ */
+.local-berufsbildung-stationen-kopf {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+}
+
+.local-berufsbildung-stationen-rollbar {
+    overflow-x: auto;
+    padding: 0.35rem 0 0.25rem;
+}
+
+.local-berufsbildung-stationen-leiste {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(6.5rem, 1fr);
+}
+
+.local-berufsbildung-station {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0 0.25rem;
+    text-align: center;
+    line-height: 1.25;
+}
+
+/* Von der Mitte dieser Station zur Mitte der naechsten. */
+.local-berufsbildung-station-linie {
+    position: absolute;
+    top: 1rem;
+    left: 50%;
+    width: 100%;
+    border-top-width: 2px !important;
+}
+
+.local-berufsbildung-station:last-child .local-berufsbildung-station-linie {
+    display: none;
+}
+
+.local-berufsbildung-station-punkt {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    border-width: 2px !important;
+    border-radius: 50%;
+    font-size: 0.8rem;
+}
+
+/* Groesser statt farbig hervorgehoben - Farben kommen nur aus dem Markup.
+   Der Rand nach oben haelt die Mitte auf der Linie der anderen Punkte. */
+.local-berufsbildung-station-punkt-aktuell {
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-top: -0.25rem;
+    margin-bottom: -0.25rem;
+    font-size: 1rem;
+}
+
+.local-berufsbildung-station-punkt-klein {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 0.7rem;
+}
+
+.local-berufsbildung-stationen-aktuell {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    padding: 0.75rem 1rem;
+}
+
+.local-berufsbildung-stationen-aktuell-text {
+    flex: 1 1 18rem;
+    min-width: 0;
+}
+
+/*
  * Schmale Fenster: die Zeile bricht ohnehin um, feste Spalten wuerden dort
  * nur Leerraum erzeugen. Kennzahlen stehen dann linksbuendig unter dem
  * Namen.
  */
 @media (max-width: 767.98px) {
-    .local-berufsbildung-kachel-einsatz,
     .local-berufsbildung-kachel-fortschritt {
         flex-basis: auto;
     }
@@ -1073,6 +1210,11 @@
     .local-berufsbildung-kachel-badges {
         min-width: 0;
         justify-content: flex-start;
+    }
+
+    .local-berufsbildung-kachel-stationen {
+        flex-basis: 100%;
+        max-width: none;
     }
 }
 

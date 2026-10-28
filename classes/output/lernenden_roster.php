@@ -34,9 +34,18 @@ use local_berufsbildung\ausbildungsstand;
  * keine DB-Zugriffe, deshalb ohne Weiteres unit-testbar.
  *
  * Eintraege haben die Form array{id: int, name: string, stand: ?ausbildungsstand,
- * istextern?: bool}.
+ * istextern?: bool, handlungsbedarf?: int}.
  */
 class lernenden_roster {
+    /** @var int Etwas ist ueberfaellig. */
+    public const HANDLUNGSBEDARF_UEBERFAELLIG = 0;
+
+    /** @var int Etwas ist jetzt zu tun, die Frist laeuft noch. */
+    public const HANDLUNGSBEDARF_OFFEN = 1;
+
+    /** @var int Nichts zu tun. */
+    public const HANDLUNGSBEDARF_KEINER = 2;
+
     /**
      * Sortiert reguläre Lernende nach laufendem Semester (aufsteigend),
      * dann nach Namen. Externe üK-Teilnehmende stehen immer zuletzt.
@@ -73,18 +82,41 @@ class lernenden_roster {
     }
 
     /**
-     * Filtert nach Namens-Teilstring (Gross-/Kleinschreibung egal) und
-     * optional exakt nach Beruf-Code. Leere Filter aendern nichts.
+     * Stellt Personen mit Handlungsbedarf voran: zuerst wer etwas
+     * Ueberfaelliges hat, dann wer etwas Offenes hat, dann alle uebrigen.
+     * Bei 16 Lernenden sonst erst nach dem Scrollen sichtbar, wer wartet.
      *
-     * @param array $eintraege Struktur: array<int, array{id: int, name: string, stand: ?ausbildungsstand}>
+     * Erwartet die Eintraege bereits nach sortiere() geordnet - usort ist
+     * stabil, innerhalb einer Stufe bleibt diese Reihenfolge. Ohne
+     * 'handlungsbedarf' gilt HANDLUNGSBEDARF_KEINER.
+     *
+     * @param array $eintraege Struktur: array<int, array{id: int, name: string, stand: ?ausbildungsstand,
+     *        handlungsbedarf?: int}>
+     * @return array
+     */
+    public static function nach_handlungsbedarf(array $eintraege): array {
+        usort($eintraege, static fn (array $a, array $b): int =>
+            ($a['handlungsbedarf'] ?? self::HANDLUNGSBEDARF_KEINER) <=> ($b['handlungsbedarf'] ?? self::HANDLUNGSBEDARF_KEINER));
+
+        return $eintraege;
+    }
+
+    /**
+     * Filtert nach Namens-Teilstring (Gross-/Kleinschreibung egal),
+     * optional exakt nach Beruf-Code und optional auf Personen mit
+     * Handlungsbedarf. Leere Filter aendern nichts.
+     *
+     * @param array $eintraege Struktur: array<int, array{id: int, name: string, stand: ?ausbildungsstand,
+     *        handlungsbedarf?: int}>
      * @param string $suchbegriff
      * @param string $beruf Exakter Beruf-Code, z.B. 'AU_EFZ' - leer = alle Berufe
+     * @param bool $nurhandlungsbedarf Nur wer etwas Ueberfaelliges oder Offenes hat
      * @return array<int, array{id: int, name: string, stand: ?ausbildungsstand}>
      */
-    public static function filtere(array $eintraege, string $suchbegriff, string $beruf): array {
+    public static function filtere(array $eintraege, string $suchbegriff, string $beruf, bool $nurhandlungsbedarf = false): array {
         $suchbegriff = trim($suchbegriff);
 
-        if ($suchbegriff === '' && $beruf === '') {
+        if ($suchbegriff === '' && $beruf === '' && !$nurhandlungsbedarf) {
             return $eintraege;
         }
 
@@ -92,8 +124,15 @@ class lernenden_roster {
 
         return array_values(array_filter(
             $eintraege,
-            static function (array $eintrag) use ($suchbegriffklein, $beruf): bool {
+            static function (array $eintrag) use ($suchbegriffklein, $beruf, $nurhandlungsbedarf): bool {
                 if ($beruf !== '' && $eintrag['stand']?->beruf !== $beruf) {
+                    return false;
+                }
+
+                if (
+                    $nurhandlungsbedarf
+                    && ($eintrag['handlungsbedarf'] ?? self::HANDLUNGSBEDARF_KEINER) === self::HANDLUNGSBEDARF_KEINER
+                ) {
                     return false;
                 }
 

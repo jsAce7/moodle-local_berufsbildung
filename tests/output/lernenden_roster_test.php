@@ -173,4 +173,39 @@ final class lernenden_roster_test extends advanced_testcase {
 
         $this->assertSame(['AU_EFZ', 'PM_EFZ'], lernenden_roster::berufe($eintraege));
     }
+
+    /**
+     * Handlungsbedarf zuerst: ueberfaellig, dann offen, dann die uebrigen;
+     * innerhalb einer Stufe bleibt die bisherige Reihenfolge.
+     */
+    public function test_nach_handlungsbedarf_stellt_wartende_voran(): void {
+        $eintraege = [
+            ['handlungsbedarf' => lernenden_roster::HANDLUNGSBEDARF_KEINER] + $this->eintrag(1, 'Anna', $this->stand(1)),
+            ['handlungsbedarf' => lernenden_roster::HANDLUNGSBEDARF_OFFEN] + $this->eintrag(2, 'Ben', $this->stand(2)),
+            ['handlungsbedarf' => lernenden_roster::HANDLUNGSBEDARF_UEBERFAELLIG] + $this->eintrag(3, 'Cleo', $this->stand(3)),
+            ['handlungsbedarf' => lernenden_roster::HANDLUNGSBEDARF_OFFEN] + $this->eintrag(4, 'Dario', $this->stand(4)),
+            // Ohne Angabe: kein Handlungsbedarf.
+            $this->eintrag(5, 'Eva', $this->stand(5)),
+        ];
+
+        $sortiert = lernenden_roster::nach_handlungsbedarf($eintraege);
+
+        $this->assertSame([3, 2, 4, 1, 5], array_column($sortiert, 'id'));
+    }
+
+    public function test_filtere_nur_mit_handlungsbedarf(): void {
+        $eintraege = [
+            ['handlungsbedarf' => lernenden_roster::HANDLUNGSBEDARF_KEINER] + $this->eintrag(1, 'Anna', $this->stand(1)),
+            ['handlungsbedarf' => lernenden_roster::HANDLUNGSBEDARF_OFFEN] + $this->eintrag(2, 'Ben', $this->stand(2)),
+            ['handlungsbedarf' => lernenden_roster::HANDLUNGSBEDARF_UEBERFAELLIG]
+                + $this->eintrag(3, 'Cleo', $this->stand(3, 'AU_EFZ')),
+            $this->eintrag(4, 'Dario', $this->stand(4)),
+        ];
+
+        $this->assertSame([2, 3], array_column(lernenden_roster::filtere($eintraege, '', '', true), 'id'));
+        // Zusammen mit dem Beruf-Filter.
+        $this->assertSame([3], array_column(lernenden_roster::filtere($eintraege, '', 'AU_EFZ', true), 'id'));
+        // Ohne den Filter bleiben alle.
+        $this->assertCount(4, lernenden_roster::filtere($eintraege, '', ''));
+    }
 }

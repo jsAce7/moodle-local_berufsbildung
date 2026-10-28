@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.0] — 2026-10-27
+
+### Hinzugefügt
+
+- **Bildungsberichte auf „Meine Lernenden“ sichtbar**: Jede Zeile hat eine Spalte mit dem Bericht, der gerade zählt, und seinem Stand (überfällig, in Arbeit, noch nicht angelegt, geplant, freigegeben), ohne Aufklappen. Aufgeklappt stehen zuoberst alle Berichte der Lehre als Zeitleiste, darunter der aktuelle mit Frist, Stand und Schaltfläche, die abgeschlossenen mit Link und der Verlauf über die ganze Lehre. Bisher erschien ein Bericht erst nach der Freigabe unter den Tätigkeiten.
+- **Bildungsberichte auf „Meine Lehre“**: Unter der Kopfkarte stehen die eigenen Berichte als Zeitleiste, darunter der aktuelle mit der Erfassen-Aktion der Quelle (etwa der Rückmeldung), die zusätzlich oben in der Kopfkarte bleibt. Die Semesterleiste der Kopfkarte entfällt dann, die Zeitleiste zeigt die Semester bereits; ohne Quelle mit Stationen bleibt sie.
+- **Handlungsbedarf auf „Meine Lernenden“**: Wer etwas Überfälliges hat, steht zuoberst, dann wer eine offene aktuelle Station hat (etwa einen Bildungsbericht in Arbeit), dann alle übrigen nach Semester und Namen (`output\lernenden_roster::nach_handlungsbedarf()`). Neuer Filter *Nur mit Handlungsbedarf* (`lernenden_roster::filtere()`, Parameter `$nurhandlungsbedarf`), die Zusammenfassung zählt die Personen mit Handlungsbedarf.
+- **`nachweis\quelle_mit_stationen`** mit den Wertobjekten `nachweis\station` und `nachweis\stationen`: für Quellen, deren Schritte über die ganze Lehre feststehen. `collector::get_stationen()` liefert sie für die eigene Person und für Personen, für die die abrufende Person heute zuständig ist; die Quelle erkennt die Sicht an `$abrufendeid === $lernendeid`. `output\stationen_leiste::render()` stellt die Aktion mit `$aktionzweitrangig` umrandet dar. Darstellung über `output\stationen_leiste`; `output\lernenden_kachel::render()` nimmt die aktuellen Stationen im neuen, optionalen Parameter `$stationen` entgegen.
+
+### Geändert
+
+- **Kein Bildungsbericht mehr doppelt**: Fälligkeiten, Nachweise, Ausstehendes und die Schaltfläche einer Quelle mit Stationen stehen auf „Meine Lernenden“ nur noch bei deren Zeitleiste, nicht zusätzlich unter *Fälligkeiten*, *Tätigkeiten* und zuoberst im Detail. Das rote Abzeichen „überfällig“ zählt sie nicht mehr mit, die Spalte zeigt sie selbst.
+- **Laufender Einsatz in der Kachel**: steht jetzt unter der Semesterleiste in derselben Spalte, damit die Zeile mit der neuen Spalte auf einem Laptop nicht umbricht. Ebenso auf „Meine Lehre“. Der Kalender bleibt unverändert.
+
 ## [1.1.1] — 2026-10-27
 
 ### Hinzugefügt

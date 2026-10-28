@@ -29,6 +29,7 @@ namespace local_berufsbildung\output;
 use core_text;
 use local_berufsbildung\ausbildungsstand;
 use local_berufsbildung\nachweis\schnellaktion;
+use local_berufsbildung\nachweis\station;
 
 /**
  * Kompakte Zusammenfassung als <summary>, volle Details (Luecken-
@@ -66,6 +67,10 @@ class lernenden_kachel {
      *        vorkamen, siehe wahlpflicht_gruppe::offen(); 0 unterdrueckt das Badge.
      *        Getrennt von $anzahlluecken: das zaehlt bestimmte fehlende HK, hier
      *        fehlt eine Anzahl, die man aus mehreren waehlen kann.
+     * @param station[]|null $stationen Die aktuelle Station je Quelle, siehe
+     *        stationen::aktuelle(), in einer eigenen Spalte. Null blendet die
+     *        Spalte aus - wo keine Quelle Stationen kennt. Leer haelt die
+     *        Spalte frei, damit die Zeilen untereinander buendig bleiben.
      */
     public static function render(
         string $name,
@@ -79,7 +84,8 @@ class lernenden_kachel {
         bool $istextern = false,
         int $lernendeid = 0,
         array $schnellaktionen = [],
-        int $anzahlwahlpflichtoffen = 0
+        int $anzahlwahlpflichtoffen = 0,
+        ?array $stationen = null
     ): string {
         global $OUTPUT;
 
@@ -97,6 +103,8 @@ class lernenden_kachel {
                 'semester' => $stand->semester,
             ]) : '',
             'stepper' => $stand !== null ? semester_stepper::render($stand->semester, $stand->gesamtsemester, kompakt: true) : '',
+            'hasstationenspalte' => $stationen !== null,
+            'stationen' => array_map([stationen_leiste::class, 'station_daten'], array_values($stationen ?? [])),
             'haswahlpflichtoffen' => $anzahlwahlpflichtoffen > 0,
             'anzahlwahlpflichtoffen' => $anzahlwahlpflichtoffen,
             'hasluecken' => $anzahlluecken > 0,

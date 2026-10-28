@@ -37,6 +37,9 @@
     * hatstand - bool
     * ausbildungsstand - string, nur wenn hatstand
     * stepper - string, bereits gerendertes HTML, nur wenn hatstand
+    * hasstationenspalte - bool, ob die Spalte fuer Stationen (etwa den Bildungsbericht) steht
+    * stationen - array of {bezeichnung, statustext, hasstand, stand, hasicon, icon, punktklasse,
+      istueberfaellig}, die aktuelle Station je Quelle (output\stationen_leiste::station_daten())
     * hasluecken - bool
     * anzahlluecken - int
     * haswahlpflichtoffen - bool
@@ -61,6 +64,19 @@
         "hatstand": true,
         "ausbildungsstand": "PM_EFZ, 3. Lehrjahr (Semester 5)",
         "stepper": "<span class=\"local-berufsbildung-stepper\"></span>",
+        "hasstationenspalte": true,
+        "stationen": [
+            {
+                "bezeichnung": "Semester 5",
+                "statustext": "überfällig",
+                "hasstand": true,
+                "stand": "Überfällig seit 31. August 2026 · noch nichts erfasst",
+                "hasicon": true,
+                "icon": "fa-exclamation",
+                "punktklasse": "bg-danger text-white border-danger",
+                "istueberfaellig": true
+            }
+        ],
         "hasluecken": true,
         "anzahlluecken": 2,
         "haswahlpflichtoffen": true,
@@ -97,22 +113,18 @@
                 <span class="d-block text-muted small">{{ausbildungsstand}}</span>
             {{/hatstand}}
         </span>
-        {{! Wo die Person gerade steht - die Frage, die man beim Blick auf den
-            Roster zuerst hat. Eigene Spalte statt einer Fortsetzung der
-            Namenszeile, damit sie ueber alle Zeilen hinweg buendig steht;
-            leer, wenn gerade kein Einsatz laeuft, aber mit gleicher Breite.
-            Der volle Name steht im Titel, weil Blockbezeichnungen lang sind. }}
-        <span class="local-berufsbildung-kachel-einsatz text-muted small" title="{{einsatzname}}">
-            {{#haseinsatz}}
-                <i class="icon fa fa-map-marker-alt fa-fw m-0" aria-hidden="true"></i> {{einsatzname}}
-            {{/haseinsatz}}
-        </span>
         {{! Die Semesterleiste steht zwischen Name und Kennzahlen, nicht unter
             dem Namen: in einer Zeile ueber die volle Breite ist sie dort der
             Fortschrittsbalken der Person. Die Spalte hat eine feste Breite
             und steht auch ohne Leiste, damit sie ueber alle Zeilen buendig
             bleibt; bei externer Teilnahme steht die Teilnahmeart an ihrer
-            Stelle - dort gibt es keine Lehre, deren Fortschritt man zeigt. }}
+            Stelle - dort gibt es keine Lehre, deren Fortschritt man zeigt.
+
+            Darunter, wo die Person gerade steht - die Frage, die man beim
+            Blick auf den Roster zuerst hat. In derselben Spalte statt einer
+            eigenen, seit die Stationen eine Spalte brauchen: sonst bricht
+            die Zeile schon auf einem Laptop um. Der volle Name steht im
+            Titel, weil Blockbezeichnungen lang sind. }}
         <span class="local-berufsbildung-kachel-fortschritt">
             {{#hatstand}}{{{stepper}}}{{/hatstand}}
             {{#hasextern}}
@@ -120,7 +132,33 @@
                     {{#str}} teilnahmeart:uek_extern, local_berufsbildung {{/str}}
                 </span>
             {{/hasextern}}
+            {{#haseinsatz}}
+                <span class="local-berufsbildung-kachel-einsatz text-muted small" title="{{einsatzname}}">
+                    <i class="icon fa fa-map-marker-alt fa-fw m-0" aria-hidden="true"></i> {{einsatzname}}
+                </span>
+            {{/haseinsatz}}
         </span>
+        {{! Die aktuelle Station je Quelle, etwa der laufende Bildungsbericht:
+            ohne Aufklappen sichtbar, was dort ansteht. Eigene Spalte, damit
+            sie ueber alle Zeilen buendig steht; kein Link, denn ein
+            Bedienelement im Umschalter waere verschachtelt (WCAG 4.1.2) -
+            das Ziel steht im Detail. Der Stand ist lang und wird
+            abgeschnitten, vollstaendig steht er im Titel. }}
+        {{#hasstationenspalte}}
+            <span class="local-berufsbildung-kachel-stationen">
+                {{#stationen}}
+                    <span class="local-berufsbildung-kachel-station bg-light border rounded{{#istueberfaellig}} border-danger{{/istueberfaellig}}" title="{{bezeichnung}} · {{statustext}}{{#hasstand}} · {{stand}}{{/hasstand}}">
+                        <span class="local-berufsbildung-station-punkt local-berufsbildung-station-punkt-klein border {{punktklasse}}" aria-hidden="true">
+                            {{#hasicon}}<i class="icon fa {{icon}} fa-fw m-0"></i>{{/hasicon}}
+                        </span>
+                        <span class="local-berufsbildung-kachel-station-text">
+                            <span class="local-berufsbildung-kachel-station-titel">{{bezeichnung}} · <span class="{{#istueberfaellig}}text-danger{{/istueberfaellig}}">{{statustext}}</span></span>
+                            {{#hasstand}}<span class="local-berufsbildung-kachel-station-stand small text-muted">{{stand}}</span>{{/hasstand}}
+                        </span>
+                    </span>
+                {{/stationen}}
+            </span>
+        {{/hasstationenspalte}}
         {{! Rechtsbuendig, Ueberfaelliges zuvorderst: es kommt und geht, und
             so verschiebt es weder die anderen Kennzahlen noch die Spalten
             davor. }}

@@ -41,6 +41,7 @@ require_once(__DIR__ . '/../fixtures/collector_test_zusammenfassung_provider.php
 require_once(__DIR__ . '/../fixtures/collector_test_ausstehend_provider.php');
 require_once(__DIR__ . '/../fixtures/collector_test_zustaendigen_provider.php');
 require_once(__DIR__ . '/../fixtures/collector_test_schnellaktion_provider.php');
+require_once(__DIR__ . '/../fixtures/collector_test_stationen_provider.php');
 
 #[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\nachweis\collector::class)]
 /**
@@ -569,5 +570,125 @@ final class collector_test extends advanced_testcase {
         $this->expectException(moodle_exception::class);
         (new collector([new collector_test_schnellaktion_provider()]))
             ->get_schnellaktionen((int) $berufsbildner->id, (int) $lernende->id);
+    }
+
+    public function test_get_stationen_liefert_stationen_mit_schluessel_der_quelle(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $lernende->id);
+
+        $provider = new collector_test_stationen_provider([
+            new station('fremd', 'Bericht 1. Semester', station::STATUS_ERLEDIGT, 'freigegeben', null, '/b.php?id=1'),
+            new station(
+                'fremd',
+                'Bericht 2. Semester',
+                station::STATUS_OFFEN,
+                'in Arbeit',
+                'Fällig bis morgen',
+                aktuell: true,
+                kurzbezeichnung: '2. Semester'
+            ),
+        ], '/verlauf.php');
+        $stationen = (new collector([$provider, new collector_test_provider()]))
+            ->get_stationen((int) $berufsbildner->id, (int) $lernende->id);
+
+        $this->assertSame(['teststationen'], array_keys($stationen));
+        $ergebnis = $stationen['teststationen'];
+        $this->assertSame('teststationen', $ergebnis->quellekey);
+        $this->assertSame('Test-Quelle mit Stationen', $ergebnis->titel);
+        $this->assertSame('/verlauf.php', $ergebnis->verlaufurl);
+        $this->assertCount(2, $ergebnis->eintraege);
+        $this->assertSame('teststationen', $ergebnis->eintraege[0]->quellekey);
+        $this->assertSame('teststationen', $ergebnis->eintraege[1]->quellekey);
+        // Alles Uebrige bleibt, wie die Quelle es geliefert hat.
+        $this->assertSame('2. Semester', $ergebnis->eintraege[1]->kurzbezeichnung);
+        $this->assertSame('Fällig bis morgen', $ergebnis->eintraege[1]->stand);
+        $this->assertSame($ergebnis->eintraege[1], $ergebnis->aktuelle());
+    }
+
+    public function test_get_stationen_ohne_stationen_laesst_die_quelle_weg(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $lernende->id);
+
+        $provider = new collector_test_stationen_provider([], '/verlauf.php');
+        $stationen = (new collector([$provider]))->get_stationen((int) $berufsbildner->id, (int) $lernende->id);
+
+        $this->assertSame([], $stationen);
+        $this->assertTrue($provider->wurdeaufgerufen);
+    }
+
+    /**
+     * Fuer sich selbst braucht es keine Zuordnung - "Meine Lehre".
+     */
+    public function test_get_stationen_fuer_sich_selbst_braucht_keine_zuordnung(): void {
+        $this->resetAfterTest();
+
+        $lernende = $this->getDataGenerator()->create_user();
+        $provider = new collector_test_stationen_provider([new station('x', 'X', station::STATUS_GEPLANT, 'geplant')]);
+
+        $stationen = (new collector([$provider]))->get_stationen((int) $lernende->id, (int) $lernende->id);
+
+        $this->assertSame(['teststationen'], array_keys($stationen));
+        $this->assertTrue($provider->wurdeaufgerufen);
+    }
+
+    public function test_get_stationen_fuer_fremde_person_fragt_die_quelle_nicht(): void {
+        $this->resetAfterTest();
+
+        $fremder = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $provider = new collector_test_stationen_provider([new station('x', 'X', station::STATUS_GEPLANT, 'geplant')]);
+
+        $this->expectException(moodle_exception::class);
+
+        try {
+            (new collector([$provider]))->get_stationen((int) $fremder->id, (int) $lernende->id);
+        } finally {
+            $this->assertFalse($provider->wurdeaufgerufen);
+        }
+    }
+
+    /**
+     * Stichtag-Randfaelle: gefragt wird fuer heute. Eine gestern beendete
+     * Zuordnung gibt keine Stationen mehr, eine erst morgen beginnende
+     * noch keine.
+     *
+     * @dataProvider zuordnungen_ohne_zustaendigkeit_heute
+     * @param int $von Beginn der Zuordnung relativ zu jetzt
+     * @param int|null $bis Ende der Zuordnung relativ zu jetzt, null offen
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('zuordnungen_ohne_zustaendigkeit_heute')]
+    public function test_get_stationen_ohne_zustaendigkeit_heute_verweigert(int $von, ?int $bis): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_zuordnung([
+            'berufsbildnerid' => (int) $berufsbildner->id,
+            'lernendeid' => (int) $lernende->id,
+            'gueltig_von' => time() + $von,
+            'gueltig_bis' => $bis !== null ? time() + $bis : null,
+        ]);
+
+        $this->expectException(moodle_exception::class);
+        (new collector([new collector_test_stationen_provider()]))
+            ->get_stationen((int) $berufsbildner->id, (int) $lernende->id);
+    }
+
+    /**
+     * Zuordnungen, die heute nicht gelten.
+     *
+     * @return array
+     */
+    public static function zuordnungen_ohne_zustaendigkeit_heute(): array {
+        return [
+            'gestern beendet' => [-YEARSECS, -DAYSECS],
+            'beginnt morgen' => [DAYSECS, null],
+        ];
     }
 }
