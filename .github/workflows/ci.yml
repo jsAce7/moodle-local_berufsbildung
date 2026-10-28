@@ -106,10 +106,12 @@ jobs:
         run: moodle-plugin-ci behat --profile chrome
 
   # Veroeffentlicht nach gruener CI auf main ein GitHub-Release mit dem
-  # installierbaren ZIP, wenn ein Push $plugin->release in version.php
-  # aendert. Ein gewoehnlicher Push genuegt, der Tag v<release> entsteht
-  # dabei auf dem gepushten Stand. Von Hand gestartet (workflow_dispatch auf
-  # main) holt der Job ein fehlendes Release zur aktuellen Version nach.
+  # installierbaren ZIP, sobald es zu $plugin->release in version.php noch
+  # keines gibt. Ein gewoehnlicher Push genuegt, der Tag v<release> entsteht
+  # dabei auf dem gepushten Stand. Verglichen wird mit den bestehenden
+  # Releases, nicht mit dem Stand vor dem Push: war die CI beim Push mit der
+  # neuen Version rot, holt der naechste gruene Push das Release nach. Von
+  # Hand gestartet (workflow_dispatch auf main) ebenso.
   release:
     needs: test
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
@@ -120,16 +122,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          # Fuer den Vergleich mit version.php vor dem Push.
-          fetch-depth: 0
 
       - name: Version aus version.php lesen
         id: version
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          EREIGNIS: ${{ github.event_name }}
-          VORHER: ${{ github.event.before }}
         run: |
           set -euo pipefail
           lies_release() { sed -n "s/^\$plugin->release *= *'\(.*\)';.*/\1/p"; }
@@ -139,15 +136,6 @@ jobs:
           if [ -z "$release" ] || [ -z "$maturity" ]; then
             echo "::error::\$plugin->release oder \$plugin->maturity nicht gefunden."
             exit 1
-          fi
-          if [ "$EREIGNIS" = "push" ]; then
-            vorher=$( (git show "$VORHER:version.php" 2>/dev/null || true) | lies_release)
-            if [ -z "$vorher" ]; then
-              kein_release "::notice::Stand vor dem Push unbekannt, kein Release. Bei Bedarf den Workflow von Hand starten."
-            fi
-            if [ "$vorher" = "$release" ]; then
-              kein_release "Release $release unveraendert, nichts zu tun."
-            fi
           fi
           tag="v$release"
           if gh release view "$tag" > /dev/null 2>&1; then

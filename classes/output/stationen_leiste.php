@@ -33,7 +33,9 @@ use local_berufsbildung\nachweis\stationen;
 /**
  * Zuoberst im Detail einer Person: alle Stationen einer Quelle als
  * Zeitleiste, darunter die aktuelle mit ihrem Stand und der Aktion der
- * Quelle, dann die abgeschlossenen mit Link. So steht alles zu
+ * Quelle. Erledigte Stationen tragen ihren Stand (etwa das
+ * Gespraechsdatum) und den Link direkt in der Zeitleiste - eine eigene
+ * Liste der abgeschlossenen hiesse dasselbe zweimal. So steht alles zu
  * Bildungsberichten an einer Stelle statt verteilt auf Schaltflaeche,
  * Faelligkeiten und Taetigkeiten.
  */
@@ -58,10 +60,6 @@ class stationen_leiste {
         global $OUTPUT;
 
         $aktuelle = $stationen->aktuelle();
-        $abgeschlossen = array_values(array_filter(
-            $stationen->eintraege,
-            static fn (station $eintrag): bool => $eintrag->status === station::STATUS_ERLEDIGT && $eintrag->url !== null
-        ));
 
         return $OUTPUT->render_from_template('local_berufsbildung/stationen_leiste', [
             'titel' => $stationen->titel,
@@ -76,9 +74,6 @@ class stationen_leiste {
                 'url' => $aktion->url,
                 'klasse' => $aktionzweitrangig ? 'btn-outline-primary' : 'btn-primary',
             ] : null,
-            'hasabgeschlossen' => !empty($abgeschlossen),
-            // Neueste zuerst: wer nachschlaegt, sucht meist den letzten Bericht.
-            'abgeschlossen' => array_map([self::class, 'station_daten'], array_reverse($abgeschlossen)),
         ]);
     }
 
@@ -105,6 +100,9 @@ class stationen_leiste {
             'statustext' => $station->statustext,
             'status' => $station->status,
             'hasstand' => $station->stand !== null && $station->stand !== '',
+            // In der Zeitleiste nur bei erledigten Stationen, etwa "Gespraech
+            // am ..."; der Stand offener ist lang und steht bei der aktuellen.
+            'zeigestand' => $station->status === station::STATUS_ERLEDIGT && $station->stand !== null && $station->stand !== '',
             'stand' => $station->stand ?? '',
             'hasurl' => $station->url !== null,
             'url' => $station->url ?? '',

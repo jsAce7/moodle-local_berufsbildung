@@ -18,9 +18,10 @@
     @template local_berufsbildung/stationen_leiste
 
     Die Stationen einer Quelle (etwa die Bildungsberichte) zuoberst im
-    Detail einer Person auf "Meine Lernenden": eine Zeitleiste ueber die
-    ganze Lehre, darunter die aktuelle Station mit ihrem Stand und der
-    Aktion, dann die abgeschlossenen Stationen mit Link.
+    Detail einer Person auf "Meine Lernenden" und auf "Meine Lehre": eine
+    Zeitleiste ueber die ganze Lehre, darunter die aktuelle Station mit
+    ihrem Stand und der Aktion. Erledigte Stationen zeigen ihren Stand
+    (etwa das Gespraechsdatum) und den Link in der Zeitleiste selbst.
 
     Die Zeitleiste ist eine geordnete Liste; der Punkt je Station ist
     Schmuck (aria-hidden), Name und Statustext tragen die Bedeutung. Auf
@@ -32,14 +33,12 @@
     * titel - string, Anzeigename der Quelle
     * hasverlauf - bool
     * verlaufurl - string
-    * eintraege - array of {bezeichnung, kurzbezeichnung, statustext, status, hasstand, stand, hasurl, url, aktuell,
-      hasicon, icon, punktklasse, istueberfaellig}
+    * eintraege - array of {bezeichnung, kurzbezeichnung, statustext, status, hasstand, stand, zeigestand, hasurl, url,
+      aktuell, hasicon, icon, punktklasse, istueberfaellig}
     * hasaktuelle - bool
     * aktuelle - wie ein Eintrag in eintraege
     * hasaktion - bool
     * aktion - {label, url, klasse}, klasse btn-primary oder btn-outline-primary
-    * hasabgeschlossen - bool
-    * abgeschlossen - wie eintraege, neueste zuerst
 
     Example context (json):
     {
@@ -48,16 +47,16 @@
         "verlaufurl": "/local/bildungsbericht/verlauf.php?userid=5",
         "eintraege": [
             {"bezeichnung": "Bildungsbericht 1. Semester", "kurzbezeichnung": "1. Semester", "statustext": "freigegeben", "status": "erledigt",
-             "hasstand": true, "stand": "Gespräch am 2. Februar 2026", "hasurl": true,
+             "hasstand": true, "stand": "Gespräch am 2. Februar 2026", "zeigestand": true, "hasurl": true,
              "url": "/local/bildungsbericht/ansicht.php?id=1", "aktuell": false, "hasicon": true,
              "icon": "fa-check", "punktklasse": "bg-success text-white border-success", "istueberfaellig": false},
             {"bezeichnung": "Bildungsbericht 2. Semester", "kurzbezeichnung": "2. Semester", "statustext": "in Arbeit", "status": "offen",
              "hasstand": true, "stand": "Fällig bis 31. August 2026 · in Arbeit, 14 von 22 Angaben erfasst",
-             "hasurl": true, "url": "/local/bildungsbericht/erfassen.php?id=2", "aktuell": true,
+             "zeigestand": false, "hasurl": true, "url": "/local/bildungsbericht/erfassen.php?id=2", "aktuell": true,
              "hasicon": true, "icon": "fa-edit", "punktklasse": "bg-primary text-white border-primary",
              "istueberfaellig": false},
             {"bezeichnung": "Bildungsbericht 3. Semester", "kurzbezeichnung": "3. Semester", "statustext": "geplant", "status": "geplant",
-             "hasstand": true, "stand": "Fällig bis 28. Februar 2027", "hasurl": false, "url": "",
+             "hasstand": true, "stand": "Fällig bis 28. Februar 2027", "zeigestand": false, "hasurl": false, "url": "",
              "aktuell": false, "hasicon": false, "icon": "", "punktklasse": "bg-white border",
              "istueberfaellig": false}
         ],
@@ -68,14 +67,7 @@
             "hasicon": true, "icon": "fa-edit", "punktklasse": "bg-primary text-white border-primary",
             "istueberfaellig": false},
         "hasaktion": true,
-        "aktion": {"label": "Bildungsbericht 2. Semester weiter erfassen", "url": "/local/bildungsbericht/erfassen.php?id=2", "klasse": "btn-primary"},
-        "hasabgeschlossen": true,
-        "abgeschlossen": [
-            {"bezeichnung": "Bildungsbericht 1. Semester", "kurzbezeichnung": "1. Semester", "statustext": "freigegeben", "status": "erledigt",
-             "hasstand": true, "stand": "Gespräch am 2. Februar 2026", "hasurl": true,
-             "url": "/local/bildungsbericht/ansicht.php?id=1", "aktuell": false, "hasicon": true,
-             "icon": "fa-check", "punktklasse": "bg-success text-white border-success", "istueberfaellig": false}
-        ]
+        "aktion": {"label": "Bildungsbericht 2. Semester weiter erfassen", "url": "/local/bildungsbericht/erfassen.php?id=2", "klasse": "btn-primary"}
     }
 }}
 <section class="local-berufsbildung-stationen" aria-labelledby="{{uniqid}}-stationen-titel">
@@ -98,6 +90,7 @@
                         {{^hasurl}}{{kurzbezeichnung}}{{/hasurl}}
                     </span>
                     <span class="d-block small {{#istueberfaellig}}text-danger{{/istueberfaellig}}{{^istueberfaellig}}text-muted{{/istueberfaellig}}">{{statustext}}</span>
+                    {{#zeigestand}}<span class="d-block small text-muted">{{stand}}</span>{{/zeigestand}}
                 </li>
             {{/eintraege}}
         </ol>
@@ -124,15 +117,4 @@
             {{/aktion}}
         {{/hasaktion}}
     {{/hasaktuelle}}
-    {{#hasabgeschlossen}}
-        <h4 class="h6 mt-3 mb-1">{{#str}} stationen:abgeschlossen, local_berufsbildung {{/str}}</h4>
-        <ul class="list-unstyled mb-0">
-            {{#abgeschlossen}}
-                <li class="local-berufsbildung-nachweis border-bottom">
-                    <a href="{{url}}">{{bezeichnung}}</a>
-                    {{#hasstand}}<span class="d-block text-muted small">{{stand}}</span>{{/hasstand}}
-                </li>
-            {{/abgeschlossen}}
-        </ul>
-    {{/hasabgeschlossen}}
 </section>

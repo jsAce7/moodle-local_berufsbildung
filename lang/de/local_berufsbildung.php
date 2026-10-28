@@ -414,7 +414,6 @@ $string['settings:versetzungsplan_alterung_tage_desc'] = 'Liegt der letzte erfol
 $string['settings:versetzungsplan_schwelle_prozent'] = 'Schwelle für unvollständige Lieferungen (%)';
 $string['settings:versetzungsplan_schwelle_prozent_desc'] = 'Enthält eine Lieferung deutlich weniger Personen als die vorherige, wird sie abgewiesen statt verarbeitet. Standard: 20 (Rückgang über 20 % gilt als unvollständig).';
 
-$string['stationen:abgeschlossen'] = 'Abgeschlossen';
 $string['stationen:verlauf'] = 'Verlauf über die ganze Lehre';
 $string['stepper:lehrjahr'] = '{$a}. Lehrjahr';
 $string['task:sync_kohorten'] = 'Zuordnungen globaler Gruppen abgleichen';

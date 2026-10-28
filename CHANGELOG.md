@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1] — 2026-10-28
+
+### Geändert
+
+- **Zeitleiste der Stationen ohne Liste „Abgeschlossen“**: Erledigte Stationen zeigen ihren Stand (etwa das Gesprächsdatum) und den Link direkt in der Zeitleiste; die eigene Liste darunter wiederholte dasselbe. Der Sprachstring `stationen:abgeschlossen` entfällt.
+- Hilfe zu „Meine Lernenden“: Die Spalte und die Zeitleiste kennen beim Bildungsbericht neu „Gespräch bestätigen“ (ab `local_bildungsbericht` 0.23.0).
+
 ## [1.2.0] — 2026-10-27
 
 ### Hinzugefügt

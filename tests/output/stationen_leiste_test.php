@@ -76,7 +76,7 @@ final class stationen_leiste_test extends advanced_testcase {
         ], '/local/test/verlauf.php');
     }
 
-    public function test_zeitleiste_mit_aktueller_station_aktion_und_abgeschlossenen(): void {
+    public function test_zeitleiste_mit_aktueller_station_und_aktion(): void {
         $this->resetAfterTest();
 
         $html = stationen_leiste::render(
@@ -92,10 +92,11 @@ final class stationen_leiste_test extends advanced_testcase {
         // Die aktuelle Station mit Stand und der Aktion der Quelle.
         $this->assertStringContainsString('Fällig bis 31. August 2026', $html);
         $this->assertStringContainsString('Semester 2 weiter erfassen', $html);
-        // Abgeschlossen mit voller Bezeichnung und Link; Verlauf verlinkt.
-        $this->assertStringContainsString(get_string('stationen:abgeschlossen', 'local_berufsbildung'), $html);
-        $this->assertStringContainsString('Bildungsbericht 1. Semester', $html);
-        $this->assertStringContainsString('/local/test/ansicht.php?id=1', $html);
+        // Erledigt: Stand und Link in der Zeitleiste selbst, keine zweite
+        // Liste; der Stand offener Stationen nur bei der aktuellen.
+        $this->assertStringContainsString('Gespräch am 2. Februar 2026', $html);
+        $this->assertSame(1, substr_count($html, '/local/test/ansicht.php?id=1'));
+        $this->assertSame(1, substr_count($html, 'Fällig bis 31. August 2026'));
         $this->assertStringContainsString('/local/test/verlauf.php', $html);
         $this->assertStringContainsString(get_string('stationen:verlauf', 'local_berufsbildung'), $html);
     }
@@ -115,7 +116,6 @@ final class stationen_leiste_test extends advanced_testcase {
         );
 
         $this->assertStringContainsString('Semester 1 anlegen', $html);
-        $this->assertStringNotContainsString(get_string('stationen:abgeschlossen', 'local_berufsbildung'), $html);
         $this->assertStringNotContainsString(get_string('stationen:verlauf', 'local_berufsbildung'), $html);
         $this->assertStringNotContainsString('aria-current', $html);
     }

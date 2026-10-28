@@ -414,7 +414,6 @@ $string['settings:versetzungsplan_alterung_tage_desc'] = 'If the last successful
 $string['settings:versetzungsplan_schwelle_prozent'] = 'Threshold for incomplete deliveries (%)';
 $string['settings:versetzungsplan_schwelle_prozent_desc'] = 'If a delivery contains significantly fewer people than the previous one, it is rejected instead of processed. Default: 20 (a drop of more than 20% counts as incomplete).';
 
-$string['stationen:abgeschlossen'] = 'Completed';
 $string['stationen:verlauf'] = 'History over the whole apprenticeship';
 $string['stepper:lehrjahr'] = 'Year {$a}';
 $string['task:sync_kohorten'] = 'Synchronise cohort assignments';
