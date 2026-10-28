@@ -1147,6 +1147,8 @@
     top: 1rem;
     left: 50%;
     width: 100%;
+    /* Gegen das !important von .border-top aus Bootstrap. */
+    /* stylelint-disable-next-line declaration-no-important */
     border-top-width: 2px !important;
 }
 
@@ -1162,6 +1164,8 @@
     flex-shrink: 0;
     width: 2rem;
     height: 2rem;
+    /* Gegen das !important von .border aus Bootstrap. */
+    /* stylelint-disable-next-line declaration-no-important */
     border-width: 2px !important;
     border-radius: 50%;
     font-size: 0.8rem;
