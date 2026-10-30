@@ -74,4 +74,30 @@ final class zeichnen_test extends \advanced_testcase {
         $this->assertEqualsWithDelta(zeichnen::RAND_SEITE, $pdf->GetX(), 0.01);
         $this->assertSame(1, $pdf->getNumPages());
     }
+
+    /**
+     * With a mark in the first columns the text wraps in the width that is left:
+     * a title that fits the whole table no longer fits beside the mark.
+     */
+    public function test_gruppenzeile_mit_marke_bricht_in_der_restbreite_um(): void {
+        $this->resetAfterTest();
+        $breiten = [9.0, 25.0, 68.0, 20.0, 48.0];
+        $text = 'Verbindungsprogrammierte Steuerungen im Niederspannungsbereich aufbauen und in Betrieb nehmen';
+
+        $ohne = $this->seite();
+        $y = $ohne->GetY();
+        zeichnen::gruppenzeile($ohne, $text, $breiten);
+        $this->assertEqualsWithDelta(5.5, $ohne->GetY() - $y, 0.01);
+
+        $mit = $this->seite();
+        $y = $mit->GetY();
+        zeichnen::gruppenzeile($mit, $text, $breiten, null, null, 'LFB_ES_UMSBAS2', 2);
+        $this->assertGreaterThan(5.5 + 2.0, $mit->GetY() - $y);
+        $this->assertEqualsWithDelta(zeichnen::RAND_SEITE, $mit->GetX(), 0.01);
+
+        $kurz = $this->seite();
+        $y = $kurz->GetY();
+        zeichnen::gruppenzeile($kurz, 'Leiterplatte bestücken und löten Basis', $breiten, null, null, 'LFB_El_LBB', 2);
+        $this->assertEqualsWithDelta(5.5, $kurz->GetY() - $y, 0.01);
+    }
 }

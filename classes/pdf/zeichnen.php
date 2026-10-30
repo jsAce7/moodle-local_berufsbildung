@@ -155,43 +155,67 @@ class zeichnen {
      * nichts; ohne Platz fuer sie und eine erste zweizeilige Zeile wandert
      * sie mit.
      *
+     * Eine Marke (etwa die Kennung eines Lernfelds) steht in den ersten
+     * $markenspalten Spalten der Tabelle, auf Hoehe der ersten Zeile; der
+     * Text beginnt dann buendig mit der naechsten Spalte und bricht in deren
+     * Breite um, sodass eine zweite Zeile unter dem Text haengt und nicht
+     * unter der Marke.
+     *
      * @param pdf $pdf
      * @param string $text
      * @param float[] $breiten
      * @param string[]|null $kopf Nach einem Seitenumbruch wiederholt
      * @param string[]|null $ausrichtung
+     * @param string $marke Vor den Text gestellt, leer fuer keine
+     * @param int $markenspalten Wie viele Spalten die Marke einnimmt
      */
     public static function gruppenzeile(
         pdf $pdf,
         string $text,
         array $breiten,
         ?array $kopf = null,
-        ?array $ausrichtung = null
+        ?array $ausrichtung = null,
+        string $marke = '',
+        int $markenspalten = 1
     ): void {
         $schrift = gestaltung::schrift();
         $breite = array_sum($breiten);
+        $markenbreite = $marke !== '' ? (float)array_sum(array_slice($breiten, 0, max(1, $markenspalten))) : 0.0;
+        $textbreite = $breite - $markenbreite;
+
         $pdf->SetFont($schrift, 'B', 8);
         // Eine Zeile bleibt bei den bisherigen 5.5 mm, jede weitere kommt mit
         // einer Zeilenhoehe dazu.
-        $hoehe = 5.5 + ($pdf->getNumLines($text, $breite) - 1) * $pdf->getCellHeight($pdf->getFontSize(), false);
+        $einzeilig = 5.5;
+        $hoehe = $einzeilig + ($pdf->getNumLines($text, $textbreite) - 1) * $pdf->getCellHeight($pdf->getFontSize(), false);
 
         if ($pdf->GetY() + $hoehe + 9.5 > $pdf->getPageHeight() - $pdf->getBreakMargin()) {
             self::seitenumbruch($pdf, $kopf, $breiten, $ausrichtung);
             $pdf->SetFont($schrift, 'B', 8);
         }
 
+        $x = $pdf->GetX();
+        $y = $pdf->GetY();
         self::farbe_fuellung($pdf, gestaltung::ton(0.16));
         self::farbe_text($pdf, gestaltung::akzent());
+        $pdf->Rect($x, $y, $breite, $hoehe, 'F');
+
+        if ($markenbreite > 0) {
+            // Auf Hoehe der ersten Textzeile; eine zu lange Marke wird schmaler
+            // gesetzt, statt in den Text zu laufen.
+            $pdf->SetXY($x, $y);
+            $pdf->Cell($markenbreite, $einzeilig, $marke, 0, 0, 'L', false, '', 1);
+        }
         $pdf->MultiCell(
-            $breite,
+            $textbreite,
             $hoehe,
             $text,
             0,
             'L',
-            true,
-            1,
-            $pdf->GetX(),
-            $pdf->GetY(),
+            false,
+            0,
+            $x + $markenbreite,
+            $y,
             true,
             0,
             false,
@@ -199,6 +223,8 @@ class zeichnen {
             $hoehe,
             'M'
         );
+
+        $pdf->SetXY(self::RAND_SEITE, $y + $hoehe);
         self::farbe_text($pdf, gestaltung::TEXT);
         $pdf->SetFont($schrift, '', 8);
     }

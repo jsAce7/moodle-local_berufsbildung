@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.2] — 2026-10-30
+
+### Hinzugefügt
+
+- **PDF: Gruppenüberschrift mit Marke** (`pdf\zeichnen::gruppenzeile()`, neue optionale Parameter `$marke` und `$markenspalten`): Eine Marke, etwa die Kennung eines Lernfelds, steht in den ersten Spalten der Tabelle; der Text beginnt bündig mit der nächsten Spalte und bricht in deren Breite um, sodass eine zweite Zeile unter dem Text hängt. Ohne Marke bleibt alles wie bisher. Genutzt von `local_uekkn` 1.6.4.
+
 ## [1.3.1] — 2026-10-30
 
 ### Geändert
