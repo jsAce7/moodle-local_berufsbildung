@@ -171,7 +171,9 @@ class zeichnen {
         $schrift = gestaltung::schrift();
         $breite = array_sum($breiten);
         $pdf->SetFont($schrift, 'B', 8);
-        $hoehe = max(5.5, $pdf->getStringHeight($breite, $text) + 2 * gestaltung::LUFT_Y);
+        // Eine Zeile bleibt bei den bisherigen 5.5 mm, jede weitere kommt mit
+        // einer Zeilenhoehe dazu.
+        $hoehe = 5.5 + ($pdf->getNumLines($text, $breite) - 1) * $pdf->getCellHeight($pdf->getFontSize(), false);
 
         if ($pdf->GetY() + $hoehe + 9.5 > $pdf->getPageHeight() - $pdf->getBreakMargin()) {
             self::seitenumbruch($pdf, $kopf, $breiten, $ausrichtung);
