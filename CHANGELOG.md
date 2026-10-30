@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.1] — 2026-10-30
+
+### Geändert
+
+- **PDF: lange Gruppenüberschriften brechen um** (`pdf\zeichnen::gruppenzeile()`): Ein Text, der nicht in eine Zeile passt, wird mehrzeilig gesetzt, statt über den rechten Tabellenrand zu laufen; das Farbband wächst mit. Kurze Überschriften bleiben unverändert einzeilig. Anlass sind die Lernfeldtitel in den üK-Kompetenznachweisen (`local_uekkn` 1.6.2).
+
 ## [1.3.0] — 2026-10-28
 
 ### Hinzugefügt

@@ -149,9 +149,11 @@ class zeichnen {
 
     /**
      * Zeile ueber die ganze Tabellenbreite, die Zeilen gruppiert - in einem
-     * Ton der Akzentfarbe, ein Drittel des Wegs zum Kopfband. Eine
-     * Gruppenueberschrift allein am Seitenende gehoert zu nichts; ohne
-     * Platz fuer sie und eine erste zweizeilige Zeile wandert sie mit.
+     * Ton der Akzentfarbe, ein Drittel des Wegs zum Kopfband. Ein Text, der
+     * nicht in eine Zeile passt, bricht um, statt ueber den rechten Rand zu
+     * laufen. Eine Gruppenueberschrift allein am Seitenende gehoert zu
+     * nichts; ohne Platz fuer sie und eine erste zweizeilige Zeile wandert
+     * sie mit.
      *
      * @param pdf $pdf
      * @param string $text
@@ -166,15 +168,35 @@ class zeichnen {
         ?array $kopf = null,
         ?array $ausrichtung = null
     ): void {
-        if ($pdf->GetY() + 15.0 > $pdf->getPageHeight() - $pdf->getBreakMargin()) {
+        $schrift = gestaltung::schrift();
+        $breite = array_sum($breiten);
+        $pdf->SetFont($schrift, 'B', 8);
+        $hoehe = max(5.5, $pdf->getStringHeight($breite, $text) + 2 * gestaltung::LUFT_Y);
+
+        if ($pdf->GetY() + $hoehe + 9.5 > $pdf->getPageHeight() - $pdf->getBreakMargin()) {
             self::seitenumbruch($pdf, $kopf, $breiten, $ausrichtung);
+            $pdf->SetFont($schrift, 'B', 8);
         }
 
-        $schrift = gestaltung::schrift();
-        $pdf->SetFont($schrift, 'B', 8);
         self::farbe_fuellung($pdf, gestaltung::ton(0.16));
         self::farbe_text($pdf, gestaltung::akzent());
-        $pdf->Cell(array_sum($breiten), 5.5, $text, 0, 1, 'L', true);
+        $pdf->MultiCell(
+            $breite,
+            $hoehe,
+            $text,
+            0,
+            'L',
+            true,
+            1,
+            $pdf->GetX(),
+            $pdf->GetY(),
+            true,
+            0,
+            false,
+            true,
+            $hoehe,
+            'M'
+        );
         self::farbe_text($pdf, gestaltung::TEXT);
         $pdf->SetFont($schrift, '', 8);
     }
