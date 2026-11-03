@@ -60,6 +60,27 @@ final class luecken_analyse_test extends advanced_testcase {
         return (int) date('n', $jetzt) >= 8 ? (int) date('Y', $jetzt) : (int) date('Y', $jetzt) - 1;
     }
 
+    /**
+     * Legt einen Betriebsblock mit einem Leistungskriterium an und teilt
+     * die Lernende/den Lernenden ihm aktuell zu.
+     *
+     * @param int $userid Lernende/r
+     * @param int $lkid Leistungskriterium des Blocks
+     */
+    private function lege_laufenden_einsatz_an(int $userid, int $lkid): void {
+        $block = new block(0, (object) ['nummer' => '4', 'name' => '4', 'ist_betrieb' => true, 'aktiv' => true]);
+        $block->create();
+        (new block_lk(0, (object) [
+            'blockid' => $block->get('id'), 'competencyid' => $lkid,
+        ]))->create();
+
+        (new einsatz(0, (object) [
+            'userid' => $userid, 'blockid' => $block->get('id'),
+            'von' => strtotime('-1 month'), 'bis' => strtotime('+1 month'),
+            'kw_von' => '2027-W01', 'kw_bis' => '2027-W04', 'importid' => 0,
+        ]))->create();
+    }
+
     public function test_get_luecken_liefert_nicht_abgedeckte_kompetenzen(): void {
         $this->resetAfterTest();
         $this->lege_profilfelder_an();
@@ -87,17 +108,7 @@ final class luecken_analyse_test extends advanced_testcase {
             'competencyframeworkid' => $framework->get('id'), 'parentid' => $hkabgedeckt->get('id'),
         ]);
 
-        $block = new block(0, (object) ['nummer' => '4', 'name' => '4', 'ist_betrieb' => true, 'aktiv' => true]);
-        $block->create();
-        (new block_lk(0, (object) [
-            'blockid' => $block->get('id'), 'competencyid' => $lk->get('id'),
-        ]))->create();
-
-        (new einsatz(0, (object) [
-            'userid' => $lernende->id, 'blockid' => $block->get('id'),
-            'von' => strtotime('-1 month'), 'bis' => strtotime('+1 month'),
-            'kw_von' => '2027-W01', 'kw_bis' => '2027-W04', 'importid' => 0,
-        ]))->create();
+        $this->lege_laufenden_einsatz_an((int) $lernende->id, (int) $lk->get('id'));
 
         $luecken = (new luecken_analyse())->get_luecken((int) $lernende->id);
 
@@ -211,16 +222,7 @@ final class luecken_analyse_test extends advanced_testcase {
             'competencyframeworkid' => $framework->get('id'), 'parentid' => $hkabgedeckt->get('id'),
         ]);
 
-        $block = new block(0, (object) ['nummer' => '4', 'name' => '4', 'ist_betrieb' => true, 'aktiv' => true]);
-        $block->create();
-        (new block_lk(0, (object) [
-            'blockid' => $block->get('id'), 'competencyid' => $lk->get('id'),
-        ]))->create();
-        (new einsatz(0, (object) [
-            'userid' => $lernende->id, 'blockid' => $block->get('id'),
-            'von' => strtotime('-1 month'), 'bis' => strtotime('+1 month'),
-            'kw_von' => '2027-W01', 'kw_bis' => '2027-W04', 'importid' => 0,
-        ]))->create();
+        $this->lege_laufenden_einsatz_an((int) $lernende->id, (int) $lk->get('id'));
 
         $abdeckungen = [];
         foreach ((new luecken_analyse())->get_abdeckung((int) $lernende->id) as $abdeckung) {
