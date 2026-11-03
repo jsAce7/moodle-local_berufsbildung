@@ -24,7 +24,9 @@
     (etwa das Gespraechsdatum) und den Link in der Zeitleiste selbst.
 
     Die Zeitleiste ist eine geordnete Liste; der Punkt je Station ist
-    Schmuck (aria-hidden), Name und Statustext tragen die Bedeutung. Auf
+    Schmuck (aria-hidden), Name und Statustext tragen die Bedeutung. Eine
+    Linie fuehrt von der aktuellen Station hinunter in ihren Kasten, beide
+    in der Randfarbe ihres Punkts, damit man sieht, wozu er gehoert. Auf
     schmalen Fenstern rollt die Leiste waagrecht in ihrem Kasten, statt
     die Seite zu verbreitern. Den Abstand nach aussen setzt die Seite: auf
     "Meine Lehre" steht die Leiste in einer eigenen Karte.
@@ -34,7 +36,7 @@
     * hasverlauf - bool
     * verlaufurl - string
     * eintraege - array of {bezeichnung, kurzbezeichnung, statustext, zeigestatus, status, hasstand, stand, zeigestand,
-      hasurl, url, aktuell, hasicon, icon, punktklasse, istueberfaellig}; zeigestatus false haelt einen
+      hasurl, url, aktuell, hasicon, icon, punktklasse, randklasse, istueberfaellig}; zeigestatus false haelt einen
       Statustext, der nur "geplant" sagt, unsichtbar (output\stationen_leiste::zeige_status())
     * hasaktuelle - bool
     * aktuelle - wie ein Eintrag in eintraege
@@ -50,23 +52,23 @@
             {"bezeichnung": "Bildungsbericht 1. Semester", "kurzbezeichnung": "1. Semester", "statustext": "freigegeben", "zeigestatus": true, "status": "erledigt",
              "hasstand": true, "stand": "Gespräch am 2. Februar 2026", "zeigestand": true, "hasurl": true,
              "url": "/local/bildungsbericht/ansicht.php?id=1", "aktuell": false, "hasicon": true,
-             "icon": "fa-check", "punktklasse": "bg-success text-white border-success", "istueberfaellig": false},
+             "icon": "fa-check", "punktklasse": "bg-success text-white border-success", "randklasse": "border-success", "istueberfaellig": false},
             {"bezeichnung": "Bildungsbericht 2. Semester", "kurzbezeichnung": "2. Semester", "statustext": "in Arbeit", "zeigestatus": true, "status": "offen",
              "hasstand": true, "stand": "Fällig bis 31. August 2026 · in Arbeit, 14 von 22 Angaben erfasst",
              "zeigestand": false, "hasurl": true, "url": "/local/bildungsbericht/erfassen.php?id=2", "aktuell": true,
              "hasicon": true, "icon": "fa-edit", "punktklasse": "bg-primary text-white border-primary",
-             "istueberfaellig": false},
+             "randklasse": "border-primary", "istueberfaellig": false},
             {"bezeichnung": "Bildungsbericht 3. Semester", "kurzbezeichnung": "3. Semester", "statustext": "geplant", "zeigestatus": false, "status": "geplant",
              "hasstand": true, "stand": "Fällig bis 28. Februar 2027", "zeigestand": false, "hasurl": false, "url": "",
              "aktuell": false, "hasicon": false, "icon": "", "punktklasse": "bg-white border",
-             "istueberfaellig": false}
+             "randklasse": "", "istueberfaellig": false}
         ],
         "hasaktuelle": true,
         "aktuelle": {"bezeichnung": "Bildungsbericht 2. Semester", "kurzbezeichnung": "2. Semester", "statustext": "in Arbeit", "status": "offen",
             "hasstand": true, "stand": "Fällig bis 31. August 2026 · in Arbeit, 14 von 22 Angaben erfasst",
             "hasurl": true, "url": "/local/bildungsbericht/erfassen.php?id=2", "aktuell": true,
             "hasicon": true, "icon": "fa-edit", "punktklasse": "bg-primary text-white border-primary",
-            "istueberfaellig": false},
+            "randklasse": "border-primary", "istueberfaellig": false},
         "hasaktion": true,
         "aktion": {"label": "Bildungsbericht 2. Semester weiter erfassen", "url": "/local/bildungsbericht/erfassen.php?id=2", "klasse": "btn-primary"}
     }
@@ -93,13 +95,14 @@
                     {{#zeigestatus}}<span class="d-block small {{#istueberfaellig}}text-danger{{/istueberfaellig}}{{^istueberfaellig}}text-muted{{/istueberfaellig}}">{{statustext}}</span>{{/zeigestatus}}
                     {{^zeigestatus}}<span class="sr-only visually-hidden">{{statustext}}</span>{{/zeigestatus}}
                     {{#zeigestand}}<span class="d-block small text-muted">{{stand}}</span>{{/zeigestand}}
+                    {{#aktuell}}<span class="local-berufsbildung-station-verbinder border-left border-start {{randklasse}}" aria-hidden="true"></span>{{/aktuell}}
                 </li>
             {{/eintraege}}
         </ol>
     </div>
     {{#hasaktuelle}}
         {{#aktuelle}}
-            <div class="local-berufsbildung-stationen-aktuell bg-light border rounded mt-3">
+            <div class="local-berufsbildung-stationen-aktuell bg-light border {{randklasse}} rounded">
                 <div class="local-berufsbildung-stationen-aktuell-text">
                     <strong class="d-block">{{bezeichnung}} · <span class="{{#istueberfaellig}}text-danger{{/istueberfaellig}}">{{statustext}}</span></strong>
                     {{#hasstand}}<span class="d-block small text-muted">{{stand}}</span>{{/hasstand}}

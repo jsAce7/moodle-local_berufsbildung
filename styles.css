@@ -1191,6 +1191,18 @@
     font-size: 1rem;
 }
 
+/* Von der aktuellen Station hinunter in ihren Kasten (stationen-aktuell):
+   fuellt die Spalte unter Name und Status und reicht durch den Innenabstand
+   der Rollbox bis an den Kasten, der direkt darunter steht. Zwei Klassen,
+   weil Boost das Theme nach diesen Regeln laedt. */
+.local-berufsbildung-station .local-berufsbildung-station-verbinder {
+    flex: 1 0 0.75rem;
+    margin-bottom: -0.25rem;
+    /* Gegen das !important von .border-left/.border-start aus Bootstrap. */
+    /* stylelint-disable-next-line declaration-no-important */
+    border-left-width: 2px !important;
+}
+
 .local-berufsbildung-station-punkt-klein {
     width: 1.5rem;
     height: 1.5rem;

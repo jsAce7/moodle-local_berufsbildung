@@ -89,6 +89,11 @@ final class stationen_leiste_test extends advanced_testcase {
         $this->assertStringContainsString('3. Semester', $html);
         $this->assertStringContainsString('geplant', $html);
         $this->assertSame(1, substr_count($html, 'aria-current="step"'));
+        // Eine Linie fuehrt nur von der aktuellen Station in ihren Kasten,
+        // beide in der Randfarbe ihres Punkts (in Arbeit: primary).
+        $this->assertSame(1, substr_count($html, 'local-berufsbildung-station-verbinder'));
+        $this->assertMatchesRegularExpression('/station-verbinder[^"]*border-primary/', $html);
+        $this->assertMatchesRegularExpression('/stationen-aktuell[^"]*border-primary/', $html);
         // Die aktuelle Station mit Stand und der Aktion der Quelle.
         $this->assertStringContainsString('Fällig bis 31. August 2026', $html);
         $this->assertStringContainsString('Semester 2 weiter erfassen', $html);

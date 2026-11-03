@@ -93,6 +93,14 @@ class stationen_leiste {
             station::STATUS_ENTFAELLT => ['fa-minus', 'bg-light text-muted border'],
             default => ['', 'bg-white border'],
         };
+        // Randfarbe des Punkts fuer Linie und Kasten der aktuellen Station,
+        // damit beide sichtbar zu ihm gehoeren; ohne Farbe der graue Rand.
+        $randklasse = match ($station->status) {
+            station::STATUS_ERLEDIGT => 'border-success',
+            station::STATUS_OFFEN => 'border-primary',
+            station::STATUS_UEBERFAELLIG => 'border-danger',
+            default => '',
+        };
 
         return [
             'bezeichnung' => $station->bezeichnung,
@@ -111,6 +119,7 @@ class stationen_leiste {
             'hasicon' => $icon !== '',
             'icon' => $icon,
             'punktklasse' => $punktklasse,
+            'randklasse' => $randklasse,
             'istueberfaellig' => $station->status === station::STATUS_UEBERFAELLIG,
         ];
     }

@@ -333,25 +333,6 @@ if (empty($eintraege)) {
             echo html_writer::div(stationen_leiste::render($einzelstationen, $stationenaktionen[$quellekey] ?? null), 'mb-4');
         }
 
-        if (!empty($raster[$lernendeid])) {
-            // Nur das Raster, ohne Lueckenliste daneben - wie auf
-            // meine_lehre.php. Was fehlt, zeigt es selbst: die weissen
-            // Zellen, und je Zelle die fehlenden LK im Dialog. Die Zahl
-            // der fehlenden Pflicht-HK traegt das Badge der Kachel.
-            echo html_writer::div(
-                kompetenzraster::render(
-                    $raster[$lernendeid],
-                    api::get_planungshorizont($lernendeid),
-                    wahlpflicht: $stand !== null ? ($wahlpflicht[$stand->beruf] ?? null) : null,
-                    // Je Beruf einmal geladen, nicht je Person.
-                    vorschlaege: $stand !== null
-                        ? ($vorschlaege[$stand->beruf] ??= api::get_bloecke_je_kompetenz($stand->beruf))
-                        : []
-                ),
-                'mb-3'
-            );
-        }
-
         // Externe Personen haben hier keinen Ausbildungsstand und damit
         // auch keine Semester, in die sich ein Nachweis oder Einsatz
         // einordnen liesse.
@@ -405,6 +386,29 @@ if (empty($eintraege)) {
             );
         } else {
             echo $links;
+        }
+
+        if (!empty($raster[$lernendeid])) {
+            // Am Ende: das Raster ist die grosse Uebersicht zum
+            // Nachschlagen, Faelligkeiten, Taetigkeiten und Plan sind das,
+            // wofuer man die Person aufklappt.
+            //
+            // Nur das Raster, ohne Lueckenliste daneben - wie auf
+            // meine_lehre.php. Was fehlt, zeigt es selbst: die weissen
+            // Zellen, und je Zelle die fehlenden LK im Dialog. Die Zahl
+            // der fehlenden Pflicht-HK traegt das Badge der Kachel.
+            echo html_writer::div(
+                kompetenzraster::render(
+                    $raster[$lernendeid],
+                    api::get_planungshorizont($lernendeid),
+                    wahlpflicht: $stand !== null ? ($wahlpflicht[$stand->beruf] ?? null) : null,
+                    // Je Beruf einmal geladen, nicht je Person.
+                    vorschlaege: $stand !== null
+                        ? ($vorschlaege[$stand->beruf] ??= api::get_bloecke_je_kompetenz($stand->beruf))
+                        : []
+                ),
+                'mb-3'
+            );
         }
 
         $profilurl = new moodle_url('/user/profile.php', ['id' => $lernendeid]);
