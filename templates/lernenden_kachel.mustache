@@ -42,8 +42,10 @@
       istueberfaellig}, die aktuelle Station je Quelle (output\stationen_leiste::station_daten())
     * hasluecken - bool
     * anzahlluecken - int
+    * lueckentitel - string, ausfuehrliche Bedeutung des Badges
     * haswahlpflichtoffen - bool
     * anzahlwahlpflichtoffen - int, verlangte Wahlpflicht-HK, die noch nicht vorkamen
+    * wahlpflichtoffentitel - string, ausfuehrliche Bedeutung des Badges
     * hasueberfaellig - bool
     * anzahlueberfaellig - int
     * hasextern - bool
@@ -79,8 +81,10 @@
         ],
         "hasluecken": true,
         "anzahlluecken": 2,
+        "lueckentitel": "Pflicht-Handlungskompetenzen, die noch in keinem Einsatz vorkamen: 2",
         "haswahlpflichtoffen": true,
         "anzahlwahlpflichtoffen": 1,
+        "wahlpflichtoffentitel": "Verlangte Wahlpflicht-Handlungskompetenzen, die noch nicht vollständig vorkamen: 1",
         "hasueberfaellig": true,
         "anzahlueberfaellig": 1,
         "hasextern": false,
@@ -143,7 +147,9 @@
             sie ueber alle Zeilen buendig steht; kein Link, denn ein
             Bedienelement im Umschalter waere verschachtelt (WCAG 4.1.2) -
             das Ziel steht im Detail. Der Stand ist lang und wird
-            abgeschnitten, vollstaendig steht er im Titel. }}
+            abgeschnitten, vollstaendig steht er im Titel. Aufgeklappt
+            blendet styles.css die Spalte aus: dann steht dieselbe Station
+            gleich darunter in der Zeitleiste, samt Schaltflaeche. }}
         {{#hasstationenspalte}}
             <span class="local-berufsbildung-kachel-stationen">
                 {{#stationen}}
@@ -177,13 +183,13 @@
             {{! Mit Beschriftung statt nur einer Zahl - "14" neben einer
                 Gluehbirne sagt nicht, wovon 14. }}
             {{#hasluecken}}
-                <span class="badge bg-light text-dark border">
+                <span class="badge bg-light text-dark border" title="{{lueckentitel}}">
                     <i class="icon fa fa-lightbulb fa-fw" aria-hidden="true"></i>
                     {{#str}} luecken:titel_anzahl, local_berufsbildung, {{anzahlluecken}} {{/str}}
                 </span>
             {{/hasluecken}}
             {{#haswahlpflichtoffen}}
-                <span class="badge bg-light text-dark border">
+                <span class="badge bg-light text-dark border" title="{{wahlpflichtoffentitel}}">
                     <i class="icon fa fa-lightbulb fa-fw" aria-hidden="true"></i>
                     {{#str}} luecken:wahlpflicht_offen, local_berufsbildung, {{anzahlwahlpflichtoffen}} {{/str}}
                 </span>

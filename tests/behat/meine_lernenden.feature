@@ -47,11 +47,18 @@ Feature: Meine Lernenden
   Scenario: Je Person stehen offene Pflicht- und Wahlpflicht-Kompetenzen und das Raster
     When I log in as "bea"
     And I visit "/local/berufsbildung/meine_lernenden.php"
-    Then I should see "2 trainees · 2 with open gaps"
-    And I should see "1 still open" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Lea Lernende')]" "xpath_element"
+    Then I should see "2 trainees · 2 with open competency areas"
+    And I should see "1 required open" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Lea Lernende')]" "xpath_element"
     And I should see "1 elective(s) open" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Lea Lernende')]" "xpath_element"
-    And I should see "2 still open" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Tom Tester')]" "xpath_element"
+    And I should see "2 required open" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Tom Tester')]" "xpath_element"
     And I should see "1 of 2 required complete" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Lea Lernende')]" "xpath_element"
+
+  Scenario: Im Detail steht der Versetzungsplan der Person, sofern einer vorliegt
+    When I log in as "bea"
+    And I visit "/local/berufsbildung/meine_lernenden.php"
+    Then I should see "Rotation plan" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Lea Lernende')]" "xpath_element"
+    And I should see "Werkstatt" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-roster-spalten ')]" "xpath_element"
+    And I should not see "Rotation plan" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Tom Tester')]" "xpath_element"
 
   Scenario: Das Raster nennt fuer fehlende Leistungskriterien die Bloecke, in denen sie vorkaemen
     When I log in as "bea"

@@ -33,8 +33,9 @@
     * titel - string, Anzeigename der Quelle
     * hasverlauf - bool
     * verlaufurl - string
-    * eintraege - array of {bezeichnung, kurzbezeichnung, statustext, status, hasstand, stand, zeigestand, hasurl, url,
-      aktuell, hasicon, icon, punktklasse, istueberfaellig}
+    * eintraege - array of {bezeichnung, kurzbezeichnung, statustext, zeigestatus, status, hasstand, stand, zeigestand,
+      hasurl, url, aktuell, hasicon, icon, punktklasse, istueberfaellig}; zeigestatus false haelt einen
+      Statustext, der nur "geplant" sagt, unsichtbar (output\stationen_leiste::zeige_status())
     * hasaktuelle - bool
     * aktuelle - wie ein Eintrag in eintraege
     * hasaktion - bool
@@ -46,16 +47,16 @@
         "hasverlauf": true,
         "verlaufurl": "/local/bildungsbericht/verlauf.php?userid=5",
         "eintraege": [
-            {"bezeichnung": "Bildungsbericht 1. Semester", "kurzbezeichnung": "1. Semester", "statustext": "freigegeben", "status": "erledigt",
+            {"bezeichnung": "Bildungsbericht 1. Semester", "kurzbezeichnung": "1. Semester", "statustext": "freigegeben", "zeigestatus": true, "status": "erledigt",
              "hasstand": true, "stand": "Gespräch am 2. Februar 2026", "zeigestand": true, "hasurl": true,
              "url": "/local/bildungsbericht/ansicht.php?id=1", "aktuell": false, "hasicon": true,
              "icon": "fa-check", "punktklasse": "bg-success text-white border-success", "istueberfaellig": false},
-            {"bezeichnung": "Bildungsbericht 2. Semester", "kurzbezeichnung": "2. Semester", "statustext": "in Arbeit", "status": "offen",
+            {"bezeichnung": "Bildungsbericht 2. Semester", "kurzbezeichnung": "2. Semester", "statustext": "in Arbeit", "zeigestatus": true, "status": "offen",
              "hasstand": true, "stand": "Fällig bis 31. August 2026 · in Arbeit, 14 von 22 Angaben erfasst",
              "zeigestand": false, "hasurl": true, "url": "/local/bildungsbericht/erfassen.php?id=2", "aktuell": true,
              "hasicon": true, "icon": "fa-edit", "punktklasse": "bg-primary text-white border-primary",
              "istueberfaellig": false},
-            {"bezeichnung": "Bildungsbericht 3. Semester", "kurzbezeichnung": "3. Semester", "statustext": "geplant", "status": "geplant",
+            {"bezeichnung": "Bildungsbericht 3. Semester", "kurzbezeichnung": "3. Semester", "statustext": "geplant", "zeigestatus": false, "status": "geplant",
              "hasstand": true, "stand": "Fällig bis 28. Februar 2027", "zeigestand": false, "hasurl": false, "url": "",
              "aktuell": false, "hasicon": false, "icon": "", "punktklasse": "bg-white border",
              "istueberfaellig": false}
@@ -89,7 +90,8 @@
                         {{#hasurl}}<a href="{{url}}">{{kurzbezeichnung}}</a>{{/hasurl}}
                         {{^hasurl}}{{kurzbezeichnung}}{{/hasurl}}
                     </span>
-                    <span class="d-block small {{#istueberfaellig}}text-danger{{/istueberfaellig}}{{^istueberfaellig}}text-muted{{/istueberfaellig}}">{{statustext}}</span>
+                    {{#zeigestatus}}<span class="d-block small {{#istueberfaellig}}text-danger{{/istueberfaellig}}{{^istueberfaellig}}text-muted{{/istueberfaellig}}">{{statustext}}</span>{{/zeigestatus}}
+                    {{^zeigestatus}}<span class="sr-only visually-hidden">{{statustext}}</span>{{/zeigestatus}}
                     {{#zeigestand}}<span class="d-block small text-muted">{{stand}}</span>{{/zeigestand}}
                 </li>
             {{/eintraege}}

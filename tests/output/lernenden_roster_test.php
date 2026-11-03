@@ -195,6 +195,28 @@ final class lernenden_roster_test extends advanced_testcase {
         $this->assertSame([3, 2, 4, 1, 5], array_column($sortiert, 'id'));
     }
 
+    /**
+     * Innerhalb einer Stufe zuerst die frueheste Frist, wer keine hat
+     * zuletzt; die Stufe geht der Frist immer vor.
+     */
+    public function test_nach_handlungsbedarf_ordnet_innerhalb_der_stufe_nach_frist(): void {
+        $keiner = lernenden_roster::HANDLUNGSBEDARF_KEINER;
+        $eintraege = [
+            ['handlungsbedarf' => $keiner, 'naechstefrist' => null] + $this->eintrag(1, 'Anna', $this->stand(1)),
+            ['handlungsbedarf' => $keiner, 'naechstefrist' => 3000] + $this->eintrag(2, 'Ben', $this->stand(1)),
+            ['handlungsbedarf' => $keiner, 'naechstefrist' => 1000] + $this->eintrag(3, 'Cleo', $this->stand(1)),
+            // Spaetere Frist, aber eine hoehere Stufe.
+            ['handlungsbedarf' => lernenden_roster::HANDLUNGSBEDARF_OFFEN, 'naechstefrist' => 9000]
+                + $this->eintrag(4, 'Dario', $this->stand(1)),
+            // Dieselbe Frist wie Ben: die bisherige Reihenfolge bleibt.
+            ['handlungsbedarf' => $keiner, 'naechstefrist' => 3000] + $this->eintrag(5, 'Eva', $this->stand(1)),
+        ];
+
+        $sortiert = lernenden_roster::nach_handlungsbedarf($eintraege);
+
+        $this->assertSame([4, 3, 2, 5, 1], array_column($sortiert, 'id'));
+    }
+
     public function test_filtere_nur_mit_handlungsbedarf(): void {
         $eintraege = [
             ['handlungsbedarf' => lernenden_roster::HANDLUNGSBEDARF_KEINER] + $this->eintrag(1, 'Anna', $this->stand(1)),

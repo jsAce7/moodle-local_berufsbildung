@@ -664,7 +664,7 @@
 
 /*
  * Die Deckung traegt den Ausbildungsstand: vollstaendig (alle LK) kraeftig,
- * teilweise mittel, nur eingeplant hell, nicht im Plan gar nicht - die
+ * teilweise mittel, spaeter eingeplant hell, nicht im Plan gar nicht - die
  * Zelle bleibt weiss. Die Stufen liegen so weit auseinander, dass man sie ueber eine
  * Zeile hinweg unterscheidet, und so tief, dass die dunkle Beschriftung
  * auf bg-info lesbar bleibt - ein Ton, der sich von den gelben und
@@ -1106,6 +1106,16 @@
 }
 
 /*
+ * Aufgeklappt steht dieselbe Station gleich darunter in der Zeitleiste,
+ * mit Frist und Schaltflaeche - in der Kopfzeile waere sie dann die dritte
+ * Nennung. Unsichtbar statt entfernt, damit Semesterleiste und Kennzahlen
+ * beim Aufklappen nicht verrutschen.
+ */
+.local-berufsbildung-kachel[open] .local-berufsbildung-kachel-stationen {
+    visibility: hidden;
+}
+
+/*
  * Zeitleiste der Stationen im Detail (stationen_leiste): eine Spalte je
  * Station, verbunden durch eine Linie hinter den Punkten. Mindestbreite je
  * Station, damit "Probezeitbericht, Verlaengerung 1" nicht zeichenweise
@@ -1272,6 +1282,12 @@
     .local-berufsbildung-kachel-stationen {
         flex-basis: 100%;
         max-width: none;
+    }
+
+    /* Hier steht die Spalte auf einer eigenen Zeile - unsichtbar bliebe
+       nur eine leere Zeile stehen. */
+    .local-berufsbildung-kachel[open] .local-berufsbildung-kachel-stationen {
+        display: none;
     }
 }
 

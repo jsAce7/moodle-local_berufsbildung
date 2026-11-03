@@ -87,17 +87,24 @@ class lernenden_roster {
      * Ueberfaelliges hat, dann wer etwas Offenes hat, dann alle uebrigen.
      * Bei 16 Lernenden sonst erst nach dem Scrollen sichtbar, wer wartet.
      *
+     * Innerhalb einer Stufe zuerst, wessen naechste Frist am fruehesten
+     * ablaeuft - ohne Handlungsbedarf sehen sonst alle Zeilen gleich aus,
+     * auch wenn bei einer Person der Probezeitbericht Wochen vor allen
+     * anderen faellig wird. Wer keine Frist hat, folgt danach.
+     *
      * Erwartet die Eintraege bereits nach sortiere() geordnet - usort ist
-     * stabil, innerhalb einer Stufe bleibt diese Reihenfolge. Ohne
-     * 'handlungsbedarf' gilt HANDLUNGSBEDARF_KEINER.
+     * stabil, bei gleicher Stufe und Frist bleibt diese Reihenfolge. Ohne
+     * 'handlungsbedarf' gilt HANDLUNGSBEDARF_KEINER, ohne 'naechstefrist'
+     * keine Frist.
      *
      * @param array $eintraege Struktur: array<int, array{id: int, name: string, stand: ?ausbildungsstand,
-     *        handlungsbedarf?: int}>
+     *        handlungsbedarf?: int, naechstefrist?: ?int}>
      * @return array
      */
     public static function nach_handlungsbedarf(array $eintraege): array {
         usort($eintraege, static fn (array $a, array $b): int =>
-            ($a['handlungsbedarf'] ?? self::HANDLUNGSBEDARF_KEINER) <=> ($b['handlungsbedarf'] ?? self::HANDLUNGSBEDARF_KEINER));
+            [$a['handlungsbedarf'] ?? self::HANDLUNGSBEDARF_KEINER, $a['naechstefrist'] ?? PHP_INT_MAX]
+            <=> [$b['handlungsbedarf'] ?? self::HANDLUNGSBEDARF_KEINER, $b['naechstefrist'] ?? PHP_INT_MAX]);
 
         return $eintraege;
     }

@@ -377,7 +377,7 @@ Für die **Anzeige** ergibt das vier Stände (`raster_kompetenz::anzeigestand()`
 | `eingeplant` | noch kein LK kam vor, welche sind eingeplant | Kalender, helle Fläche |
 | `offen` | kein LK steht im Plan | weiss |
 
-Die Lückenanalyse (`get_luecken_nach_bereich()`, Badge „x noch offen") bleibt beim Status oben: eine HK ist keine Planungslücke mehr, sobald eines ihrer LK vorkam. Die Zelle zeigt „4 von 12 LK vorgekommen, 2 eingeplant"; ein Klick öffnet die LK-Liste mit Block und Kalenderwochen je LK.
+Die Lückenanalyse (`get_luecken_nach_bereich()`, Badge „x Pflicht offen") bleibt beim Status oben: eine HK ist keine Planungslücke mehr, sobald eines ihrer LK vorkam. Die Zelle zeigt „4 von 12 LK vorgekommen, 2 eingeplant"; ein Klick öffnet die LK-Liste mit Block und Kalenderwochen je LK.
 
 **Pflicht und Wahlpflicht.** Welche HK eines Berufs Wahlpflicht sind, steht in der Einstellung `beruf_wahlpflicht_hk` (`AU_EFZ=a.04,a.05,…`). Wahlpflicht-HK zählen nicht in die Pflicht-Bezugsgrösse („x von 14 Pflicht-HK"). Wie viele davon der Bildungsplan verlangt, steht in `beruf_wahlpflicht_anzahl`, je Gruppe von Bereichen oder einzelnen HK:
 

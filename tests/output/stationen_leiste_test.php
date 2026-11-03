@@ -120,6 +120,31 @@ final class stationen_leiste_test extends advanced_testcase {
         $this->assertStringNotContainsString('aria-current', $html);
     }
 
+    /**
+     * Ein Statustext, der nur "geplant" sagt, steht in der Zeitleiste nur
+     * fuer Screenreader da; was eine geplante Station sonst sagt, etwa
+     * "freiwillig", bleibt sichtbar, ebenso jeder andere Status.
+     */
+    public function test_nur_geplant_steht_nicht_sichtbar_in_der_zeitleiste(): void {
+        $this->resetAfterTest();
+        $geplant = get_string('stationen:status_geplant', 'local_berufsbildung');
+
+        $this->assertFalse(stationen_leiste::zeige_status(
+            new station('bildungsbericht', 'Bildungsbericht 3. Semester', station::STATUS_GEPLANT, $geplant)
+        ));
+        $this->assertTrue(stationen_leiste::zeige_status(
+            new station('bildungsbericht', 'Bildungsbericht 8. Semester', station::STATUS_GEPLANT, 'freiwillig')
+        ));
+        $this->assertTrue(stationen_leiste::zeige_status(
+            new station('bildungsbericht', 'Bildungsbericht 2. Semester', station::STATUS_OFFEN, $geplant)
+        ));
+
+        $html = stationen_leiste::render(new stationen('bildungsbericht', 'Bildungsbericht', [
+            new station('bildungsbericht', 'Bildungsbericht 3. Semester', station::STATUS_GEPLANT, $geplant),
+        ]));
+        $this->assertStringContainsString('<span class="sr-only visually-hidden">' . $geplant . '</span>', $html);
+    }
+
     public function test_kachel_zeigt_aktuelle_station_in_eigener_spalte(): void {
         $this->resetAfterTest();
 

@@ -98,6 +98,7 @@ class stationen_leiste {
             'bezeichnung' => $station->bezeichnung,
             'kurzbezeichnung' => $station->kurzbezeichnung ?? $station->bezeichnung,
             'statustext' => $station->statustext,
+            'zeigestatus' => self::zeige_status($station),
             'status' => $station->status,
             'hasstand' => $station->stand !== null && $station->stand !== '',
             // In der Zeitleiste nur bei erledigten Stationen, etwa "Gespraech
@@ -112,5 +113,22 @@ class stationen_leiste {
             'punktklasse' => $punktklasse,
             'istueberfaellig' => $station->status === station::STATUS_UEBERFAELLIG,
         ];
+    }
+
+    /**
+     * Ob der Statustext in der Zeitleiste sichtbar unter dem Namen steht.
+     *
+     * Nicht, wenn eine geplante Station nur "geplant" sagt: ueber die ganze
+     * Lehre stuende das sonst unter fast jeder Station und sagt nichts, was
+     * der leere Punkt nicht schon zeigt. Fuer Screenreader bleibt der Text
+     * stehen. Was eine geplante Station sonst von sich sagt, etwa
+     * "freiwillig", bleibt sichtbar.
+     *
+     * @param station $station
+     * @return bool
+     */
+    public static function zeige_status(station $station): bool {
+        return $station->status !== station::STATUS_GEPLANT
+            || $station->statustext !== get_string('stationen:status_geplant', 'local_berufsbildung');
     }
 }

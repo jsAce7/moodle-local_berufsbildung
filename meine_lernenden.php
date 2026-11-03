@@ -24,14 +24,17 @@
  * einer eigenen Spalte und alles Weitere als Zeitleiste zuoberst im
  * Detail - nicht noch einmal unter Faelligkeiten und Taetigkeiten.
  *
- * Sortiert nach Handlungsbedarf, dann nach laufendem Semester, dann nach
- * Namen (siehe output\lernenden_roster::nach_handlungsbedarf() und
- * sortiere()), durchsuchbar nach Namen und filterbar nach Beruf und
- * Handlungsbedarf. Jede Person ist eine Zeile ueber die volle Breite -
- * Details (Luecken-Aufschluesselung, Kompetenzraster, Taetigkeitenliste,
- * Profil-Link) stehen erst auf Wunsch (natives <details>-Element, kein
- * JavaScript). Volle Breite, weil das Kompetenzraster ein breiter Inhalt
- * ist: in einer Kachelspalte bricht es zeichenweise um.
+ * Sortiert nach Handlungsbedarf, dann nach der naechsten Frist, dann nach
+ * laufendem Semester, dann nach Namen (siehe
+ * output\lernenden_roster::nach_handlungsbedarf() und sortiere()),
+ * durchsuchbar nach Namen und filterbar nach Beruf und Handlungsbedarf
+ * ("faellige Aufgaben"). Jede Person ist eine Zeile ueber die volle
+ * Breite - Details (Kompetenzraster, Faelligkeiten, Taetigkeitenliste,
+ * Versetzungsplan, Profil-Link) stehen erst auf Wunsch (natives
+ * <details>-Element, kein JavaScript). Volle Breite, weil das
+ * Kompetenzraster ein breiter Inhalt ist: in einer Kachelspalte bricht es
+ * zeichenweise um. Die schmalen Listen darunter stehen auf breiten
+ * Bildschirmen in zwei Spalten.
  *
  * @package    local_berufsbildung
  * @copyright  2026 jsAce7
@@ -43,6 +46,7 @@ require_once(__DIR__ . '/../../config.php');
 use local_berufsbildung\api;
 use local_berufsbildung\nachweis\collector;
 use local_berufsbildung\navigation\menuepunkt;
+use local_berufsbildung\output\einsatz_timeline;
 use local_berufsbildung\output\faelligkeiten_liste;
 use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\output\kompetenzraster;
@@ -123,9 +127,18 @@ if (empty($eintraege)) {
     // wird nur Überfälliges signalisiert; alle Fristen stehen im Detail.
     $faelligkeitenjelernende = [];
     $anzahlueberfaellig = [];
+    // Die frueheste Frist, die bei der Berufsbildner/in liegt - auch aus
+    // einer Quelle mit Stationen, etwa der naechste Bildungsbericht. Danach
+    // ordnet sich die Liste innerhalb derselben Stufe Handlungsbedarf.
+    // Aufgaben der Lernenden selbst (etwa der naechste Lerndoku-Eintrag)
+    // zaehlen nicht: sonst stuende zuoberst, wer bald schreiben muss.
+    $naechstefrist = [];
     foreach ($eintraege as $eintrag) {
         $lernendeid = $eintrag['id'];
         foreach ($collector->get_faelligkeiten($berufsbildnerid, $lernendeid) as $faelligkeit) {
+            if ($faelligkeit->im_kalender_von(false)) {
+                $naechstefrist[$lernendeid] = min($naechstefrist[$lernendeid] ?? PHP_INT_MAX, $faelligkeit->datum);
+            }
             // Eine Quelle mit Stationen zeigt ihre Fristen dort, auch die
             // ueberfaelligen - sie zaehlen nicht noch einmal im Badge.
             if (isset($stationenjelernende[$lernendeid][$faelligkeit->quellekey])) {
@@ -193,7 +206,8 @@ if (empty($eintraege)) {
     // Handlungsbedarf je Person: Ueberfaelliges aus den Faelligkeiten oder
     // eine ueberfaellige aktuelle Station, sonst eine offene aktuelle
     // Station - also das, was die Kachel ohne Aufklappen rot oder blau
-    // zeigt. Wer wartet, steht zuoberst.
+    // zeigt. Wer wartet, steht zuoberst, innerhalb derselben Stufe wer
+    // zuerst eine Frist hat.
     foreach ($eintraege as &$eintrag) {
         $eintrag['handlungsbedarf'] = lernenden_roster::handlungsbedarf_aus_stationen(
             $stationenjelernende[$eintrag['id']],
@@ -201,6 +215,7 @@ if (empty($eintraege)) {
                 ? lernenden_roster::HANDLUNGSBEDARF_UEBERFAELLIG
                 : lernenden_roster::HANDLUNGSBEDARF_KEINER
         );
+        $eintrag['naechstefrist'] = $naechstefrist[$eintrag['id']] ?? null;
     }
     unset($eintrag);
     $eintraege = lernenden_roster::nach_handlungsbedarf($eintraege);
@@ -337,7 +352,12 @@ if (empty($eintraege)) {
             );
         }
 
-        echo faelligkeiten_liste::render(
+        // Externe Personen haben hier keinen Ausbildungsstand und damit
+        // auch keine Semester, in die sich ein Nachweis oder Einsatz
+        // einordnen liesse.
+        $semestergrenzen = $eintrag['istextern'] ? [] : api::get_semester_grenzen($lernendeid);
+
+        $links = faelligkeiten_liste::render(
             $faelligkeitenjelernende[$lernendeid] ?? [],
             get_string('faelligkeiten:titel', 'local_berufsbildung'),
             kompakt: true
@@ -349,16 +369,43 @@ if (empty($eintraege)) {
             $collector->get_nachweise($berufsbildnerid, $lernendeid, 0, time()),
             static fn ($nachweis): bool => !isset($stationen[$nachweis->quellekey])
         ));
-        echo nachweis_liste::render(
+        $links .= nachweis_liste::render(
             $nachweise,
             $quellennamen,
-            // Externe Personen haben hier keinen Ausbildungsstand und damit
-            // auch keine Semester, in die sich ein Nachweis einordnen liesse.
-            $eintrag['istextern'] ? [] : api::get_semester_grenzen($lernendeid),
+            $semestergrenzen,
             get_string('nachweis:titel', 'local_berufsbildung'),
             $collector->get_zusammenfassungen($nachweise),
             array_diff_key($collector->get_ausstehende($berufsbildnerid, $lernendeid), $stationen)
         );
+
+        // Der Versetzungsplan beantwortet, was das Raster offenlaesst: wann
+        // und wo das "spaeter Eingeplante" kommt, und wann die Person die
+        // Abteilung wechselt. Dieselbe Darstellung wie auf meine_lehre.php,
+        // offen nur das laufende Semester. Die Blockbezeichnungen aus dem
+        // Zwischenspeicher der Seite, nicht je Person neu gelesen.
+        $einsaetze = api::get_einsaetze($lernendeid);
+        foreach ($einsaetze as $einzeleinsatz) {
+            $blockid = (int) $einzeleinsatz->get('blockid');
+            if (!array_key_exists($blockid, $blocknamen)) {
+                $blocknamen[$blockid] = api::get_block_name($blockid);
+            }
+        }
+        $rechts = einsatz_timeline::render($einsaetze, array_filter($blocknamen, 'is_string'), null, $semestergrenzen);
+
+        // Fristen und Taetigkeiten links, der Plan rechts: beide sind
+        // schmale Listen, untereinander bliebe die halbe Breite leer. Erst
+        // ab xl nebeneinander - mit offener Moodle-Seitenleiste ist der
+        // Inhaltsbereich sonst zu schmal fuer zwei Spalten. Ohne Plan
+        // nimmt die linke Liste die volle Breite, statt neben einer leeren
+        // Haelfte zu stehen.
+        if ($rechts !== '') {
+            echo html_writer::div(
+                html_writer::div($links, 'col-12 col-xl-6') . html_writer::div($rechts, 'col-12 col-xl-6 mb-4'),
+                'row local-berufsbildung-roster-spalten'
+            );
+        } else {
+            echo $links;
+        }
 
         $profilurl = new moodle_url('/user/profile.php', ['id' => $lernendeid]);
         echo html_writer::div(html_writer::link(

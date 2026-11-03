@@ -1,5 +1,19 @@
 # Changelog
 
+## [Unreleased]
+
+### Hinzugefügt
+
+- **Versetzungsplan auf „Meine Lernenden“.** Im Detail einer Person steht derselbe Zeitstrahl wie auf „Meine Lehre“ (`output\einsatz_timeline`), nach Semestern gegliedert, offen das laufende. Ohne Plan entfällt er.
+
+### Geändert
+
+- **Zwei Spalten im Detail auf „Meine Lernenden“.** Ab der Bootstrap-Stufe xl stehen Fälligkeiten und Tätigkeiten links, der Versetzungsplan rechts. Zeitleiste der Bildungsberichte und Kompetenzraster bleiben in voller Breite. Ohne Plan nimmt die linke Spalte die ganze Breite.
+- **Keine dreifache Nennung des laufenden Berichts.** Aufgeklappt blendet die Kachel ihre Stationsspalte aus, die Station steht direkt darunter in der Zeitleiste.
+- **„geplant“ steht in der Zeitleiste der Stationen nur noch für Screenreader** (`stationen_leiste::zeige_status()`). Andere Texte geplanter Stationen, etwa „freiwillig“, bleiben sichtbar.
+- **Sortierung nach nächster Frist.** Innerhalb derselben Stufe Handlungsbedarf steht zuerst, bei wem die nächste Frist der Berufsbildner/in am frühesten abläuft (`lernenden_roster::nach_handlungsbedarf()`, neuer optionaler Schlüssel `naechstefrist`). Aufgaben der Lernenden selbst zählen nicht.
+- **Einheitliche Begriffe.** Raster, Legende, Zusammenfassung und Wahlpflicht-Zeilen sprechen durchgehend von „vollständig vorgekommen“, „teilweise vorgekommen“, „später eingeplant“ und „nicht im Plan“ (vorher daneben „alle LK vorgekommen“, „nur eingeplant“, „Fehlt noch“). Die Badges heissen „Pflicht offen“ und „Wahlpflicht offen“ und erklären im Titel, was sie zählen. „Handlungsbedarf“ heisst in Filter und Zusammenfassung „fällige Aufgaben“, „offene Lücken“ heisst „offene Handlungskompetenzen“.
+
 ## [1.6.1] — 2026-11-03
 
 ### Geändert

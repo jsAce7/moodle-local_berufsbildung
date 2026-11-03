@@ -22,8 +22,8 @@
     Spalten.
 
     Die Flaeche der Zelle zeigt den Ausbildungsstand: kraeftig gefuellt
-    vollstaendig (alle LK vorgekommen, mit Haekchen), mittel teilweise,
-    hell nur eingeplant, weiss nicht im Plan. Pflicht oder Wahlpflicht steht als schmaler Streifen oben, in
+    vollstaendig vorgekommen (alle LK, mit Haekchen), mittel teilweise
+    vorgekommen, hell spaeter eingeplant, weiss nicht im Plan. Pflicht oder Wahlpflicht steht als schmaler Streifen oben, in
     den Farben des Bildungsplans. Der Stand haengt zusaetzlich an Symbol
     und Klartext - Farbe allein traegt nie eine Information.
 
@@ -62,18 +62,18 @@
         "titel": "Handlungskompetenzen",
         "kompakt": false,
         "haszusammenfassung": true,
-        "zusammenfassung": "2 Pflicht-Handlungskompetenzen: 1 bereits vorgekommen, 0 später eingeplant, 1 nicht im Plan",
+        "zusammenfassung": "2 Pflicht-Handlungskompetenzen: 1 vollständig, 0 teilweise vorgekommen, 0 später eingeplant, 1 nicht im Plan",
         "hatwahlpflichtwahl": true,
         "wahlpflichtwahl": "Wahlpflicht – einer der folgenden Wege genügt:",
         "wahlpflichtwege": [
             {"hattitel": true, "titel": "Weg 1", "erfuellt": false, "staende": [
-                {"text": "Wahlpflicht aus d.06: verlangt 1, vollständig 0, teilweise 0, später eingeplant 1",
+                {"text": "Wahlpflicht aus d.06: 1 verlangt · 0 vollständig, 0 teilweise vorgekommen, 1 später eingeplant",
                  "erfuellt": false, "eingerueckt": true}
             ]},
             {"hattitel": true, "titel": "Weg 2", "erfuellt": true, "staende": [
-                {"text": "Wahlpflicht aus b, c, d: verlangt 2, vollständig 2, teilweise 0, später eingeplant 0",
+                {"text": "Wahlpflicht aus b, c, d: 2 verlangt · 2 vollständig, 0 teilweise vorgekommen, 0 später eingeplant",
                  "erfuellt": true, "eingerueckt": true},
-                {"text": "Wahlpflicht aus d: verlangt 1, vollständig 1, teilweise 0, später eingeplant 0",
+                {"text": "Wahlpflicht aus d: 1 verlangt · 1 vollständig, 0 teilweise vorgekommen, 0 später eingeplant",
                  "erfuellt": true, "eingerueckt": true}
             ]}
         ],
@@ -105,7 +105,7 @@
                         "haslk": true,
                         "lktext": "1 von 2 LK vorgekommen",
                         "lkgruppen": [
-                            {"titel": "Fehlt noch (1)", "statusklasse": "local-berufsbildung-raster-lk-offen",
+                            {"titel": "Nicht im Plan (1)", "statusklasse": "local-berufsbildung-raster-lk-offen",
                              "icon": "fa-times",
                              "leistungskriterien": [{"name": "AU a1 02", "beschreibung": "Sie zeichnen Skizzen.",
                                                      "hatbeschreibung": true, "hatorte": false, "orte": "",

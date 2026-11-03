@@ -107,8 +107,17 @@ class lernenden_kachel {
             'stationen' => array_map([stationen_leiste::class, 'station_daten'], array_values($stationen ?? [])),
             'haswahlpflichtoffen' => $anzahlwahlpflichtoffen > 0,
             'anzahlwahlpflichtoffen' => $anzahlwahlpflichtoffen,
+            // "Offen" heisst bei Pflicht und Wahlpflicht nicht dasselbe -
+            // noch nie vorgekommen bzw. noch nicht vollstaendig. Das Badge
+            // bleibt kurz, der Titel sagt es genau.
+            'wahlpflichtoffentitel' => get_string(
+                'luecken:wahlpflicht_offen_titel',
+                'local_berufsbildung',
+                $anzahlwahlpflichtoffen
+            ),
             'hasluecken' => $anzahlluecken > 0,
             'anzahlluecken' => $anzahlluecken,
+            'lueckentitel' => get_string('luecken:pflicht_offen_titel', 'local_berufsbildung', $anzahlluecken),
             'hasueberfaellig' => $anzahlueberfaellig > 0,
             'anzahlueberfaellig' => $anzahlueberfaellig,
             'hasextern' => $istextern,

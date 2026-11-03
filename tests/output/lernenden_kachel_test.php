@@ -113,4 +113,23 @@ final class lernenden_kachel_test extends advanced_testcase {
             $ohne
         );
     }
+
+    /**
+     * "Offen" heisst bei Pflicht und Wahlpflicht nicht dasselbe - der Titel
+     * jedes Badges sagt, was gezaehlt ist.
+     */
+    public function test_badges_erklaeren_ihre_zahl_im_titel(): void {
+        $this->resetAfterTest();
+
+        $html = lernenden_kachel::render('Elena Furrer', null, 5, 0, '', anzahlwahlpflichtoffen: 2);
+
+        $this->assertStringContainsString(
+            'title="' . s(get_string('luecken:pflicht_offen_titel', 'local_berufsbildung', 5)) . '"',
+            $html
+        );
+        $this->assertStringContainsString(
+            'title="' . s(get_string('luecken:wahlpflicht_offen_titel', 'local_berufsbildung', 2)) . '"',
+            $html
+        );
+    }
 }
