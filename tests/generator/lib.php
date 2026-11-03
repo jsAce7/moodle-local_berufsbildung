@@ -159,4 +159,37 @@ class local_berufsbildung_generator extends component_generator_base {
 
         return $einsatz;
     }
+
+    /**
+     * Spielt eine Versetzungsplan-Lieferung ueber den import_service ein, mit
+     * je einem Einsatz pro Person im selben Block und Zeitraum. Bei einem
+     * deutlichen Rueckgang wird sie wie im Betrieb zurueckgehalten.
+     *
+     * @param array $record Muss emails (string[]), block, kw_von und kw_bis
+     *                       enthalten; quelle und ausgefuehrt_von haben Defaults.
+     * @return array Ergebnis wie import_service::verarbeiten()
+     */
+    public function create_plan_lieferung(array $record): array {
+        foreach (['emails', 'block', 'kw_von', 'kw_bis'] as $feld) {
+            if (empty($record[$feld])) {
+                throw new coding_exception('create_plan_lieferung() benoetigt ' . $feld);
+            }
+        }
+
+        $record += [
+            'quelle' => 'webservice',
+            'ausgefuehrt_von' => (int) get_admin()->id,
+        ];
+
+        $csv = "email;block;kw_von;kw_bis\n";
+        foreach ($record['emails'] as $email) {
+            $csv .= "{$email};{$record['block']};{$record['kw_von']};{$record['kw_bis']}\n";
+        }
+
+        return (new \local_berufsbildung\versetzungsplan\import_service())->verarbeiten(
+            $csv,
+            (string) $record['quelle'],
+            (int) $record['ausgefuehrt_von']
+        );
+    }
 }

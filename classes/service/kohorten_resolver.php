@@ -53,6 +53,26 @@ class kohorten_resolver {
     }
 
     /**
+     * Ob die Person Mitglied mindestens einer der Kohorten ist.
+     *
+     * @param int $userid
+     * @param int[] $cohortids
+     * @return bool
+     */
+    public function ist_mitglied(int $userid, array $cohortids): bool {
+        global $DB;
+
+        if (empty($cohortids)) {
+            return false;
+        }
+
+        [$insql, $params] = $DB->get_in_or_equal($cohortids, SQL_PARAMS_NAMED);
+        $params['userid'] = $userid;
+
+        return $DB->record_exists_select('cohort_members', "userid = :userid AND cohortid {$insql}", $params);
+    }
+
+    /**
      * Anzeigenamen der Kohorten - fuer die Verwaltungsseite, wo nur die
      * gespeicherte cohortid vorliegt.
      *

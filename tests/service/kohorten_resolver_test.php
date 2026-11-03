@@ -65,4 +65,28 @@ final class kohorten_resolver_test extends advanced_testcase {
 
         $this->assertSame([], (new kohorten_resolver())->mitglieder([]));
     }
+
+    public function test_ist_mitglied_in_einer_der_kohorten(): void {
+        $this->resetAfterTest();
+
+        $kohorte1 = $this->getDataGenerator()->create_cohort();
+        $kohorte2 = $this->getDataGenerator()->create_cohort();
+        $mitglied = $this->getDataGenerator()->create_user();
+        $andere = $this->getDataGenerator()->create_user();
+        cohort_add_member($kohorte2->id, $mitglied->id);
+
+        $resolver = new kohorten_resolver();
+        $kohorten = [(int) $kohorte1->id, (int) $kohorte2->id];
+        $this->assertTrue($resolver->ist_mitglied((int) $mitglied->id, $kohorten));
+        $this->assertFalse($resolver->ist_mitglied((int) $andere->id, $kohorten));
+        $this->assertFalse($resolver->ist_mitglied((int) $mitglied->id, [(int) $kohorte1->id]));
+    }
+
+    public function test_ist_mitglied_ohne_kohorten_ist_niemand(): void {
+        $this->resetAfterTest();
+
+        $person = $this->getDataGenerator()->create_user();
+
+        $this->assertFalse((new kohorten_resolver())->ist_mitglied((int) $person->id, []));
+    }
 }

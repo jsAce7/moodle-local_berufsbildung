@@ -26,7 +26,8 @@ declare(strict_types=1);
 
 /**
  * Testdaten fuer Behat: Ausbildungsblöcke, deren Kompetenzzuordnung, ein
- * gegliederter Kompetenzrahmen sowie Lernende mit ihren Einsaetzen.
+ * gegliederter Kompetenzrahmen, Lernende mit ihren Einsaetzen und
+ * Zuordnungen sowie Versetzungsplan-Lieferungen.
  *
  * Aufruf z.B. mit 'the following "local_berufsbildung > blocks" exist:'.
  */
@@ -78,6 +79,13 @@ class behat_local_berufsbildung_generator extends behat_generator_base {
                 'datagenerator' => 'zuordnung',
                 'required' => ['trainer', 'learner'],
                 'switchids' => ['trainer' => 'berufsbildnerid', 'learner' => 'lernendeid'],
+            ],
+            // Eine Lieferung je Zeile, in der Reihenfolge der Tabelle
+            // eingespielt. 'learners' sind kommagetrennte Benutzernamen.
+            'rotation plan deliveries' => [
+                'singular' => 'rotation plan delivery',
+                'datagenerator' => 'plan_lieferung',
+                'required' => ['learners', 'block', 'kw_von', 'kw_bis'],
             ],
         ];
     }
@@ -161,6 +169,22 @@ class behat_local_berufsbildung_generator extends behat_generator_base {
      */
     protected function preprocess_lernende(array $data): array {
         $data += ['password' => $data['username']];
+
+        return $data;
+    }
+
+    /**
+     * Die Lieferung adressiert Personen ueber ihre Mailadresse.
+     *
+     * @param array $data
+     * @return array
+     */
+    protected function preprocess_plan_lieferung(array $data): array {
+        $data['emails'] = [];
+        foreach (explode(',', $data['learners']) as $username) {
+            $data['emails'][] = core_user::get_user($this->get_user_id(trim($username)), 'email', MUST_EXIST)->email;
+        }
+        unset($data['learners']);
 
         return $data;
     }

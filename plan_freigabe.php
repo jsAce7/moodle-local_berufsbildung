@@ -45,17 +45,22 @@ $id = optional_param('id', 0, PARAM_INT);
 
 if (in_array($aktion, ['freigeben', 'verwerfen'], true) && $id > 0) {
     if (optional_param('bestaetigt', 0, PARAM_BOOL) && confirm_sesskey()) {
-        if ($aktion === 'freigeben') {
-            $ergebnis = $service->freigeben($id, (int) $USER->id);
-            redirect(
-                $url,
-                get_string('planfreigabe:freigegeben', 'local_berufsbildung', $ergebnis['einsaetze_erzeugt']),
-                null,
-                \core\output\notification::NOTIFY_SUCCESS
-            );
+        // Inzwischen entschieden oder ueberholt, oder die Freigabe scheitert:
+        // eine Meldung auf der Uebersicht statt einer Fehlerseite.
+        try {
+            if ($aktion === 'freigeben') {
+                $ergebnis = $service->freigeben($id, (int) $USER->id);
+                $meldung = get_string('planfreigabe:freigegeben', 'local_berufsbildung', $ergebnis['einsaetze_erzeugt']);
+                $meldungstyp = \core\output\notification::NOTIFY_SUCCESS;
+            } else {
+                $service->verwerfen($id, (int) $USER->id);
+                $meldung = get_string('planfreigabe:verworfen', 'local_berufsbildung');
+                $meldungstyp = \core\output\notification::NOTIFY_INFO;
+            }
+        } catch (moodle_exception $e) {
+            redirect($url, $e->getMessage(), null, \core\output\notification::NOTIFY_ERROR);
         }
-        $service->verwerfen($id, (int) $USER->id);
-        redirect($url, get_string('planfreigabe:verworfen', 'local_berufsbildung'), null, \core\output\notification::NOTIFY_INFO);
+        redirect($url, $meldung, null, $meldungstyp);
     }
 
     echo $OUTPUT->header();

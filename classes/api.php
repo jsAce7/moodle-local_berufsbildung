@@ -32,6 +32,7 @@ use local_berufsbildung\persistent\einsatz;
 use local_berufsbildung\persistent\teilnahmeprofil;
 use local_berufsbildung\persistent\zuordnung;
 use local_berufsbildung\service\beruf_katalog;
+use local_berufsbildung\service\kohorten_resolver;
 use local_berufsbildung\service\lk_abdeckung_service;
 use local_berufsbildung\service\kompetenz_baum;
 use local_berufsbildung\service\lehrdauer_resolver;
@@ -90,8 +91,6 @@ class api {
      * @return bool
      */
     public static function ist_lerndokumentation_erforderlich(int $userid): bool {
-        global $DB;
-
         if (self::ist_uek_extern($userid)) {
             return false;
         }
@@ -100,10 +99,8 @@ class api {
         if ($kohorten === []) {
             return true;
         }
-        [$insql, $params] = $DB->get_in_or_equal($kohorten, SQL_PARAMS_NAMED);
-        $params['userid'] = $userid;
 
-        return $DB->record_exists_select('cohort_members', "userid = :userid AND cohortid $insql", $params);
+        return (new kohorten_resolver())->ist_mitglied($userid, $kohorten);
     }
 
     /**
