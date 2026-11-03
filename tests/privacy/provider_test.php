@@ -37,6 +37,7 @@ use local_berufsbildung\nachweis\faelligkeit;
 use local_berufsbildung\persistent\aufbewahrung;
 use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\einsatz;
+use local_berufsbildung\persistent\einsatz_aenderung;
 use local_berufsbildung\persistent\kohorten_link;
 use local_berufsbildung\persistent\plan_import;
 use local_berufsbildung\persistent\zuordnung;
@@ -65,6 +66,41 @@ final class provider_test extends \core_privacy\tests\provider_testcase {
         $this->assertContains('local_berufsbildung_kohorten_link', $tabellen);
         $this->assertContains('local_berufsbildung_einsatz', $tabellen);
         $this->assertContains('local_berufsbildung_plan_import', $tabellen);
+        $this->assertContains('local_berufsbildung_einsatz_aenderung', $tabellen);
+    }
+
+    /**
+     * Das Aenderungsprotokoll allein macht die Person auffindbar, steht im
+     * Export und verschwindet mit dem Account.
+     */
+    public function test_aenderungsprotokoll_wird_gefunden_exportiert_und_mit_dem_account_geloescht(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        $lernende = $this->getDataGenerator()->create_user();
+        (new einsatz_aenderung(0, (object) [
+            'importid' => 1, 'userid' => (int) $lernende->id, 'art' => einsatz_aenderung::ENTFAELLT,
+            'block' => '4', 'kw_von' => '2027-W15', 'kw_bis' => '2027-W16', 'von' => strtotime('2027-04-12'),
+        ]))->create();
+        $kontext = context_user::instance((int) $lernende->id);
+
+        $this->assertEquals([$kontext->id], provider::get_contexts_for_userid((int) $lernende->id)->get_contextids());
+        $userlist = new userlist($kontext, 'local_berufsbildung');
+        provider::get_users_in_context($userlist);
+        $this->assertEquals([(int) $lernende->id], $userlist->get_userids());
+
+        $this->export_all_data_for_user((int) $lernende->id, 'local_berufsbildung');
+        $daten = writer::with_context($kontext)->get_data([get_string('privacy:pfad_einsatzaenderungen', 'local_berufsbildung')]);
+        $this->assertCount(1, $daten->aenderungen);
+        $this->assertSame('entfaellt', $daten->aenderungen[0]['art']);
+
+        // Nur als geloescht markiert, nicht delete_user(): so bleibt der
+        // Benutzerkontext stehen, und der Test haengt nicht davon ab, in
+        // welcher Reihenfolge Moodle Konto und Kontext aufraeumt.
+        $DB->set_field('user', 'deleted', 1, ['id' => (int) $lernende->id]);
+        provider::delete_data_for_user($this->loeschanfrage_fuer($lernende));
+
+        $this->assertSame(0, einsatz_aenderung::count_records(['userid' => (int) $lernende->id]));
     }
 
     public function test_get_contexts_for_userid_findet_beide_rollen(): void {

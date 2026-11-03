@@ -273,6 +273,15 @@ if ($hatverwaltung) {
         'local/berufsbildung:importplan'
     ));
 
+    // Fuer beide: wer importiert, will sehen, was der Lauf bewirkt hat, und
+    // wer freigibt, was bisher uebernommen wurde.
+    $ADMIN->add('ausbildungsverwaltung_planung', new admin_externalpage(
+        'local_berufsbildung_planverlauf',
+        new lang_string('planverlauf:titel', 'local_berufsbildung'),
+        new moodle_url('/local/berufsbildung/plan_verlauf.php'),
+        ['local/berufsbildung:importplan', 'local/berufsbildung:approveplan']
+    ));
+
     $ADMIN->add('ausbildungsverwaltung_planung', new admin_externalpage(
         'local_berufsbildung_planfreigabe',
         new lang_string('planfreigabe:titel', 'local_berufsbildung'),

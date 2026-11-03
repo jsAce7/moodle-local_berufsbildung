@@ -126,6 +126,11 @@ final class import_versetzungsplan_test extends advanced_testcase {
         $this->assertSame(1, $ergebnis['einsaetze_erzeugt']);
         $this->assertSame([], $ergebnis['protokoll']);
         $this->assertCount(1, einsatz::get_records([]));
+        // Das Skript erkennt die Person an der gelieferten Mailadresse.
+        $this->assertCount(1, $ergebnis['aenderungen']);
+        $this->assertSame('person0@firma.ch', $ergebnis['aenderungen'][0]['email']);
+        $this->assertSame('neu', $ergebnis['aenderungen'][0]['art']);
+        $this->assertSame('2027-W15', $ergebnis['aenderungen'][0]['kw_von']);
 
         $importe = plan_import::get_records([]);
         $this->assertCount(1, $importe);

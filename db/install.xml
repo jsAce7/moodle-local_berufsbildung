@@ -142,6 +142,27 @@
         <INDEX NAME="status_zeitpunkt" UNIQUE="false" FIELDS="status, zeitpunkt" COMMENT="Fuer den Alterungshinweis (letzter erfolgreicher Import)"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="local_berufsbildung_einsatz_aenderung" COMMENT="Welche Einsaetze ein Importlauf je Person neu angelegt oder ersetzt hat">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="importid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK auf local_berufsbildung_plan_import.id, der Lauf, der die Aenderung bewirkt hat"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK auf user.id, lernende Person"/>
+        <FIELD NAME="art" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="'neu' | 'entfaellt'"/>
+        <FIELD NAME="block" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="Blocknummer als Text, der Block kann spaeter wegfallen"/>
+        <FIELD NAME="kw_von" TYPE="char" LENGTH="8" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="kw_bis" TYPE="char" LENGTH="8" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="von" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Beginn des Einsatzes, fuer die Sortierung"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="usermodified" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="importid" TYPE="foreign" FIELDS="importid" REFTABLE="local_berufsbildung_plan_import" REFFIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
     <TABLE NAME="local_berufsbildung_aufbewahrung" COMMENT="Dokumentierte Aufbewahrungspflicht fuer eine lernende Person - verhindert die automatische Retention-Loeschung ihrer Zuordnungen und (ueber lokal_lerndokumentation) der Lerndoku-Inhalte waehrend der Gueltigkeit">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>

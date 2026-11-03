@@ -28,6 +28,7 @@ namespace local_berufsbildung\service;
 
 use local_berufsbildung\api;
 use local_berufsbildung\persistent\aufbewahrung;
+use local_berufsbildung\persistent\einsatz_aenderung;
 use local_berufsbildung\persistent\teilnahmeprofil;
 use local_berufsbildung\persistent\zuordnung;
 
@@ -121,7 +122,8 @@ class zuordnung_retention_service {
     /**
      * Loescht alle Zuordnungen dieser Person, unabhaengig von gueltig_bis,
      * sowie bereits abgelaufene Aufbewahrungsvermerke (deren Grund entfaellt
-     * mit den Daten, auf die sie sich bezogen).
+     * mit den Daten, auf die sie sich bezogen), Teilnahmeprofil, Termine und
+     * das Aenderungsprotokoll ihrer Einsaetze.
      *
      * @param int $lernendeid
      * @return int Anzahl geloeschter Zuordnungen
@@ -140,6 +142,11 @@ class zuordnung_retention_service {
         }
         foreach (teilnahmeprofil::get_records(['userid' => $lernendeid]) as $profil) {
             $profil->delete();
+        }
+        // Anders als die Einsaetze selbst kein Ausbildungsnachweis, nur die
+        // Spur, was die Importe geaendert haben.
+        foreach (einsatz_aenderung::get_records(['userid' => $lernendeid]) as $aenderung) {
+            $aenderung->delete();
         }
         // Die Kalendertermine zu ihren Faelligkeiten tragen ihren Namen, auch
         // in den Kalendern der zustaendigen Personen.

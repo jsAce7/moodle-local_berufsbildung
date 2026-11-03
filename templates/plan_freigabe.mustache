@@ -84,36 +84,7 @@
     {{#haspersonenunveraendert}}
         <p>{{#str}} planfreigabe:personen_unveraendert, local_berufsbildung, {{personenunveraendert}} {{/str}}</p>
     {{/haspersonenunveraendert}}
-    {{#personen}}
-        <h5>{{name}}</h5>
-        <table class="generaltable">
-            <thead>
-                <tr>
-                    <th scope="col">
-                        <span class="sr-only visually-hidden">{{#str}} planimport:status, local_berufsbildung {{/str}}</span>
-                    </th>
-                    <th scope="col">{{#str}} planfreigabe:block, local_berufsbildung {{/str}}</th>
-                    <th scope="col">{{#str}} planfreigabe:zeitraum, local_berufsbildung {{/str}}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{#einsaetze}}
-                    <tr>
-                        <td>
-                            {{#entfaellt}}
-                                <span class="badge bg-danger">{{#str}} planfreigabe:entfaellt, local_berufsbildung {{/str}}</span>
-                            {{/entfaellt}}
-                            {{^entfaellt}}
-                                <span class="badge bg-success">{{#str}} planfreigabe:neu, local_berufsbildung {{/str}}</span>
-                            {{/entfaellt}}
-                        </td>
-                        <td>{{block}}</td>
-                        <td>{{zeitraum}}</td>
-                    </tr>
-                {{/einsaetze}}
-            </tbody>
-        </table>
-    {{/personen}}
+    {{> local_berufsbildung/plan_aenderungen }}
 
     {{#hasfehlende}}
         <h4>{{#str}} planfreigabe:fehlende_personen, local_berufsbildung, {{anzahlfehlende}} {{/str}}</h4>

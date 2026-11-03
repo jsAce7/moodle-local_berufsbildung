@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.6.0] — 2026-11-03
+
+### Hinzugefügt
+
+- **Änderungsprotokoll des Versetzungsplans.** Jeder übernommene Import hält je Person fest, welche Einsätze er ersetzt (`entfaellt`) oder neu angelegt (`neu`) hat. Neue Tabelle `local_berufsbildung_einsatz_aenderung` mit Persistent `einsatz_aenderung`, gelesen über `import_service::aenderungen_fuer_import()`.
+- **Seite *Ausbildungsplanung ▸ Versetzungsplan-Verlauf*** (`plan_verlauf.php`, für `importplan` und `approveplan`): die letzten 50 Läufe mit Status und Anzahl geänderter Einsätze, je Lauf Eckdaten, Protokoll und die Änderungen je Person.
+- Die Antwort des Webservice und das Ergebnis von `import_service::verarbeiten()` enthalten `aenderungen`, beim Testlauf und bei `zur_freigabe` die, die eine Übernahme bewirken würde. `import_plan.php` zeigt sie unter dem Ergebnis, das Beispielskript schreibt sie ins Log.
+- `output\plan_aenderungen` mit Template `local_berufsbildung/plan_aenderungen`, gemeinsam genutzt von Freigabe, Upload und Verlauf.
+- Datenschutz: Das Änderungsprotokoll wird exportiert und höchstens ein Jahr alt. Früher verschwindet es mit den Zuordnungen der Person (Aufbewahrungsfrist abgelaufen oder Account gelöscht). Das Beispielskript kürzt seine Log-Datei (`-LogPath`) bei jedem Lauf auf das letzte Jahr.
+- **Neuer täglicher Task `task\bereinige_planverlauf`** (`import_service::bereinige_verlauf()`): löscht geänderte Einsätze, die älter als ein Jahr sind, und leert den Protokolltext ebenso alter Importläufe, der nicht zugeordnete Mailadressen enthalten kann. Die Läufe selbst mit ihren Zahlen bleiben. Eine Lieferung, die auf Freigabe wartet, behält ihr Protokoll.
+
+### Geändert
+
+- Eine unbekannte Mailadresse wird im Importprotokoll nur noch einmal genannt, nicht je Einsatz.
+
 ## [1.5.0] — 2026-11-03
 
 ### Hinzugefügt

@@ -1,0 +1,67 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_berufsbildung/plan_aenderungen
+
+    Je Person die Einsaetze, die ein Versetzungsplan-Import wegnimmt oder
+    neu anlegt. Eigenstaendig (output\plan_aenderungen::render()) und als
+    Teil von plan_freigabe.
+
+    Context variables required for this template:
+    * personen - array of {name, einsaetze}, alphabetisch
+      * einsaetze - array of {entfaellt, block, zeitraum}; entfaellt false heisst neu
+
+    Example context (json):
+    {
+        "personen": [
+            {"name": "Anna Muster", "einsaetze": [
+                {"entfaellt": true, "block": "4", "zeitraum": "2027-W15 – 2027-W16"},
+                {"entfaellt": false, "block": "4", "zeitraum": "2027-W20 – 2027-W21"}
+            ]}
+        ]
+    }
+}}
+{{#personen}}
+    <h5>{{name}}</h5>
+    <table class="generaltable">
+        <thead>
+            <tr>
+                <th scope="col">
+                    <span class="sr-only visually-hidden">{{#str}} planimport:status, local_berufsbildung {{/str}}</span>
+                </th>
+                <th scope="col">{{#str}} planfreigabe:block, local_berufsbildung {{/str}}</th>
+                <th scope="col">{{#str}} planfreigabe:zeitraum, local_berufsbildung {{/str}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#einsaetze}}
+                <tr>
+                    <td>
+                        {{#entfaellt}}
+                            <span class="badge bg-danger">{{#str}} planfreigabe:entfaellt, local_berufsbildung {{/str}}</span>
+                        {{/entfaellt}}
+                        {{^entfaellt}}
+                            <span class="badge bg-success">{{#str}} planfreigabe:neu, local_berufsbildung {{/str}}</span>
+                        {{/entfaellt}}
+                    </td>
+                    <td>{{block}}</td>
+                    <td>{{zeitraum}}</td>
+                </tr>
+            {{/einsaetze}}
+        </tbody>
+    </table>
+{{/personen}}

@@ -21,6 +21,10 @@
       Webservice-Fehler mitunter mit 200 und einem 'exception'-Feld im
       JSON - das wird gesondert geprueft.
 
+    Nach der Zusammenfassung listet das Skript je Person die Einsaetze, die
+    der Lauf entfernt ('entfaellt') oder angelegt ('neu') hat. Dieselben
+    Aenderungen haelt Moodle fest (Ausbildungsplanung > Versetzungsplan-Verlauf).
+
 .PARAMETER MoodleUrl
     Basis-URL der Moodle-Instanz, z.B. https://moodle.example.ch (ohne
     abschliessenden Schraegstrich).
@@ -51,7 +55,11 @@
 
 .PARAMETER LogPath
     Optionale Log-Datei. Ohne Angabe wird nur nach Stdout/Stderr protokolliert
-    (was die Aufgabenplanung ueblicherweise ohnehin umleitet).
+    (was die Aufgabenplanung ueblicherweise ohnehin umleitet). Das Log nennt
+    je geaendertem Einsatz die Mailadresse der Person - die Datei deshalb wie
+    die CSV selbst nur fuer Berechtigte lesbar ablegen. Zeilen, die aelter
+    als ein Jahr sind, entfernt jeder Lauf, wie Moodle sein
+    Aenderungsprotokoll.
 
 .EXAMPLE
     # Erst-Einrichtung: pruefen, ohne zu schreiben
@@ -110,6 +118,21 @@ function Exit-MitFehler {
     param([string]$Meldung)
     Write-Log -Stufe 'ERROR' -Meldung $Meldung
     exit 1
+}
+
+# --- Log auf ein Jahr kuerzen --------------------------------------------
+# Jede Zeile beginnt mit dem Zeitstempel aus Write-Log (Format 's'). Zeilen
+# ohne lesbaren Zeitstempel stammen nicht vom Skript und bleiben stehen.
+if ($LogPath -and (Test-Path -LiteralPath $LogPath -PathType Leaf)) {
+    $grenze = (Get-Date).AddYears(-1)
+    $kultur = [System.Globalization.CultureInfo]::InvariantCulture
+    $behalten = @(Get-Content -LiteralPath $LogPath | Where-Object {
+        $zeitpunkt = [datetime]::MinValue
+        $lesbar = $_.Length -ge 19 -and
+            [datetime]::TryParseExact($_.Substring(0, 19), 's', $kultur, [System.Globalization.DateTimeStyles]::None, [ref]$zeitpunkt)
+        -not $lesbar -or $zeitpunkt -ge $grenze
+    })
+    Set-Content -LiteralPath $LogPath -Value $behalten
 }
 
 # --- Token laden -------------------------------------------------------
@@ -181,6 +204,20 @@ Write-Log $zusammenfassung
 
 foreach ($zeile in $antwort.protokoll) {
     Write-Log $zeile -Stufe 'WARN'
+}
+
+# Je Person die Einsaetze, die wegfallen oder neu dazukommen - beim Testlauf
+# und beim Zurueckhalten die, die eine Uebernahme aendern wuerde. Gefiltert
+# statt @($antwort.aenderungen), weil @($null) in PowerShell 5.1 ein Element
+# hat und eine aeltere Moodle-Version das Feld nicht kennt.
+$aenderungen = @($antwort.aenderungen | Where-Object { $_ })
+if ($aenderungen.Count -gt 0) {
+    $personen = @($aenderungen | Select-Object -ExpandProperty email -Unique).Count
+    Write-Log ('Einsatzaenderungen: {0} bei {1} Personen' -f $aenderungen.Count, $personen)
+    foreach ($aenderung in $aenderungen) {
+        $zeitraum = if ($aenderung.kw_von -eq $aenderung.kw_bis) { $aenderung.kw_von } else { "$($aenderung.kw_von) - $($aenderung.kw_bis)" }
+        Write-Log ('  {0,-9} {1}  Block {2}  {3}' -f $aenderung.art, $aenderung.email, $aenderung.block, $zeitraum)
+    }
 }
 
 switch ($antwort.status) {

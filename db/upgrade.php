@@ -489,5 +489,32 @@ function xmldb_local_berufsbildung_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026110300, 'local', 'berufsbildung');
     }
 
+    if ($oldversion < 2026110302) {
+        // Je Importlauf festhalten, welche Einsaetze neu dazukamen oder
+        // ersetzt wurden - bisher sah man das nur vor einer Freigabe.
+        $table = new xmldb_table('local_berufsbildung_einsatz_aenderung');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('usermodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('importid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('art', XMLDB_TYPE_CHAR, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('block', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('kw_von', XMLDB_TYPE_CHAR, '8', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('kw_bis', XMLDB_TYPE_CHAR, '8', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('von', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('usermodified', XMLDB_KEY_FOREIGN, ['usermodified'], 'user', ['id']);
+        $table->add_key('importid', XMLDB_KEY_FOREIGN, ['importid'], 'local_berufsbildung_plan_import', ['id']);
+        $table->add_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        upgrade_plugin_savepoint(true, 2026110302, 'local', 'berufsbildung');
+    }
+
     return true;
 }

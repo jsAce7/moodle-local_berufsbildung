@@ -242,7 +242,7 @@ local_berufsbildung_plan_import
   zeilen_ausserhalb_geltungsbereich int(10)  -- Zeilen ohne aktive Zuordnung, nur gezählt
   einsaetze_erzeugt  int(10)
   status             varchar(20)    -- siehe unten
-  protokoll          text           -- Zeile für Zeile, was nicht zugeordnet werden konnte
+  protokoll          text           -- Zeile für Zeile, was nicht zugeordnet werden konnte; nach einem Jahr geleert, ausser bei zur_freigabe
   csvdaten           text           -- nur solange eine Lieferung auf Freigabe wartet
   entschieden_von    int(10)        -- wer freigegeben oder verworfen hat
   entschieden_am     int(10)
@@ -258,6 +258,21 @@ local_berufsbildung_plan_import
 | `zur_freigabe` | zurückgehalten wegen deutlichem Rückgang, wartet auf Entscheidung (§5.3) |
 | `freigegeben`, `verworfen` | entschiedene Lieferung; bei der Freigabe entsteht zusätzlich ein eigener Eintrag für den Lauf |
 | `ueberholt` | durch eine neuere Lieferung ersetzt, bevor entschieden wurde |
+
+```
+local_berufsbildung_einsatz_aenderung
+  id
+  importid           int(10)        -- der Lauf, der die Änderung bewirkt hat
+  userid             int(10)        -- lernende Person
+  art                varchar(10)    -- 'neu' | 'entfaellt'
+  block              varchar(20)    -- Blocknummer als Text, der Block kann später wegfallen
+  kw_von             varchar(8)
+  kw_bis             varchar(8)
+  von                int(10)        -- Beginn, für die Sortierung
+  timecreated, timemodified, usermodified
+```
+
+Je übernommenem Lauf die Einsätze, die er je Person ersetzt oder neu angelegt hat, ermittelt vor dem Ersetzen mit demselben Vergleich wie die Freigabe-Vorschau. Unveränderte Einsätze erscheinen nicht. Sichtbar unter *Ausbildungsplanung ▸ Versetzungsplan-Verlauf* (`plan_verlauf.php`); dieselbe Liste geht mit der Antwort des Webservice an das Skript. Anders als die Einsätze ist das Protokoll kein Ausbildungsnachweis: Es wird höchstens ein Jahr alt (`import_service::VERLAUF_MONATE`, täglich bereinigt von `task\bereinige_planverlauf` über `import_service::bereinige_verlauf()`; ein Eintrag genau ein Jahr alt bleibt noch stehen) und verschwindet früher mit den Zuordnungen der Person (`zuordnung_retention_service::loesche_fuer_lernende()`), also nach Ablauf der Aufbewahrungsfrist oder bei einer Account-Löschung. Das Beispielskript kürzt seine Log-Datei bei jedem Lauf ebenso auf das letzte Jahr.
 | `abgewiesen` | nur in Einträgen vor Version 1.4.0, als ein Rückgang noch abgewiesen statt zurückgehalten wurde |
 
 ### 5.3 Import

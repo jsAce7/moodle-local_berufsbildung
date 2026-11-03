@@ -28,6 +28,7 @@ require_once($CFG->libdir . '/adminlib.php');
 
 use local_berufsbildung\form\plan_import_form;
 use local_berufsbildung\output\hilfe_link;
+use local_berufsbildung\output\plan_aenderungen;
 use local_berufsbildung\versetzungsplan\alterung_service;
 use local_berufsbildung\versetzungsplan\import_service;
 
@@ -121,8 +122,24 @@ if ($ergebnis !== null) {
             echo $OUTPUT->heading(get_string('planimport:protokoll', 'local_berufsbildung'), 4);
             echo html_writer::alist(array_map('s', $ergebnis['protokoll']));
         }
+
+        // Was die Uebernahme geaendert hat - beim Testlauf und beim
+        // Zurueckhalten, was sie aendern wuerde.
+        if (!empty($ergebnis['aenderungen'])) {
+            echo $OUTPUT->heading(get_string(
+                'planfreigabe:aenderungen',
+                'local_berufsbildung',
+                count(array_unique(array_column($ergebnis['aenderungen'], 'userid')))
+            ), 4);
+            echo plan_aenderungen::render($ergebnis['aenderungen']);
+        }
     }
 }
+
+echo html_writer::tag('p', html_writer::link(
+    new moodle_url('/local/berufsbildung/plan_verlauf.php'),
+    get_string('planverlauf:titel', 'local_berufsbildung')
+));
 
 $form->display();
 

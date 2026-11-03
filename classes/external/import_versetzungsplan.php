@@ -127,6 +127,20 @@ class import_versetzungsplan extends external_api {
                 VALUE_DEFAULT,
                 []
             ),
+            'aenderungen' => new external_multiple_structure(
+                new external_single_structure([
+                    'userid' => new external_value(PARAM_INT, 'Moodle-ID der lernenden Person'),
+                    'email' => new external_value(PARAM_RAW_TRIMMED, 'Mailadresse wie in der Lieferung'),
+                    'art' => new external_value(PARAM_ALPHA, "'entfaellt' | 'neu'"),
+                    'block' => new external_value(PARAM_TEXT, 'Blocknummer'),
+                    'kw_von' => new external_value(PARAM_ALPHANUMEXT, 'erste Kalenderwoche, z.B. 2027-W15'),
+                    'kw_bis' => new external_value(PARAM_ALPHANUMEXT, 'letzte Kalenderwoche'),
+                ]),
+                'Je Person die Einsaetze, die wegfallen oder neu dazukommen - bei Testlauf und Zurueckhalten '
+                    . 'die, die es bei einer Uebernahme taeten',
+                VALUE_DEFAULT,
+                []
+            ),
         ]);
     }
 }

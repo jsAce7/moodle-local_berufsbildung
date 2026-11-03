@@ -29,6 +29,7 @@ namespace local_berufsbildung\versetzungsplan;
 use advanced_testcase;
 use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\einsatz;
+use local_berufsbildung\persistent\einsatz_aenderung;
 use local_berufsbildung\persistent\plan_import;
 use stdClass;
 
@@ -95,6 +96,202 @@ final class import_service_test extends advanced_testcase {
         $this->assertSame(1, $ergebnis['personen_verarbeitet']);
         $this->assertSame(1, $ergebnis['einsaetze_erzeugt']);
         $this->assertCount(1, array_filter($ergebnis['protokoll'], static fn ($z) => str_contains($z, 'alt.name@firma.ch')));
+    }
+
+    /**
+     * Eine unbekannte Adresse mit mehreren Einsaetzen wird nur einmal gemeldet.
+     */
+    public function test_unbekannte_mailadresse_mit_mehreren_einsaetzen_wird_einmal_gemeldet(): void {
+        $this->resetAfterTest();
+
+        $admin = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user(['email' => 'anna.muster@firma.ch']);
+        $this->lege_aktive_zuordnung_an($lernende);
+        (new block(0, (object) ['nummer' => '4', 'name' => '4', 'ist_betrieb' => true, 'aktiv' => true]))->create();
+
+        $csv = "email;block;kw_von;kw_bis\n"
+            . "alt.name@firma.ch;4;2027-W15;2027-W16\n"
+            . "alt.name@firma.ch;4;2027-W20;2027-W21\n"
+            . "anna.muster@firma.ch;4;2027-W17;2027-W18\n";
+
+        $ergebnis = (new import_service())->verarbeiten($csv, 'upload', (int) $admin->id);
+
+        $this->assertSame('mit_warnungen', $ergebnis['status']);
+        $this->assertCount(1, $ergebnis['protokoll']);
+        $this->assertStringContainsString('alt.name@firma.ch', $ergebnis['protokoll'][0]);
+    }
+
+    /**
+     * Der erste Import legt nur neue Einsaetze an. Der zweite verschiebt
+     * einen: der bisherige entfaellt, der verschobene ist neu - beides im
+     * Ergebnis und festgehalten beim zweiten Lauf.
+     */
+    public function test_uebernahme_haelt_geaenderte_einsaetze_fest(): void {
+        $this->resetAfterTest();
+
+        $admin = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user(['email' => 'anna.muster@firma.ch']);
+        $this->lege_aktive_zuordnung_an($lernende);
+        (new block(0, (object) ['nummer' => '4', 'name' => '4', 'ist_betrieb' => true, 'aktiv' => true]))->create();
+        $service = new import_service();
+
+        $erster = $service->verarbeiten(
+            "email;block;kw_von;kw_bis\nanna.muster@firma.ch;4;2027-W15;2027-W16\n",
+            'upload',
+            (int) $admin->id
+        );
+
+        $this->assertCount(1, $erster['aenderungen']);
+        $this->assertSame('neu', $erster['aenderungen'][0]['art']);
+        $this->assertSame('anna.muster@firma.ch', $erster['aenderungen'][0]['email']);
+        $this->assertSame((int) $lernende->id, $erster['aenderungen'][0]['userid']);
+        $ersterlauf = (int) $service->letzter_erfolgreicher_import()->get('id');
+        $this->assertCount(1, einsatz_aenderung::get_records(['importid' => $ersterlauf]));
+
+        $zweiter = $service->verarbeiten(
+            "email;block;kw_von;kw_bis\nanna.muster@firma.ch;4;2027-W16;2027-W18\n",
+            'upload',
+            (int) $admin->id
+        );
+
+        $erwartet = [
+            ['art' => 'entfaellt', 'block' => '4', 'kw_von' => '2027-W15', 'kw_bis' => '2027-W16'],
+            ['art' => 'neu', 'block' => '4', 'kw_von' => '2027-W16', 'kw_bis' => '2027-W18'],
+        ];
+        $nurvergleich = static fn (array $a): array => [
+            'art' => $a['art'], 'block' => $a['block'], 'kw_von' => $a['kw_von'], 'kw_bis' => $a['kw_bis'],
+        ];
+        $this->assertSame($erwartet, array_map($nurvergleich, $zweiter['aenderungen']));
+
+        $zweiterlauf = (int) $service->letzter_erfolgreicher_import()->get('id');
+        $this->assertNotSame($ersterlauf, $zweiterlauf);
+        $festgehalten = $service->aenderungen_fuer_import($zweiterlauf);
+        $this->assertSame($erwartet, array_map($nurvergleich, $festgehalten));
+        $this->assertSame([(int) $lernende->id], array_values(array_unique(array_column($festgehalten, 'userid'))));
+    }
+
+    /**
+     * Wessen Einsaetze gleich bleiben, erscheint nicht im Protokoll.
+     */
+    public function test_unveraenderte_person_erscheint_nicht_im_aenderungsprotokoll(): void {
+        $this->resetAfterTest();
+
+        $admin = $this->getDataGenerator()->create_user();
+        $anna = $this->getDataGenerator()->create_user(['email' => 'anna.muster@firma.ch']);
+        $ben = $this->getDataGenerator()->create_user(['email' => 'ben.beispiel@firma.ch']);
+        $this->lege_aktive_zuordnung_an($anna);
+        $this->lege_aktive_zuordnung_an($ben);
+        (new block(0, (object) ['nummer' => '4', 'name' => '4', 'ist_betrieb' => true, 'aktiv' => true]))->create();
+        $service = new import_service();
+
+        $service->verarbeiten(
+            "email;block;kw_von;kw_bis\n"
+                . "anna.muster@firma.ch;4;2027-W15;2027-W16\n"
+                . "ben.beispiel@firma.ch;4;2027-W15;2027-W16\n",
+            'upload',
+            (int) $admin->id
+        );
+        $ergebnis = $service->verarbeiten(
+            "email;block;kw_von;kw_bis\n"
+                . "anna.muster@firma.ch;4;2027-W15;2027-W16\n"
+                . "ben.beispiel@firma.ch;4;2027-W20;2027-W21\n",
+            'upload',
+            (int) $admin->id
+        );
+
+        $this->assertSame(['ben.beispiel@firma.ch'], array_values(array_unique(array_column($ergebnis['aenderungen'], 'email'))));
+        $lauf = (int) $service->letzter_erfolgreicher_import()->get('id');
+        $this->assertSame(0, einsatz_aenderung::count_records(['importid' => $lauf, 'userid' => (int) $anna->id]));
+        $this->assertSame(2, einsatz_aenderung::count_records(['importid' => $lauf, 'userid' => (int) $ben->id]));
+    }
+
+    /**
+     * Randfall der Jahresfrist fuer geaenderte Einsaetze: ein Eintrag genau
+     * ein Jahr vor dem Stichtag bleibt, eine Sekunde aelter wird geloescht.
+     */
+    public function test_bereinige_verlauf_aenderungen_grenze_genau_ein_jahr(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        $stichtag = mktime(12, 0, 0, 11, 3, 2026);
+        $grenze = mktime(12, 0, 0, 11, 3, 2025);
+        $ids = [];
+        foreach ([$grenze, $grenze - 1, $stichtag] as $erstellt) {
+            $aenderung = new einsatz_aenderung(0, (object) [
+                'importid' => 1, 'userid' => 2, 'art' => einsatz_aenderung::NEU,
+                'block' => '4', 'kw_von' => '2027-W15', 'kw_bis' => '2027-W16', 'von' => $stichtag,
+            ]);
+            $aenderung->create();
+            $DB->set_field(einsatz_aenderung::TABLE, 'timecreated', $erstellt, ['id' => (int) $aenderung->get('id')]);
+            $ids[$erstellt] = (int) $aenderung->get('id');
+        }
+
+        $ergebnis = (new import_service())->bereinige_verlauf($stichtag);
+
+        $this->assertSame(1, $ergebnis['aenderungen']);
+        $this->assertTrue(einsatz_aenderung::record_exists($ids[$grenze]));
+        $this->assertFalse(einsatz_aenderung::record_exists($ids[$grenze - 1]));
+        $this->assertTrue(einsatz_aenderung::record_exists($ids[$stichtag]));
+    }
+
+    /**
+     * Randfall der Jahresfrist fuer den Protokolltext: genau ein Jahr alt
+     * bleibt er, eine Sekunde aelter wird er geleert - der Lauf selbst
+     * bleibt. Eine wartende Lieferung behaelt ihn in jedem Fall.
+     */
+    public function test_bereinige_verlauf_leert_alte_protokolle_ausser_wartende(): void {
+        $this->resetAfterTest();
+
+        $stichtag = mktime(12, 0, 0, 11, 3, 2026);
+        $grenze = mktime(12, 0, 0, 11, 3, 2025);
+        $faelle = [
+            'grenze' => [$grenze, 'ok'],
+            'alt' => [$grenze - 1, 'mit_warnungen'],
+            'wartend' => [$grenze - 1, 'zur_freigabe'],
+        ];
+        $laeufe = [];
+        foreach ($faelle as $name => [$zeitpunkt, $status]) {
+            $lauf = new plan_import(0, (object) [
+                'quelle' => 'upload', 'daten_hash' => str_repeat('a', 64), 'zeitpunkt' => $zeitpunkt,
+                'ausgefuehrt_von' => 0, 'status' => $status,
+                'protokoll' => 'Mailadresse alt.name@firma.ch keinem Moodle-Konto zugeordnet – übersprungen',
+            ]);
+            $lauf->create();
+            $laeufe[$name] = $lauf;
+        }
+
+        $ergebnis = (new import_service())->bereinige_verlauf($stichtag);
+
+        $this->assertSame(1, $ergebnis['protokolle']);
+        foreach ($laeufe as $lauf) {
+            $lauf->read();
+        }
+        $this->assertStringContainsString('alt.name@firma.ch', $laeufe['grenze']->get('protokoll'));
+        $this->assertSame('', (string) $laeufe['alt']->get('protokoll'));
+        $this->assertSame('mit_warnungen', $laeufe['alt']->get('status'));
+        $this->assertStringContainsString('alt.name@firma.ch', $laeufe['wartend']->get('protokoll'));
+    }
+
+    /**
+     * Der Testlauf nennt, was sich aendern wuerde, haelt aber nichts fest.
+     */
+    public function test_testlauf_nennt_aenderungen_ohne_sie_festzuhalten(): void {
+        $this->resetAfterTest();
+
+        $admin = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user(['email' => 'anna.muster@firma.ch']);
+        $this->lege_aktive_zuordnung_an($lernende);
+
+        $ergebnis = (new import_service())->verarbeiten(
+            "email;block;kw_von;kw_bis\nanna.muster@firma.ch;4;2027-W15;2027-W16\n",
+            'upload',
+            (int) $admin->id,
+            true
+        );
+
+        $this->assertCount(1, $ergebnis['aenderungen']);
+        $this->assertSame('neu', $ergebnis['aenderungen'][0]['art']);
+        $this->assertSame(0, einsatz_aenderung::count_records());
     }
 
     /**

@@ -30,6 +30,7 @@ use advanced_testcase;
 use context_system;
 use local_berufsbildung\api;
 use local_berufsbildung\persistent\aufbewahrung;
+use local_berufsbildung\persistent\einsatz_aenderung;
 use local_berufsbildung\persistent\zuordnung;
 
 #[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\service\zuordnung_retention_service::class)]
@@ -194,6 +195,30 @@ final class zuordnung_retention_service_test extends advanced_testcase {
         $this->assertSame(1, $anzahl);
         $this->assertCount(0, zuordnung::get_records(['lernendeid' => (int) $lernende->id]));
         $this->assertCount(0, aufbewahrung::get_records(['lernendeid' => (int) $lernende->id]));
+    }
+
+    /**
+     * Das Aenderungsprotokoll der Einsaetze verschwindet mit den
+     * Zuordnungen - nur das der betroffenen Person.
+     */
+    public function test_loesche_fuer_lernende_entfernt_das_aenderungsprotokoll(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $andere = $this->getDataGenerator()->create_user();
+        $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $lernende->id, strtotime('-1 month'));
+        foreach ([$lernende, $andere] as $person) {
+            (new einsatz_aenderung(0, (object) [
+                'importid' => 1, 'userid' => (int) $person->id, 'art' => einsatz_aenderung::NEU,
+                'block' => '4', 'kw_von' => '2027-W15', 'kw_bis' => '2027-W16', 'von' => strtotime('2027-04-12'),
+            ]))->create();
+        }
+
+        (new zuordnung_retention_service())->loesche_fuer_lernende((int) $lernende->id);
+
+        $this->assertSame(0, einsatz_aenderung::count_records(['userid' => (int) $lernende->id]));
+        $this->assertSame(1, einsatz_aenderung::count_records(['userid' => (int) $andere->id]));
     }
 
     /**

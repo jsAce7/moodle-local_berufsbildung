@@ -116,11 +116,19 @@ Base64 statt Rohtext, damit Zeilenumbrüche und Sonderzeichen die Formularkodier
   "zeilen_ausserhalb_geltungsbereich": 79,
   "einsaetze_erzeugt": 11,
   "protokoll": [
-    "Zeile 34: Mailadresse alt.name@firma.ch keinem Moodle-Konto zugeordnet – übersprungen",
-    "Zeile 51: Block 'X9' in Moodle unbekannt – ohne Kompetenzabdeckung angelegt"
+    "Mailadresse alt.name@firma.ch keinem Moodle-Konto zugeordnet – übersprungen",
+    "Block 'X9' in Moodle unbekannt – ohne Kompetenzabdeckung angelegt"
+  ],
+  "aenderungen": [
+    {"userid": 812, "email": "anna.muster@firma.ch", "art": "entfaellt", "block": "4", "kw_von": "2027-W15", "kw_bis": "2027-W20"},
+    {"userid": 812, "email": "anna.muster@firma.ch", "art": "neu", "block": "4", "kw_von": "2027-W17", "kw_bis": "2027-W22"}
   ]
 }
 ```
+
+Eine unbekannte Mailadresse wird im Protokoll nur einmal genannt, auch wenn sie mehrere Einsätze hat.
+
+`aenderungen` nennt je Person die Einsätze, die der Lauf entfernt (`entfaellt`) oder angelegt (`neu`) hat. Ein verschobener Einsatz erscheint als beides, ein unveränderter gar nicht. Beim Testlauf und bei `zur_freigabe` stehen hier die Einsätze, die eine Übernahme ändern würde. Bei `fehlgeschlagen` und `unveraendert` ist die Liste leer. Moodle hält die Änderungen eines übernommenen Laufs zusätzlich fest, sichtbar unter *Ausbildungsplanung ▸ Versetzungsplan-Verlauf*, und löscht sie nach einem Jahr.
 
 `status` ist `ok`, `mit_warnungen`, `zur_freigabe` oder `fehlgeschlagen`. Bei `fehlgeschlagen` und `zur_freigabe` wurde nichts geschrieben.
 

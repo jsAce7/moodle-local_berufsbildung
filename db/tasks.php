@@ -66,6 +66,17 @@ $tasks = [
         'dayofweek' => '*',
         'disabled' => 0,
     ],
+    // Das Aenderungsprotokoll der Einsaetze wird hoechstens ein Jahr alt.
+    [
+        'classname' => 'local_berufsbildung\task\bereinige_planverlauf',
+        'blocking' => 0,
+        'minute' => 'R',
+        'hour' => '4',
+        'day' => '*',
+        'month' => '*',
+        'dayofweek' => '*',
+        'disabled' => 0,
+    ],
     [
         'classname' => 'local_berufsbildung\task\zuordnung_retention',
         'blocking' => 0,

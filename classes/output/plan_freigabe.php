@@ -26,7 +26,6 @@ declare(strict_types=1);
 
 namespace local_berufsbildung\output;
 
-use core_collator;
 use core_user;
 use local_berufsbildung\persistent\plan_import;
 use moodle_url;
@@ -70,26 +69,19 @@ class plan_freigabe {
         // 0, wenn das Konto inzwischen anonymisiert wurde (privacy\provider).
         $ausgefuehrtvon = core_user::get_user((int) $wartend->get('ausgefuehrt_von'));
 
-        $personen = [];
-        foreach (self::namen(array_keys($pruefung['aenderungen'])) as $userid => $name) {
-            $einsaetze = [];
+        $liste = [];
+        foreach ($pruefung['aenderungen'] as $userid => $jeart) {
             foreach (['entfaellt', 'neu'] as $art) {
-                foreach ($pruefung['aenderungen'][$userid][$art] as $einsatz) {
-                    $einsaetze[] = [
-                        'entfaellt' => $art === 'entfaellt',
-                        'block' => $einsatz['block'],
-                        'zeitraum' => $einsatz['kw_von'] === $einsatz['kw_bis']
-                            ? $einsatz['kw_von']
-                            : $einsatz['kw_von'] . ' – ' . $einsatz['kw_bis'],
-                    ];
+                foreach ($jeart[$art] as $einsatz) {
+                    $liste[] = ['userid' => (int) $userid, 'art' => $art] + $einsatz;
                 }
             }
-            $personen[] = ['name' => $name, 'einsaetze' => $einsaetze];
         }
+        $personen = plan_aenderungen::personen($liste);
 
         $fehlende = array_map(
             static fn (string $name): array => ['name' => $name],
-            array_values(self::namen($pruefung['fehlende_personen']))
+            array_values(plan_aenderungen::namen($pruefung['fehlende_personen']))
         );
         $protokoll = array_map(
             static fn (string $zeile): array => ['zeile' => $zeile],
@@ -120,23 +112,5 @@ class plan_freigabe {
             'hasprotokoll' => !empty($protokoll),
             'protokoll' => $protokoll,
         ];
-    }
-
-    /**
-     * Anzeigenamen, alphabetisch. Eine inzwischen geloeschte Person
-     * erscheint mit ihrer userid.
-     *
-     * @param int[] $userids
-     * @return array<int, string> userid => Name
-     */
-    private static function namen(array $userids): array {
-        $namen = [];
-        foreach ($userids as $userid) {
-            $person = core_user::get_user((int) $userid);
-            $namen[(int) $userid] = $person ? fullname($person) : (string) $userid;
-        }
-        core_collator::asort($namen);
-
-        return $namen;
     }
 }

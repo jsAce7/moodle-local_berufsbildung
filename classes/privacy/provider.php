@@ -81,6 +81,14 @@ class provider implements
             'bis' => 'privacy:metadata:einsatz:bis',
         ], 'privacy:metadata:einsatz');
 
+        $collection->add_database_table('local_berufsbildung_einsatz_aenderung', [
+            'userid' => 'privacy:metadata:einsatzaenderung:userid',
+            'art' => 'privacy:metadata:einsatzaenderung:art',
+            'block' => 'privacy:metadata:einsatzaenderung:block',
+            'kw_von' => 'privacy:metadata:einsatzaenderung:kw_von',
+            'kw_bis' => 'privacy:metadata:einsatzaenderung:kw_bis',
+        ], 'privacy:metadata:einsatzaenderung');
+
         $collection->add_database_table('local_berufsbildung_plan_import', [
             'ausgefuehrt_von' => 'privacy:metadata:planimport:ausgefuehrt_von',
             'quelle' => 'privacy:metadata:planimport:quelle',
@@ -144,6 +152,7 @@ class provider implements
                      OR EXISTS (SELECT 1 FROM {local_berufsbildung_block} b WHERE b.usermodified = :uid8)
                      OR EXISTS (SELECT 1 FROM {local_berufsbildung_block_lk} bl WHERE bl.usermodified = :uid9)
                      OR EXISTS (SELECT 1 FROM {event} ev WHERE ev.component = :komponente AND ev.instance = :uid10)
+                     OR EXISTS (SELECT 1 FROM {local_berufsbildung_einsatz_aenderung} ea WHERE ea.userid = :uid12)
                    )";
 
         $contextlist->add_from_sql($sql, [
@@ -151,7 +160,7 @@ class provider implements
             'userid' => $userid,
             'uid1' => $userid, 'uid2' => $userid, 'uid3' => $userid, 'uid4' => $userid, 'uid5' => $userid,
             'uid6' => $userid, 'uid7' => $userid, 'uid8' => $userid, 'uid9' => $userid, 'uid10' => $userid,
-            'uid11' => $userid,
+            'uid11' => $userid, 'uid12' => $userid,
             'komponente' => termin_service::KOMPONENTE,
         ]);
 
@@ -189,7 +198,8 @@ class provider implements
             || $DB->record_exists('local_berufsbildung_teilnahmeprofil', ['userid' => $userid])
             || $DB->record_exists('local_berufsbildung_block', ['usermodified' => $userid])
             || $DB->record_exists('local_berufsbildung_block_lk', ['usermodified' => $userid])
-            || $DB->record_exists('event', ['component' => termin_service::KOMPONENTE, 'instance' => $userid]);
+            || $DB->record_exists('event', ['component' => termin_service::KOMPONENTE, 'instance' => $userid])
+            || $DB->record_exists('local_berufsbildung_einsatz_aenderung', ['userid' => $userid]);
 
         if ($hasdata) {
             $userlist->add_user($userid);
@@ -273,6 +283,22 @@ class provider implements
                     'von' => transform::datetime((int) $e->von),
                     'bis' => transform::datetime((int) $e->bis),
                 ], $einsaetze)]
+            );
+        }
+
+        $aenderungen = array_values(
+            $DB->get_records('local_berufsbildung_einsatz_aenderung', ['userid' => $userid], 'timecreated ASC, id ASC')
+        );
+        if (!empty($aenderungen)) {
+            writer::with_context($context)->export_data(
+                [get_string('privacy:pfad_einsatzaenderungen', 'local_berufsbildung')],
+                (object) ['aenderungen' => array_map(static fn ($a): array => [
+                    'art' => $a->art,
+                    'block' => $a->block,
+                    'kw_von' => $a->kw_von,
+                    'kw_bis' => $a->kw_bis,
+                    'geaendert_am' => transform::datetime((int) $a->timecreated),
+                ], $aenderungen)]
             );
         }
 
@@ -427,6 +453,11 @@ class provider implements
      * anonymisiert: Architekturregel 5 (Versetzungsplan-Spiegel bleibt
      * unangetastet) verlangt den Erhalt dieser Historie als
      * Ausbildungsnachweis.
+     *
+     * Das Aenderungsprotokoll der Einsaetze ist dagegen kein Nachweis: es
+     * wird hoechstens ein Jahr alt (task\bereinige_planverlauf) und
+     * verschwindet frueher mit der Zuordnung
+     * (zuordnung_retention_service::loesche_fuer_lernende()).
      *
      * Zuordnung folgt seit dem Retention-Feature einer anderen Regel als
      * frueher (Architekturregel 2): waehrend laufender Ausbildung oder mit

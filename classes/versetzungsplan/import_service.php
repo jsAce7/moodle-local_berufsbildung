@@ -30,6 +30,7 @@ namespace local_berufsbildung\versetzungsplan;
 use local_berufsbildung\api;
 use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\einsatz;
+use local_berufsbildung\persistent\einsatz_aenderung;
 use local_berufsbildung\persistent\plan_import;
 use local_berufsbildung\persistent\zuordnung;
 
@@ -52,7 +53,9 @@ use local_berufsbildung\persistent\zuordnung;
  *    Entscheidung bleibt der Einsatzbestand unangetastet.
  * 5. Testlauf endet hier, ohne zu schreiben. Sonst: pro verarbeiteter
  *    Person die bestehenden Einsaetze im Zeitraum der Lieferung ersetzen,
- *    in einer Transaktion.
+ *    in einer Transaktion, und festhalten, welche davon entfallen und welche
+ *    neu sind (einsatz_aenderung). Die Aenderungen gehen in jedem Fall,
+ *    auch beim Testlauf und beim Zurueckhalten, mit dem Ergebnis zurueck.
  *
  * Es wartet hoechstens eine Lieferung auf Freigabe: jede neuere, die
  * verarbeitet oder ihrerseits zurueckgehalten wird, ueberholt sie. Sonst
@@ -65,6 +68,9 @@ class import_service {
 
     /** Capability fuer die Freigabe zurueckgehaltener Lieferungen. */
     public const CAPABILITY_FREIGABE = 'local/berufsbildung:approveplan';
+
+    /** Wie viele Monate geaenderte Einsaetze und Protokolltext im Verlauf hoechstens alt werden. */
+    public const VERLAUF_MONATE = 12;
 
     /**
      * Konstruktor.
@@ -86,7 +92,8 @@ class import_service {
      * @param bool $testlauf true = nur pruefen, nichts schreiben
      * @param bool $rueckgangbestaetigt true = ein deutlicher Rueckgang der verarbeiteten Personen ist beabsichtigt
      * @return array{status: string, unveraendert: bool, zeilen_gelesen: int, personen_verarbeitet: int,
-     *               zeilen_ausserhalb_geltungsbereich: int, einsaetze_erzeugt: int, protokoll: string[]}
+     *               zeilen_ausserhalb_geltungsbereich: int, einsaetze_erzeugt: int, protokoll: string[],
+     *               aenderungen: array[]} aenderungen siehe aenderungen_liste()
      */
     public function verarbeiten(
         string $csvinhalt,
@@ -147,6 +154,11 @@ class import_service {
         $aufgeloest = $this->zeilen_aufloesen($geparst['eintraege']);
         $protokoll = array_merge($geparst['fehler'], $aufgeloest['protokoll']);
         $personenverarbeitet = count($aufgeloest['nachuserid']);
+        // Vor dem Schreiben: danach ist der bisherige Bestand ersetzt.
+        $aenderungen = $this->aenderungen_liste(
+            $this->vergleiche_einsaetze($aufgeloest['nachuserid']),
+            $aufgeloest['nachuserid']
+        );
 
         if (!$testlauf && $letztererfolgreicher !== null && $letztererfolgreicher->get('personen_verarbeitet') > 0) {
             $schwelle = $this->schwelle_prozent();
@@ -193,7 +205,8 @@ class import_service {
                     $personenverarbeitet,
                     $aufgeloest['ausserhalb_geltungsbereich'],
                     0,
-                    $protokoll
+                    $protokoll,
+                    $aenderungen
                 );
             }
         }
@@ -208,7 +221,8 @@ class import_service {
                 $personenverarbeitet,
                 $aufgeloest['ausserhalb_geltungsbereich'],
                 $this->zaehle_eintraege($aufgeloest['nachuserid']),
-                $protokoll
+                $protokoll,
+                $aenderungen
             );
         }
 
@@ -221,7 +235,8 @@ class import_service {
             $personenverarbeitet,
             $aufgeloest['ausserhalb_geltungsbereich'],
             $status,
-            $protokoll
+            $protokoll,
+            $aenderungen
         );
 
         return $this->ergebnis(
@@ -231,7 +246,8 @@ class import_service {
             $personenverarbeitet,
             $aufgeloest['ausserhalb_geltungsbereich'],
             $einsaetzeerzeugt,
-            $protokoll
+            $protokoll,
+            $aenderungen
         );
     }
 
@@ -397,6 +413,90 @@ class import_service {
     }
 
     /**
+     * Die Aenderungen aus vergleiche_einsaetze() als flache Liste, so wie
+     * der Webservice sie zurueckgibt und einsatz_aenderung sie speichert: je
+     * Person zuerst, was entfaellt, dann, was neu ist. Die Mailadresse ist
+     * die gelieferte, damit das Skript die Person ohne Moodle-ID erkennt.
+     *
+     * @param array $aenderungen Ergebnis von vergleiche_einsaetze()
+     * @param array $nachuserid Struktur: array<int,array>
+     * @return array[] je Einsatz ['userid' => int, 'email' => string, 'art' => 'entfaellt'|'neu',
+     *  'block' => string, 'kw_von' => string, 'kw_bis' => string, 'von' => int]
+     */
+    private function aenderungen_liste(array $aenderungen, array $nachuserid): array {
+        $liste = [];
+        foreach ($aenderungen as $userid => $jeart) {
+            foreach ([einsatz_aenderung::ENTFAELLT, einsatz_aenderung::NEU] as $art) {
+                foreach ($jeart[$art] as $einsatz) {
+                    $liste[] = [
+                        'userid' => (int) $userid,
+                        'email' => (string) $nachuserid[$userid][0]['email'],
+                        'art' => $art,
+                    ] + $einsatz;
+                }
+            }
+        }
+
+        return $liste;
+    }
+
+    /**
+     * Was ein Importlauf an den Einsaetzen geaendert hat, in derselben Form
+     * wie im Ergebnis von verarbeiten(), aber ohne Mailadresse: die steht nur
+     * in der Lieferung, nicht im Protokoll.
+     *
+     * @param int $importid
+     * @return array[] je Einsatz ['userid' => int, 'art' => 'entfaellt'|'neu', 'block' => string,
+     *  'kw_von' => string, 'kw_bis' => string, 'von' => int], nach Person, Art und Beginn
+     */
+    public function aenderungen_fuer_import(int $importid): array {
+        return array_map(
+            static fn (einsatz_aenderung $aenderung): array => [
+                'userid' => (int) $aenderung->get('userid'),
+                'art' => (string) $aenderung->get('art'),
+                'block' => (string) $aenderung->get('block'),
+                'kw_von' => (string) $aenderung->get('kw_von'),
+                'kw_bis' => (string) $aenderung->get('kw_bis'),
+                'von' => (int) $aenderung->get('von'),
+            ],
+            array_values(einsatz_aenderung::get_records(['importid' => $importid], 'userid, art, von'))
+        );
+    }
+
+    /**
+     * Raeumt den Verlauf auf, was aelter als VERLAUF_MONATE ist: loescht die
+     * geaenderten Einsaetze und leert den Protokolltext der Laeufe - er kann
+     * nicht zugeordnete Mailadressen enthalten. Die Laeufe selbst bleiben,
+     * die Einsaetze verweisen auf sie, und ihre Zahlen tragen keinen
+     * Personenbezug. Eine wartende Lieferung behaelt ihr Protokoll, es wird
+     * fuer die Entscheidung gebraucht.
+     *
+     * "Hoechstens ein Jahr alt": was genau an der Grenze liegt, bleibt.
+     * Aufgerufen taeglich von task\bereinige_planverlauf.
+     *
+     * @param int|null $stichtag Timestamp, null bedeutet "jetzt"
+     * @return array{aenderungen: int, protokolle: int} Anzahl geloeschter Aenderungen
+     *  und geleerter Protokolle
+     */
+    public function bereinige_verlauf(?int $stichtag = null): array {
+        global $DB;
+
+        $grenze = strtotime('-' . self::VERLAUF_MONATE . ' months', $stichtag ?? time());
+
+        $bedingung = 'timecreated < :grenze';
+        $aenderungen = $DB->count_records_select(einsatz_aenderung::TABLE, $bedingung, ['grenze' => $grenze]);
+        $DB->delete_records_select(einsatz_aenderung::TABLE, $bedingung, ['grenze' => $grenze]);
+
+        $bedingung = 'zeitpunkt < :grenze AND status <> :wartend AND '
+            . $DB->sql_isnotempty(plan_import::TABLE, 'protokoll', true, true);
+        $parameter = ['grenze' => $grenze, 'wartend' => 'zur_freigabe'];
+        $protokolle = $DB->count_records_select(plan_import::TABLE, $bedingung, $parameter);
+        $DB->set_field_select(plan_import::TABLE, 'protokoll', '', $bedingung, $parameter);
+
+        return ['aenderungen' => $aenderungen, 'protokolle' => $protokolle];
+    }
+
+    /**
      * Die bestehenden Einsaetze einer Person, die eine Lieferung ersetzt.
      *
      * Eine Lieferung deckt einen Planungszeitraum ab, nicht die ganze
@@ -545,11 +645,17 @@ class import_service {
         $ausserhalbgeltungsbereich = 0;
         $protokoll = [];
         $bekanntebloecke = [];
+        $gemeldeteadressen = [];
 
         foreach ($eintraege as $eintrag) {
             $nutzer = $DB->get_records('user', ['email' => $eintrag['email'], 'deleted' => 0], '', 'id');
             if (count($nutzer) !== 1) {
-                $protokoll[] = "Mailadresse {$eintrag['email']} keinem Moodle-Konto zugeordnet – übersprungen";
+                // Eine Person hat meist mehrere Einsaetze - die Adresse
+                // trotzdem nur einmal melden.
+                if (!isset($gemeldeteadressen[$eintrag['email']])) {
+                    $gemeldeteadressen[$eintrag['email']] = true;
+                    $protokoll[] = "Mailadresse {$eintrag['email']} keinem Moodle-Konto zugeordnet – übersprungen";
+                }
                 continue;
             }
 
@@ -595,9 +701,9 @@ class import_service {
     /**
      * Legt fehlende Bloecke an, ersetzt je verarbeiteter Person die
      * bestehenden Einsaetze im Zeitraum der Lieferung und schreibt das
-     * Importprotokoll - alles in einer Transaktion, damit ein Fehler
-     * mittendrin den bestehenden Datenbestand nicht antastet
-     * (Architekturregel 5).
+     * Importprotokoll samt den Aenderungen - alles in einer Transaktion,
+     * damit ein Fehler mittendrin den bestehenden Datenbestand nicht
+     * antastet (Architekturregel 5).
      *
      * @param array $nachuserid Struktur: array<int,array>
      * @param string $quelle
@@ -608,6 +714,7 @@ class import_service {
      * @param int $ausserhalbgeltungsbereich
      * @param string $status
      * @param string[] $protokoll
+     * @param array[] $aenderungen siehe aenderungen_liste(), vor dem Ersetzen ermittelt
      * @return int Anzahl erzeugter Einsaetze
      */
     private function schreiben(
@@ -619,7 +726,8 @@ class import_service {
         int $personenverarbeitet,
         int $ausserhalbgeltungsbereich,
         string $status,
-        array $protokoll
+        array $protokoll,
+        array $aenderungen
     ): int {
         global $DB;
 
@@ -666,6 +774,18 @@ class import_service {
         ]);
         $import->create();
         $importid = (int) $import->get('id');
+
+        foreach ($aenderungen as $aenderung) {
+            (new einsatz_aenderung(0, (object) [
+                'importid' => $importid,
+                'userid' => $aenderung['userid'],
+                'art' => $aenderung['art'],
+                'block' => $aenderung['block'],
+                'kw_von' => $aenderung['kw_von'],
+                'kw_bis' => $aenderung['kw_bis'],
+                'von' => $aenderung['von'],
+            ]))->create();
+        }
 
         $einsaetzeerzeugt = 0;
         foreach ($nachuserid as $userid => $eintraege) {
@@ -806,6 +926,7 @@ class import_service {
      * @param int $ausserhalbgeltungsbereich
      * @param int $einsaetzeerzeugt
      * @param string[] $protokoll
+     * @param array[] $aenderungen siehe aenderungen_liste()
      * @return array
      */
     private function ergebnis(
@@ -815,7 +936,8 @@ class import_service {
         int $personenverarbeitet,
         int $ausserhalbgeltungsbereich,
         int $einsaetzeerzeugt,
-        array $protokoll
+        array $protokoll,
+        array $aenderungen = []
     ): array {
         return [
             'status' => $status,
@@ -825,6 +947,7 @@ class import_service {
             'zeilen_ausserhalb_geltungsbereich' => $ausserhalbgeltungsbereich,
             'einsaetze_erzeugt' => $einsaetzeerzeugt,
             'protokoll' => $protokoll,
+            'aenderungen' => $aenderungen,
         ];
     }
 }
