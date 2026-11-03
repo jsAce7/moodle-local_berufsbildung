@@ -231,18 +231,34 @@ local_berufsbildung_einsatz
 Aufeinanderfolgende Kalenderwochen mit derselben Blocknummer werden beim Import zu **einem** Einsatz zusammengefasst. Aus zwölf Zellen mit „4" wird ein Einsatz über zwölf Wochen — sonst hätte man pro Lehrling und Jahr zweiundfünfzig Datensätze und keine brauchbare Zeitachse.
 
 ```
-local_berufsbildung_import
+local_berufsbildung_plan_import
   id
-  quelle             varchar(50)    -- 'webservice' | 'upload'
+  quelle             varchar(50)    -- 'webservice' | 'upload' | Freitext des Skripts
   daten_hash         char(64)       -- unveränderte Lieferung wird nicht erneut verarbeitet
   zeitpunkt          int(10)
   ausgefuehrt_von    int(10)
   zeilen_gelesen     int(10)
-  personen_erkannt   int(10)
+  personen_verarbeitet              int(10)  -- Personen mit aktiver Zuordnung, Grundlage der Schwelle
+  zeilen_ausserhalb_geltungsbereich int(10)  -- Zeilen ohne aktive Zuordnung, nur gezählt
   einsaetze_erzeugt  int(10)
-  status             varchar(20)    -- 'ok' | 'mit_warnungen' | 'abgewiesen' | 'fehlgeschlagen'
+  status             varchar(20)    -- siehe unten
   protokoll          text           -- Zeile für Zeile, was nicht zugeordnet werden konnte
+  csvdaten           text           -- nur solange eine Lieferung auf Freigabe wartet
+  entschieden_von    int(10)        -- wer freigegeben oder verworfen hat
+  entschieden_am     int(10)
+  timecreated, timemodified, usermodified
+
+  INDEX (status, zeitpunkt)
 ```
+
+| Status | Bedeutung |
+|---|---|
+| `ok`, `mit_warnungen` | verarbeitet; zählt als erfolgreicher Import für Schwelle, Idempotenz und Alterung |
+| `fehlgeschlagen` | nichts geschrieben, Bestand unangetastet |
+| `zur_freigabe` | zurückgehalten wegen deutlichem Rückgang, wartet auf Entscheidung (§5.3) |
+| `freigegeben`, `verworfen` | entschiedene Lieferung; bei der Freigabe entsteht zusätzlich ein eigener Eintrag für den Lauf |
+| `ueberholt` | durch eine neuere Lieferung ersetzt, bevor entschieden wurde |
+| `abgewiesen` | nur in Einträgen vor Version 1.4.0, als ein Rückgang noch abgewiesen statt zurückgehalten wurde |
 
 ### 5.3 Import
 
@@ -272,7 +288,7 @@ Nicht zuordenbare Mailadressen von Personen, die eine Zuordnung haben sollten, l
 
 **Vollständige Lieferung**: Jeder Lauf enthält den gesamten Plan, nicht nur Änderungen. Moodle ersetzt den Bestand der gelieferten Personen vollständig — sonst blieben in der Excel gelöschte Einsätze stehen.
 
-**Schutz vor unvollständigen Lieferungen**: Enthält ein Lauf deutlich weniger *verarbeitete* Personen als der vorherige, wird er abgewiesen statt verarbeitet. Gezählt wird der verarbeitete Bestand, nicht die Zeilenzahl — sonst schlüge die Schwelle beim Ausweiten des Teilnehmerkreises in die falsche Richtung an. Das fängt den Fall ab, dass das Skript wegen eines Fehlers eine halbe Datei erzeugt und Moodle daraufhin sämtliche Einsätze löscht. Ein solcher Lauf wird nicht verworfen, sondern zurückgehalten und der Administration gemeldet. Sie prüft unter *Versetzungsplan-Freigabe*, wer fehlt, und gibt ihn frei oder verwirft ihn (`local/berufsbildung:approveplan`). Eine neuere Lieferung ersetzt die wartende, damit eine späte Freigabe nie einen neueren Plan überschreibt. Weiss das Skript, dass der Rückgang beabsichtigt ist, bestätigt es ihn über einen Parameter.
+**Schutz vor unvollständigen Lieferungen**: Enthält ein Lauf deutlich weniger *verarbeitete* Personen als der letzte erfolgreiche (Schwelle `versetzungsplan_schwelle_prozent`, Standard 20 %), wird er nicht verarbeitet. Gezählt wird der verarbeitete Bestand, nicht die Zeilenzahl — sonst schlüge die Schwelle beim Ausweiten des Teilnehmerkreises in die falsche Richtung an. Das fängt den Fall ab, dass das Skript wegen eines Fehlers eine halbe Datei erzeugt und Moodle daraufhin sämtliche Einsätze löscht. Ein solcher Lauf wird nicht verworfen, sondern zurückgehalten und der Administration gemeldet. Sie prüft unter *Versetzungsplan-Freigabe*, wer fehlt, und gibt ihn frei oder verwirft ihn (`local/berufsbildung:approveplan`). Eine neuere Lieferung ersetzt die wartende, damit eine späte Freigabe nie einen neueren Plan überschreibt. Weiss das Skript, dass der Rückgang beabsichtigt ist, bestätigt es ihn über einen Parameter.
 
 **Idempotenz**: Über den Hash der Daten. Bei wöchentlicher Lieferung eines Plans, der sich einige Male im Jahr ändert, ist die unveränderte Lieferung der Normalfall — sie wird erkannt und ohne Schreibvorgang beendet.
 
@@ -491,21 +507,26 @@ Das Basis-Plugin sammelt sie über `get_plugins_with_function()` ein. Es kennt k
 **Die Zuständigkeitsprüfung passiert im Basis-Plugin, bevor ein Provider aufgerufen wird** — nie im Provider selbst. Sonst hängt die Absicherung an jeder einzelnen Implementierung, und ein nachlässig geschriebener Provider öffnet Leistungsdaten für alle.
 
 ```php
-public static function get_nachweise(int $lernendeid, int $von, int $bis): array {
-    global $USER;
-    if (!self::is_zustaendig($USER->id, $lernendeid)
-        && !has_capability('local/berufsbildung:viewallnachweise', \context_system::instance())) {
-        throw new \required_capability_exception(/* ... */);
+// nachweis\collector
+public function get_nachweise(int $abrufendeid, int $lernendeid, int $von, int $bis,
+        ?int $berechtigungsstichtag = null): array {
+    if ($abrufendeid !== $lernendeid
+        && !api::is_zustaendig($abrufendeid, $lernendeid, $berechtigungsstichtag)) {
+        throw new moodle_exception('error:keinezustaendigkeit', 'local_berufsbildung');
     }
     // erst jetzt die Provider abfragen
 }
 ```
 
-Zusätzliche Capability: `local/berufsbildung:viewallnachweise` (System) für die Ausbildungsleitung.
+Nachweise sieht heute nur die lernende Person selbst und, wer für sie zuständig ist. Der Stichtag der Berechtigung lässt sich mitgeben, damit ein abgeschlossener Bericht auch nach dem Ende der Zuordnung lesbar bleibt (Architekturregel 3).
+
+**Offen, nicht umgesetzt:** Eine Capability `local/berufsbildung:viewallnachweise` (System), mit der die Ausbildungsleitung die Nachweise aller Lernenden sieht, ohne selbst zugeordnet zu sein. Sie erweitert den Zugriff auf Leistungsdaten deutlich; vor einer Umsetzung ist zu klären, wer diese Sicht wofür braucht.
 
 ### Übersichtsseite
 
-`local/berufsbildung/nachweise.php` — „meine Lernenden", pro Person alle Nachweise aus allen registrierten Quellen, nach Datum sortiert und nach Quelle filterbar. Der Berufsbildner braucht dafür keine Kurseinschreibung; die Berechtigung kommt aus der Zuordnung.
+Die Nachweise der eigenen Lernenden stehen auf „Meine Lernenden" (`meine_lernenden.php`), je Person in der aufklappbaren Kachel, und je Quelle mit Stationen als eigener Reiter (`stationen.php`). Der Berufsbildner braucht dafür keine Kurseinschreibung; die Berechtigung kommt aus der Zuordnung.
+
+**Offen, nicht umgesetzt:** Die ursprünglich geplante eigene Seite `nachweise.php` mit allen Nachweisen je Person, nach Datum sortiert und nach Quelle filterbar. Sie hängt an der Entscheidung zu `viewallnachweise` oben; für die eigenen Lernenden deckt „Meine Lernenden" den Zweck ab.
 
 Das ist die dritte eigenständige Verwendung des Basis-Plugins und ein guter Beleg dafür, dass die Trennung trägt.
 
@@ -543,7 +564,7 @@ Damit Moodle-Kernfunktionen (Nutzerauswahl, Berichte, Profilsichtbarkeit) ohne S
 ## 8. Verwaltung
 
 **Übersichtsseite** `local/berufsbildung/zuordnung.php`
-Report-Builder-Datasource mit Filtern nach Beruf, Lehrjahr, Berufsbildner/in und Status (laufend / beendet). Export nach CSV und Excel kommt damit gratis.
+Report-Builder-Systembericht mit Filtern nach Beruf, Rolle, Berufsbildner/in, Lernender Person, Status (laufend / beendet) und Gültigkeitsbeginn. Export nach CSV und Excel kommt damit gratis. Das Lehrjahr steht als Spalte, ist aber bewusst weder filter- noch sortierbar: Es wird über `api::get_ausbildungsstand()` berechnet, damit die Semesterberechnung samt Lehrdauer je Beruf nur an einer Stelle lebt und nicht ein zweites Mal als SQL-Ausdruck.
 
 **CSV-Import**
 Für den Jahreswechsel, wenn ein ganzer Lehrjahrgang neu zugeordnet wird. Spalten: Benutzername Berufsbildner/in, Benutzername Lernende/r, Beruf, gültig ab. Vorschau vor dem Übernehmen, Zeilen mit Fehlern werden einzeln gemeldet statt den ganzen Import abzubrechen.
@@ -576,10 +597,12 @@ Oberhalb der Blöcke je Beruf, was dem Kompetenzraster der Lernenden fehlt (`ser
 |---|---|---|
 | `local/berufsbildung:managezuordnung` | System | Zuordnungen anlegen, beenden, importieren |
 | `local/berufsbildung:viewzuordnung` | System | Übersicht einsehen, ohne zu ändern |
-| `local/berufsbildung:viewallnachweise` | System | Nachweise aller Lernenden sehen (Ausbildungsleitung) |
 | `local/berufsbildung:manageblocks` | System | Ausbildungsblöcke und ihre Kompetenzabdeckung pflegen |
 | `local/berufsbildung:importplan` | System | Versetzungsplan importieren |
 | `local/berufsbildung:approveplan` | System | Zurückgehaltene Versetzungsplan-Lieferungen freigeben oder verwerfen |
+| `local/berufsbildung:manageaufbewahrung` | System | Aufbewahrungspflichten dokumentieren, anstehende Löschungen einsehen |
+
+`local/berufsbildung:viewallnachweise` ist geplant, aber nicht umgesetzt (siehe §6, Berechtigung).
 
 Mehr nicht. Alles Fachliche gehört in die aufsetzenden Plugins. Die Nachweis-Einsicht für die eigenen Lernenden braucht keine Capability — sie folgt aus der Zuordnung.
 
