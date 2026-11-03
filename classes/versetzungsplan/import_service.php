@@ -699,7 +699,8 @@ class import_service {
     }
 
     /**
-     * Legt fehlende Bloecke an, ersetzt je verarbeiteter Person die
+     * Legt fehlende Bloecke an (benannt nach blocknamen_aus_bemerkung()),
+     * ersetzt je verarbeiteter Person die
      * bestehenden Einsaetze im Zeitraum der Lieferung und schreibt das
      * Importprotokoll samt den Aenderungen - alles in einer Transaktion,
      * damit ein Fehler mittendrin den bestehenden Datenbestand nicht
@@ -735,6 +736,7 @@ class import_service {
 
         $this->ueberhole_wartende();
 
+        $blocknamen = $this->blocknamen_aus_bemerkung($nachuserid);
         $blockidsnachnummer = [];
         foreach ($nachuserid as $eintraege) {
             foreach ($eintraege as $eintrag) {
@@ -751,7 +753,7 @@ class import_service {
 
                 $neu = new block(0, (object) [
                     'nummer' => $nummer,
-                    'name' => $nummer,
+                    'name' => $blocknamen[$nummer] ?? $nummer,
                     'ist_betrieb' => true,
                     'aktiv' => true,
                 ]);
@@ -816,6 +818,30 @@ class import_service {
         $transaktion->allow_commit();
 
         return $einsaetzeerzeugt;
+    }
+
+    /**
+     * Name fuer einen Block, den der Import neu anlegt: die erste nicht
+     * leere Bemerkung zu dieser Blocknummer in der Lieferung, ohne Bemerkung
+     * die Nummer selbst (siehe schreiben()). Ein bestehender Block behaelt
+     * seinen in Moodle gepflegten Namen.
+     *
+     * @param array $nachuserid Struktur: array<int,array>
+     * @return array<string, string> Blocknummer => Name, nur fuer Nummern mit Bemerkung
+     */
+    private function blocknamen_aus_bemerkung(array $nachuserid): array {
+        $namen = [];
+        foreach ($nachuserid as $eintraege) {
+            foreach ($eintraege as $eintrag) {
+                $bemerkung = trim((string) ($eintrag['bemerkung'] ?? ''));
+                if ($bemerkung !== '' && !isset($namen[$eintrag['block']])) {
+                    // So lang wie das Feld name in local_berufsbildung_block.
+                    $namen[$eintrag['block']] = \core_text::substr($bemerkung, 0, 255);
+                }
+            }
+        }
+
+        return $namen;
     }
 
     /**

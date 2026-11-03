@@ -18,7 +18,7 @@ Werte ohne Anführungszeichen, sofern sie kein Semikolon enthalten. Enthält ein
 | `block` | ja | Text | Nummer oder Kürzel des Ausbildungsblocks, exakt wie in der Excel |
 | `kw_von` | ja | `JJJJ-Wnn` | Erste Kalenderwoche des Einsatzes, ISO 8601 |
 | `kw_bis` | ja | `JJJJ-Wnn` | Letzte Kalenderwoche, einschliesslich |
-| `bemerkung` | nein | Text | Freitext, wird unverändert übernommen |
+| `bemerkung` | nein | Text | Freitext. Benennt einen Block, den der Import neu anlegt, siehe *Unbekannte Blocknummern* |
 
 ### Beispiel
 
@@ -65,7 +65,7 @@ Daraus folgt für das liefernde Skript: Einen Einsatz zu entfernen, heisst, den 
 
 **Nicht betriebliche Zeiten.** Berufsfachschule, überbetriebliche Kurse, Ferien, Militärdienst dürfen mitgeliefert werden — sie machen die Zeitachse vollständig. In Moodle werden die betreffenden Blöcke mit `ist_betrieb = 0` gekennzeichnet und zählen dann nicht zur Kompetenzabdeckung. Werden sie weggelassen, ist das ebenso in Ordnung.
 
-**Unbekannte Blocknummern** brechen die Verarbeitung nicht ab. Moodle legt den Block ohne Kompetenzabdeckung an und meldet ihn im Protokoll — die Zeitachse stimmt dann, nur die Vorbelegung im Bildungsbericht fehlt für diesen Block.
+**Unbekannte Blocknummern** brechen die Verarbeitung nicht ab. Moodle legt den Block ohne Kompetenzabdeckung an und meldet ihn im Protokoll — die Zeitachse stimmt dann, nur die Vorbelegung im Bildungsbericht fehlt für diesen Block. Als Namen erhält der neue Block die erste nicht leere `bemerkung` zu seiner Nummer, ohne Bemerkung die Nummer selbst. Bestehende Blöcke behalten ihren Namen.
 
 **Unbekannte Mailadressen** brechen die Verarbeitung ebenfalls nicht ab. Die betreffenden Zeilen werden übersprungen und protokolliert. Bei zwanzig Lernenden soll nicht ein Tippfehler den ganzen Lauf verwerfen.
 

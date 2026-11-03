@@ -299,7 +299,7 @@ Alternativ eine Zeile je Woche (`email;block;kw`) — dann fasst Moodle aufeinan
 
 Nicht zuordenbare Mailadressen von Personen, die eine Zuordnung haben sollten, landen dagegen sehr wohl im Protokoll.
 
-**Unbekannte Blocknummern** werden ohne Kompetenzabdeckung angelegt und protokolliert. Die Zeitachse stimmt dann, nur die Vorbelegung im Bildungsbericht fehlt für diesen Block.
+**Unbekannte Blocknummern** werden ohne Kompetenzabdeckung angelegt und protokolliert. Die Zeitachse stimmt dann, nur die Vorbelegung im Bildungsbericht fehlt für diesen Block. Als Name erhält der neue Block die erste nicht leere `bemerkung` zu seiner Nummer in der Lieferung, ohne Bemerkung die Nummer selbst. Ein bestehender Block behält seinen in Moodle gepflegten Namen; die Bemerkung überschreibt ihn nie.
 
 **Vollständige Lieferung**: Jeder Lauf enthält den gesamten Plan, nicht nur Änderungen. Moodle ersetzt den Bestand der gelieferten Personen vollständig — sonst blieben in der Excel gelöschte Einsätze stehen.
 

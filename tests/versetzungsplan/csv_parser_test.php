@@ -71,6 +71,23 @@ final class csv_parser_test extends advanced_testcase {
      * Randfall: eine Luecke zwischen den Wochen ergibt zwei getrennte
      * Eintraege statt eines durchgehenden.
      */
+    /**
+     * Steht die Bemerkung erst in einer spaeteren Woche, gilt sie fuer den
+     * zusammengefassten Einsatz; eine fruehere bleibt vorrangig.
+     */
+    public function test_wochenformat_uebernimmt_die_erste_bemerkung_des_einsatzes(): void {
+        $csv = "email;block;kw;bemerkung\n"
+            . "anna.muster@firma.ch;90;2027-W34;\n"
+            . "anna.muster@firma.ch;90;2027-W35;Berufsfachschule\n"
+            . "anna.muster@firma.ch;90;2027-W36;anderer Text\n";
+
+        $ergebnis = (new csv_parser())->parsen($csv);
+
+        $this->assertSame([], $ergebnis['fehler']);
+        $this->assertCount(1, $ergebnis['eintraege']);
+        $this->assertSame('Berufsfachschule', $ergebnis['eintraege'][0]['bemerkung']);
+    }
+
     public function test_wochenformat_mit_luecke_ergibt_zwei_eintraege(): void {
         $csv = "email;block;kw\n"
             . "anna.muster@firma.ch;4;2027-W15\n"

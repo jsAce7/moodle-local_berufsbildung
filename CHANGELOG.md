@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1] — 2026-11-03
+
+### Geändert
+
+- **Name neuer Ausbildungsblöcke aus der Bemerkung.** Legt der Versetzungsplan-Import einen unbekannten Block an, erhält er als Namen die erste nicht leere `bemerkung` zu seiner Nummer in der Lieferung, statt der Nummer. Ohne Bemerkung bleibt es bei der Nummer. Bestehende Blöcke behalten ihren Namen.
+- Im Wochenformat gilt eine Bemerkung, die erst in einer späteren Woche eines Einsatzes steht, für den ganzen zusammengefassten Einsatz.
+
 ## [1.6.0] — 2026-11-03
 
 ### Hinzugefügt

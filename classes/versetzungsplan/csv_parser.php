@@ -188,6 +188,12 @@ class csv_parser {
                 if ($aktuell !== null && $zeile['von'] === $aktuell['bis'] + 1) {
                     $aktuell['bis'] = $zeile['bis'];
                     $aktuell['kw_bis'] = $zeile['kw_bis'];
+                    // Steht die Bemerkung erst in einer spaeteren Woche, gilt sie
+                    // fuer den ganzen Einsatz - sie kann den Namen eines neuen
+                    // Blocks liefern.
+                    if ($aktuell['bemerkung'] === '') {
+                        $aktuell['bemerkung'] = $zeile['bemerkung'];
+                    }
                     continue;
                 }
                 if ($aktuell !== null) {

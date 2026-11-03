@@ -122,6 +122,36 @@ final class import_service_test extends advanced_testcase {
     }
 
     /**
+     * Ein neu angelegter Block heisst wie die erste Bemerkung zu seiner
+     * Nummer, ohne Bemerkung wie die Nummer. Ein bestehender Block behaelt
+     * seinen Namen, auch wenn die Lieferung eine Bemerkung mitbringt.
+     */
+    public function test_neuer_block_erhaelt_den_namen_aus_der_bemerkung(): void {
+        $this->resetAfterTest();
+
+        $admin = $this->getDataGenerator()->create_user();
+        $anna = $this->getDataGenerator()->create_user(['email' => 'anna.muster@firma.ch']);
+        $ben = $this->getDataGenerator()->create_user(['email' => 'ben.beispiel@firma.ch']);
+        $this->lege_aktive_zuordnung_an($anna);
+        $this->lege_aktive_zuordnung_an($ben);
+        (new block(0, (object) ['nummer' => '104', 'name' => 'Montage', 'ist_betrieb' => true, 'aktiv' => true]))->create();
+
+        $csv = "email;block;kw_von;kw_bis;bemerkung\n"
+            . "anna.muster@firma.ch;104;2027-W15;2027-W20;Elektronik\n"
+            . "anna.muster@firma.ch;90;2027-W21;2027-W21;\n"
+            . "anna.muster@firma.ch;207;2027-W22;2027-W30;\n"
+            . "ben.beispiel@firma.ch;90;2027-W21;2027-W21;Berufsfachschule\n"
+            . "ben.beispiel@firma.ch;91;2027-W22;2027-W22;  üK 1  \n";
+
+        (new import_service())->verarbeiten($csv, 'upload', (int) $admin->id);
+
+        $this->assertSame('Montage', block::get_record(['nummer' => '104'])->get('name'));
+        $this->assertSame('Berufsfachschule', block::get_record(['nummer' => '90'])->get('name'));
+        $this->assertSame('üK 1', block::get_record(['nummer' => '91'])->get('name'));
+        $this->assertSame('207', block::get_record(['nummer' => '207'])->get('name'));
+    }
+
+    /**
      * Der erste Import legt nur neue Einsaetze an. Der zweite verschiebt
      * einen: der bisherige entfaellt, der verschobene ist neu - beides im
      * Ergebnis und festgehalten beim zweiten Lauf.
