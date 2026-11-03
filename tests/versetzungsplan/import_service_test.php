@@ -191,10 +191,12 @@ final class import_service_test extends advanced_testcase {
             'upload',
             (int) $admin->id
         );
+        // Bens neuer Einsatz ueberschneidet den bisherigen, damit dieser
+        // ersetzt wird - ausserhalb des gelieferten Zeitraums bliebe er stehen.
         $ergebnis = $service->verarbeiten(
             "email;block;kw_von;kw_bis\n"
                 . "anna.muster@firma.ch;4;2027-W15;2027-W16\n"
-                . "ben.beispiel@firma.ch;4;2027-W20;2027-W21\n",
+                . "ben.beispiel@firma.ch;4;2027-W16;2027-W17\n",
             'upload',
             (int) $admin->id
         );
