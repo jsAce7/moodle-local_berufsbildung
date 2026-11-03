@@ -101,7 +101,7 @@ Parameter:
 | `csvdaten` | Inhalt der CSV-Datei, Base64-kodiert |
 | `quelle` | Freitext zur Herkunft, etwa `versetzungsplan-skript` |
 | `testlauf` | `1` = nur prüfen und Protokoll zurückgeben, nichts schreiben. `0` = übernehmen |
-| `rueckgang_bestaetigt` | optional. `1` = ein deutlicher Rückgang der Personenzahl ist beabsichtigt, siehe *Schutz vor unvollständigen Lieferungen*. Standard `0` |
+| `rueckgang_bestaetigt` | optional. `1` = ein deutlicher Rückgang der Personenzahl ist beabsichtigt und wird ohne Freigabe verarbeitet, siehe *Schutz vor unvollständigen Lieferungen*. Standard `0` |
 
 Base64 statt Rohtext, damit Zeilenumbrüche und Sonderzeichen die Formularkodierung nicht stören.
 
@@ -122,19 +122,26 @@ Base64 statt Rohtext, damit Zeilenumbrüche und Sonderzeichen die Formularkodier
 }
 ```
 
-`status` ist `ok`, `mit_warnungen` oder `fehlgeschlagen`. Bei `fehlgeschlagen` wurde nichts geschrieben.
+`status` ist `ok`, `mit_warnungen`, `zur_freigabe` oder `fehlgeschlagen`. Bei `fehlgeschlagen` und `zur_freigabe` wurde nichts geschrieben.
 
 `unveraendert` ist `true`, wenn die Daten dem letzten erfolgreichen Import entsprechen — dann passiert nichts. Das ist bei wöchentlicher Lieferung der Normalfall, weil der Plan sich nur einige Male im Jahr ändert.
 
 ### Schutz vor unvollständigen Lieferungen
 
-Enthält eine Lieferung **deutlich weniger verarbeitete Personen** als die vorherige — Standardschwelle 20 Prozent —, wird sie **abgewiesen** und gemeldet, statt verarbeitet.
+Enthält eine Lieferung **deutlich weniger verarbeitete Personen** als die vorherige — Standardschwelle 20 Prozent —, wird sie **zurückgehalten**, statt verarbeitet: Moodle speichert sie, antwortet mit `status: zur_freigabe` und benachrichtigt die Administration (Site-Admins und alle mit `local/berufsbildung:approveplan`, standardmässig Manager). Unter *Ausbildungsplanung ▸ Versetzungsplan-Freigabe* sieht die Administration, wer gegenüber dem letzten erfolgreichen Import fehlt, und gibt die Lieferung frei oder verwirft sie. Bis dahin bleibt der Einsatzbestand unverändert.
 
 Gezählt wird der verarbeitete Bestand, nicht die Zeilenzahl der Lieferung. Sonst würde die Schwelle beim Ausweiten des Teilnehmerkreises in die falsche Richtung anschlagen. Das fängt den Fall ab, dass das Skript wegen eines Fehlers eine halbe oder leere Datei erzeugt und Moodle daraufhin sämtliche Einsätze löscht.
 
-Ist der Rückgang beabsichtigt, etwa nach einem Lehrabschluss-Jahrgang, wird der Parameter `rueckgang_bestaetigt=1` mitgeliefert.
+Für das Skript heisst das:
 
-Der Versetzungsplan enthält nur laufende Lehrverhältnisse. Wer die Lehre abschliesst, fällt also aus der Lieferung. Bei einer dreijährigen Lehre ist das rund ein Drittel der Lernenden auf einmal, und damit mehr als die Standardschwelle. Die erste Lieferung nach dem Lehrabschluss wird deshalb voraussichtlich abgewiesen, wenn bis dahin nicht genügend neue Lernende mit Zuordnung hinzugekommen sind. Ihre bisherigen Einsätze bleiben in Moodle erhalten, weil nur die Einsätze der gelieferten Personen ersetzt werden.
+- `zur_freigabe` ist kein Fehler, das Skript muss nichts tun. Eine Meldung an die zuständige Person schadet aber nicht.
+- Dieselbe Lieferung in der nächsten Woche erneut zu senden, ist unschädlich: Sie wird nicht ein zweites Mal gemeldet, die Antwort bleibt `zur_freigabe`.
+- Eine **neuere, abweichende** Lieferung ersetzt die wartende. Wird sie verarbeitet, ist die wartende erledigt. Wird auch sie zurückgehalten, wartet nur noch sie. So kann eine späte Freigabe nie einen inzwischen übernommenen Plan mit einem älteren überschreiben.
+- Ist der Rückgang beabsichtigt und das Skript weiss das, etwa nach einem Lehrabschluss-Jahrgang, kann es weiterhin `rueckgang_bestaetigt=1` mitliefern. Dann wird ohne Freigabe verarbeitet.
+
+Bei der Freigabe wird die gespeicherte Lieferung mit dem dann aktuellen Zuordnungsstand verarbeitet, wie eine neue Lieferung. Danach, beim Verwerfen und beim Ersetzen durch eine neuere wird sie gelöscht.
+
+Der Versetzungsplan enthält nur laufende Lehrverhältnisse. Wer die Lehre abschliesst, fällt also aus der Lieferung. Bei einer dreijährigen Lehre ist das rund ein Drittel der Lernenden auf einmal, und damit mehr als die Standardschwelle. Die erste Lieferung nach dem Lehrabschluss wird deshalb voraussichtlich zurückgehalten, wenn bis dahin nicht genügend neue Lernende mit Zuordnung hinzugekommen sind. Ihre bisherigen Einsätze bleiben in Moodle erhalten, auch nach der Freigabe, weil nur die Einsätze der gelieferten Personen ersetzt werden.
 
 ---
 
@@ -155,7 +162,7 @@ Das Token gehört auf der Skript-Seite in eine Umgebungsvariable oder einen Anme
 
 **Erst mit `testlauf=1`.** Beim Einrichten und nach jeder Änderung an der Excel-Struktur zuerst den Testlauf, Protokoll ansehen, dann übernehmen.
 
-**Fehler müssen laut sein.** Ein nicht erreichbarer Endpunkt, ein abgelaufenes Token oder `status: fehlgeschlagen` gehören in eine Meldung an die zuständige Person. Ein Skript, das monatelang stillschweigend nichts tut, ist schlimmer als eines, das laut scheitert.
+**Fehler müssen laut sein.** Ein nicht erreichbarer Endpunkt, ein abgelaufenes Token oder `status: fehlgeschlagen` gehören in eine Meldung an die zuständige Person. `zur_freigabe` meldet Moodle selbst an die Administration. Ein Skript, das monatelang stillschweigend nichts tut, ist schlimmer als eines, das laut scheitert.
 
 **HTTP-Status prüfen, nicht nur den Antworttext.** Moodle antwortet auf Webservice-Fehler mitunter mit Status 200 und einem `exception`-Feld im JSON.
 

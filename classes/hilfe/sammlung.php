@@ -122,7 +122,10 @@ final class sammlung {
             $abschnitte[] = self::abschnitt(abschnitt::PLANUNG, 'ausbildungsbloecke');
             $abschnitte[] = self::abschnitt(abschnitt::PLANUNG, 'kompetenzrahmen');
         }
-        if (has_capability('local/berufsbildung:importplan', $system)) {
+        if (
+            has_capability('local/berufsbildung:importplan', $system)
+            || has_capability('local/berufsbildung:approveplan', $system)
+        ) {
             $abschnitte[] = self::abschnitt(abschnitt::PLANUNG, 'planimport');
         }
         if ($zuordnung) {

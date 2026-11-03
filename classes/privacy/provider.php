@@ -39,6 +39,7 @@ use local_berufsbildung\api;
 use local_berufsbildung\service\termin_service;
 use local_berufsbildung\service\zuordnung_retention_service;
 use local_berufsbildung\service\zuordnung_service;
+use local_berufsbildung\versetzungsplan\import_service;
 
 /**
  * Alle personenbezogenen Daten dieses Plugins haengen an context_user, nie
@@ -84,7 +85,12 @@ class provider implements
             'ausgefuehrt_von' => 'privacy:metadata:planimport:ausgefuehrt_von',
             'quelle' => 'privacy:metadata:planimport:quelle',
             'zeitpunkt' => 'privacy:metadata:planimport:zeitpunkt',
+            'csvdaten' => 'privacy:metadata:planimport:csvdaten',
+            'entschieden_von' => 'privacy:metadata:planimport:entschieden_von',
         ], 'privacy:metadata:planimport');
+
+        // Meldung an die Administration, wenn eine Lieferung auf Freigabe wartet.
+        $collection->add_subsystem_link('core_message', [], 'privacy:metadata:core_message');
 
         $collection->add_database_table('local_berufsbildung_aufbewahrung', [
             'lernendeid' => 'privacy:metadata:aufbewahrung:lernendeid',
@@ -131,7 +137,8 @@ class provider implements
                                  WHERE z.berufsbildnerid = :uid1 OR z.lernendeid = :uid2)
                      OR EXISTS (SELECT 1 FROM {local_berufsbildung_kohorten_link} k WHERE k.berufsbildnerid = :uid3)
                      OR EXISTS (SELECT 1 FROM {local_berufsbildung_einsatz} e WHERE e.userid = :uid4)
-                     OR EXISTS (SELECT 1 FROM {local_berufsbildung_plan_import} p WHERE p.ausgefuehrt_von = :uid5)
+                     OR EXISTS (SELECT 1 FROM {local_berufsbildung_plan_import} p
+                                 WHERE p.ausgefuehrt_von = :uid5 OR p.entschieden_von = :uid11)
                      OR EXISTS (SELECT 1 FROM {local_berufsbildung_aufbewahrung} a WHERE a.lernendeid = :uid6)
                      OR EXISTS (SELECT 1 FROM {local_berufsbildung_teilnahmeprofil} t WHERE t.userid = :uid7)
                      OR EXISTS (SELECT 1 FROM {local_berufsbildung_block} b WHERE b.usermodified = :uid8)
@@ -144,6 +151,7 @@ class provider implements
             'userid' => $userid,
             'uid1' => $userid, 'uid2' => $userid, 'uid3' => $userid, 'uid4' => $userid, 'uid5' => $userid,
             'uid6' => $userid, 'uid7' => $userid, 'uid8' => $userid, 'uid9' => $userid, 'uid10' => $userid,
+            'uid11' => $userid,
             'komponente' => termin_service::KOMPONENTE,
         ]);
 
@@ -172,7 +180,11 @@ class provider implements
         )
             || $DB->record_exists('local_berufsbildung_kohorten_link', ['berufsbildnerid' => $userid])
             || $DB->record_exists('local_berufsbildung_einsatz', ['userid' => $userid])
-            || $DB->record_exists('local_berufsbildung_plan_import', ['ausgefuehrt_von' => $userid])
+            || $DB->record_exists_select(
+                'local_berufsbildung_plan_import',
+                'ausgefuehrt_von = :uid1 OR entschieden_von = :uid2',
+                ['uid1' => $userid, 'uid2' => $userid]
+            )
             || $DB->record_exists('local_berufsbildung_aufbewahrung', ['lernendeid' => $userid])
             || $DB->record_exists('local_berufsbildung_teilnahmeprofil', ['userid' => $userid])
             || $DB->record_exists('local_berufsbildung_block', ['usermodified' => $userid])
@@ -277,6 +289,20 @@ class provider implements
                     'zeilen_gelesen' => (int) $p->zeilen_gelesen,
                     'personen_verarbeitet' => (int) $p->personen_verarbeitet,
                 ], $importe)]
+            );
+        }
+
+        $entscheidungen = array_values(
+            $DB->get_records('local_berufsbildung_plan_import', ['entschieden_von' => $userid], 'entschieden_am ASC')
+        );
+        if (!empty($entscheidungen)) {
+            writer::with_context($context)->export_data(
+                [get_string('privacy:pfad_planfreigaben', 'local_berufsbildung')],
+                (object) ['entscheidungen' => array_map(static fn ($p): array => [
+                    'lieferung_vom' => transform::datetime((int) $p->zeitpunkt),
+                    'status' => $p->status,
+                    'entschieden_am' => transform::datetime((int) $p->entschieden_am),
+                ], $entscheidungen)]
             );
         }
 
@@ -410,15 +436,24 @@ class provider implements
      * Nur der ausfuehrende Account eines Versetzungsplan-Imports laesst
      * sich ohne Verlust des Protokollwerts anonymisieren - wer den Import
      * ausgeloest hat, ist fuer die Aussagekraft des Protokolls unerheblich.
-     * Dasselbe gilt fuer die letzte Aenderung an Ausbildungsbloecken und
+     * Ebenso, wer eine zurueckgehaltene Lieferung freigegeben oder verworfen
+     * hat. Dasselbe gilt fuer die letzte Aenderung an Ausbildungsbloecken und
      * deren Kompetenzzuordnungen: die Struktur bleibt, nur die Spur der
      * bearbeitenden Person verschwindet.
+     *
+     * Eine noch wartende Lieferung, die die Mailadresse der Person enthaelt,
+     * wird verworfen: sie liesse sich nicht teilweise bereinigen.
      *
      * @param int $userid
      */
     protected static function anonymisiere_bearbeitungsspuren(int $userid): void {
         global $DB;
         $DB->set_field('local_berufsbildung_plan_import', 'ausgefuehrt_von', 0, ['ausgefuehrt_von' => $userid]);
+        $DB->set_field('local_berufsbildung_plan_import', 'entschieden_von', 0, ['entschieden_von' => $userid]);
+        $email = $DB->get_field('user', 'email', ['id' => $userid]);
+        if (is_string($email) && $email !== '') {
+            (new import_service())->verwerfe_wartende_mit_mailadresse($email);
+        }
         $DB->set_field('local_berufsbildung_block', 'usermodified', 0, ['usermodified' => $userid]);
         $DB->set_field('local_berufsbildung_block_lk', 'usermodified', 0, ['usermodified' => $userid]);
     }

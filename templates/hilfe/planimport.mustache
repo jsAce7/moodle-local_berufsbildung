@@ -17,7 +17,8 @@
 {{!
     @template local_berufsbildung/hilfe/planimport
 
-    Hilfeseite, Ausbildungsplanung: den Versetzungsplan von Hand uebernehmen.
+    Hilfeseite, Ausbildungsplanung: den Versetzungsplan von Hand uebernehmen
+    und zurueckgehaltene Lieferungen freigeben.
 
     Example context (json):
     {}
@@ -30,7 +31,9 @@
 </ol>
 <h4>Schutz vor unvollständigen Lieferungen</h4>
 <ul>
-    <li>Enthält eine Lieferung deutlich weniger Personen als die letzte, wird sie <strong>abgewiesen</strong>. Ist der Rückgang beabsichtigt, etwa nach Lehrabschlüssen, bestätige ihn und lade erneut hoch.</li>
+    <li>Enthält eine Lieferung deutlich weniger Personen als die letzte, wird sie <strong>zurückgehalten</strong> und die Administration benachrichtigt. Bis dahin bleibt der bisherige Plan unverändert.</li>
+    <li>Unter <em>Ausbildungsplanung ▸ Versetzungsplan-Freigabe</em> siehst du, wie viele Personen die Lieferung enthält, wer gegenüber dem letzten Import fehlt und bei wem sich welche Einsätze ändern. Ein verschobener Einsatz erscheint als „entfällt“ und „neu“. Ist der Rückgang beabsichtigt, etwa nach Lehrabschlüssen, <strong>gib sie frei</strong>; ist die Lieferung unvollständig, <strong>verwirf sie</strong>. Kommt vorher eine neuere Lieferung, ersetzt sie die wartende.</li>
+    <li>Beim Hochladen von Hand kannst du einen beabsichtigten Rückgang auch direkt bestätigen.</li>
     <li>Eine fehlerhafte Lieferung lässt den bisherigen Plan unangetastet.</li>
     <li>Liegt der letzte erfolgreiche Import zu lange zurück, erscheint ein Alterungshinweis. Dann prüfen, ob das Skript noch läuft.</li>
 </ul>

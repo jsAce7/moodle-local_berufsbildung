@@ -112,7 +112,7 @@ class import_versetzungsplan extends external_api {
      */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
-            'status' => new external_value(PARAM_ALPHAEXT, "'ok' | 'mit_warnungen' | 'abgewiesen' | 'fehlgeschlagen'"),
+            'status' => new external_value(PARAM_ALPHAEXT, "'ok' | 'mit_warnungen' | 'zur_freigabe' | 'fehlgeschlagen'"),
             'unveraendert' => new external_value(
                 PARAM_BOOL,
                 'true = identisch zum letzten erfolgreichen Import, nichts geschrieben'

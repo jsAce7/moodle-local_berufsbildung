@@ -31,6 +31,11 @@ use core\persistent;
 /**
  * Ein Datensatz je tatsaechlich verarbeitetem Importlauf. Ein Testlauf
  * (nur pruefen, nichts schreiben) erzeugt bewusst keinen Datensatz.
+ *
+ * 'abgewiesen' kommt nur noch in Datensaetzen vor Version 1.4.0 vor; seither
+ * wird eine solche Lieferung zurueckgehalten ('zur_freigabe') und endet als
+ * 'freigegeben', 'verworfen' oder 'ueberholt'. Nur solange sie wartet, ist
+ * die Lieferung selbst in csvdaten gespeichert.
  */
 class plan_import extends persistent {
     /** Tabellenname. */
@@ -73,12 +78,36 @@ class plan_import extends persistent {
             ],
             'status' => [
                 'type' => PARAM_ALPHAEXT,
-                'choices' => ['ok', 'mit_warnungen', 'abgewiesen', 'fehlgeschlagen'],
+                'choices' => [
+                    'ok',
+                    'mit_warnungen',
+                    'abgewiesen',
+                    'fehlgeschlagen',
+                    'zur_freigabe',
+                    'freigegeben',
+                    'verworfen',
+                    'ueberholt',
+                ],
                 'default' => 'ok',
             ],
             'protokoll' => [
                 'type' => PARAM_RAW,
                 'default' => '',
+                'null' => NULL_ALLOWED,
+            ],
+            'csvdaten' => [
+                'type' => PARAM_RAW,
+                'default' => null,
+                'null' => NULL_ALLOWED,
+            ],
+            'entschieden_von' => [
+                'type' => PARAM_INT,
+                'default' => null,
+                'null' => NULL_ALLOWED,
+            ],
+            'entschieden_am' => [
+                'type' => PARAM_INT,
+                'default' => null,
                 'null' => NULL_ALLOWED,
             ],
         ];

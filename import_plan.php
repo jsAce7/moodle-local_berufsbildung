@@ -79,8 +79,8 @@ if ($ergebnis !== null) {
     $statusstrings = [
         'ok' => 'planimport:status_ok',
         'mit_warnungen' => 'planimport:status_mit_warnungen',
-        'abgewiesen' => 'planimport:status_abgewiesen',
         'fehlgeschlagen' => 'planimport:status_fehlgeschlagen',
+        'zur_freigabe' => 'planimport:status_zur_freigabe',
     ];
 
     echo $OUTPUT->heading(get_string('planimport:ergebnis', 'local_berufsbildung'), 3);
@@ -88,15 +88,26 @@ if ($ergebnis !== null) {
     if ($ergebnis['unveraendert']) {
         echo $OUTPUT->notification(get_string('planimport:unveraendert', 'local_berufsbildung'), 'info');
     } else {
-        $notiftyp = $ergebnis['status'] === 'ok' ? 'success' : ($ergebnis['status'] === 'mit_warnungen' ? 'warning' : 'error');
+        $notiftyp = match ($ergebnis['status']) {
+            'ok' => 'success',
+            'mit_warnungen', 'zur_freigabe' => 'warning',
+            default => 'error',
+        };
         echo $OUTPUT->notification(
             get_string('planimport:status', 'local_berufsbildung') . ': '
                 . get_string($statusstrings[$ergebnis['status']], 'local_berufsbildung'),
             $notiftyp
         );
 
-        if ($ergebnis['status'] === 'abgewiesen') {
-            echo $OUTPUT->notification(get_string('planimport:abgewiesen_hinweis', 'local_berufsbildung'), 'info');
+        if ($ergebnis['status'] === 'zur_freigabe') {
+            echo $OUTPUT->notification(
+                get_string(
+                    'planimport:zur_freigabe_hinweis',
+                    'local_berufsbildung',
+                    (new moodle_url('/local/berufsbildung/plan_freigabe.php'))->out()
+                ),
+                'info'
+            );
         }
 
         $table = new html_table();

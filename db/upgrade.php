@@ -461,5 +461,33 @@ function xmldb_local_berufsbildung_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026102700, 'local', 'berufsbildung');
     }
 
+    if ($oldversion < 2026110300) {
+        // Eine Lieferung mit deutlichem Rueckgang wird nicht mehr
+        // abgewiesen, sondern bis zur Freigabe durch die Administration
+        // zurueckgehalten - samt der Lieferung selbst, damit sie sich ohne
+        // erneutes Senden uebernehmen laesst.
+        $table = new xmldb_table('local_berufsbildung_plan_import');
+
+        $field = new xmldb_field('csvdaten', XMLDB_TYPE_TEXT, null, null, null, null, null, 'protokoll');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('entschieden_von', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'csvdaten');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('entschieden_am', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'entschieden_von');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $key = new xmldb_key('entschiedenvon', XMLDB_KEY_FOREIGN, ['entschieden_von'], 'user', ['id']);
+        $dbman->add_key($table, $key);
+
+        upgrade_plugin_savepoint(true, 2026110300, 'local', 'berufsbildung');
+    }
+
     return true;
 }

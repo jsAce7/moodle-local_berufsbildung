@@ -57,6 +57,16 @@ $capabilities = [
         'archetypes' => [],
     ],
 
+    // Getrennt von importplan: das Dienstkonto soll eine zurueckgehaltene
+    // Lieferung nicht selbst freigeben koennen.
+    'local/berufsbildung:approveplan' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => [
+            'manager' => CAP_ALLOW,
+        ],
+    ],
+
     'local/berufsbildung:manageaufbewahrung' => [
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,

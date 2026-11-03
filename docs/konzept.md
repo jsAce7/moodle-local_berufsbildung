@@ -272,7 +272,7 @@ Nicht zuordenbare Mailadressen von Personen, die eine Zuordnung haben sollten, l
 
 **Vollständige Lieferung**: Jeder Lauf enthält den gesamten Plan, nicht nur Änderungen. Moodle ersetzt den Bestand der gelieferten Personen vollständig — sonst blieben in der Excel gelöschte Einsätze stehen.
 
-**Schutz vor unvollständigen Lieferungen**: Enthält ein Lauf deutlich weniger *verarbeitete* Personen als der vorherige, wird er abgewiesen statt verarbeitet. Gezählt wird der verarbeitete Bestand, nicht die Zeilenzahl — sonst schlüge die Schwelle beim Ausweiten des Teilnehmerkreises in die falsche Richtung an. Das fängt den Fall ab, dass das Skript wegen eines Fehlers eine halbe Datei erzeugt und Moodle daraufhin sämtliche Einsätze löscht. Ein beabsichtigter Rückgang wird über einen Parameter bestätigt.
+**Schutz vor unvollständigen Lieferungen**: Enthält ein Lauf deutlich weniger *verarbeitete* Personen als der vorherige, wird er abgewiesen statt verarbeitet. Gezählt wird der verarbeitete Bestand, nicht die Zeilenzahl — sonst schlüge die Schwelle beim Ausweiten des Teilnehmerkreises in die falsche Richtung an. Das fängt den Fall ab, dass das Skript wegen eines Fehlers eine halbe Datei erzeugt und Moodle daraufhin sämtliche Einsätze löscht. Ein solcher Lauf wird nicht verworfen, sondern zurückgehalten und der Administration gemeldet. Sie prüft unter *Versetzungsplan-Freigabe*, wer fehlt, und gibt ihn frei oder verwirft ihn (`local/berufsbildung:approveplan`). Eine neuere Lieferung ersetzt die wartende, damit eine späte Freigabe nie einen neueren Plan überschreibt. Weiss das Skript, dass der Rückgang beabsichtigt ist, bestätigt es ihn über einen Parameter.
 
 **Idempotenz**: Über den Hash der Daten. Bei wöchentlicher Lieferung eines Plans, der sich einige Male im Jahr ändert, ist die unveränderte Lieferung der Normalfall — sie wird erkannt und ohne Schreibvorgang beendet.
 
@@ -579,6 +579,7 @@ Oberhalb der Blöcke je Beruf, was dem Kompetenzraster der Lernenden fehlt (`ser
 | `local/berufsbildung:viewallnachweise` | System | Nachweise aller Lernenden sehen (Ausbildungsleitung) |
 | `local/berufsbildung:manageblocks` | System | Ausbildungsblöcke und ihre Kompetenzabdeckung pflegen |
 | `local/berufsbildung:importplan` | System | Versetzungsplan importieren |
+| `local/berufsbildung:approveplan` | System | Zurückgehaltene Versetzungsplan-Lieferungen freigeben oder verwerfen |
 
 Mehr nicht. Alles Fachliche gehört in die aufsetzenden Plugins. Die Nachweis-Einsicht für die eigenen Lernenden braucht keine Capability — sie folgt aus der Zuordnung.
 

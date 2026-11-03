@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.4.0] — 2026-11-03
+
+### Geändert
+
+- **Versetzungsplan: Freigabe statt Abweisung bei deutlichem Rückgang.** Enthält eine Lieferung deutlich weniger verarbeitete Personen als der letzte erfolgreiche Import, wird sie nicht mehr abgewiesen. Sie wird zurückgehalten (Status `zur_freigabe`, auch als Antwort des Webservice) und samt CSV gespeichert. Site-Admins und alle mit der neuen Capability `local/berufsbildung:approveplan` (Standard: Manager) bekommen eine Benachrichtigung (neuer Nachrichtentyp `versetzungsplan_freigabe`, standardmässig auch per E-Mail). Bis zur Entscheidung bleibt der Einsatzbestand unverändert.
+- Dieselbe Lieferung erneut gesendet erzeugt keinen zweiten Eintrag und keine zweite Meldung. Eine neuere Lieferung ersetzt die wartende (`ueberholt`), ob sie verarbeitet oder selbst zurückgehalten wird. So überschreibt eine späte Freigabe nie einen neueren Plan.
+- `rueckgang_bestaetigt=1` verarbeitet weiterhin direkt, ohne Freigabe.
+- Welche Einsätze eine Lieferung ersetzt, bestimmt eine gemeinsame Methode (`bestehende_im_zeitraum()`) für Import und Freigabe-Vorschau. Die Vorschau zeigt so genau, was der Import löscht.
+- `import_service::letzter_erfolgreicher_import()` ist öffentlich und entscheidet bei gleichem Zeitpunkt nach der ID.
+
+### Hinzugefügt
+
+- **Seite *Ausbildungsplanung ▸ Versetzungsplan-Freigabe*** (`plan_freigabe.php`): Sie zeigt je wartende Lieferung die Personen beim letzten Import und heute, die Einsätze, die übernommen würden, **je gelieferter Person nur die Einsätze, die wegfallen oder neu dazukommen** (unveränderte Personen nur als Zahl), die Personen, die gegenüber dem letzten Import fehlen, und das Protokoll. Dazu die Aktionen **Freigeben** und **Verwerfen** mit Bestätigung. Die Freigabe verarbeitet die gespeicherte Lieferung mit dem aktuellen Zuordnungsstand.
+- `import_service::freigeben()`, `verwerfen()` und `pruefe_wartende()`.
+- Felder `csvdaten`, `entschieden_von` und `entschieden_am` in `local_berufsbildung_plan_import`. Die CSV wird nach der Entscheidung oder beim Ersetzen gelöscht.
+- Datenschutz: `entschieden_von` wird exportiert und bei einer Löschanfrage anonymisiert. Eine wartende Lieferung mit der Mailadresse der Person wird bei deren Löschanfrage verworfen.
+
 ## [1.3.2] — 2026-10-30
 
 ### Hinzugefügt

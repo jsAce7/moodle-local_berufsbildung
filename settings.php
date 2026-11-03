@@ -36,6 +36,7 @@ $verwaltungscaps = [
     'local/berufsbildung:managezuordnung',
     'local/berufsbildung:manageblocks',
     'local/berufsbildung:importplan',
+    'local/berufsbildung:approveplan',
     'local/berufsbildung:manageaufbewahrung',
 ];
 
@@ -263,6 +264,13 @@ if ($hatverwaltung) {
         new lang_string('planimport:titel', 'local_berufsbildung'),
         new moodle_url('/local/berufsbildung/import_plan.php'),
         'local/berufsbildung:importplan'
+    ));
+
+    $ADMIN->add('ausbildungsverwaltung_planung', new admin_externalpage(
+        'local_berufsbildung_planfreigabe',
+        new lang_string('planfreigabe:titel', 'local_berufsbildung'),
+        new moodle_url('/local/berufsbildung/plan_freigabe.php'),
+        'local/berufsbildung:approveplan'
     ));
 
     $ADMIN->add('ausbildungsverwaltung_system', new admin_externalpage(

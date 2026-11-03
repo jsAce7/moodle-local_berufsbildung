@@ -211,6 +211,74 @@ final class provider_test extends \core_privacy\tests\provider_testcase {
     }
 
     /**
+     * Wer eine zurueckgehaltene Lieferung entschieden hat, wird gefunden,
+     * exportiert und bei einer Loeschanfrage anonymisiert.
+     */
+    public function test_entscheidung_ueber_lieferung_wird_exportiert_und_anonymisiert(): void {
+        $this->resetAfterTest();
+
+        $verwaltung = $this->getDataGenerator()->create_user();
+        $import = new plan_import(0, (object) [
+            'quelle' => 'webservice', 'daten_hash' => str_repeat('b', 64), 'zeitpunkt' => time(),
+            'ausgefuehrt_von' => 0, 'status' => 'freigegeben', 'protokoll' => '',
+            'entschieden_von' => (int) $verwaltung->id, 'entschieden_am' => time(),
+        ]);
+        $import->create();
+
+        $this->assertEquals(
+            [context_user::instance((int) $verwaltung->id)->id],
+            provider::get_contexts_for_userid((int) $verwaltung->id)->get_contextids()
+        );
+
+        $this->export_all_data_for_user((int) $verwaltung->id, 'local_berufsbildung');
+        $daten = writer::with_context(context_user::instance((int) $verwaltung->id))
+            ->get_data([get_string('privacy:pfad_planfreigaben', 'local_berufsbildung')]);
+        $this->assertCount(1, $daten->entscheidungen);
+
+        provider::delete_data_for_user($this->loeschanfrage_fuer($verwaltung));
+
+        $import->read();
+        $this->assertSame(0, (int) $import->get('entschieden_von'));
+    }
+
+    /**
+     * Eine wartende Lieferung mit der Mailadresse der Person wird bei ihrer
+     * Loeschanfrage verworfen; eine ohne sie bleibt offen.
+     */
+    public function test_loeschanfrage_verwirft_wartende_lieferung_mit_ihrer_mailadresse(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user(['email' => 'anna@firma.ch']);
+        $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_zuordnung([
+            'berufsbildnerid' => (int) $berufsbildner->id,
+            'lernendeid' => (int) $lernende->id,
+            'gueltig_von' => strtotime('-1 year'),
+        ]);
+
+        $mitanna = new plan_import(0, (object) [
+            'quelle' => 'webservice', 'daten_hash' => str_repeat('c', 64), 'zeitpunkt' => time(),
+            'ausgefuehrt_von' => 0, 'status' => 'zur_freigabe', 'protokoll' => '',
+            'csvdaten' => "email;block;kw_von;kw_bis\nAnna@firma.ch;4;2027-W15;2027-W16\n",
+        ]);
+        $mitanna->create();
+        $ohneanna = new plan_import(0, (object) [
+            'quelle' => 'webservice', 'daten_hash' => str_repeat('d', 64), 'zeitpunkt' => time(),
+            'ausgefuehrt_von' => 0, 'status' => 'zur_freigabe', 'protokoll' => '',
+            'csvdaten' => "email;block;kw_von;kw_bis\nbeat@firma.ch;4;2027-W15;2027-W16\n",
+        ]);
+        $ohneanna->create();
+
+        provider::delete_data_for_user($this->loeschanfrage_fuer($lernende));
+
+        $mitanna->read();
+        $this->assertSame('verworfen', $mitanna->get('status'));
+        $this->assertNull($mitanna->get('csvdaten'));
+        $ohneanna->read();
+        $this->assertSame('zur_freigabe', $ohneanna->get('status'));
+    }
+
+    /**
      * Baut eine genehmigte Loeschanfrage fuer eine lernende Person.
      *
      * @param stdClass $lernende
