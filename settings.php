@@ -187,6 +187,13 @@ if ($hassiteconfig) {
         PARAM_INT
     ));
 
+    $settings->add(new admin_setting_configcheckbox(
+        'local_berufsbildung/versetzungsplan_alterung_meldung',
+        new lang_string('settings:versetzungsplan_alterung_meldung', 'local_berufsbildung'),
+        new lang_string('settings:versetzungsplan_alterung_meldung_desc', 'local_berufsbildung'),
+        0
+    ));
+
     $settings->add(new admin_setting_configtext(
         'local_berufsbildung/retention_monate',
         new lang_string('settings:retention_monate', 'local_berufsbildung'),

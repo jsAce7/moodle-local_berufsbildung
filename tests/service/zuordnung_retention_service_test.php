@@ -195,4 +195,106 @@ final class zuordnung_retention_service_test extends advanced_testcase {
         $this->assertCount(0, zuordnung::get_records(['lernendeid' => (int) $lernende->id]));
         $this->assertCount(0, aufbewahrung::get_records(['lernendeid' => (int) $lernende->id]));
     }
+
+    /**
+     * Legt eine lernende Person mit aufloesbarem Ausbildungsstand und
+     * laufender Zuordnung an.
+     *
+     * @param string $jahrgang
+     * @return int userid der lernenden Person
+     */
+    private function lege_lernende_mit_zuordnung_an(string $jahrgang): int {
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_lernende([
+            'beruf' => 'AU_EFZ',
+            'jahrgang' => $jahrgang,
+        ]);
+        $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $lernende->id, null);
+
+        return (int) $lernende->id;
+    }
+
+    /**
+     * Randfall der Vorschau: wer genau VORSCHAU_TAGE nach dem Stichtag
+     * geloescht wird, erscheint, eine Sekunde spaeter nicht mehr.
+     */
+    public function test_anstehende_loeschungen_grenze_der_vorschau(): void {
+        $this->resetAfterTest();
+
+        $lernendeid = $this->lege_lernende_mit_zuordnung_an('2022');
+        $ende = api::get_aufbewahrungsende($lernendeid);
+        $vorschau = zuordnung_retention_service::VORSCHAU_TAGE * DAYSECS;
+        $service = new zuordnung_retention_service();
+
+        $this->assertSame([[
+            'lernendeid' => $lernendeid,
+            'ausbildungsende' => api::get_ausbildungsende($lernendeid),
+            'loeschung_ab' => $ende,
+            'faellig' => false,
+        ]], $service->anstehende_loeschungen($ende - $vorschau));
+        $this->assertSame([], $service->anstehende_loeschungen($ende - $vorschau - 1));
+    }
+
+    /**
+     * Faellig ab dem Aufbewahrungsende, wie aufbewahrungsfrist_abgelaufen().
+     */
+    public function test_anstehende_loeschungen_faellig_ab_dem_aufbewahrungsende(): void {
+        $this->resetAfterTest();
+
+        $lernendeid = $this->lege_lernende_mit_zuordnung_an('2022');
+        $ende = api::get_aufbewahrungsende($lernendeid);
+        $service = new zuordnung_retention_service();
+
+        $this->assertFalse($service->anstehende_loeschungen($ende - 1)[0]['faellig']);
+        $this->assertTrue($service->anstehende_loeschungen($ende)[0]['faellig']);
+        $this->assertTrue(api::aufbewahrungsfrist_abgelaufen($lernendeid, $ende));
+    }
+
+    /**
+     * Eine Aufbewahrungspflicht zaehlt, wenn sie am Aufbewahrungsende gilt -
+     * auch wenn sie erst nach dem Stichtag beginnt. Endet sie vorher, wird
+     * trotzdem geloescht.
+     */
+    public function test_anstehende_loeschungen_ohne_wer_am_aufbewahrungsende_aufbewahrt_wird(): void {
+        $this->resetAfterTest();
+
+        $lernendeid = $this->lege_lernende_mit_zuordnung_an('2022');
+        $ende = api::get_aufbewahrungsende($lernendeid);
+        $stichtag = $ende - 30 * DAYSECS;
+        $service = new zuordnung_retention_service();
+
+        (new aufbewahrung(0, (object) [
+            'lernendeid' => $lernendeid,
+            'grund' => 'Endet vor der Loeschung',
+            'gueltig_von' => $stichtag - DAYSECS,
+            'gueltig_bis' => $ende - 1,
+        ]))->create();
+        $this->assertCount(1, $service->anstehende_loeschungen($stichtag));
+
+        (new aufbewahrung(0, (object) [
+            'lernendeid' => $lernendeid,
+            'grund' => 'Laufendes Verfahren',
+            'gueltig_von' => $ende - DAYSECS,
+            'gueltig_bis' => null,
+        ]))->create();
+        $this->assertSame([], $service->anstehende_loeschungen($stichtag));
+    }
+
+    /**
+     * Nach Loeschdatum sortiert; wessen Ausbildungsstand sich nicht
+     * aufloesen laesst, wird nie automatisch geloescht und fehlt.
+     */
+    public function test_anstehende_loeschungen_nach_loeschdatum_sortiert(): void {
+        $this->resetAfterTest();
+
+        $spaeter = $this->lege_lernende_mit_zuordnung_an('2022');
+        $frueher = $this->lege_lernende_mit_zuordnung_an('2021');
+        $ohnestand = $this->getDataGenerator()->create_user();
+        $this->lege_zuordnung_an((int) $this->getDataGenerator()->create_user()->id, (int) $ohnestand->id, null);
+
+        $anstehend = (new zuordnung_retention_service())->anstehende_loeschungen(api::get_aufbewahrungsende($spaeter));
+
+        $this->assertSame([$frueher, $spaeter], array_column($anstehend, 'lernendeid'));
+        $this->assertSame([true, true], array_column($anstehend, 'faellig'));
+    }
 }

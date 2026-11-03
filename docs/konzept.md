@@ -65,7 +65,7 @@ local_berufsbildung_zuordnung
 Endgültig gelöscht wird eine Zuordnung nur in drei Fällen (`CLAUDE.md` Architekturregel 2):
 
 - **Falsch erfasst**: Eine berechtigte Verwaltung entfernt eine nachweislich falsch erfasste Zuordnung über `api::loesche_zuordnung()`, nach Bestätigung in der Zuordnungsübersicht.
-- **Aufbewahrungsfrist abgelaufen**: `retention_monate` (Standard 12) nach dem berechneten Ausbildungsabschluss (`api::get_ausbildungsende()`) löscht `zuordnung_retention_service` alle Zuordnungen einer Person, ausser eine Aufbewahrungspflicht ist dokumentiert (`api::hat_aufbewahrungspflicht()`), siehe Abschnitt 13 Punkt 4.
+- **Aufbewahrungsfrist abgelaufen**: `retention_monate` (Standard 12) nach dem berechneten Ausbildungsabschluss (`api::get_ausbildungsende()`) löscht `zuordnung_retention_service` alle Zuordnungen einer Person, ausser eine Aufbewahrungspflicht ist dokumentiert (`api::hat_aufbewahrungspflicht()`), siehe Abschnitt 13 Punkt 4. Die Seite *Aufbewahrungspflichten* zeigt 60 Tage im Voraus, wer gelöscht wird (`zuordnung_retention_service::anstehende_loeschungen()`), damit eine nötige Aufbewahrungspflicht rechtzeitig erfasst werden kann.
 - **Konto der lernenden Person gelöscht**: Ihre Zuordnungen verschwinden sofort und unbedingt, unabhängig vom Ausbildungsstand (`privacy\provider`). Wird dagegen das Konto einer Berufsbildner/in gelöscht, enden ihre laufenden Zuordnungen nur, noch nicht begonnene werden gelöscht (`zuordnung_service::beende_fuer_geloeschtes_konto()`). Beendete bleiben als Ausbildungshistorie der lernenden Person, bis deren Aufbewahrungsfrist abläuft.
 
 Früher, auf eine Löschanfrage hin, wird nur gelöscht, wenn die Ausbildung abgeschlossen und keine Aufbewahrungspflicht dokumentiert ist (`api::darf_personendaten_geloescht_werden()`).
@@ -294,7 +294,7 @@ Beide Wege enden im selben Importvorgang. Die Verarbeitungslogik kennt den Weg n
 
 Läuft das Skript per Zeitplan, muss ein Fehlschlag auf der Skript-Seite gemeldet werden — nicht erreichbarer Endpunkt, abgelaufenes Token, abgewiesene Lieferung. Moodle kann nur melden, was bei ihm ankommt; eine Lieferung, die nie versucht wurde, sieht es nicht.
 
-Der Alterungshinweis aus 5.4 ist die Rückversicherung dagegen: Er greift auch dann, wenn auf der anderen Seite niemand etwas bemerkt hat.
+Der Alterungshinweis aus 5.4 ist die Rückversicherung dagegen: Er greift auch dann, wenn auf der anderen Seite niemand etwas bemerkt hat. Weil die Übersichtsseite im Regelbetrieb niemand öffnet, meldet `task\pruefe_planalterung` einen veralteten Plan zusätzlich den Site-Admins, sofern `versetzungsplan_alterung_meldung` eingeschaltet ist: einmal je veraltetem Import, bis wieder einer erfolgreich ist (`versetzungsplan\alterung_service`).
 
 ### 5.6 API
 

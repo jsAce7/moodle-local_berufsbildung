@@ -32,6 +32,8 @@ use local_berufsbildung\persistent\aufbewahrung;
 admin_externalpage_setup('local_berufsbildung_aufbewahrung');
 
 $id = optional_param('id', 0, PARAM_INT);
+// Vorbelegt aus der Liste der anstehenden Loeschungen auf aufbewahrung.php.
+$lernendeid = optional_param('lernendeid', 0, PARAM_INT);
 
 $PAGE->set_url(new moodle_url('/local/berufsbildung/aufbewahrung_bearbeiten.php', ['id' => $id]));
 $titel = $id
@@ -65,6 +67,8 @@ if (!$form->is_submitted() && $eintrag !== null) {
         // "kein Datum" (siehe zuordnung_beenden.php).
         'gueltig_bis' => $eintrag->get('gueltig_bis') ?? 0,
     ]);
+} else if (!$form->is_submitted() && $lernendeid > 0) {
+    $form->set_data((object) ['lernendeid' => $lernendeid]);
 }
 
 if ($data = $form->get_data()) {

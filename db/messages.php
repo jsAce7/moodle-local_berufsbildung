@@ -35,4 +35,14 @@ $messageproviders = [
             'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED,
         ],
     ],
+    // Der Versetzungsplan wurde laenger nicht mehr erfolgreich importiert,
+    // siehe versetzungsplan\alterung_service. Nur an Site-Admins, und nur
+    // wenn versetzungsplan_alterung_meldung eingeschaltet ist.
+    'versetzungsplan_alterung' => [
+        'capability' => 'moodle/site:config',
+        'defaults' => [
+            'popup' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED,
+            'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED,
+        ],
+    ],
 ];

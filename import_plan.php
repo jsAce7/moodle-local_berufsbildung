@@ -28,7 +28,7 @@ require_once($CFG->libdir . '/adminlib.php');
 
 use local_berufsbildung\form\plan_import_form;
 use local_berufsbildung\output\hilfe_link;
-use local_berufsbildung\persistent\plan_import;
+use local_berufsbildung\versetzungsplan\alterung_service;
 use local_berufsbildung\versetzungsplan\import_service;
 
 admin_externalpage_setup('local_berufsbildung_importplan');
@@ -55,24 +55,19 @@ if ($data = $form->get_data()) {
 
 echo $OUTPUT->header();
 
-$letzter = plan_import::get_records_select("status IN ('ok', 'mit_warnungen')", [], 'zeitpunkt DESC', '*', 0, 1);
-$letzter = !empty($letzter) ? reset($letzter) : null;
+$letzter = (new import_service())->letzter_erfolgreicher_import();
 
 echo html_writer::start_tag('p');
 echo get_string('planimport:letzter_import', 'local_berufsbildung') . ': ';
 echo $letzter !== null ? userdate((int) $letzter->get('zeitpunkt')) : get_string('planimport:noch_nie', 'local_berufsbildung');
 echo html_writer::end_tag('p');
 
-if ($letzter !== null) {
-    $alterungtage = get_config('local_berufsbildung', 'versetzungsplan_alterung_tage');
-    $alterungtage = $alterungtage !== false ? (int) $alterungtage : 10;
-
-    if ($letzter->get('zeitpunkt') < time() - ($alterungtage * DAYSECS)) {
-        echo $OUTPUT->notification(
-            get_string('planimport:alterung_hinweis', 'local_berufsbildung', $alterungtage),
-            'warning'
-        );
-    }
+$alterung = new alterung_service();
+if ($alterung->veralteter_import() !== null) {
+    echo $OUTPUT->notification(
+        get_string('planimport:alterung_hinweis', 'local_berufsbildung', $alterung->frist_tage()),
+        'warning'
+    );
 }
 
 if ($ergebnis !== null) {

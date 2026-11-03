@@ -38,6 +38,9 @@ use local_berufsbildung\persistent\zuordnung;
  * CLAUDE.md, Architekturregel 2 (Ausnahme).
  */
 class zuordnung_retention_service {
+    /** Wie viele Tage anstehende_loeschungen() vorausschaut. */
+    public const VORSCHAU_TAGE = 60;
+
     /**
      * Prueft alle je zugeordneten lernenden Personen - nicht nur solche mit
      * bereits beendeter Zeile, da eine Zuordnung bei Abschluss durchaus
@@ -67,6 +70,52 @@ class zuordnung_retention_service {
         }
 
         return $ergebnis;
+    }
+
+    /**
+     * Wen bereinige_abgelaufene() bis VORSCHAU_TAGE nach dem Stichtag
+     * loeschen wird, damit eine noetige Aufbewahrungspflicht vorher erfasst
+     * werden kann (aufbewahrung.php). Dazu gehoeren auch bereits faellige
+     * Personen, die erst der naechste Lauf der geplanten Aufgabe loescht.
+     * Es fehlt, wer am Aufbewahrungsende - bei faelligen am Stichtag - eine
+     * Aufbewahrungspflicht hat.
+     *
+     * @param int|null $stichtag Timestamp, null bedeutet "jetzt"
+     * @return array<int, array{lernendeid: int, ausbildungsende: int, loeschung_ab: int, faellig: bool}>
+     *         nach loeschung_ab sortiert
+     */
+    public function anstehende_loeschungen(?int $stichtag = null): array {
+        global $DB;
+
+        $stichtag ??= time();
+        $vorschaubis = $stichtag + self::VORSCHAU_TAGE * DAYSECS;
+
+        $anstehend = [];
+        foreach ($DB->get_fieldset_sql('SELECT DISTINCT lernendeid FROM {local_berufsbildung_zuordnung}') as $lernendeid) {
+            $lernendeid = (int) $lernendeid;
+            $loeschungab = api::get_aufbewahrungsende($lernendeid);
+            if ($loeschungab === null || $loeschungab > $vorschaubis) {
+                continue;
+            }
+            if (api::hat_aufbewahrungspflicht($lernendeid, max($loeschungab, $stichtag))) {
+                continue;
+            }
+
+            $anstehend[] = [
+                'lernendeid' => $lernendeid,
+                'ausbildungsende' => (int) api::get_ausbildungsende($lernendeid),
+                'loeschung_ab' => $loeschungab,
+                'faellig' => $loeschungab <= $stichtag,
+            ];
+        }
+
+        usort(
+            $anstehend,
+            static fn (array $a, array $b): int =>
+                [$a['loeschung_ab'], $a['lernendeid']] <=> [$b['loeschung_ab'], $b['lernendeid']]
+        );
+
+        return $anstehend;
     }
 
     /**

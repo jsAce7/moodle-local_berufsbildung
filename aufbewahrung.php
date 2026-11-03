@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Uebersicht der dokumentierten Aufbewahrungspflichten.
+ * Uebersicht der anstehenden automatischen Loeschungen und der
+ * dokumentierten Aufbewahrungspflichten.
  *
  * @package    local_berufsbildung
  * @copyright  2026 jsAce7
@@ -27,6 +28,7 @@ require_once($CFG->libdir . '/adminlib.php');
 
 use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\persistent\aufbewahrung;
+use local_berufsbildung\service\zuordnung_retention_service;
 
 admin_externalpage_setup('local_berufsbildung_aufbewahrung');
 
@@ -43,6 +45,50 @@ echo html_writer::div($OUTPUT->single_button(
     get_string('aufbewahrung:neu', 'local_berufsbildung')
 ), 'mb-3');
 
+// Wer demnaechst automatisch geloescht wird, damit eine noetige
+// Aufbewahrungspflicht rechtzeitig erfasst werden kann.
+echo $OUTPUT->heading(get_string('aufbewahrung:anstehend', 'local_berufsbildung'), 3);
+$anstehend = (new zuordnung_retention_service())->anstehende_loeschungen();
+$vorschautage = zuordnung_retention_service::VORSCHAU_TAGE;
+
+if (empty($anstehend)) {
+    echo $OUTPUT->notification(get_string('aufbewahrung:anstehend_keine', 'local_berufsbildung', $vorschautage), 'info');
+} else {
+    echo html_writer::tag('p', get_string('aufbewahrung:anstehend_beschreibung', 'local_berufsbildung', $vorschautage));
+
+    $table = new html_table();
+    $table->head = [
+        get_string('aufbewahrung:lernende', 'local_berufsbildung'),
+        get_string('aufbewahrung:ausbildungsende', 'local_berufsbildung'),
+        get_string('aufbewahrung:loeschung_ab', 'local_berufsbildung'),
+        '',
+    ];
+
+    foreach ($anstehend as $eintrag) {
+        $lernende = core_user::get_user($eintrag['lernendeid']);
+        $loeschungab = userdate($eintrag['loeschung_ab'], get_string('strftimedate', 'langconfig'));
+        if ($eintrag['faellig']) {
+            $loeschungab .= ' ' . html_writer::span(
+                get_string('aufbewahrung:loeschung_faellig', 'local_berufsbildung'),
+                'badge bg-warning text-dark'
+            );
+        }
+
+        $table->data[] = [
+            $lernende !== false ? fullname($lernende) : '-',
+            userdate($eintrag['ausbildungsende'], get_string('strftimedate', 'langconfig')),
+            $loeschungab,
+            html_writer::link(
+                new moodle_url('/local/berufsbildung/aufbewahrung_bearbeiten.php', ['lernendeid' => $eintrag['lernendeid']]),
+                get_string('aufbewahrung:erfassen', 'local_berufsbildung')
+            ),
+        ];
+    }
+
+    echo html_writer::table($table);
+}
+
+echo $OUTPUT->heading(get_string('aufbewahrung:dokumentiert', 'local_berufsbildung'), 3);
 $eintraege = aufbewahrung::get_records([], 'gueltig_von', 'DESC');
 
 if (empty($eintraege)) {

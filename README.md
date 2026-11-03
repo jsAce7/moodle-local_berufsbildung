@@ -73,6 +73,7 @@ Dieses Plugin hat keine eigene Fachfunktion. Alles Fachliche — Lerndokumentati
 | Anzahl Wahlpflicht-Handlungskompetenzen je Beruf | leer | Wie viele Wahlpflicht-HK der Bildungsplan verlangt, je Gruppe von Bereichen, z. B. `AU_EFZ=a,b,c:1; d:1` (eine aus a, b und c, eine aus d) oder `AU_EFZ=3` für den ganzen Beruf. Eine Gruppe kann einzelne HK nennen (`d.06`), `|` trennt Wege, von denen einer genügt: `PM_EFZ=d.06:1 \| b,c,d:2; d:1` (d6, oder zwei aus b, c und d, davon eine aus d). Ohne Eintrag zeigt das Raster keinen Wahlpflicht-Stand. |
 | Schwelle für unvollständige Lieferungen (%) | 20 | Vollständigkeitsschutz beim Versetzungsplan-Import: Enthält eine Lieferung deutlich weniger Personen als die vorherige, wird sie zurückgehalten und wartet auf die Freigabe unter *Versetzungsplan-Freigabe*; die Administration wird benachrichtigt |
 | Alterungshinweis nach (Tagen) | 10 | Alterungshinweis, wenn der letzte Import zu lange zurückliegt |
+| Alterung den Site-Admins melden | aus | Benachrichtigt die Site-Admins, wenn der letzte erfolgreiche Import älter als die Frist oben ist, einmal bis zum nächsten erfolgreichen Import. Sonst steht der Hinweis nur auf *Versetzungsplan-Import*, die im Regelbetrieb niemand öffnet. |
 | Aufbewahrungsfrist nach Ausbildungsabschluss (Monate) | 12 | Frist bis zur automatischen Löschung von Zuordnungen (und, über die aufsetzenden Plugins, ihrer Inhalte) nach Lehrabschluss. Wirksam sind Werte von 1 bis 120. |
 | Logo für den Kopf der PDF-Dokumente | keines | PNG oder JPEG, gilt für alle PDF-Dokumente der Berufsbildung |
 | Akzentfarbe der PDF-Dokumente | `#1F4A6D` | Farbe für Abschnittstitel, Tabellenköpfe und Gruppenbänder |
@@ -87,7 +88,7 @@ Welcher Rahmen zu welchem Beruf gehört, steht nicht in den Einstellungen, sonde
 
 Der Rahmen muss der lernenden Person dafür **nicht zusätzlich zugewiesen** werden (kein Lernplan, keine Kurs-Verknüpfung nötig) — `\core_competency\api::add_evidence()` legt den `user_competency`-Datensatz beim ersten Kompetenznachweis automatisch an.
 
-Dokumentierte Aufbewahrungspflichten (Ausnahmen von der automatischen Löschung) werden auf einer eigenen Seite verwaltet: *Website-Administration ▸ Berufsbildung ▸ Allgemein ▸ Aufbewahrungspflichten*, Capability `local/berufsbildung:manageaufbewahrung`.
+Dokumentierte Aufbewahrungspflichten (Ausnahmen von der automatischen Löschung) werden auf einer eigenen Seite verwaltet: *Website-Administration ▸ Berufsbildung ▸ Allgemein ▸ Aufbewahrungspflichten*, Capability `local/berufsbildung:manageaufbewahrung`. Zuoberst zeigt die Seite, wer in den nächsten 60 Tagen automatisch gelöscht wird, damit eine nötige Aufbewahrungspflicht rechtzeitig erfasst werden kann.
 
 ## Rollen und Zugang
 
@@ -183,13 +184,14 @@ Wie bei den Menüpunkten liefert das Plugin nur, was die angemeldete Person öff
 
 ## Geplante Aufgaben
 
-Vier geplante Aufgaben (*Website-Administration ▸ Server ▸ Geplante Aufgaben*):
+Fünf geplante Aufgaben (*Website-Administration ▸ Server ▸ Geplante Aufgaben*):
 
 | Task | Wann | Was |
 |---|---|---|
 | `task\sync_kohorten` | stündlich, Minute zufällig | gleicht die Verknüpfungen mit globalen Gruppen ab: neue Mitglieder erhalten eine Zuordnung, die Zuordnung ausgeschiedener Mitglieder wird beendet, nie gelöscht |
 | `task\sync_role_assignments` | stündlich, Minute zufällig | gleicht die Rollen *Berufsbildner/in* und *Ausbildungsplanung* mit den Zuordnungen ab |
 | `task\sync_termine` | stündlich, Minute zufällig | gleicht die Fälligkeiten aller Quellen mit den Terminen im Moodle-Kalender ab |
+| `task\pruefe_planalterung` | täglich 06:xx | meldet einen veralteten Versetzungsplan den Site-Admins, wenn *Alterung den Site-Admins melden* eingeschaltet ist |
 | `task\zuordnung_retention` | sonntags 03:30 | löscht Zuordnungen nach Ablauf der Aufbewahrungsfrist |
 
 ## Öffentliche API

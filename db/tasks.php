@@ -55,6 +55,17 @@ $tasks = [
         'dayofweek' => '*',
         'disabled' => 0,
     ],
+    // Meldet nur, wenn versetzungsplan_alterung_meldung eingeschaltet ist.
+    [
+        'classname' => 'local_berufsbildung\task\pruefe_planalterung',
+        'blocking' => 0,
+        'minute' => 'R',
+        'hour' => '6',
+        'day' => '*',
+        'month' => '*',
+        'dayofweek' => '*',
+        'disabled' => 0,
+    ],
     [
         'classname' => 'local_berufsbildung\task\zuordnung_retention',
         'blocking' => 0,

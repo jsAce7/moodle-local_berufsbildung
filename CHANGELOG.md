@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.5.0] — 2026-11-03
+
+### Hinzugefügt
+
+- **Meldung bei veraltetem Versetzungsplan.** Liegt der letzte erfolgreiche Import länger als `versetzungsplan_alterung_tage` zurück, bekommen die Site-Admins eine Benachrichtigung (neuer Nachrichtentyp `versetzungsplan_alterung`, standardmässig auch per E-Mail), einmal je veraltetem Import bis zum nächsten erfolgreichen. Bisher erschien nur ein Hinweis auf `import_plan.php`, die im Regelbetrieb über den Webservice niemand öffnet. Eingeschaltet über die neue Einstellung `versetzungsplan_alterung_meldung` (Standard: aus). Geprüft täglich vom neuen Task `task\pruefe_planalterung`, die Regel liegt in `versetzungsplan\alterung_service`, den auch der Hinweis auf `import_plan.php` nutzt.
+- **Anstehende Löschungen auf *Aufbewahrungspflichten*.** Die Seite zeigt zuoberst, wessen Zuordnungen und Ausbildungsdaten in den nächsten 60 Tagen automatisch gelöscht werden, mit Lehrabschluss und Löschdatum, bereits fällige gekennzeichnet. Wer am Löschdatum eine Aufbewahrungspflicht hat, fehlt. Je Person führt *Aufbewahrungspflicht erfassen* auf das vorbelegte Formular. Neu: `zuordnung_retention_service::anstehende_loeschungen()`.
+- `output\plan_freigabe` mit Template `local_berufsbildung/plan_freigabe`: die Darstellung einer wartenden Lieferung, bisher direkt in `plan_freigabe.php`.
+- `service\kohorten_resolver::ist_mitglied()`. `api::ist_lerndokumentation_erforderlich()` fragt `cohort_members` nicht mehr selbst ab (Architekturregel 8).
+- Tests für den Webservice `import_versetzungsplan`, die Tasks `zuordnung_retention` und `pruefe_planalterung` sowie Behat-Szenarien für die Versetzungsplan-Freigabe. Der Testdatengenerator kann Versetzungsplan-Lieferungen einspielen (`create_plan_lieferung()`, in Behat `rotation plan deliveries`).
+
+### Geändert
+
+- **Versetzungsplan-Freigabe:** Ist eine Lieferung inzwischen entschieden oder durch eine neuere überholt, etwa nach einem Doppelklick, führt Freigeben oder Verwerfen zu einer Meldung auf der Übersicht statt zu einer Fehlerseite.
+- Hilfe-Link auch auf den Unterseiten der Zuordnungen, Ausbildungsblöcke, globalen Gruppen und Aufbewahrungspflichten, mit dem Abschnitt ihrer Übersichtsseite.
+
 ## [1.4.0] — 2026-11-03
 
 ### Geändert
