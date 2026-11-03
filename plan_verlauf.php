@@ -49,7 +49,7 @@ $anzahl = 50;
 
 $statusname = static function (string $status): string {
     $bekannt = ['ok', 'mit_warnungen', 'fehlgeschlagen', 'zur_freigabe', 'freigegeben', 'verworfen', 'ueberholt'];
-    // 'abgewiesen' gibt es nur noch in Altdaten.
+    // Den Status 'abgewiesen' gibt es nur noch in Altdaten.
     return in_array($status, $bekannt, true)
         ? get_string('planimport:status_' . $status, 'local_berufsbildung')
         : s($status);
