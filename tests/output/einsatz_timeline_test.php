@@ -258,6 +258,96 @@ final class einsatz_timeline_test extends advanced_testcase {
     }
 
     /**
+     * Im offenen Semester stehen die vergangenen Einsaetze vor dem
+     * laufenden eingeklappt - der laufende und die kommenden bleiben
+     * ausserhalb des Aufklappers sichtbar.
+     */
+    public function test_fruehere_einsaetze_im_offenen_semester_eingeklappt(): void {
+        $this->resetAfterTest();
+
+        $grenzen = [1 => [1000, 9999]];
+        $einsaetze = [
+            $this->einsatz(1, 1000, 1999),
+            $this->einsatz(2, 2000, 2999),
+            $this->einsatz(3, 3000, 3999),
+            $this->einsatz(4, 4000, 4999),
+            $this->einsatz(5, 5000, 5999),
+        ];
+        $blocknamen = [1 => 'Ferien', 2 => 'Start-up', 3 => 'üK 2', 4 => 'Montage', 5 => 'Lager'];
+
+        $html = einsatz_timeline::render($einsaetze, $blocknamen, 4500, $grenzen);
+
+        $anzeigen = get_string('einsatz:frueher_anzeigen', 'local_berufsbildung', 3);
+        $this->assertStringContainsString($anzeigen, $html);
+
+        // Die drei frueheren stehen im Aufklapper, der laufende danach.
+        $ende = strpos($html, '</details>');
+        foreach (['Ferien', 'Start-up', 'üK 2'] as $name) {
+            $this->assertLessThan($ende, strpos($html, $name));
+        }
+        $this->assertGreaterThan($ende, strpos($html, 'Montage'));
+        $this->assertGreaterThan($ende, strpos($html, 'Lager'));
+
+        // Der Aufklapper steht zu - offen bleibt nur das Semester.
+        $this->assertSame(1, substr_count($html, ' open>'));
+    }
+
+    /**
+     * Randfall: ein einzelner frueherer Einsatz braucht zugeklappt so viel
+     * Platz wie offen und bleibt deshalb stehen.
+     */
+    public function test_ein_frueherer_einsatz_bleibt_offen(): void {
+        $this->resetAfterTest();
+
+        $grenzen = [1 => [1000, 9999]];
+        $einsaetze = [$this->einsatz(1, 1000, 1999), $this->einsatz(2, 4000, 4999)];
+
+        $html = einsatz_timeline::render($einsaetze, [1 => 'Ferien', 2 => 'Montage'], 4500, $grenzen);
+
+        $this->assertStringNotContainsString('local-berufsbildung-timeline-frueher', $html);
+    }
+
+    /**
+     * Randfall: liegt die ganze offene Gruppe in der Vergangenheit, stuende
+     * eingeklappt nur noch der Aufklapper da - sie bleibt offen.
+     */
+    public function test_abgelaufene_gruppe_wird_nicht_eingeklappt(): void {
+        $this->resetAfterTest();
+
+        $grenzen = [1 => [1000, 9999]];
+        $einsaetze = [
+            $this->einsatz(1, 1000, 1999),
+            $this->einsatz(2, 2000, 2999),
+            $this->einsatz(3, 3000, 3999),
+        ];
+
+        $html = einsatz_timeline::render($einsaetze, [1 => 'A', 2 => 'B', 3 => 'C'], 50000, $grenzen);
+
+        $this->assertStringNotContainsString('local-berufsbildung-timeline-frueher', $html);
+    }
+
+    /**
+     * Zugeklappte Semester falten nicht noch einmal: wer ein vergangenes
+     * Semester oeffnet, will seine Einsaetze sehen, nicht einen zweiten
+     * Aufklapper.
+     */
+    public function test_nur_das_offene_semester_klappt_fruehere_ein(): void {
+        $this->resetAfterTest();
+
+        $grenzen = [1 => [1000, 4999], 2 => [5000, 9999]];
+        $einsaetze = [
+            $this->einsatz(1, 1000, 1999),
+            $this->einsatz(2, 2000, 2999),
+            $this->einsatz(3, 3000, 3999),
+            $this->einsatz(4, 6000, 7000),
+        ];
+
+        $html = einsatz_timeline::render($einsaetze, [1 => 'A', 2 => 'B', 3 => 'C', 4 => 'D'], 6500, $grenzen);
+
+        $this->assertStringNotContainsString('local-berufsbildung-timeline-frueher', $html);
+    }
+
+    /**
      * Ein Block, dessen Nummer beim Import unbekannt war, hat keinen
      * Namen - der Einsatz selbst bleibt trotzdem sichtbar, statt aus dem
      * Zeitstrahl zu verschwinden.

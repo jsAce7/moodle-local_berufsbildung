@@ -178,9 +178,56 @@ class einsatz_timeline {
             $gruppen[$index]['anzahl'] = $anzahl === 1
                 ? get_string('einsatz:gruppe_anzahl_eins', 'local_berufsbildung')
                 : get_string('einsatz:gruppe_anzahl', 'local_berufsbildung', $anzahl);
+
+            // Explizit false statt fehlend: Mustache sucht einen fehlenden
+            // Schluessel im umgebenden Kontext weiter.
+            $gruppen[$index]['frueher'] = false;
+            if ($index === $offen) {
+                [$gruppen[$index]['frueher'], $gruppen[$index]['eintraege']] = self::trenne_fruehere($gruppe['eintraege']);
+            }
         }
 
         return $gruppen;
+    }
+
+    /**
+     * Klappt im offenen Semester die vergangenen Einsaetze vor dem
+     * laufenden ein.
+     *
+     * Im Herbst des ersten Semesters stehen sonst Betriebsferien, Start-up
+     * und zwei üK ueber dem laufenden Einsatz, und die Frage "was kommt als
+     * Naechstes" beantwortet erst der untere Teil der Liste. Erst ab zwei
+     * frueheren: ein einzelner braucht zugeklappt so viel Platz wie offen.
+     * Liegt die ganze Gruppe in der Vergangenheit, bleibt sie offen - sonst
+     * stuende dort nur der Aufklapper.
+     *
+     * @param array $eintraege Template-Kontext der Eintraege, chronologisch
+     * @return array{0: array|false, 1: array} Kontext des Aufklappers oder
+     *         false, dazu die Eintraege, die offen stehen bleiben
+     */
+    private static function trenne_fruehere(array $eintraege): array {
+        // Die Einsaetze ueberschneiden sich nicht und sind nach 'von'
+        // sortiert, die vergangenen stehen also alle vorne.
+        $anzahl = 0;
+        foreach ($eintraege as $eintrag) {
+            if (!$eintrag['istvergangen']) {
+                break;
+            }
+            $anzahl++;
+        }
+
+        if ($anzahl < 2 || $anzahl === count($eintraege)) {
+            return [false, $eintraege];
+        }
+
+        return [
+            [
+                'eintraege' => array_slice($eintraege, 0, $anzahl),
+                'anzeigen' => get_string('einsatz:frueher_anzeigen', 'local_berufsbildung', $anzahl),
+                'ausblenden' => get_string('einsatz:frueher_ausblenden', 'local_berufsbildung'),
+            ],
+            array_slice($eintraege, $anzahl),
+        ];
     }
 
     /**

@@ -42,7 +42,8 @@ class lernenden_kachel {
      *
      * @param string $name Vollstaendiger Name, bereits durch fullname() formatiert
      * @param ?ausbildungsstand $stand null, wenn Lehre nicht begonnen oder beendet
-     * @param int $anzahlluecken 0 unterdrueckt das Luecken-Badge
+     * @param int $anzahlluecken Pflicht-HK, die der vollstaendige Plan nicht
+     *        vorsieht, siehe raster_bereich::nicht_im_plan(); 0 unterdrueckt das Badge
      * @param int $anzahltaetigkeiten
      * @param string $detailhtml Bereits gerendertes HTML fuer den ausgeklappten Bereich
      *                            (Luecken-Detail, Taetigkeitenliste, Profil-Link)
@@ -63,8 +64,9 @@ class lernenden_kachel {
      *        ohne Schnellaktionen ohne Bedeutung.
      * @param schnellaktion[] $schnellaktionen Aus collector::get_schnellaktionen(),
      *        stehen in der Kopfzeile, ohne dass die Kachel aufklappt.
-     * @param int $anzahlwahlpflichtoffen Verlangte Wahlpflicht-HK, die noch nicht
-     *        vorkamen, siehe wahlpflicht_gruppe::offen(); 0 unterdrueckt das Badge.
+     * @param int $anzahlwahlpflichtoffen Verlangte Wahlpflicht-HK, die der
+     *        vollstaendige Plan nicht vorsieht, siehe wahlpflicht_gruppe::offen()
+     *        mit $mitgeplant; 0 unterdrueckt das Badge.
      *        Getrennt von $anzahlluecken: das zaehlt bestimmte fehlende HK, hier
      *        fehlt eine Anzahl, die man aus mehreren waehlen kann.
      * @param station[]|null $stationen Die aktuelle Station je Quelle, siehe

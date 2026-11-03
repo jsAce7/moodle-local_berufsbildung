@@ -65,10 +65,8 @@ final class kompetenzraster_test extends advanced_testcase {
     }
 
     /**
-     * Der haeufigste Stand ist der leiseste: "nicht im Plan" trifft auf die
-     * grosse Mehrheit der Zellen zu. Sichtbar ist er deshalb nicht - im
-     * Dokument bleibt er stehen, damit Screenreader und der Titel beim
-     * Darueberfahren vollstaendig bleiben.
+     * Den Stand zeigt der Balken; der Klartext bleibt im Dokument, damit
+     * Screenreader und der Titel beim Darueberfahren vollstaendig bleiben.
      */
     public function test_offene_zelle_zeigt_kein_zeichen_bleibt_aber_lesbar(): void {
         $this->resetAfterTest();
@@ -133,10 +131,8 @@ final class kompetenzraster_test extends advanced_testcase {
         $this->assertStringContainsString(
             get_string('raster:zusammenfassung', 'local_berufsbildung', (object) [
                 'soll' => 2,
+                'begonnen' => 1,
                 'vollstaendig' => 1,
-                'teilweise' => 0,
-                'eingeplant' => 0,
-                'offen' => 1,
             ]),
             $html
         );
@@ -158,20 +154,18 @@ final class kompetenzraster_test extends advanced_testcase {
         $this->assertStringNotContainsString(
             get_string('raster:zusammenfassung', 'local_berufsbildung', (object) [
                 'soll' => 1,
+                'begonnen' => 1,
                 'vollstaendig' => 1,
-                'teilweise' => 0,
-                'eingeplant' => 0,
-                'offen' => 0,
             ]),
             $html
         );
     }
 
     /**
-     * Die Zusammenfassung trennt "bereits vorgekommen" von "spaeter
-     * eingeplant" - "im Plan" allein liesse offen, was gemeint ist.
+     * Die Zusammenfassung zaehlt, was schon vorkam; eingeplante HK zeigt
+     * der Balken, die ohne jeden Einsatz nennt eine eigene Zeile.
      */
-    public function test_zusammenfassung_trennt_vorgekommen_und_eingeplant(): void {
+    public function test_zusammenfassung_zaehlt_vorgekommene(): void {
         $this->resetAfterTest();
 
         $html = kompetenzraster::render([$this->bereich([
@@ -185,10 +179,8 @@ final class kompetenzraster_test extends advanced_testcase {
         $this->assertStringContainsString(
             get_string('raster:zusammenfassung', 'local_berufsbildung', (object) [
                 'soll' => 4,
+                'begonnen' => 1,
                 'vollstaendig' => 1,
-                'teilweise' => 0,
-                'eingeplant' => 2,
-                'offen' => 1,
             ]),
             $html
         );
@@ -196,6 +188,129 @@ final class kompetenzraster_test extends advanced_testcase {
             get_string('raster:hinweis_nichts_im_plan', 'local_berufsbildung'),
             $html
         );
+    }
+
+    /**
+     * Pflicht-HK ohne jeden Einsatz stehen mit Kuerzel in einer eigenen
+     * Zeile: ruhig als "noch nicht geplant", solange der Plan nicht bis zum
+     * Lehrende reicht, danach als Warnung. Wahlpflicht zaehlt nicht.
+     */
+    public function test_ohne_einsatz_erst_mit_vollstaendigem_plan_als_warnung(): void {
+        $this->resetAfterTest();
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework();
+        $hkb = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id'), 'idnumber' => '7777BE d']);
+        $kompetenzen = [];
+        $staende = [
+            'd.01' => [raster_kompetenz::STATUS_ABGEDECKT, false],
+            'd.02' => [raster_kompetenz::STATUS_OFFEN, false],
+            'd.03' => [raster_kompetenz::STATUS_OFFEN, true],
+        ];
+        foreach ($staende as $kuerzel => [$status, $istwahlpflicht]) {
+            $kompetenzen[] = new raster_kompetenz((int) $generator->create_competency([
+                'competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hkb->get('id'), 'idnumber' => '7777BE ' . $kuerzel,
+            ])->get('id'), $status, $istwahlpflicht);
+        }
+        $raster = [new raster_bereich((int) $hkb->get('id'), $kompetenzen)];
+
+        $html = kompetenzraster::render($raster, time());
+        $this->assertStringContainsString(get_string('raster:noch_nicht_geplant', 'local_berufsbildung', 'd.02'), $html);
+        $this->assertStringNotContainsString('text-danger', $html);
+
+        $html = kompetenzraster::render($raster, time(), planvollstaendig: true);
+        $this->assertStringContainsString(get_string('raster:nicht_im_plan', 'local_berufsbildung', 'd.02'), $html);
+        $this->assertStringContainsString('text-danger', $html);
+        $this->assertStringContainsString(get_string('raster:status_offen_vollstaendig', 'local_berufsbildung'), $html);
+    }
+
+    /**
+     * Zugeklappt (je Person auf meine_lernenden.php) steht zuerst eine
+     * Punktreihe je Bereich; Legende und Raster folgen in einem Aufklapper.
+     */
+    public function test_zugeklappt_zeigt_zuerst_die_punktreihen(): void {
+        $this->resetAfterTest();
+        $raster = [$this->bereich([
+            [raster_kompetenz::STATUS_ABGEDECKT, false],
+            [raster_kompetenz::STATUS_OFFEN, true],
+        ])];
+
+        $offen = kompetenzraster::render($raster, time());
+        $this->assertStringNotContainsString('local-berufsbildung-raster-uebersicht', $offen);
+        $this->assertStringNotContainsString(get_string('raster:alle_anzeigen', 'local_berufsbildung'), $offen);
+
+        $zu = kompetenzraster::render($raster, time(), zugeklappt: true);
+        $this->assertStringContainsString('local-berufsbildung-raster-uebersicht', $zu);
+        $this->assertStringContainsString(get_string('raster:alle_anzeigen', 'local_berufsbildung'), $zu);
+        // Die Uebersicht steht vor dem Aufklapper, das Raster darin.
+        $this->assertLessThan(
+            strpos($zu, 'local-berufsbildung-raster-ausklapp'),
+            strpos($zu, 'local-berufsbildung-raster-uebersicht')
+        );
+        $this->assertGreaterThan(
+            strpos($zu, 'local-berufsbildung-raster-ausklapp'),
+            strpos($zu, 'local-berufsbildung-raster-tabelle')
+        );
+    }
+
+    /**
+     * Die Liste fuer schmale Bildschirme bringt die LK nicht ein zweites
+     * Mal mit, sondern verweist auf die LK-Liste der Tabellenzelle - deren
+     * id ist je Raster eindeutig, weil auf meine_lernenden.php mehrere
+     * Raster auf einer Seite stehen.
+     */
+    public function test_schmale_liste_verweist_auf_die_lk_der_zelle(): void {
+        $this->resetAfterTest();
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework();
+        $hkb = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id')]);
+        $hk = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hkb->get('id')]);
+        $lk = (int) $generator->create_competency([
+            'competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hk->get('id'), 'shortname' => 'AU a1 01',
+        ])->get('id');
+        $raster = [new raster_bereich((int) $hkb->get('id'), [
+            new raster_kompetenz((int) $hk->get('id'), raster_kompetenz::STATUS_OFFEN, false, [
+                $lk => raster_kompetenz::STATUS_OFFEN,
+            ]),
+        ])];
+
+        $html = kompetenzraster::render($raster, time());
+
+        $this->assertMatchesRegularExpression('~data-ziel="([^"]+)"~', $html);
+        preg_match('~data-ziel="([^"]+)"~', $html, $treffer);
+        $this->assertStringContainsString('id="' . $treffer[1] . '"', $html);
+        // Die LK selbst nur einmal im Dokument.
+        $this->assertSame(1, substr_count($html, 'AU a1 01'));
+        // Ein zweites Raster bekommt andere ids.
+        $this->assertStringNotContainsString($treffer[1], kompetenzraster::render($raster, time()));
+    }
+
+    /**
+     * Der Balken zeigt die Anteile der LK: vorgekommen und eingeplant.
+     */
+    public function test_balken_zeigt_anteile_der_leistungskriterien(): void {
+        $this->resetAfterTest();
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework();
+        $hkb = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id')]);
+        $hk = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hkb->get('id')]);
+        $lk = [];
+        for ($i = 0; $i < 4; $i++) {
+            $lk[] = (int) $generator->create_competency([
+                'competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hk->get('id'),
+            ])->get('id');
+        }
+
+        $html = kompetenzraster::render([new raster_bereich((int) $hkb->get('id'), [
+            new raster_kompetenz((int) $hk->get('id'), raster_kompetenz::STATUS_ABGEDECKT, false, [
+                $lk[0] => raster_kompetenz::STATUS_ABGEDECKT,
+                $lk[1] => raster_kompetenz::STATUS_EINGEPLANT,
+                $lk[2] => raster_kompetenz::STATUS_EINGEPLANT,
+                $lk[3] => raster_kompetenz::STATUS_OFFEN,
+            ]),
+        ])], time());
+
+        $this->assertStringContainsString('style="width: 25%"', $html);
+        $this->assertMatchesRegularExpression('~local-berufsbildung-raster-balkengeplant bg-info"\s+style="width: 50%"~', $html);
     }
 
     /**
@@ -335,10 +450,10 @@ final class kompetenzraster_test extends advanced_testcase {
         $html = kompetenzraster::render($raster, time(), wahlpflicht: $vorgabe);
 
         $this->assertStringContainsString(get_string('raster:wahlpflicht_stand_bereiche', 'local_berufsbildung', (object) [
-            'bereiche' => 'a, b, c', 'soll' => 1, 'vollstaendig' => 1, 'teilweise' => 0, 'eingeplant' => 0,
+            'bereiche' => 'a, b, c', 'soll' => 1, 'begonnen' => 1, 'eingeplant' => 0,
         ]), $html);
         $this->assertStringContainsString(get_string('raster:wahlpflicht_stand_bereiche', 'local_berufsbildung', (object) [
-            'bereiche' => 'd', 'soll' => 1, 'vollstaendig' => 0, 'teilweise' => 0, 'eingeplant' => 1,
+            'bereiche' => 'd', 'soll' => 1, 'begonnen' => 0, 'eingeplant' => 1,
         ]), $html);
         // Nur die Gruppe a, b, c ist erfuellt.
         $this->assertSame(1, substr_count($html, get_string('raster:wahlpflicht_erfuellt', 'local_berufsbildung')));
@@ -347,7 +462,9 @@ final class kompetenzraster_test extends advanced_testcase {
         $this->assertStringNotContainsString('local-berufsbildung-raster-wahlpflicht-eingerueckt', $html);
 
         $ohne = kompetenzraster::render($raster, time());
-        $this->assertSame(1, substr_count($ohne, 'local-berufsbildung-raster-zusammenfassung'));
+        $this->assertStringNotContainsString(get_string('raster:wahlpflicht_stand_bereiche', 'local_berufsbildung', (object) [
+            'bereiche' => 'd', 'soll' => 1, 'begonnen' => 0, 'eingeplant' => 1,
+        ]), $ohne);
     }
 
     /**
@@ -387,10 +504,10 @@ final class kompetenzraster_test extends advanced_testcase {
         $this->assertStringContainsString(get_string('raster:wahlpflicht_weg', 'local_berufsbildung', 1), $html);
         $this->assertStringContainsString(get_string('raster:wahlpflicht_weg', 'local_berufsbildung', 2), $html);
         $this->assertStringContainsString(get_string('raster:wahlpflicht_stand_bereiche', 'local_berufsbildung', (object) [
-            'bereiche' => 'd.06', 'soll' => 1, 'vollstaendig' => 0, 'teilweise' => 0, 'eingeplant' => 1,
+            'bereiche' => 'd.06', 'soll' => 1, 'begonnen' => 0, 'eingeplant' => 1,
         ]), $html);
         $this->assertStringContainsString(get_string('raster:wahlpflicht_stand_bereiche', 'local_berufsbildung', (object) [
-            'bereiche' => 'b, c, d', 'soll' => 2, 'vollstaendig' => 2, 'teilweise' => 0, 'eingeplant' => 1,
+            'bereiche' => 'b, c, d', 'soll' => 2, 'begonnen' => 2, 'eingeplant' => 1,
         ]), $html);
         $this->assertSame(3, substr_count($html, 'local-berufsbildung-raster-wahlpflicht-eingerueckt'));
         // Weg 2 als Ganzes und seine beiden Gruppen; Weg 1 nicht.
@@ -432,7 +549,6 @@ final class kompetenzraster_test extends advanced_testcase {
 
         $this->assertStringContainsString('local-berufsbildung-raster-teilweise', $html);
         $this->assertStringNotContainsString('fa-check', $this->zellenkopf($html));
-        $this->assertStringContainsString('fa-hourglass-half', $this->zellenkopf($html));
         $this->assertStringContainsString('Werkstatt, ', $html);
 
         $vollstaendig = [new raster_bereich((int) $hkb->get('id'), [
@@ -448,14 +564,15 @@ final class kompetenzraster_test extends advanced_testcase {
     }
 
     /**
-     * Der Kopf der ersten Rasterzelle - Zeichen und Kuerzel, ohne die
+     * Der Kopf der ersten Rasterzelle - Kuerzel und Haekchen, ohne die
      * LK-Liste darunter, die eigene Zeichen je Gruppe traegt.
      *
      * @param string $html
      * @return string
      */
     private function zellenkopf(string $html): string {
-        preg_match('~<span class="local-berufsbildung-raster-kopf">(.*?)</span>~s', $html, $treffer);
+        $muster = '~<span class="local-berufsbildung-raster-kopf">(.*?)<span class="local-berufsbildung-raster-name">~s';
+        preg_match($muster, $html, $treffer);
 
         return $treffer[1] ?? '';
     }
@@ -502,7 +619,9 @@ final class kompetenzraster_test extends advanced_testcase {
             get_string('raster:vorschlag', 'local_berufsbildung', 'B4 Montage, B7 Labor'),
             $html
         );
-        $this->assertSame(1, substr_count($html, get_string('raster:vorschlag', 'local_berufsbildung', 'B7 Labor')));
+        // Nur bei der HK ohne LK, nicht beim vorgekommenen LK - je einmal in
+        // der Tabelle und in der Liste fuer schmale Bildschirme.
+        $this->assertSame(2, substr_count($html, get_string('raster:vorschlag', 'local_berufsbildung', 'B7 Labor')));
         $this->assertStringNotContainsString(
             get_string('raster:vorschlag', 'local_berufsbildung', ''),
             kompetenzraster::render($raster, time())

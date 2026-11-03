@@ -942,6 +942,29 @@ class api {
     }
 
     /**
+     * Ob der Versetzungsplan bis ins letzte Semester reicht.
+     *
+     * Der Plan wird jahrweise geliefert und ist erst im letzten Lehrjahr
+     * vollstaendig. Vorher heisst eine Handlungskompetenz ohne Einsatz nur
+     * "noch nicht geplant"; erst danach ist sie eine Luecke, die jemand
+     * angehen muss.
+     *
+     * @param int $lernendeid
+     * @return bool false ohne Plan oder ohne aufloesbare Semester
+     */
+    public static function ist_plan_vollstaendig(int $lernendeid): bool {
+        $horizont = self::get_planungshorizont($lernendeid);
+        $grenzen = self::get_semester_grenzen($lernendeid);
+        if ($horizont === null || $grenzen === []) {
+            return false;
+        }
+
+        [$beginnletztes] = end($grenzen);
+
+        return $horizont >= $beginnletztes;
+    }
+
+    /**
      * Bezeichnung eines Ausbildungsblocks, z.B. fuer die automatische
      * Abteilungs-Anzeige in aufsetzenden Plugins - siehe
      * versetzungsplan\einsatz und docs/konzept.md §5.7.

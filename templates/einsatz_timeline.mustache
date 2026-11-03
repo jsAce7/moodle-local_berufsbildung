@@ -29,10 +29,12 @@
 
     Ohne Semestergrenzen (hasname = false) gibt es nichts zu falten; dann
     steht die Liste wie bisher durchgehend da. Die Eintraege selbst stehen
-    in einsatz_timeline_eintraege, weil beide Faelle sie brauchen.
+    in einsatz_timeline_eintraege, weil beide Faelle sie brauchen. Im
+    offenen Semester stehen die vergangenen Einsaetze vor dem laufenden
+    eingeklappt davor (einsatz_timeline_frueher).
 
     Context variables required for this template:
-    * gruppen - array of {hasname, name, anzahl, istoffen, eintraege}
+    * gruppen - array of {hasname, name, anzahl, istoffen, frueher, eintraege}
     * eintraege - array of {blockname, zeitraum, haskw, kw, istvergangen, istaktuell, istkommend}
     * titel - string, Ueberschrift der Liste
 
@@ -45,6 +47,7 @@
                 "name": "1. Semester",
                 "anzahl": "8 Einsätze",
                 "istoffen": true,
+                "frueher": false,
                 "eintraege": [
                     {
                         "blockname": "Montage",
@@ -72,10 +75,12 @@
                     <span class="local-berufsbildung-timeline-gruppenname h6 mb-0">{{name}}</span>
                     <span class="local-berufsbildung-timeline-gruppenanzahl text-muted small">{{anzahl}}</span>
                 </summary>
+                {{> local_berufsbildung/einsatz_timeline_frueher }}
                 {{> local_berufsbildung/einsatz_timeline_eintraege }}
             </details>
         {{/hasname}}
         {{^hasname}}
+            {{> local_berufsbildung/einsatz_timeline_frueher }}
             {{> local_berufsbildung/einsatz_timeline_eintraege }}
         {{/hasname}}
     {{/gruppen}}

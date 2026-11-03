@@ -455,6 +455,47 @@
 }
 
 /*
+ * Fruehere Einsaetze eingeklappt (einsatz_timeline_frueher). Der Kopf ist
+ * eine Zeile des Zeitstrahls; die Listen davor und danach schliessen ohne
+ * Abstand an, damit der Strang durchlaeuft - auch ueber den letzten
+ * frueheren Einsatz hinaus, der sonst als letzter seiner Liste keine
+ * Verbindung zeichnet.
+ */
+.local-berufsbildung-timeline-gruppe .local-berufsbildung-timeline-frueher {
+    margin: 0.25rem 0 0 1rem;
+}
+
+.local-berufsbildung-timeline-gruppe .local-berufsbildung-timeline-frueher .local-berufsbildung-timeline-liste {
+    margin: 0;
+}
+
+.local-berufsbildung-timeline-gruppe .local-berufsbildung-timeline-frueher + .local-berufsbildung-timeline-liste {
+    margin-top: 0;
+}
+
+.local-berufsbildung-timeline-frueher .local-berufsbildung-timeline-eintrag:last-child .local-berufsbildung-timeline-verbindung {
+    display: block;
+}
+
+.local-berufsbildung-timeline-frueherkopf {
+    list-style: none;
+    cursor: pointer;
+}
+
+.local-berufsbildung-timeline-frueherkopf::-webkit-details-marker {
+    display: none;
+}
+
+.local-berufsbildung-timeline-frueherkopf:hover .local-berufsbildung-timeline-titelzeile {
+    text-decoration: underline;
+}
+
+.local-berufsbildung-timeline-frueher[open] .local-berufsbildung-timeline-frueher-anzeigen,
+.local-berufsbildung-timeline-frueher:not([open]) .local-berufsbildung-timeline-frueher-ausblenden {
+    display: none;
+}
+
+/*
  * Auf schmalen Fenstern reicht die Breite nicht fuer drei Spalten - dann
  * steht die Woche ueber der Bezeichnung statt daneben, der Strang bleibt
  * links.
@@ -641,11 +682,9 @@
 }
 
 /*
- * Die Flaeche liegt als eigene Ebene unter dem Text, damit ihre Deckung
- * den Ausbildungsstand zeigen kann, ohne die Lesbarkeit der Beschriftung
- * anzutasten. Darueber oben ein schmaler Streifen fuer Pflicht oder
- * Wahlpflicht. Beide Farben kommen ueber Bootstrap-Klassen im Markup -
- * siehe Kopfkommentar dieser Datei.
+ * Pflicht ist der Normalfall und braucht kein Zeichen; Wahlpflicht hat
+ * einen gestrichelten Rahmen und einen blasseren Namen - man waehlt aus
+ * ihnen, sie sind nicht alle zu erreichen.
  */
 .local-berufsbildung-raster-zelle {
     position: relative;
@@ -654,45 +693,63 @@
     padding: 0.4rem 0.5rem !important;
 }
 
-.local-berufsbildung-raster-fuellung {
+/* Als eigene Ebene in der Zelle: am Tabellenrahmen selbst setzt sich in
+   border-collapse der durchgezogene Rahmen der Nachbarzelle durch. Mit der
+   Zelle davor, weil Boost das Plugin-CSS vor .border aus Bootstrap laedt. */
+.local-berufsbildung-raster-zelle .local-berufsbildung-raster-rahmen {
+    position: absolute;
+    top: 0.15rem;
+    right: 0.15rem;
+    bottom: 0.15rem;
+    left: 0.15rem;
+    border-radius: 0.2rem;
+    pointer-events: none;
+    /* .border setzt den Stil mit !important. */
+    /* stylelint-disable-next-line declaration-no-important */
+    border-style: dashed !important;
+}
+
+.local-berufsbildung-raster-wahlpflicht .local-berufsbildung-raster-name {
+    opacity: 0.75;
+}
+
+/*
+ * Mengenbalken: der Anteil der LK, die vorkamen, kraeftig, der eingeplante
+ * daneben blass, auf einem blassen Grund. Die Breiten setzt das Template.
+ * Grund und Teile tragen ihre Farbe als Bootstrap-Klasse, hier steht nur
+ * die Deckung.
+ */
+.local-berufsbildung-raster-balken {
+    position: relative;
+    display: flex;
+    height: 0.4rem;
+    margin-top: 0.35rem;
+    overflow: hidden;
+    border-radius: 0.2rem;
+}
+
+.local-berufsbildung-raster-balkengrund {
     position: absolute;
     top: 0;
     right: 0;
     bottom: 0;
     left: 0;
+    opacity: 0.5;
 }
 
-/*
- * Die Deckung traegt den Ausbildungsstand: vollstaendig (alle LK) kraeftig,
- * teilweise mittel, spaeter eingeplant hell, nicht im Plan gar nicht - die
- * Zelle bleibt weiss. Die Stufen liegen so weit auseinander, dass man sie ueber eine
- * Zeile hinweg unterscheidet, und so tief, dass die dunkle Beschriftung
- * auf bg-info lesbar bleibt - ein Ton, der sich von den gelben und
- * gruenen Streifen fuer Pflicht und Wahlpflicht klar abhebt.
- */
-.local-berufsbildung-raster-vollstaendig > .local-berufsbildung-raster-fuellung {
+.local-berufsbildung-raster-balkenteil {
+    position: relative;
+    height: 100%;
+}
+
+.local-berufsbildung-raster-balkengeplant {
     opacity: 0.4;
 }
 
-.local-berufsbildung-raster-teilweise > .local-berufsbildung-raster-fuellung {
-    opacity: 0.2;
-}
-
-.local-berufsbildung-raster-eingeplant > .local-berufsbildung-raster-fuellung {
-    opacity: 0.08;
-}
-
-.local-berufsbildung-raster-offen > .local-berufsbildung-raster-fuellung {
-    display: none;
-}
-
-/* Pflicht oder Wahlpflicht, wie im Bildungsplan. */
-.local-berufsbildung-raster-art {
-    position: absolute;
-    top: 0;
-    right: 0;
-    left: 0;
-    height: 0.25rem;
+.local-berufsbildung-raster-alle {
+    margin-left: auto;
+    font-weight: 400;
+    white-space: nowrap;
 }
 
 .local-berufsbildung-raster-inhalt {
@@ -771,23 +828,16 @@
     margin-left: 1rem;
 }
 
-.local-berufsbildung-raster-status {
-    display: block;
-    margin-top: 0.15rem;
-    opacity: 0.75;
-}
-
 /*
- * Eine Kompetenz, die im Plan nicht vorkommt, tritt zurueck: kein Symbol,
- * kein Statustext (siehe kompetenzraster.mustache), und der Name blasser
- * als bei den Zellen, die etwas aussagen.
+ * Eine Kompetenz, die im Plan nicht vorkommt, tritt zurueck: leerer
+ * Balken und der Name blasser als bei den Zellen, die etwas aussagen.
  */
 .local-berufsbildung-raster-offen .local-berufsbildung-raster-name {
     opacity: 0.7;
 }
 
 /*
- * Kompakte Variante fuer die Roster-Karten: nur Kuerzel und Symbol. Name
+ * Kompakte Variante fuer die Roster-Karten: nur Kuerzel und Balken. Name
  * und Stand bleiben im Dokument und damit fuer Screenreader lesbar, sind
  * aber visuell ausgeblendet - dieselbe Technik wie
  * .local-berufsbildung-nurtext weiter oben.
@@ -818,10 +868,106 @@
 }
 
 /*
- * Das Feld fuer einen Stand sieht aus wie eine Zelle mit diesem Stand:
- * dieselbe Fuellung in derselben Deckung, "nicht im Plan" leer.
+ * Die Felder der Legende sehen aus wie das, was sie erklaeren: ein kurzer
+ * Balken voll, blass oder leer, ein gestrichelter Rahmen.
  */
-.local-berufsbildung-raster-legendenstand {
+.local-berufsbildung-raster-legendenbalken {
+    width: 1.4rem;
+    margin-top: 0;
+}
+
+.local-berufsbildung-raster-legende-vorgekommen .local-berufsbildung-raster-balkenteil {
+    width: 100%;
+}
+
+.local-berufsbildung-raster-legende-eingeplant .local-berufsbildung-raster-balkenteil {
+    width: 100%;
+    opacity: 0.4;
+}
+
+.local-berufsbildung-raster-legende-leer .local-berufsbildung-raster-balkenteil {
+    display: none;
+}
+
+.local-berufsbildung-raster-legende .local-berufsbildung-raster-legendenwahlpflicht {
+    display: inline-block;
+    width: 1rem;
+    height: 0.8rem;
+    /* .border setzt Breite und Stil mit !important. */
+    /* stylelint-disable-next-line declaration-no-important */
+    border-style: dashed !important;
+}
+
+/*
+ * Schmale Bildschirme: statt der Tabelle je Bereich eine Klappe, im Kopf
+ * Name, Zahl und die Punktreihe, darin die HK als Liste mit Balken. Sieben
+ * Spalten passen auf kein Telefon, und seitwaerts schieben verliert die
+ * Zeilenkoepfe.
+ */
+.local-berufsbildung-raster-schmal {
+    display: none;
+}
+
+@media (max-width: 767.98px) {
+    .local-berufsbildung-raster .table-responsive {
+        display: none;
+    }
+
+    .local-berufsbildung-raster-schmal {
+        display: block;
+    }
+}
+
+.local-berufsbildung-raster-klappenkopf {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.5rem 0.75rem;
+    list-style: none;
+    cursor: pointer;
+}
+
+.local-berufsbildung-raster-klappenkopf::-webkit-details-marker {
+    display: none;
+}
+
+.local-berufsbildung-raster-klappenzeile {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.local-berufsbildung-raster-chevron {
+    flex-shrink: 0;
+    transition: transform 0.15s ease;
+}
+
+.local-berufsbildung-raster-klappe[open] .local-berufsbildung-raster-chevron {
+    transform: rotate(180deg);
+}
+
+.local-berufsbildung-raster-eintrag {
+    position: relative;
+    padding: 0.5rem 0.75rem;
+}
+
+.local-berufsbildung-raster-eintrag .local-berufsbildung-raster-kopf {
+    gap: 0.4rem;
+}
+
+/*
+ * Punktreihe: ein Feld je HK, von unten gefuellt - kraeftig, was vorkam,
+ * blass darueber, was eingeplant ist. Die blasse Ebene liegt unten im
+ * Markup und wird von der kraeftigen ueberdeckt.
+ */
+.local-berufsbildung-raster-punkte {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem;
+}
+
+.local-berufsbildung-raster-punkt {
     position: relative;
     display: inline-block;
     width: 0.9rem;
@@ -830,11 +976,48 @@
     border-radius: 0.15rem;
 }
 
-/* Der Streifen fuer Pflicht oder Wahlpflicht, wie oben in der Zelle. */
-.local-berufsbildung-raster-legendenart {
-    display: inline-block;
-    width: 0.9rem;
-    height: 0.25rem;
+.local-berufsbildung-raster-punkte .local-berufsbildung-raster-punkt-wahlpflicht {
+    /* .border setzt den Stil mit !important. */
+    /* stylelint-disable-next-line declaration-no-important */
+    border-style: dashed !important;
+}
+
+.local-berufsbildung-raster-punkt-wahlpflicht .local-berufsbildung-raster-balkengrund {
+    display: none;
+}
+
+.local-berufsbildung-raster-punktteil {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+/*
+ * Zugeklappt (meine_lernenden.php): je Bereich eine Zeile mit Name und
+ * Punktreihe, auf breiten Bildschirmen in zwei Spalten, damit die Namen
+ * untereinander stehen.
+ */
+.local-berufsbildung-raster-uebersicht {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.local-berufsbildung-raster-uebersichtzeile {
+    display: grid;
+    gap: 0.15rem 1rem;
+}
+
+@media (min-width: 768px) {
+    .local-berufsbildung-raster-uebersichtzeile {
+        grid-template-columns: minmax(0, 24rem) 1fr;
+        align-items: center;
+    }
+}
+
+.local-berufsbildung-raster-ausklapp > summary {
+    margin-bottom: 0.5rem;
+    cursor: pointer;
 }
 
 /*

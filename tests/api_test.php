@@ -1225,6 +1225,55 @@ final class api_test extends advanced_testcase {
         }
     }
 
+    /**
+     * Der Plan gilt als vollstaendig, sobald sein letzter Einsatz ins
+     * letzte Semester reicht. Randfall: endet er eine Sekunde vor dessen
+     * Beginn, fehlt das letzte Semester noch.
+     */
+    public function test_ist_plan_vollstaendig_ab_dem_letzten_semester(): void {
+        $this->resetAfterTest();
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung');
+        $lernendeid = (int) $generator->create_lernende(['beruf' => 'AU_EFZ', 'jahrgang' => '2026'])->id;
+
+        $this->assertFalse(api::ist_plan_vollstaendig($lernendeid));
+
+        $grenzen = api::get_semester_grenzen($lernendeid);
+        $beginnletztes = $grenzen[8][0];
+        $block = $generator->create_block(['nummer' => 'B1', 'name' => 'Werkstatt']);
+        $einsatz = $generator->create_einsatz([
+            'userid' => $lernendeid,
+            'blockid' => $block->get('id'),
+            'von' => $grenzen[1][0],
+            'bis' => $beginnletztes - 1,
+        ]);
+
+        $this->assertFalse(api::ist_plan_vollstaendig($lernendeid));
+
+        $einsatz->set('bis', $beginnletztes);
+        $einsatz->update();
+
+        $this->assertTrue(api::ist_plan_vollstaendig($lernendeid));
+    }
+
+    /**
+     * Ohne aufloesbare Semester gibt es kein letztes Semester, in das der
+     * Plan reichen koennte - dann gilt er nie als vollstaendig.
+     */
+    public function test_ist_plan_vollstaendig_ohne_semester(): void {
+        $this->resetAfterTest();
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung');
+        $lernendeid = (int) $this->getDataGenerator()->create_user()->id;
+        $block = $generator->create_block(['nummer' => 'B1', 'name' => 'Werkstatt']);
+        $generator->create_einsatz([
+            'userid' => $lernendeid,
+            'blockid' => $block->get('id'),
+            'von' => time(),
+            'bis' => time() + 10 * YEARSECS,
+        ]);
+
+        $this->assertFalse(api::ist_plan_vollstaendig($lernendeid));
+    }
+
     public function test_get_semester_grenzen_ohne_profildaten_ist_leer(): void {
         $this->resetAfterTest();
         $lernende = $this->getDataGenerator()->create_user();

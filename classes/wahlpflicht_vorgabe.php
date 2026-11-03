@@ -59,9 +59,10 @@ class wahlpflicht_vorgabe {
      * erfuellt.
      *
      * @param raster_bereich[] $raster Ergebnis von api::get_kompetenzraster()
+     * @param bool $mitgeplant Siehe wahlpflicht_gruppe::offen()
      */
-    public function offen(array $raster): int {
-        $je = $this->offen_je_weg($raster);
+    public function offen(array $raster, bool $mitgeplant = false): int {
+        $je = $this->offen_je_weg($raster, $mitgeplant);
 
         return $je === [] ? 0 : min($je);
     }
@@ -76,13 +77,17 @@ class wahlpflicht_vorgabe {
      * keiner anderen liegen, zaehlen zusammen.
      *
      * @param raster_bereich[] $raster Ergebnis von api::get_kompetenzraster()
+     * @param bool $mitgeplant Siehe wahlpflicht_gruppe::offen()
      * @return int[] In der Reihenfolge der Wege
      */
-    public function offen_je_weg(array $raster): array {
+    public function offen_je_weg(array $raster, bool $mitgeplant = false): array {
         $je = [];
         foreach ($this->wege as $gruppen) {
             $gruppen = array_values($gruppen);
-            $fehlend = array_map(static fn (wahlpflicht_gruppe $gruppe): int => $gruppe->offen($raster), $gruppen);
+            $fehlend = array_map(
+                static fn (wahlpflicht_gruppe $gruppe): int => $gruppe->offen($raster, $mitgeplant),
+                $gruppen
+            );
 
             // Je Gruppe die kleinste, in der sie liegt.
             $kinder = [];

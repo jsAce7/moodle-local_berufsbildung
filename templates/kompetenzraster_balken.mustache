@@ -1,0 +1,39 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_berufsbildung/kompetenzraster_balken
+
+    Mengenbalken einer Handlungskompetenz: der Anteil der LK, die in
+    Einsaetzen vorkamen, kraeftig, der eingeplante blass daneben. In der
+    Rasterzelle und in der Liste fuer schmale Bildschirme derselbe.
+    Rein visuell; den Stand tragen Klartext und LK-Zahl daneben.
+
+    Context variables required for this template:
+    * anteilvorgekommen - int, Prozent der LK
+    * anteileingeplant - int, Prozent der LK
+
+    Example context (json):
+    {
+        "anteilvorgekommen": 30,
+        "anteileingeplant": 20
+    }
+}}
+<span class="local-berufsbildung-raster-balken" aria-hidden="true">
+    <span class="local-berufsbildung-raster-balkengrund bg-secondary"></span>
+    <span class="local-berufsbildung-raster-balkenteil bg-info" style="width: {{anteilvorgekommen}}%"></span>
+    <span class="local-berufsbildung-raster-balkenteil local-berufsbildung-raster-balkengeplant bg-info" style="width: {{anteileingeplant}}%"></span>
+</span>

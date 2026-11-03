@@ -132,6 +132,17 @@ final class wahlpflicht_vorgabe_test extends advanced_testcase {
     }
 
     /**
+     * Mit $mitgeplant genuegt der Weg, den der Plan vorsieht - auch wenn
+     * dort noch nichts vollstaendig vorkam.
+     */
+    public function test_mitgeplant_zaehlt_eingeplantes(): void {
+        $vorgabe = $this->vorgabe(self::POLYMECHANIK);
+
+        $this->assertSame(0, $vorgabe->offen($this->raster([], ['d.06']), mitgeplant: true));
+        $this->assertSame(1, $vorgabe->offen($this->raster([], []), mitgeplant: true));
+    }
+
+    /**
      * Gruppen, die sich nicht ueberschneiden, zaehlen zusammen - wie vor
      * den Wegen. Die bestehenden Einstellungen rechnen also unveraendert.
      */

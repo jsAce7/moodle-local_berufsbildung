@@ -151,10 +151,18 @@ class wahlpflicht_gruppe {
      * vorkamen. Erfuellt ist die Gruppe erst, wenn genug HK vollstaendig
      * sind - wie das Haekchen im Raster.
      *
+     * Mit $mitgeplant zaehlt jede HK, die vorkam oder eingeplant ist: bei
+     * einem Plan bis zum Lehrende fehlt dann nur, was er gar nicht
+     * vorsieht - siehe api::ist_plan_vollstaendig().
+     *
      * @param raster_bereich[] $raster Ergebnis von api::get_kompetenzraster()
+     * @param bool $mitgeplant Auch teilweise vorgekommene und eingeplante HK zaehlen
      */
-    public function offen(array $raster): int {
-        return max(0, $this->anzahl - $this->stand($raster)[raster_kompetenz::ANZEIGE_VOLLSTAENDIG]);
+    public function offen(array $raster, bool $mitgeplant = false): int {
+        $stand = $this->stand($raster);
+        $erfuellt = $mitgeplant ? array_sum($stand) : $stand[raster_kompetenz::ANZEIGE_VOLLSTAENDIG];
+
+        return max(0, $this->anzahl - $erfuellt);
     }
 
     /**

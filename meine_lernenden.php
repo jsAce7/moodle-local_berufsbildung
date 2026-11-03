@@ -164,10 +164,17 @@ if (empty($eintraege)) {
     // Einmal das Raster, daraus beides: die Zahl fuer die Kachel und
     // weiter unten das Raster selbst. Sonst liefe dieselbe Auswertung je
     // Person mehrfach.
+    //
+    // Luecken zaehlen erst, wenn der Versetzungsplan bis ins letzte
+    // Semester reicht: er wird erst im letzten Lehrjahr vollstaendig, und
+    // vorher heisst "nicht im Plan" nur "noch nicht geplant" - ein Badge
+    // stuende dann bei fast allen. Danach zaehlt nur, was der Plan gar
+    // nicht vorsieht; Eingeplantes kommt noch.
     $raster = [];
+    $planvollstaendig = [];
     $anzahlluecken = [];
-    // Verlangte Wahlpflicht-HK, die noch nicht vorkamen - je Person, aber
-    // die Vorgabe nur einmal je Beruf aus der Einstellung gelesen.
+    // Verlangte Wahlpflicht-HK, die der Plan nicht vorsieht - je Person,
+    // aber die Vorgabe nur einmal je Beruf aus der Einstellung gelesen.
     $anzahlwahlpflichtoffen = [];
     $wahlpflicht = [];
     $vorschlaege = [];
@@ -179,9 +186,13 @@ if (empty($eintraege)) {
             ? api::get_kompetenzraster($eintrag['id'])
             : [];
 
+        $planvollstaendig[$eintrag['id']] = $mitraster && api::ist_plan_vollstaendig($eintrag['id']);
+
         $offen = 0;
-        foreach (api::abdeckung_aus_raster($raster[$eintrag['id']]) as $abdeckung) {
-            $offen += count($abdeckung->luecken);
+        if ($planvollstaendig[$eintrag['id']]) {
+            foreach ($raster[$eintrag['id']] as $bereich) {
+                $offen += count($bereich->nicht_im_plan());
+            }
         }
         $anzahlluecken[$eintrag['id']] = $offen;
 
@@ -189,15 +200,20 @@ if (empty($eintraege)) {
         if ($mitraster) {
             // Mit array_key_exists statt ??=: null heisst "nichts
             // hinterlegt" und soll nicht je Person neu gelesen werden.
+            // Geladen auch ohne vollstaendigen Plan - das Raster weiter
+            // unten braucht die Vorgabe.
             if (!array_key_exists($stand->beruf, $wahlpflicht)) {
                 $wahlpflicht[$stand->beruf] = api::get_wahlpflicht_vorgabe_for_beruf($stand->beruf);
             }
-            $wahlpflichtoffen = $wahlpflicht[$stand->beruf]?->offen($raster[$eintrag['id']]) ?? 0;
+            if ($planvollstaendig[$eintrag['id']]) {
+                $wahlpflichtoffen = $wahlpflicht[$stand->beruf]?->offen($raster[$eintrag['id']], mitgeplant: true) ?? 0;
+            }
         }
         $anzahlwahlpflichtoffen[$eintrag['id']] = $wahlpflichtoffen;
     }
-    // Mit Luecken heisst: eine fehlende Pflicht-HK oder eine noch offene
-    // verlangte Wahlpflicht-HK - beides steht als Badge auf der Kachel.
+    // Mit Luecken heisst: eine Pflicht-HK oder verlangte Wahlpflicht-HK,
+    // die der vollstaendige Plan nicht vorsieht - beides steht als Badge
+    // auf der Kachel.
     $anzahlmitluecken = count(array_filter(
         array_keys($anzahlluecken),
         static fn (int $id): bool => $anzahlluecken[$id] > 0 || $anzahlwahlpflichtoffen[$id] > 0
@@ -394,8 +410,8 @@ if (empty($eintraege)) {
             // wofuer man die Person aufklappt.
             //
             // Nur das Raster, ohne Lueckenliste daneben - wie auf
-            // meine_lehre.php. Was fehlt, zeigt es selbst: die weissen
-            // Zellen, und je Zelle die fehlenden LK im Dialog. Die Zahl
+            // meine_lehre.php. Was fehlt, zeigt es selbst: die leeren
+            // Balken, und je Zelle die fehlenden LK im Dialog. Die Zahl
             // der fehlenden Pflicht-HK traegt das Badge der Kachel.
             echo html_writer::div(
                 kompetenzraster::render(
@@ -405,7 +421,9 @@ if (empty($eintraege)) {
                     // Je Beruf einmal geladen, nicht je Person.
                     vorschlaege: $stand !== null
                         ? ($vorschlaege[$stand->beruf] ??= api::get_bloecke_je_kompetenz($stand->beruf))
-                        : []
+                        : [],
+                    planvollstaendig: $planvollstaendig[$lernendeid] ?? false,
+                    zugeklappt: true
                 ),
                 'mb-3'
             );

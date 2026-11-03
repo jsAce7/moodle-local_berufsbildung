@@ -240,7 +240,8 @@ if ($stand !== null) {
             api::get_kompetenzraster($lernendeid),
             api::get_planungshorizont($lernendeid),
             wahlpflicht: api::get_wahlpflicht_vorgabe_for_beruf($stand->beruf),
-            vorschlaege: api::get_bloecke_je_kompetenz($stand->beruf)
+            vorschlaege: api::get_bloecke_je_kompetenz($stand->beruf),
+            planvollstaendig: api::ist_plan_vollstaendig($lernendeid)
         ));
     }
 

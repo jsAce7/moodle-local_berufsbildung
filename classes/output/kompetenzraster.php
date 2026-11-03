@@ -40,12 +40,13 @@ use local_berufsbildung\service\kompetenz_baum;
  * dieselbe Anordnung wie im gedruckten Bildungsplan, damit die Darstellung
  * in Moodle und auf Papier dieselbe Gestalt hat.
  *
- * Die Flaeche einer Zelle zeigt den Ausbildungsstand - er ist das, wofuer
- * man das Raster aufschlaegt. Pflicht oder Wahlpflicht steht als schmaler
- * Streifen oben in der Zelle, in den Farben des Bildungsplans; so behaelt
- * das Raster den Bezug zum Dokument, ohne dass dessen Farben die ganze
- * Flaeche belegen. Der Stand steht zusaetzlich als Symbol und Klartext da,
- * damit Farbe nie der einzige Traeger einer Information ist.
+ * Ein Balken je Zelle zeigt den Ausbildungsstand als Menge: welcher Anteil
+ * der Leistungskriterien in Einsaetzen vorkam und welcher eingeplant ist.
+ * Vier Farbstufen ueber die ganze Flaeche liessen sich kaum unterscheiden,
+ * und "teilweise" sagte nicht, ob 1 oder 9 von 10. Die Zahl steht daneben
+ * als Text, das Haekchen nur, wenn alle LK vorkamen - Farbe ist nie der
+ * einzige Traeger einer Information. Wahlpflicht hat einen gestrichelten
+ * Rahmen; Pflicht ist der Normalfall und braucht kein Zeichen.
  *
  * Kein Beurteilungsstatus: gezeigt wird ausschliesslich, was im
  * importierten Versetzungsplan vorkommt (Architekturregel 6). Ob eine
@@ -73,13 +74,19 @@ class kompetenzraster {
      * @param array $vorschlaege Planungshilfe: je Kompetenz die Bloecke, in denen sie vorkaeme,
      *                      siehe api::get_bloecke_je_kompetenz(); genannt bei LK, die im Plan
      *                      fehlen. Leer blendet die Angabe aus
+     * @param bool $planvollstaendig Plan bis ins letzte Semester, siehe api::ist_plan_vollstaendig():
+     *                      dann ist eine HK ohne Einsatz eine Luecke, vorher nur noch nicht geplant
+     * @param bool $zugeklappt Zuerst nur eine Punktreihe je Bereich, das volle Raster auf Klick -
+     *                      fuer die Kacheln auf meine_lernenden.php, wo es je Person dasteht
      */
     public static function render(
         array $raster,
         ?int $horizont = null,
         bool $kompakt = false,
         ?wahlpflicht_vorgabe $wahlpflicht = null,
-        array $vorschlaege = []
+        array $vorschlaege = [],
+        bool $planvollstaendig = false,
+        bool $zugeklappt = false
     ): string {
         global $OUTPUT, $PAGE;
 
@@ -104,7 +111,11 @@ class kompetenzraster {
         // Lesezeit und erklaert nichts.
         $vorhandenestaende = [];
         $vorhandenearten = [];
+        $mitgeplantem = false;
         $soll = 0;
+        // Kuerzel der Pflicht-HK ohne jeden Einsatz, fuer die Zeile unter
+        // der Zusammenfassung.
+        $ohneeinsatz = [];
 
         // Die Pflicht-HK je Stand, fuer die Zusammenfassung: "im Plan" allein
         // liesse offen, ob vollstaendig, teilweise oder erst eingeplant.
@@ -113,6 +124,11 @@ class kompetenzraster {
         // Die Einsaetze, in denen die LK vorkamen oder vorkommen werden -
         // einmal fuer das ganze Raster geladen, nicht je Zelle.
         $einsaetze = self::lade_einsaetze($raster);
+
+        // Auf schmalen Bildschirmen oeffnet die Liste den LK-Dialog der
+        // Tabellenzelle, statt die LK-Liste ein zweites Mal mitzubringen.
+        // Eindeutig je Raster, weil auf meine_lernenden.php mehrere stehen.
+        $rasterid = \html_writer::random_id('local-berufsbildung-raster');
 
         $bereiche = [];
         foreach ($raster as $bereich) {
@@ -125,8 +141,15 @@ class kompetenzraster {
                 $vorhandenearten[$kompetenz->istwahlpflicht ? 'wahlpflicht' : 'pflicht'] = true;
                 if (!$kompetenz->istwahlpflicht) {
                     $pflichtstaende[$anzeige]++;
+                    if ($anzeige === raster_kompetenz::ANZEIGE_OFFEN) {
+                        $kuerzel = $kompetenzen[$kompetenz->competencyid]['idnumber'] ?? '';
+                        $ohneeinsatz[] = $kuerzel !== '' ? $kuerzel : '#' . $kompetenz->competencyid;
+                    }
                 }
-                $zellen[] = self::zelle($kompetenz, $kompetenzen, $einsaetze, $kompakt, $vorschlaege);
+                $zelle = self::zelle($kompetenz, $kompetenzen, $einsaetze, $kompakt, $vorschlaege, $planvollstaendig)
+                    + ['zellid' => $rasterid . '-' . $kompetenz->competencyid];
+                $mitgeplantem = $mitgeplantem || $zelle['anteileingeplant'] > 0;
+                $zellen[] = $zelle;
             }
             for ($leer = count($zellen); $leer < $spalten; $leer++) {
                 $zellen[] = ['istleer' => true];
@@ -137,11 +160,14 @@ class kompetenzraster {
                 // Mit "Pflicht" beschriftet: ohne das liest man "0 von 3" in
                 // einer Zeile mit sechs Zellen als Fehler. Kompakt fehlt der
                 // Platz dafuer, dort erklaert es das Badge der Kachel.
+                // Begonnen statt vollstaendig: alle LK einer HK kommen meist
+                // erst gegen Ende der Lehre vor, "0 von 3" stuende sonst bis
+                // dahin in fast jeder Zeile.
                 'abdeckung' => get_string(
                     $kompakt ? 'raster:bereich_abdeckung' : 'raster:bereich_abdeckung_pflicht',
                     'local_berufsbildung',
                     (object) [
-                        'abgedeckt' => $bereich->anzahl_vollstaendig(),
+                        'abgedeckt' => $bereich->anzahl_abgedeckt(),
                         'soll' => $bereich->soll(),
                     ]
                 ),
@@ -178,6 +204,7 @@ class kompetenzraster {
             'titel' => get_string('raster:titel', 'local_berufsbildung'),
             'bereiche' => $bereiche,
             'kompakt' => $kompakt,
+            'zugeklappt' => $zugeklappt,
             // Die Gesamtzahl beantwortet dasselbe wie eine Lueckenliste
             // daneben, nur ohne dieselben Namen ein zweites Mal aufzuzaehlen
             // - welche Kompetenzen gemeint sind, steht im Raster darunter.
@@ -186,11 +213,20 @@ class kompetenzraster {
             'haszusammenfassung' => !$kompakt && $soll > 0 && $hinweis === '',
             'zusammenfassung' => get_string('raster:zusammenfassung', 'local_berufsbildung', (object) [
                 'soll' => $soll,
+                'begonnen' => $pflichtstaende[raster_kompetenz::ANZEIGE_VOLLSTAENDIG]
+                    + $pflichtstaende[raster_kompetenz::ANZEIGE_TEILWEISE],
                 'vollstaendig' => $pflichtstaende[raster_kompetenz::ANZEIGE_VOLLSTAENDIG],
-                'teilweise' => $pflichtstaende[raster_kompetenz::ANZEIGE_TEILWEISE],
-                'eingeplant' => $pflichtstaende[raster_kompetenz::ANZEIGE_EINGEPLANT],
-                'offen' => $pflichtstaende[raster_kompetenz::ANZEIGE_OFFEN],
             ]),
+            // Was der Plan nicht vorsieht, mit Kuerzeln statt nur als Zahl:
+            // vor dem letzten Lehrjahr ruhig als "noch nicht geplant", mit
+            // dem Plan bis zum Lehrende als Warnung.
+            'hatohneeinsatz' => !$kompakt && $hinweis === '' && $ohneeinsatz !== [],
+            'ohneeinsatzwarnung' => $planvollstaendig,
+            'ohneeinsatz' => get_string(
+                $planvollstaendig ? 'raster:nicht_im_plan' : 'raster:noch_nicht_geplant',
+                'local_berufsbildung',
+                implode(', ', $ohneeinsatz)
+            ),
             'wahlpflichtwege' => $mitwahlpflicht
                 ? self::wahlpflichtwege($wahlpflicht, self::mit_kuerzeln($raster, $kompetenzen))
                 : [],
@@ -212,7 +248,7 @@ class kompetenzraster {
                     userdate($horizont, get_string('strftimedate', 'langconfig'))
                 )
                 : '',
-            'legende' => self::legende($vorhandenestaende, $vorhandenearten),
+            'legende' => self::legende($vorhandenestaende, $vorhandenearten, $mitgeplantem, $planvollstaendig),
         ]);
     }
 
@@ -243,8 +279,8 @@ class kompetenzraster {
                 $daten = (object) [
                     'bereiche' => implode(', ', $gruppe->bereiche),
                     'soll' => $gruppe->anzahl,
+                    'begonnen' => $stand[raster_kompetenz::ANZEIGE_VOLLSTAENDIG] + $stand[raster_kompetenz::ANZEIGE_TEILWEISE],
                     'vollstaendig' => $stand[raster_kompetenz::ANZEIGE_VOLLSTAENDIG],
-                    'teilweise' => $stand[raster_kompetenz::ANZEIGE_TEILWEISE],
                     'eingeplant' => $stand[raster_kompetenz::ANZEIGE_EINGEPLANT],
                 ];
                 $staende[] = [
@@ -310,6 +346,7 @@ class kompetenzraster {
      * @param array $einsaetze Einsaetze aus lade_einsaetze(), nach einsatz-id
      * @param bool $kompakt Ohne LK-Liste - in der Roster-Kachel fehlt der Platz
      * @param array $vorschlaege Bloecke je Kompetenz, siehe render()
+     * @param bool $planvollstaendig Siehe render()
      * @return array Template-Kontext
      */
     private static function zelle(
@@ -317,11 +354,12 @@ class kompetenzraster {
         array $kompetenzen,
         array $einsaetze,
         bool $kompakt,
-        array $vorschlaege = []
+        array $vorschlaege = [],
+        bool $planvollstaendig = false
     ): array {
         $bezeichnung = $kompetenzen[$kompetenz->competencyid] ?? null;
         $anzeige = $kompetenz->anzeigestand();
-        $darstellung = self::darstellung($anzeige);
+        $darstellung = self::darstellung($anzeige, $planvollstaendig);
         $name = $bezeichnung['shortname'] ?? ('#' . $kompetenz->competencyid);
         $idnumber = $bezeichnung['idnumber'] ?? '';
 
@@ -329,26 +367,34 @@ class kompetenzraster {
             ? get_string('raster:wahlpflicht', 'local_berufsbildung')
             : get_string('raster:pflicht', 'local_berufsbildung');
 
+        // Anteile fuer den Balken. Eine HK ohne LK fuellt ihn ganz oder gar
+        // nicht, je nach ihrem eigenen Stand.
+        $anzahllk = count($kompetenz->leistungskriterien);
+        if ($anzahllk > 0) {
+            $vorgekommen = $kompetenz->anzahl_lk(raster_kompetenz::STATUS_ABGEDECKT) / $anzahllk;
+            $eingeplant = $kompetenz->anzahl_lk(raster_kompetenz::STATUS_EINGEPLANT) / $anzahllk;
+        } else {
+            $vorgekommen = $kompetenz->status === raster_kompetenz::STATUS_ABGEDECKT ? 1 : 0;
+            $eingeplant = $kompetenz->status === raster_kompetenz::STATUS_EINGEPLANT ? 1 : 0;
+        }
+
         return [
             'istleer' => false,
             'name' => $name,
             'hascode' => $idnumber !== '',
             'code' => $idnumber,
-            // Farbe des Streifens, wie im Bildungsplan. Sie kommt ueber
-            // Bootstrap-Klassen, nie aus styles.css - siehe Kopfkommentar dort.
-            'farbklasse' => $kompetenz->istwahlpflicht ? 'bg-success' : 'bg-warning',
+            'istwahlpflicht' => $kompetenz->istwahlpflicht,
             'statusklasse' => 'local-berufsbildung-raster-' . $anzeige,
-            // Der haeufigste Stand bekommt das leiseste Zeichen: "nicht im
-            // Plan" trifft auf die grosse Mehrheit der Zellen zu und traegt
-            // damit den geringsten Informationswert. Sichtbares Symbol und
-            // Klartext bekommen nur die beiden Staende, die etwas aussagen;
-            // im Dokument bleibt der Klartext in jeder Zelle stehen, damit
-            // Screenreader und der Titel beim Darueberfahren vollstaendig
-            // bleiben - und Farbe nie der einzige Traeger der Information
-            // ist.
-            'hatzeichen' => $anzeige !== raster_kompetenz::ANZEIGE_OFFEN,
-            'icon' => $darstellung['icon'],
+            // Das Haekchen nur, wenn alle LK vorkamen; die uebrigen Staende
+            // zeigt der Balken. Der Klartext bleibt in jeder Zelle im
+            // Dokument, fuer Screenreader und den Titel beim Darueberfahren.
+            'istvollstaendig' => $anzeige === raster_kompetenz::ANZEIGE_VOLLSTAENDIG,
             'statustext' => $darstellung['text'],
+            'anteilvorgekommen' => (int) round($vorgekommen * 100),
+            'anteileingeplant' => (int) round($eingeplant * 100),
+            // Fuer die Punktreihe: eingeplant liegt dort ueber dem
+            // Vorgekommenen, beide von unten gefuellt.
+            'anteilbisgeplant' => (int) round(($vorgekommen + $eingeplant) * 100),
             // Im kompakten Raster steht nur das Kuerzel in der Zelle; der
             // Titel traegt dort die ganze Information nach.
             'titel' => $name . ' · ' . $art . ' · ' . $darstellung['text'],
@@ -478,72 +524,75 @@ class kompetenzraster {
     }
 
     /**
-     * Symbol und Klartext je Stand.
+     * Klartext je Stand.
      *
-     * @param string $status Eine der raster_kompetenz::STATUS_*-Konstanten
-     * @return array{icon: string, text: string}
+     * @param string $status Eine der raster_kompetenz::ANZEIGE_*-Konstanten
+     * @param bool $planvollstaendig Siehe render()
+     * @return array{text: string}
      */
-    private static function darstellung(string $status): array {
-        // Bewusst Symbole, die es in FontAwesome 4 und 6 gleichermassen
-        // gibt - Moodle 4.5 und 5.x liefern nicht dieselbe Fassung aus.
-        // Das Haekchen gibt es erst, wenn alle LK vorkamen.
-        $symbole = [
-            raster_kompetenz::ANZEIGE_VOLLSTAENDIG => 'fa-check',
-            raster_kompetenz::ANZEIGE_TEILWEISE => 'fa-hourglass-half',
-            raster_kompetenz::ANZEIGE_EINGEPLANT => 'fa-calendar',
-            raster_kompetenz::ANZEIGE_OFFEN => 'fa-minus',
-        ];
+    private static function darstellung(string $status, bool $planvollstaendig = false): array {
+        $schluessel = 'raster:status_' . $status;
+        if ($planvollstaendig && $status === raster_kompetenz::ANZEIGE_OFFEN) {
+            $schluessel = 'raster:status_offen_vollstaendig';
+        }
 
-        return [
-            'icon' => $symbole[$status] ?? 'fa-minus',
-            'text' => get_string('raster:status_' . $status, 'local_berufsbildung'),
-        ];
+        return ['text' => get_string($schluessel, 'local_berufsbildung')];
     }
 
     /**
-     * Legende: was Farbe und Symbol bedeuten - aber nur fuer das, was im
-     * gezeigten Raster auch vorkommt. Eine Legende, die mehr erklaert als
-     * dasteht, laesst den Blick nach etwas suchen, das es nicht gibt.
+     * Legende: was Balken, Haekchen und Rahmen bedeuten - aber nur fuer das,
+     * was im gezeigten Raster auch vorkommt. Eine Legende, die mehr erklaert
+     * als dasteht, laesst den Blick nach etwas suchen, das es nicht gibt.
      *
-     * @param array $vorhandenestaende Status => true, Struktur: array<string, bool>
+     * @param array $vorhandenestaende Anzeigestand => true, Struktur: array<string, bool>
      * @param array $vorhandenearten 'pflicht'/'wahlpflicht' => true, Struktur: array<string, bool>
+     * @param bool $mitgeplantem Mindestens ein Balken hat einen eingeplanten Teil
+     * @param bool $planvollstaendig Siehe render()
      * @return array Template-Kontext
      */
-    private static function legende(array $vorhandenestaende, array $vorhandenearten): array {
+    private static function legende(
+        array $vorhandenestaende,
+        array $vorhandenearten,
+        bool $mitgeplantem,
+        bool $planvollstaendig
+    ): array {
+        $balken = static fn (string $klasse, string $text): array => [
+            'istbalken' => true, 'istalle' => false, 'istwahlpflicht' => false,
+            'balkenklasse' => $klasse, 'text' => $text,
+        ];
+
         $eintraege = [];
-
-        // Zuerst der Stand - er ist das, wofuer man das Raster liest.
-        foreach (self::ANZEIGESTAENDE as $status) {
-            if (empty($vorhandenestaende[$status])) {
-                continue;
-            }
-
-            $darstellung = self::darstellung($status);
+        if (
+            !empty($vorhandenestaende[raster_kompetenz::ANZEIGE_VOLLSTAENDIG])
+            || !empty($vorhandenestaende[raster_kompetenz::ANZEIGE_TEILWEISE])
+        ) {
+            $eintraege[] = $balken(
+                'local-berufsbildung-raster-legende-vorgekommen',
+                get_string('raster:legende_vorgekommen', 'local_berufsbildung')
+            );
+        }
+        if ($mitgeplantem) {
+            $eintraege[] = $balken(
+                'local-berufsbildung-raster-legende-eingeplant',
+                get_string('raster:legende_eingeplant', 'local_berufsbildung')
+            );
+        }
+        if (!empty($vorhandenestaende[raster_kompetenz::ANZEIGE_OFFEN])) {
+            $eintraege[] = $balken(
+                'local-berufsbildung-raster-legende-leer',
+                get_string($planvollstaendig ? 'raster:legende_offen_vollstaendig' : 'raster:legende_offen', 'local_berufsbildung')
+            );
+        }
+        if (!empty($vorhandenestaende[raster_kompetenz::ANZEIGE_VOLLSTAENDIG])) {
             $eintraege[] = [
-                'istfarbe' => false,
-                // Das Feld der Legende sieht aus wie eine Zelle mit diesem
-                // Stand: gleiche Flaeche, gleiches Zeichen.
-                'statusklasse' => 'local-berufsbildung-raster-' . $status,
-                // Der Stand "nicht im Plan" zeigt sich in der Zelle durch das Fehlen
-                // eines Zeichens - die Legende zeigt deshalb auch hier
-                // keins, sonst erklaert sie ein Symbol, das im Raster
-                // nirgends steht.
-                'hatzeichen' => $status !== raster_kompetenz::ANZEIGE_OFFEN,
-                'icon' => $darstellung['icon'],
-                'text' => get_string('raster:legende_' . $status, 'local_berufsbildung'),
+                'istbalken' => false, 'istalle' => true, 'istwahlpflicht' => false,
+                'text' => get_string('raster:legende_vollstaendig', 'local_berufsbildung'),
             ];
         }
-
-        foreach (['pflicht' => 'bg-warning', 'wahlpflicht' => 'bg-success'] as $art => $farbklasse) {
-            if (empty($vorhandenearten[$art])) {
-                continue;
-            }
-
+        if (!empty($vorhandenearten['wahlpflicht'])) {
             $eintraege[] = [
-                'istfarbe' => true,
-                'hatzeichen' => false,
-                'farbklasse' => $farbklasse,
-                'text' => get_string('raster:legende_' . $art, 'local_berufsbildung'),
+                'istbalken' => false, 'istalle' => false, 'istwahlpflicht' => true,
+                'text' => get_string('raster:legende_wahlpflicht', 'local_berufsbildung'),
             ];
         }
 

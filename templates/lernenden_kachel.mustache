@@ -182,14 +182,17 @@
             {{/hasueberfaellig}}
             {{! Mit Beschriftung statt nur einer Zahl - "14" neben einer
                 Gluehbirne sagt nicht, wovon 14. }}
+            {{! Erst bei einem Plan bis zum Lehrende gesetzt, dann aber eine
+                echte Luecke - deshalb in der Warnfarbe, text-dark wie oben
+                ausdruecklich fuer Bootstrap 4. }}
             {{#hasluecken}}
-                <span class="badge bg-light text-dark border" title="{{lueckentitel}}">
+                <span class="badge bg-warning text-dark" title="{{lueckentitel}}">
                     <i class="icon fa fa-lightbulb fa-fw" aria-hidden="true"></i>
                     {{#str}} luecken:titel_anzahl, local_berufsbildung, {{anzahlluecken}} {{/str}}
                 </span>
             {{/hasluecken}}
             {{#haswahlpflichtoffen}}
-                <span class="badge bg-light text-dark border" title="{{wahlpflichtoffentitel}}">
+                <span class="badge bg-warning text-dark" title="{{wahlpflichtoffentitel}}">
                     <i class="icon fa fa-lightbulb fa-fw" aria-hidden="true"></i>
                     {{#str}} luecken:wahlpflicht_offen, local_berufsbildung, {{anzahlwahlpflichtoffen}} {{/str}}
                 </span>

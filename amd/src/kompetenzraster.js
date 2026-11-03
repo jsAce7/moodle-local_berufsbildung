@@ -22,6 +22,10 @@
  * demselben Inhalt - bei zehn und mehr LK waere die Zeile des Rasters
  * sonst unuebersichtlich.
  *
+ * Die Liste fuer schmale Bildschirme bringt die LK nicht ein zweites Mal
+ * mit: ihr Verweis (data-region="raster-lk-verweis") oeffnet den Dialog
+ * der Tabellenzelle, deren id in data-ziel steht.
+ *
  * amd/build entsteht mit "npx grunt amd --root=local/berufsbildung" aus dem
  * Moodle-Verzeichnis; die CI prueft mit "moodle-plugin-ci grunt", dass er
  * zu amd/src passt.
@@ -46,12 +50,14 @@ export const init = () => {
     angehaengt = true;
 
     document.addEventListener('click', (ereignis) => {
-        const kopf = ereignis.target.closest('[data-region="raster-lk-kopf"]');
+        const kopf = ereignis.target.closest('[data-region="raster-lk-kopf"], [data-region="raster-lk-verweis"]');
         if (!kopf) {
             return;
         }
 
-        const liste = kopf.closest('[data-region="raster-lk"]');
+        const liste = kopf.dataset.ziel
+            ? document.getElementById(kopf.dataset.ziel)
+            : kopf.closest('[data-region="raster-lk"]');
         const inhalt = liste ? liste.querySelector('[data-region="raster-lk-inhalt"]') : null;
         if (!inhalt) {
             return;

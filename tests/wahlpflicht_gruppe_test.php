@@ -109,6 +109,17 @@ final class wahlpflicht_gruppe_test extends advanced_testcase {
     }
 
     /**
+     * Mit $mitgeplant zaehlt alles, was der Plan vorsieht: eingeplante und
+     * teilweise vorgekommene HK erfuellen die Gruppe, nur offene nicht.
+     */
+    public function test_offen_mitgeplant_zaehlt_nur_was_der_plan_nicht_vorsieht(): void {
+        $this->assertSame(0, (new wahlpflicht_gruppe(['a'], 2))->offen($this->raster(), mitgeplant: true));
+        $this->assertSame(0, (new wahlpflicht_gruppe(['d'], 1))->offen($this->raster(), mitgeplant: true));
+        $this->assertSame(1, (new wahlpflicht_gruppe(['d'], 2))->offen($this->raster(), mitgeplant: true));
+        $this->assertSame(1, (new wahlpflicht_gruppe([], 4))->offen($this->raster(), mitgeplant: true));
+    }
+
+    /**
      * Eine Gruppe kann eine einzelne HK nennen: gezaehlt wird nur sie, nicht
      * die anderen HK ihres Bereichs. Gross- und Kleinschreibung im Rahmen
      * spielt keine Rolle.

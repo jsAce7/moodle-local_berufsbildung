@@ -1,0 +1,68 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_berufsbildung/einsatz_timeline_frueher
+
+    Die vergangenen Einsaetze vor dem laufenden, eingeklappt - siehe
+    einsatz_timeline::trenne_fruehere(). Der Kopf ist selbst eine Zeile
+    des Zeitstrahls, mit einem gefuellten Punkt wie die vergangenen
+    Einsaetze: zugeklappt fuehrt der Strang von ihm in den ersten offenen
+    Eintrag, aufgeklappt durch die frueheren hindurch. Natives <details>
+    wie bei den Semestern; welcher der beiden Texte gilt, entscheidet das
+    CSS am [open].
+
+    Context variables required for this template:
+    * frueher - false oder {anzeigen, ausblenden, eintraege}
+    * eintraege - array of {blockname, zeitraum, haskw, kw, istvergangen, istaktuell, istkommend}
+
+    Example context (json):
+    {
+        "frueher": {
+            "anzeigen": "3 frühere Einsätze anzeigen",
+            "ausblenden": "Frühere Einsätze ausblenden",
+            "eintraege": [
+                {
+                    "blockname": "Betriebsferien",
+                    "zeitraum": "27.07.26 bis 02.08.26",
+                    "haskw": true,
+                    "kw": "KW 31",
+                    "istvergangen": true,
+                    "istaktuell": false,
+                    "istkommend": false
+                }
+            ]
+        }
+    }
+}}
+{{#frueher}}
+    <details class="local-berufsbildung-timeline-frueher">
+        <summary class="local-berufsbildung-timeline-eintrag local-berufsbildung-timeline-frueherkopf">
+            <span class="local-berufsbildung-timeline-kw"></span>
+            <span class="local-berufsbildung-timeline-strang" aria-hidden="true">
+                <span class="local-berufsbildung-timeline-verbindung bg-primary"></span>
+                <span class="local-berufsbildung-timeline-punkt bg-primary"></span>
+            </span>
+            <span class="local-berufsbildung-timeline-text">
+                <span class="local-berufsbildung-timeline-titelzeile text-primary">
+                    <span class="local-berufsbildung-timeline-frueher-anzeigen">{{anzeigen}}</span>
+                    <span class="local-berufsbildung-timeline-frueher-ausblenden">{{ausblenden}}</span>
+                </span>
+            </span>
+        </summary>
+        {{> local_berufsbildung/einsatz_timeline_eintraege }}
+    </details>
+{{/frueher}}

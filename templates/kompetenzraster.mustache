@@ -21,11 +21,16 @@
     Handlungskompetenzbereiche als Zeilen, Handlungskompetenzen als
     Spalten.
 
-    Die Flaeche der Zelle zeigt den Ausbildungsstand: kraeftig gefuellt
-    vollstaendig vorgekommen (alle LK, mit Haekchen), mittel teilweise
-    vorgekommen, hell spaeter eingeplant, weiss nicht im Plan. Pflicht oder Wahlpflicht steht als schmaler Streifen oben, in
-    den Farben des Bildungsplans. Der Stand haengt zusaetzlich an Symbol
-    und Klartext - Farbe allein traegt nie eine Information.
+    Ein Balken je Zelle zeigt den Anteil der Leistungskriterien, die in
+    Einsaetzen vorkamen (kraeftig) und die eingeplant sind (blass); daneben
+    steht die Zahl als Text, und ein Haekchen mit "alle LK", wenn alle
+    vorkamen. Wahlpflicht hat einen gestrichelten Rahmen. Der Stand steht
+    in jeder Zelle zusaetzlich als Klartext fuer Screenreader - Farbe
+    allein traegt nie eine Information.
+
+    Unter 768px Breite steht statt der Tabelle je Bereich eine Klappe mit
+    einer Punktreihe im Kopf (kompetenzraster_punkte) und einer Liste
+    darin - sieben Spalten passen auf kein Telefon.
 
     Nur ein Vorschlag fuer die Ausbildungsplanung, keine Festlegung
     (Architekturregel 6), und kein Beurteilungsstatus.
@@ -34,16 +39,23 @@
     * titel - string, Ueberschrift
     * bereiche - array of {name, abdeckung, hatsoll, zellen}
     * zellen - array of {istleer} oder
-               {istleer, name, hascode, code, farbklasse, statusklasse, hatzeichen, icon, statustext, titel,
-                dialogtitel, vorschlag, haslk, lktext, lkgruppen}
+               {istleer, name, hascode, code, istwahlpflicht, statusklasse, istvollstaendig, statustext,
+                anteilvorgekommen, anteileingeplant, titel, dialogtitel, vorschlag, haslk, lktext, lkgruppen}
+      anteilvorgekommen, anteileingeplant - int, Prozent der LK fuer den Balken
+      anteilbisgeplant - int, beides zusammen, fuer die Punktreihe
+      zellid - string, id der LK-Liste; die Liste fuer schmale Bildschirme oeffnet darueber deren Dialog
       vorschlag - string, bei einer HK ohne LK, die im Plan fehlt: die Bloecke, in denen sie vorkaeme
     * lkgruppen - array of {titel, statusklasse, icon, leistungskriterien}, das Fehlende zuerst
     * leistungskriterien - array of {name, beschreibung, hatbeschreibung, hatorte, orte, vorschlag}
       orte - Block und Zeitraum der Einsaetze, in denen das LK vorkam oder geplant ist
       vorschlag - string, bei einem LK, das im Plan fehlt: die Bloecke, in denen es vorkaeme
-    * kompakt - bool, nur Kuerzel und Symbol statt der vollen Bezeichnung
+    * kompakt - bool, nur Kuerzel und Balken statt der vollen Bezeichnung
+    * zugeklappt - bool, zuerst nur die Punktreihe je Bereich, Legende und Raster auf Klick
     * haszusammenfassung - bool
     * zusammenfassung - string, Pflicht-HK je Stand ueber alle Bereiche
+    * hatohneeinsatz - bool, es gibt Pflicht-HK ohne jeden Einsatz
+    * ohneeinsatzwarnung - bool, der Plan reicht bis zum Lehrende: dann als Warnung
+    * ohneeinsatz - string, deren Kuerzel
     * hatwahlpflichtwahl - bool, mehrere Wege, von denen einer genuegt
     * wahlpflichtwahl - string, Einleitung dazu
     * wahlpflichtwege - array of {hattitel, titel, erfuellt, staende}, je Weg; leer, wenn
@@ -55,25 +67,29 @@
     * bloeckeurl, bloeckelinktext - string
     * hathorizont - bool
     * horizont - string, bis wann der vorliegende Plan reicht
-    * legende - array of {istfarbe, hatzeichen, farbklasse, statusklasse, icon, text}
+    * legende - array of {istbalken, balkenklasse, istalle, istwahlpflicht, text}
 
     Example context (json):
     {
         "titel": "Handlungskompetenzen",
         "kompakt": false,
+        "zugeklappt": false,
         "haszusammenfassung": true,
-        "zusammenfassung": "2 Pflicht-Handlungskompetenzen: 1 vollständig, 0 teilweise vorgekommen, 0 später eingeplant, 1 nicht im Plan",
+        "zusammenfassung": "1 von 2 Pflicht-Handlungskompetenzen kamen schon in Einsätzen vor, bei 1 davon alle Leistungskriterien.",
+        "hatohneeinsatz": true,
+        "ohneeinsatzwarnung": false,
+        "ohneeinsatz": "Noch nicht geplant: a2",
         "hatwahlpflichtwahl": true,
         "wahlpflichtwahl": "Wahlpflicht – einer der folgenden Wege genügt:",
         "wahlpflichtwege": [
             {"hattitel": true, "titel": "Weg 1", "erfuellt": false, "staende": [
-                {"text": "Wahlpflicht aus d.06: 1 verlangt · 0 vollständig, 0 teilweise vorgekommen, 1 später eingeplant",
+                {"text": "Wahlpflicht aus d.06: 1 verlangt · 0 begonnen, 1 eingeplant",
                  "erfuellt": false, "eingerueckt": true}
             ]},
             {"hattitel": true, "titel": "Weg 2", "erfuellt": true, "staende": [
-                {"text": "Wahlpflicht aus b, c, d: 2 verlangt · 2 vollständig, 0 teilweise vorgekommen, 0 später eingeplant",
+                {"text": "Wahlpflicht aus b, c, d: 2 verlangt · 2 begonnen, 0 eingeplant",
                  "erfuellt": true, "eingerueckt": true},
-                {"text": "Wahlpflicht aus d: 1 verlangt · 1 vollständig, 0 teilweise vorgekommen, 0 später eingeplant",
+                {"text": "Wahlpflicht aus d: 1 verlangt · 1 begonnen, 0 eingeplant",
                  "erfuellt": true, "eingerueckt": true}
             ]}
         ],
@@ -87,7 +103,7 @@
         "bereiche": [
             {
                 "name": "a Entwickeln von automatisierten Anlagen",
-                "abdeckung": "1 von 2 Pflicht bereits vorgekommen",
+                "abdeckung": "1 von 2 Pflicht begonnen",
                 "hatsoll": true,
                 "zellen": [
                     {
@@ -95,12 +111,15 @@
                         "name": "Fertigungsunterlagen erstellen",
                         "hascode": true,
                         "code": "a1",
-                        "farbklasse": "bg-warning",
-                        "statusklasse": "local-berufsbildung-raster-vollstaendig",
-                        "hatzeichen": true,
-                        "icon": "fa-check",
-                        "statustext": "abgedeckt",
-                        "titel": "Fertigungsunterlagen erstellen · Pflicht · abgedeckt",
+                        "istwahlpflicht": false,
+                        "statusklasse": "local-berufsbildung-raster-teilweise",
+                        "istvollstaendig": false,
+                        "statustext": "teilweise vorgekommen",
+                        "anteilvorgekommen": 50,
+                        "anteileingeplant": 0,
+                        "anteilbisgeplant": 50,
+                        "zellid": "raster1-11",
+                        "titel": "Fertigungsunterlagen erstellen · Pflicht · teilweise vorgekommen",
                         "dialogtitel": "a1 Fertigungsunterlagen erstellen",
                         "haslk": true,
                         "lktext": "1 von 2 LK vorgekommen",
@@ -121,21 +140,24 @@
                         "name": "Skizzen von Komponenten erstellen",
                         "hascode": true,
                         "code": "a2",
-                        "farbklasse": "bg-success",
+                        "istwahlpflicht": true,
                         "statusklasse": "local-berufsbildung-raster-offen",
-                        "hatzeichen": false,
-                        "icon": "fa-minus",
-                        "statustext": "nicht im Plan",
-                        "titel": "Skizzen von Komponenten erstellen · Wahlpflicht · nicht im Plan"
+                        "istvollstaendig": false,
+                        "statustext": "noch nicht geplant",
+                        "anteilvorgekommen": 0,
+                        "anteileingeplant": 0,
+                        "anteilbisgeplant": 0,
+                        "zellid": "raster1-12",
+                        "titel": "Skizzen von Komponenten erstellen · Wahlpflicht · noch nicht geplant"
                     },
                     {"istleer": true}
                 ]
             }
         ],
         "legende": [
-            {"istfarbe": false, "hatzeichen": true, "statusklasse": "local-berufsbildung-raster-vollstaendig",
-             "icon": "fa-check", "text": "abgedeckt"},
-            {"istfarbe": true, "hatzeichen": false, "farbklasse": "bg-warning", "text": "Pflicht"}
+            {"istbalken": true, "istalle": false, "istwahlpflicht": false,
+             "balkenklasse": "local-berufsbildung-raster-legende-vorgekommen", "text": "in Einsätzen vorgekommen"},
+            {"istbalken": false, "istalle": false, "istwahlpflicht": true, "text": "Wahlpflicht-Handlungskompetenz (gestrichelt)"}
         ]
     }
 }}
@@ -144,6 +166,13 @@
     {{#haszusammenfassung}}
         <p class="local-berufsbildung-raster-zusammenfassung mb-1">{{zusammenfassung}}</p>
     {{/haszusammenfassung}}
+    {{#hatohneeinsatz}}
+        {{! Vor dem letzten Lehrjahr ist das der Normalfall und steht ruhig da;
+            reicht der Plan bis zum Lehrende, ist es eine Luecke. }}
+        <p class="local-berufsbildung-raster-zusammenfassung mb-1{{#ohneeinsatzwarnung}} text-danger{{/ohneeinsatzwarnung}}{{^ohneeinsatzwarnung}} text-muted{{/ohneeinsatzwarnung}}">
+            {{#ohneeinsatzwarnung}}<i class="icon fa fa-exclamation-triangle fa-fw" aria-hidden="true"></i>{{/ohneeinsatzwarnung}}{{ohneeinsatz}}
+        </p>
+    {{/hatohneeinsatz}}
     {{#hatwahlpflichtwahl}}
         <p class="local-berufsbildung-raster-zusammenfassung mb-1">{{wahlpflichtwahl}}</p>
     {{/hatwahlpflichtwahl}}
@@ -174,18 +203,40 @@
     {{#hathorizont}}
         <p class="small text-muted mb-2">{{horizont}}</p>
     {{/hathorizont}}
+    {{#zugeklappt}}
+        {{! Je Person auf meine_lernenden.php: erst der Ueberblick, das
+            Raster auf Klick - sonst ist jede aufgeklappte Kachel so lang
+            wie ein ganzes Raster. }}
+        <ul class="local-berufsbildung-raster-uebersicht list-unstyled mb-2">
+            {{#bereiche}}
+                <li class="local-berufsbildung-raster-uebersichtzeile">
+                    <span class="local-berufsbildung-raster-uebersichtname small">
+                        {{name}}{{#hatsoll}}<span class="d-block text-muted">{{abdeckung}}</span>{{/hatsoll}}
+                    </span>
+                    {{> local_berufsbildung/kompetenzraster_punkte }}
+                </li>
+            {{/bereiche}}
+        </ul>
+        <details class="local-berufsbildung-raster-ausklapp">
+            <summary class="small">{{#str}} raster:alle_anzeigen, local_berufsbildung {{/str}}</summary>
+    {{/zugeklappt}}
     <ul class="local-berufsbildung-raster-legende list-unstyled small text-muted mb-2">
         {{#legende}}
             <li class="local-berufsbildung-raster-legendeneintrag">
-                {{#istfarbe}}
-                    <span class="local-berufsbildung-raster-legendenart {{farbklasse}}" aria-hidden="true"></span>
-                {{/istfarbe}}
-                {{^istfarbe}}
-                    <span class="local-berufsbildung-raster-legendenstand border {{statusklasse}}" aria-hidden="true">
-                        <span class="local-berufsbildung-raster-fuellung bg-info"></span>
+                {{#istbalken}}
+                    <span class="local-berufsbildung-raster-balken local-berufsbildung-raster-legendenbalken {{balkenklasse}}" aria-hidden="true">
+                        <span class="local-berufsbildung-raster-balkengrund bg-secondary"></span>
+                        <span class="local-berufsbildung-raster-balkenteil bg-info"></span>
                     </span>
-                    {{#hatzeichen}}<i class="icon fa {{icon}} fa-fw m-0" aria-hidden="true"></i>{{/hatzeichen}}
-                {{/istfarbe}}
+                {{/istbalken}}
+                {{#istalle}}
+                    <span class="text-success text-nowrap" aria-hidden="true">
+                        <i class="icon fa fa-check fa-fw m-0"></i>{{#str}} raster:alle_lk, local_berufsbildung {{/str}}:
+                    </span>
+                {{/istalle}}
+                {{#istwahlpflicht}}
+                    <span class="local-berufsbildung-raster-legendenwahlpflicht border border-secondary" aria-hidden="true"></span>
+                {{/istwahlpflicht}}
                 {{text}}
             </li>
         {{/legende}}
@@ -206,22 +257,24 @@
                                 <td class="local-berufsbildung-raster-leer"></td>
                             {{/istleer}}
                             {{^istleer}}
-                                <td class="local-berufsbildung-raster-zelle {{statusklasse}}" title="{{titel}}">
-                                    <span class="local-berufsbildung-raster-fuellung bg-info" aria-hidden="true"></span>
-                                    <span class="local-berufsbildung-raster-art {{farbklasse}}" aria-hidden="true"></span>
+                                <td class="local-berufsbildung-raster-zelle {{statusklasse}}{{#istwahlpflicht}} local-berufsbildung-raster-wahlpflicht{{/istwahlpflicht}}" title="{{titel}}">
+                                    {{#istwahlpflicht}}<span class="local-berufsbildung-raster-rahmen border border-secondary" aria-hidden="true"></span>{{/istwahlpflicht}}
                                     <div class="local-berufsbildung-raster-inhalt">
                                         <span class="local-berufsbildung-raster-kopf">
-                                            {{#hatzeichen}}<i class="icon fa {{icon}} fa-fw m-0" aria-hidden="true"></i>{{/hatzeichen}}
                                             {{#hascode}}<span class="local-berufsbildung-raster-code">{{code}}</span>{{/hascode}}
+                                            {{#istvollstaendig}}
+                                                <span class="local-berufsbildung-raster-alle text-success" aria-hidden="true">
+                                                    <i class="icon fa fa-check fa-fw m-0"></i>{{#str}} raster:alle_lk, local_berufsbildung {{/str}}
+                                                </span>
+                                            {{/istvollstaendig}}
                                         </span>
                                         <span class="local-berufsbildung-raster-name">{{name}}</span>
-                                        {{! Der haeufigste Stand - "nicht im Plan" - bleibt im Dokument, wird
-                                            aber nicht angezeigt: sonst steht in fast jeder Zelle dieselbe
-                                            Zeile, die nichts unterscheidet. Ebenso im kompakten Raster Name
-                                            und Status. Eigene Regel in styles.css statt sr-only/visually-hidden,
-                                            weil die Klasse zwischen Bootstrap 4 (Moodle 4.5) und 5 (Moodle 5.x)
-                                            den Namen wechselt. }}
-                                        <span class="local-berufsbildung-raster-status small{{^hatzeichen}} local-berufsbildung-nurtext{{/hatzeichen}}">{{statustext}}</span>
+                                        {{! Der Stand steht als Balken und Zahl da; der Klartext bleibt fuer
+                                            Screenreader im Dokument. Eigene Regel in styles.css statt
+                                            sr-only/visually-hidden, weil die Klasse zwischen Bootstrap 4
+                                            (Moodle 4.5) und 5 (Moodle 5.x) den Namen wechselt. }}
+                                        <span class="local-berufsbildung-raster-status local-berufsbildung-nurtext">{{statustext}}</span>
+                                        {{> local_berufsbildung/kompetenzraster_balken }}
                                         {{#vorschlag}}
                                             <span class="local-berufsbildung-raster-vorschlag small">{{vorschlag}}</span>
                                         {{/vorschlag}}
@@ -230,7 +283,7 @@
                                                 (amd/src/kompetenzraster.js) - bei zehn und mehr LK waere die
                                                 Liste in der Zelle unuebersichtlich. Ohne JavaScript klappt
                                                 das native <details> in der Zelle auf. }}
-                                            <details class="local-berufsbildung-raster-lk" data-region="raster-lk"
+                                            <details class="local-berufsbildung-raster-lk" data-region="raster-lk" id="{{zellid}}"
                                                      data-titel="{{dialogtitel}}">
                                                 <summary class="local-berufsbildung-raster-lkkopf small"
                                                          data-region="raster-lk-kopf">{{lktext}}</summary>
@@ -273,4 +326,52 @@
             </tbody>
         </table>
     </div>
+    <div class="local-berufsbildung-raster-schmal">
+        {{#bereiche}}
+            <details class="local-berufsbildung-raster-klappe border rounded mb-2">
+                <summary class="local-berufsbildung-raster-klappenkopf">
+                    <span class="local-berufsbildung-raster-klappenzeile">
+                        <strong class="local-berufsbildung-raster-bereichname">{{name}}</strong>
+                        <span class="local-berufsbildung-raster-chevron text-muted" aria-hidden="true">
+                            <i class="icon fa fa-chevron-down fa-fw m-0"></i>
+                        </span>
+                    </span>
+                    {{#hatsoll}}<span class="small text-muted">{{abdeckung}}</span>{{/hatsoll}}
+                    {{> local_berufsbildung/kompetenzraster_punkte }}
+                </summary>
+                <ul class="list-unstyled mb-0">
+                    {{#zellen}}
+                        {{^istleer}}
+                            <li class="local-berufsbildung-raster-eintrag border-top {{statusklasse}}{{#istwahlpflicht}} local-berufsbildung-raster-wahlpflicht{{/istwahlpflicht}}">
+                                <span class="local-berufsbildung-raster-kopf">
+                                    {{#hascode}}<span class="local-berufsbildung-raster-code">{{code}}</span>{{/hascode}}
+                                    {{#istwahlpflicht}}<span class="badge bg-light text-dark border">{{#str}} raster:wahlpflicht, local_berufsbildung {{/str}}</span>{{/istwahlpflicht}}
+                                    {{#istvollstaendig}}
+                                        <span class="local-berufsbildung-raster-alle text-success" aria-hidden="true">
+                                            <i class="icon fa fa-check fa-fw m-0"></i>{{#str}} raster:alle_lk, local_berufsbildung {{/str}}
+                                        </span>
+                                    {{/istvollstaendig}}
+                                </span>
+                                <span class="local-berufsbildung-raster-name">{{name}}</span>
+                                <span class="local-berufsbildung-raster-status local-berufsbildung-nurtext">{{statustext}}</span>
+                                {{> local_berufsbildung/kompetenzraster_balken }}
+                                {{#vorschlag}}
+                                    <span class="local-berufsbildung-raster-vorschlag small">{{vorschlag}}</span>
+                                {{/vorschlag}}
+                                {{#haslk}}
+                                    {{! Oeffnet den Dialog der Tabellenzelle (data-ziel), statt die
+                                        LK-Liste ein zweites Mal ins Dokument zu stellen. }}
+                                    <button type="button" class="btn btn-link p-0 small local-berufsbildung-raster-lkkopf"
+                                            data-region="raster-lk-verweis" data-ziel="{{zellid}}">{{lktext}}</button>
+                                {{/haslk}}
+                            </li>
+                        {{/istleer}}
+                    {{/zellen}}
+                </ul>
+            </details>
+        {{/bereiche}}
+    </div>
+    {{#zugeklappt}}
+        </details>
+    {{/zugeklappt}}
 </div>

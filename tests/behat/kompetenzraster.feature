@@ -36,7 +36,7 @@ Feature: Kompetenzraster auf Meine Lehre
     When I log in as "lea"
     And I visit "/local/berufsbildung/meine_lehre.php"
     Then I should see "No competency area occurs in the rotation plan on file yet."
-    And I should not see "required competency areas:"
+    And I should not see "required competency areas have occurred"
     And I should not see "Assign competencies to the training blocks"
 
   Scenario: Die Zusammenfassung trennt bereits Vorgekommenes von spaeter Eingeplantem
@@ -46,11 +46,11 @@ Feature: Kompetenzraster auf Meine Lehre
       | B2    | 7777BE a.02 |
     When I log in as "lea"
     And I visit "/local/berufsbildung/meine_lehre.php"
-    Then I should see "2 required competency areas: 1 fully, 0 partly encountered, 1 scheduled later, 0 not in the plan"
-    And I should see "1 of 2 required complete"
+    Then I should see "1 of 2 required competency areas have occurred in placements, 1 of them with all performance criteria."
+    And I should see "1 of 2 required started"
     And I should see "1 of 1 criteria encountered"
     And I should see "0 of 1 criteria encountered, 1 scheduled"
-    And I should see "Electives from a: 1 required · 0 fully, 0 partly encountered, 0 scheduled later"
+    And I should see "Electives from a: 1 required · 0 started, 0 scheduled"
     And I should not see "No competency area occurs in the rotation plan on file yet."
 
   @javascript

@@ -94,6 +94,25 @@ class raster_bereich {
     }
 
     /**
+     * competencyids der Pflicht-HK, die weder vorkamen noch eingeplant
+     * sind. Anders als luecken() ohne die eingeplanten: bei einem Plan bis
+     * zum Lehrende kommen die noch, gefehlt hat nur, was der Plan gar nicht
+     * vorsieht - siehe api::ist_plan_vollstaendig().
+     *
+     * @return int[]
+     */
+    public function nicht_im_plan(): array {
+        return array_values(array_map(
+            static fn (raster_kompetenz $kompetenz): int => $kompetenz->competencyid,
+            array_filter(
+                $this->pflicht(),
+                static fn (raster_kompetenz $kompetenz): bool =>
+                    $kompetenz->status === raster_kompetenz::STATUS_OFFEN
+            )
+        ));
+    }
+
+    /**
      * Anzahl der Pflicht-HK dieses Bereichs, deren LK alle bis zum Stichtag
      * vorkamen - siehe raster_kompetenz::anzeigestand().
      */

@@ -2,7 +2,7 @@
 Feature: Meine Lernenden
   Als Berufsbildner/in
   will ich je betreute Person den Stand ihrer Handlungskompetenzen sehen
-  damit ich erkenne, was in der Ausbildungsplanung noch fehlt
+  damit ich erkenne, was in der Ausbildungsplanung fehlt
 
   Background:
     Given the following config values are set as admin:
@@ -44,14 +44,25 @@ Feature: Meine Lernenden
       | bea     | lea     |
       | bea     | tom     |
 
-  Scenario: Je Person stehen offene Pflicht- und Wahlpflicht-Kompetenzen und das Raster
+  Scenario: Solange der Plan nicht bis ins letzte Semester reicht, meldet die Kachel keine Luecken
     When I log in as "bea"
     And I visit "/local/berufsbildung/meine_lernenden.php"
-    Then I should see "2 trainees · 2 with open competency areas"
-    And I should see "1 required open" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Lea Lernende')]" "xpath_element"
-    And I should see "1 elective(s) open" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Lea Lernende')]" "xpath_element"
-    And I should see "2 required open" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Tom Tester')]" "xpath_element"
-    And I should see "1 of 2 required complete" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Lea Lernende')]" "xpath_element"
+    Then I should see "2 trainees · 0 with gaps in the rotation plan"
+    And I should not see "not in plan"
+    And I should see "1 of 2 required started" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Lea Lernende')]" "xpath_element"
+
+  Scenario: Reicht der Plan bis ins letzte Semester, meldet die Kachel, was er nicht vorsieht
+    # Wieder Werkstatt, also wieder nur a.01: a.02 und die Wahlpflicht a.03
+    # sieht der Plan bis zum Lehrende nicht vor.
+    Given the following "local_berufsbildung > placements" exist:
+      | user | block | von            | bis                    |
+      | lea  | B1    | ##+40 months## | ##+40 months +7 days## |
+    When I log in as "bea"
+    And I visit "/local/berufsbildung/meine_lernenden.php"
+    Then I should see "2 trainees · 1 with gaps in the rotation plan"
+    And I should see "1 required not in plan" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Lea Lernende')]" "xpath_element"
+    And I should see "1 elective(s) not in plan" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Lea Lernende')]" "xpath_element"
+    And I should not see "not in plan" in the "//div[contains(concat(' ', @class, ' '), ' local-berufsbildung-kachel-rahmen ')][contains(., 'Tom Tester')]" "xpath_element"
 
   Scenario: Im Detail steht der Versetzungsplan der Person, sofern einer vorliegt
     When I log in as "bea"
