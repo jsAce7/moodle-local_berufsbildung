@@ -1192,12 +1192,11 @@
 }
 
 /* Von der aktuellen Station hinunter in ihren Kasten (stationen-aktuell):
-   fuellt die Spalte unter Name und Status und reicht durch den Innenabstand
-   der Rollbox bis an den Kasten, der direkt darunter steht. Zwei Klassen,
-   weil Boost das Theme nach diesen Regeln laedt. */
+   fuellt die Spalte unter Name und Status bis an den Kasten, der direkt
+   darunter steht. Zwei Klassen, weil Boost das Theme nach diesen Regeln
+   laedt. */
 .local-berufsbildung-station .local-berufsbildung-station-verbinder {
     flex: 1 0 0.75rem;
-    margin-bottom: -0.25rem;
     /* Gegen das !important von .border-left/.border-start aus Bootstrap. */
     /* stylelint-disable-next-line declaration-no-important */
     border-left-width: 2px !important;
@@ -1207,6 +1206,19 @@
     width: 1.5rem;
     height: 1.5rem;
     font-size: 0.7rem;
+}
+
+/* Dieselben Spalten wie die Leiste darueber (Zahl aus dem Template), damit
+   der Kasten unter seinem Punkt steht und mit der Leiste rollt. Auf
+   schmalen Bildschirmen ohne Spalten: dann nimmt er die sichtbare Breite. */
+.local-berufsbildung-stationen-aktuell-spalten {
+    display: grid;
+}
+
+@media (max-width: 767.98px) {
+    .local-berufsbildung-stationen-aktuell-spalten {
+        display: block;
+    }
 }
 
 .local-berufsbildung-stationen-aktuell {

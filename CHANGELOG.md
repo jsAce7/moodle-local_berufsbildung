@@ -5,7 +5,7 @@
 ### Geändert
 
 - **Kompetenzraster am Ende des Details auf „Meine Lernenden“.** Fälligkeiten, Tätigkeiten und Versetzungsplan stehen jetzt direkt unter der Zeitleiste der Bildungsberichte, das Raster als Übersicht zum Nachschlagen darunter. „Meine Lehre“ bleibt unverändert.
-- **Aktueller Bericht an seinen Punkt angebunden.** In der Zeitleiste der Stationen führt eine Linie vom Punkt der aktuellen Station hinunter in ihren Kasten mit Frist und Schaltfläche (`stationen_leiste`), auf „Meine Lernenden“ und „Meine Lehre“.
+- **Aktueller Bericht an seinen Punkt angebunden.** In der Zeitleiste der Stationen führt eine Linie vom Punkt der aktuellen Station hinunter in ihren Kasten mit Frist und Schaltfläche, beide in der Farbe des Punkts (`stationen_leiste`), auf „Meine Lernenden“ und „Meine Lehre“. Der Kasten nimmt nicht mehr die ganze Breite, sondern die Hälfte der Spalten mittig unter seinem Punkt (`stationen_leiste::kasten_spalten()`) und rollt mit der Leiste; auf schmalen Bildschirmen bleibt er voll breit.
 
 ## [1.7.0] — 2026-11-03
 

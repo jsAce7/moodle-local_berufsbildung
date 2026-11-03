@@ -60,9 +60,20 @@ class stationen_leiste {
         global $OUTPUT;
 
         $aktuelle = $stationen->aktuelle();
+        $eintraege = array_values($stationen->eintraege);
+        $index = 0;
+        foreach ($eintraege as $i => $eintrag) {
+            if ($eintrag->aktuell) {
+                $index = $i;
+            }
+        }
+        [$kastenstart, $kastenbreite] = self::kasten_spalten($index, count($eintraege));
 
         return $OUTPUT->render_from_template('local_berufsbildung/stationen_leiste', [
             'titel' => $stationen->titel,
+            'anzahl' => count($eintraege),
+            'kastenstart' => $kastenstart,
+            'kastenbreite' => $kastenbreite,
             'hasverlauf' => $stationen->verlaufurl !== null,
             'verlaufurl' => $stationen->verlaufurl ?? '',
             'eintraege' => array_map([self::class, 'station_daten'], $stationen->eintraege),
@@ -75,6 +86,24 @@ class stationen_leiste {
                 'klasse' => $aktionzweitrangig ? 'btn-outline-primary' : 'btn-primary',
             ] : null,
         ]);
+    }
+
+    /**
+     * Wo der Kasten der aktuellen Station unter der Zeitleiste steht: ueber
+     * die Haelfte der Spalten, mittig unter ihrem Punkt, am Rand aber
+     * innerhalb der Leiste. Ueber die volle Breite stuende er unter allen
+     * Stationen und gehoerte sichtbar zu keiner.
+     *
+     * @param int $index Position der aktuellen Station, ab 0
+     * @param int $anzahl Zahl der Stationen
+     * @return int[] Erste Spalte (ab 1) und Zahl der Spalten fuer grid-column
+     */
+    public static function kasten_spalten(int $index, int $anzahl): array {
+        $anzahl = max(1, $anzahl);
+        $breite = (int) ceil($anzahl / 2);
+        $start = max(1, min($index + 1 - intdiv($breite, 2), $anzahl - $breite + 1));
+
+        return [$start, $breite];
     }
 
     /**

@@ -94,6 +94,8 @@ final class stationen_leiste_test extends advanced_testcase {
         $this->assertSame(1, substr_count($html, 'local-berufsbildung-station-verbinder'));
         $this->assertMatchesRegularExpression('/station-verbinder[^"]*border-primary/', $html);
         $this->assertMatchesRegularExpression('/stationen-aktuell[^"]*border-primary/', $html);
+        // Zweite von drei Stationen: zwei Spalten, mittig ab der ersten.
+        $this->assertStringContainsString('grid-column: 1 / span 2;', $html);
         // Die aktuelle Station mit Stand und der Aktion der Quelle.
         $this->assertStringContainsString('Fällig bis 31. August 2026', $html);
         $this->assertStringContainsString('Semester 2 weiter erfassen', $html);
@@ -104,6 +106,22 @@ final class stationen_leiste_test extends advanced_testcase {
         $this->assertSame(1, substr_count($html, 'Fällig bis 31. August 2026'));
         $this->assertStringContainsString('/local/test/verlauf.php', $html);
         $this->assertStringContainsString(get_string('stationen:verlauf', 'local_berufsbildung'), $html);
+    }
+
+    /**
+     * Der Kasten der aktuellen Station steht ueber die Haelfte der Spalten
+     * mittig unter seinem Punkt, an den Raendern aber innerhalb der Leiste.
+     */
+    public function test_kasten_spalten(): void {
+        // Neun Stationen (Probezeit, acht Semester): fuenf Spalten breit.
+        $this->assertSame([1, 5], stationen_leiste::kasten_spalten(0, 9));
+        $this->assertSame([1, 5], stationen_leiste::kasten_spalten(1, 9));
+        $this->assertSame([3, 5], stationen_leiste::kasten_spalten(4, 9));
+        $this->assertSame([5, 5], stationen_leiste::kasten_spalten(7, 9));
+        $this->assertSame([5, 5], stationen_leiste::kasten_spalten(8, 9));
+        // Randfaelle: eine Station nimmt ihre Spalte ganz.
+        $this->assertSame([1, 1], stationen_leiste::kasten_spalten(0, 1));
+        $this->assertSame([2, 2], stationen_leiste::kasten_spalten(2, 3));
     }
 
     /**

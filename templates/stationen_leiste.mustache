@@ -26,13 +26,19 @@
     Die Zeitleiste ist eine geordnete Liste; der Punkt je Station ist
     Schmuck (aria-hidden), Name und Statustext tragen die Bedeutung. Eine
     Linie fuehrt von der aktuellen Station hinunter in ihren Kasten, beide
-    in der Randfarbe ihres Punkts, damit man sieht, wozu er gehoert. Auf
-    schmalen Fenstern rollt die Leiste waagrecht in ihrem Kasten, statt
+    in der Randfarbe ihres Punkts, damit man sieht, wozu er gehoert. Der
+    Kasten steht in denselben Spalten wie die Leiste, ueber die Haelfte
+    davon und mittig unter seinem Punkt (stationen_leiste::kasten_spalten()),
+    und rollt mit ihr; auf schmalen Bildschirmen nimmt er die ganze Breite.
+    Auf schmalen Fenstern rollt die Leiste waagrecht in ihrem Kasten, statt
     die Seite zu verbreitern. Den Abstand nach aussen setzt die Seite: auf
     "Meine Lehre" steht die Leiste in einer eigenen Karte.
 
     Context variables required for this template:
     * titel - string, Anzeigename der Quelle
+    * anzahl - int, Zahl der Stationen und damit der Spalten
+    * kastenstart - int, erste Spalte des Kastens der aktuellen Station, ab 1
+    * kastenbreite - int, Zahl der Spalten des Kastens
     * hasverlauf - bool
     * verlaufurl - string
     * eintraege - array of {bezeichnung, kurzbezeichnung, statustext, zeigestatus, status, hasstand, stand, zeigestand,
@@ -46,6 +52,9 @@
     Example context (json):
     {
         "titel": "Bildungsbericht",
+        "anzahl": 3,
+        "kastenstart": 1,
+        "kastenbreite": 2,
         "hasverlauf": true,
         "verlaufurl": "/local/bildungsbericht/verlauf.php?userid=5",
         "eintraege": [
@@ -99,22 +108,24 @@
                 </li>
             {{/eintraege}}
         </ol>
-    </div>
-    {{#hasaktuelle}}
-        {{#aktuelle}}
-            <div class="local-berufsbildung-stationen-aktuell bg-light border {{randklasse}} rounded">
-                <div class="local-berufsbildung-stationen-aktuell-text">
-                    <strong class="d-block">{{bezeichnung}} · <span class="{{#istueberfaellig}}text-danger{{/istueberfaellig}}">{{statustext}}</span></strong>
-                    {{#hasstand}}<span class="d-block small text-muted">{{stand}}</span>{{/hasstand}}
+        {{#hasaktuelle}}
+            {{#aktuelle}}
+                <div class="local-berufsbildung-stationen-aktuell-spalten" style="grid-template-columns: repeat({{anzahl}}, minmax(6.5rem, 1fr));">
+                    <div class="local-berufsbildung-stationen-aktuell bg-light border {{randklasse}} rounded" style="grid-column: {{kastenstart}} / span {{kastenbreite}};">
+                        <div class="local-berufsbildung-stationen-aktuell-text">
+                            <strong class="d-block">{{bezeichnung}} · <span class="{{#istueberfaellig}}text-danger{{/istueberfaellig}}">{{statustext}}</span></strong>
+                            {{#hasstand}}<span class="d-block small text-muted">{{stand}}</span>{{/hasstand}}
+                        </div>
+                        {{#hasaktion}}
+                            {{#aktion}}
+                                <a href="{{url}}" class="btn {{klasse}}">{{label}}</a>
+                            {{/aktion}}
+                        {{/hasaktion}}
+                    </div>
                 </div>
-                {{#hasaktion}}
-                    {{#aktion}}
-                        <a href="{{url}}" class="btn {{klasse}}">{{label}}</a>
-                    {{/aktion}}
-                {{/hasaktion}}
-            </div>
-        {{/aktuelle}}
-    {{/hasaktuelle}}
+            {{/aktuelle}}
+        {{/hasaktuelle}}
+    </div>
     {{^hasaktuelle}}
         {{#hasaktion}}
             {{#aktion}}
