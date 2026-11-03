@@ -28,6 +28,7 @@ require_once($CFG->libdir . '/adminlib.php');
 
 use local_berufsbildung\api;
 use local_berufsbildung\form\zuordnung_beenden_form;
+use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\persistent\zuordnung;
 
 admin_externalpage_setup('local_berufsbildung_zuordnung');
@@ -40,6 +41,7 @@ $PAGE->set_url(new moodle_url('/local/berufsbildung/zuordnung_beenden.php', ['id
 $titel = get_string('zuordnung:beenden', 'local_berufsbildung');
 $PAGE->set_title($titel);
 $PAGE->set_heading($titel);
+hilfe_link::fuer_seite('berufsbildung-zuordnungen');
 $PAGE->navbar->add(get_string('zuordnung:uebersicht', 'local_berufsbildung'), new moodle_url('/local/berufsbildung/zuordnung.php'));
 $PAGE->navbar->add($titel);
 

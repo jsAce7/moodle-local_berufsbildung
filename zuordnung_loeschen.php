@@ -26,6 +26,7 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 
 use local_berufsbildung\api;
+use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\persistent\zuordnung;
 
 admin_externalpage_setup('local_berufsbildung_zuordnung');
@@ -37,6 +38,7 @@ $returnurl = new moodle_url('/local/berufsbildung/zuordnung.php');
 $PAGE->set_url(new moodle_url('/local/berufsbildung/zuordnung_loeschen.php', ['id' => $id]));
 $PAGE->set_title(get_string('zuordnung:loeschen', 'local_berufsbildung'));
 $PAGE->set_heading(get_string('zuordnung:loeschen', 'local_berufsbildung'));
+hilfe_link::fuer_seite('berufsbildung-zuordnungen');
 
 if (optional_param('bestaetigt', 0, PARAM_BOOL) && confirm_sesskey()) {
     api::loesche_zuordnung($id);

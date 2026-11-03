@@ -29,6 +29,7 @@ require_once($CFG->dirroot . '/cohort/lib.php');
 
 use local_berufsbildung\api;
 use local_berufsbildung\form\zuordnung_form;
+use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\service\kohorten_resolver;
 
 admin_externalpage_setup('local_berufsbildung_zuordnung');
@@ -38,6 +39,7 @@ $PAGE->set_url(new moodle_url('/local/berufsbildung/zuordnung_anlegen.php'));
 $titel = get_string('zuordnung:anlegen', 'local_berufsbildung');
 $PAGE->set_title($titel);
 $PAGE->set_heading($titel);
+hilfe_link::fuer_seite('berufsbildung-zuordnungen');
 $PAGE->navbar->add(get_string('zuordnung:uebersicht', 'local_berufsbildung'), new moodle_url('/local/berufsbildung/zuordnung.php'));
 $PAGE->navbar->add($titel);
 

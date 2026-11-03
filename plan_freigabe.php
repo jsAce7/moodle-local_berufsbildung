@@ -27,6 +27,7 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 
 use local_berufsbildung\output\hilfe_link;
+use local_berufsbildung\output\plan_freigabe;
 use local_berufsbildung\persistent\plan_import;
 use local_berufsbildung\versetzungsplan\import_service;
 
@@ -85,106 +86,8 @@ if (empty($wartende)) {
 echo html_writer::tag('p', get_string('planfreigabe:beschreibung', 'local_berufsbildung'));
 
 $letzter = $service->letzter_erfolgreicher_import();
-
 foreach ($wartende as $wartend) {
-    $pruefung = $service->pruefe_wartende($wartend);
-    // 0, wenn das Konto inzwischen anonymisiert wurde (privacy\provider).
-    $ausgefuehrtvon = core_user::get_user((int) $wartend->get('ausgefuehrt_von'));
-
-    echo $OUTPUT->heading(
-        get_string('planfreigabe:lieferung_vom', 'local_berufsbildung', userdate((int) $wartend->get('zeitpunkt'))),
-        3
-    );
-
-    $table = new html_table();
-    $table->data = [
-        [get_string('planfreigabe:quelle', 'local_berufsbildung'), s($wartend->get('quelle'))],
-        [
-            get_string('planfreigabe:ausgefuehrt_von', 'local_berufsbildung'),
-            $ausgefuehrtvon ? fullname($ausgefuehrtvon) : '-',
-        ],
-        [get_string('planimport:zeilen_gelesen', 'local_berufsbildung'), (int) $wartend->get('zeilen_gelesen')],
-        [
-            get_string('planfreigabe:personen_vorher', 'local_berufsbildung'),
-            $letzter !== null ? (int) $letzter->get('personen_verarbeitet') : '-',
-        ],
-        [get_string('planfreigabe:personen_heute', 'local_berufsbildung'), $pruefung['personen_verarbeitet']],
-        [get_string('planfreigabe:einsaetze_heute', 'local_berufsbildung'), $pruefung['einsaetze_erzeugt']],
-    ];
-    echo html_writer::table($table);
-
-    echo $OUTPUT->heading(
-        get_string('planfreigabe:aenderungen', 'local_berufsbildung', count($pruefung['aenderungen'])),
-        4
-    );
-    if ($pruefung['personen_unveraendert'] > 0) {
-        echo html_writer::tag(
-            'p',
-            get_string('planfreigabe:personen_unveraendert', 'local_berufsbildung', $pruefung['personen_unveraendert'])
-        );
-    }
-    $personen = [];
-    foreach (array_keys($pruefung['aenderungen']) as $userid) {
-        $person = core_user::get_user($userid);
-        $personen[$userid] = $person ? fullname($person) : (string) $userid;
-    }
-    core_collator::asort($personen);
-    $badges = [
-        'entfaellt' => html_writer::span(get_string('planfreigabe:entfaellt', 'local_berufsbildung'), 'badge bg-danger'),
-        'neu' => html_writer::span(get_string('planfreigabe:neu', 'local_berufsbildung'), 'badge bg-success'),
-    ];
-    foreach ($personen as $userid => $name) {
-        echo $OUTPUT->heading(s($name), 5);
-        $aenderungstabelle = new html_table();
-        $aenderungstabelle->head = [
-            '',
-            get_string('planfreigabe:block', 'local_berufsbildung'),
-            get_string('planfreigabe:zeitraum', 'local_berufsbildung'),
-        ];
-        foreach (['entfaellt', 'neu'] as $art) {
-            foreach ($pruefung['aenderungen'][$userid][$art] as $einsatz) {
-                $zeitraum = $einsatz['kw_von'] === $einsatz['kw_bis']
-                    ? $einsatz['kw_von']
-                    : $einsatz['kw_von'] . ' – ' . $einsatz['kw_bis'];
-                $aenderungstabelle->data[] = [$badges[$art], s($einsatz['block']), s($zeitraum)];
-            }
-        }
-        echo html_writer::table($aenderungstabelle);
-    }
-
-    if (!empty($pruefung['fehlende_personen'])) {
-        echo $OUTPUT->heading(
-            get_string('planfreigabe:fehlende_personen', 'local_berufsbildung', count($pruefung['fehlende_personen'])),
-            4
-        );
-        echo html_writer::tag('p', get_string('planfreigabe:fehlende_personen_hinweis', 'local_berufsbildung'));
-        $namen = [];
-        foreach ($pruefung['fehlende_personen'] as $userid) {
-            $person = core_user::get_user($userid);
-            $namen[] = $person ? fullname($person) : (string) $userid;
-        }
-        core_collator::asort($namen);
-        echo html_writer::alist(array_map('s', $namen));
-    }
-
-    $protokoll = array_filter(explode("\n", (string) $wartend->get('protokoll')));
-    if (!empty($protokoll)) {
-        echo $OUTPUT->heading(get_string('planimport:protokoll', 'local_berufsbildung'), 4);
-        echo html_writer::alist(array_map('s', $protokoll));
-    }
-
-    echo html_writer::start_div('d-flex mb-4');
-    echo $OUTPUT->single_button(
-        new moodle_url($url, ['aktion' => 'freigeben', 'id' => $wartend->get('id')]),
-        get_string('planfreigabe:freigeben', 'local_berufsbildung'),
-        'get'
-    );
-    echo $OUTPUT->single_button(
-        new moodle_url($url, ['aktion' => 'verwerfen', 'id' => $wartend->get('id')]),
-        get_string('planfreigabe:verwerfen', 'local_berufsbildung'),
-        'get'
-    );
-    echo html_writer::end_div();
+    echo plan_freigabe::render($wartend, $service->pruefe_wartende($wartend), $letzter, $url);
 }
 
 echo $OUTPUT->footer();

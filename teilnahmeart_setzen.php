@@ -30,6 +30,7 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 
 use local_berufsbildung\api;
+use local_berufsbildung\output\hilfe_link;
 
 admin_externalpage_setup('local_berufsbildung_zuordnung');
 require_capability('local/berufsbildung:managezuordnung', context_system::instance());
@@ -49,6 +50,7 @@ $titel = get_string(
 $PAGE->set_url(new moodle_url('/local/berufsbildung/teilnahmeart_setzen.php', ['userid' => $userid, 'art' => $art]));
 $PAGE->set_title($titel);
 $PAGE->set_heading($titel);
+hilfe_link::fuer_seite('berufsbildung-zuordnungen');
 
 if (optional_param('bestaetigt', 0, PARAM_BOOL) && confirm_sesskey()) {
     api::set_teilnahmeart($userid, $art);

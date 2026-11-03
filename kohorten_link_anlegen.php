@@ -28,6 +28,7 @@ require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/cohort/lib.php');
 
 use local_berufsbildung\form\kohorten_link_form;
+use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\persistent\kohorten_link;
 use local_berufsbildung\service\kohorten_sync_service;
 
@@ -37,6 +38,7 @@ $PAGE->set_url(new moodle_url('/local/berufsbildung/kohorten_link_anlegen.php'))
 $titel = get_string('kohortenlink:anlegen', 'local_berufsbildung');
 $PAGE->set_title($titel);
 $PAGE->set_heading($titel);
+hilfe_link::fuer_seite('berufsbildung-globale-gruppen');
 $PAGE->navbar->add(
     get_string('kohortenlink:uebersicht', 'local_berufsbildung'),
     new moodle_url('/local/berufsbildung/kohorten_links.php')

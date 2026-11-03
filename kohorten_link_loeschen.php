@@ -26,6 +26,7 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 
 use local_berufsbildung\api;
+use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\persistent\kohorten_link;
 
 admin_externalpage_setup('local_berufsbildung_kohortenlinks');
@@ -37,6 +38,7 @@ $title = get_string('kohortenlink:loeschen', 'local_berufsbildung');
 $PAGE->set_url(new moodle_url('/local/berufsbildung/kohorten_link_loeschen.php', ['id' => $id]));
 $PAGE->set_title($title);
 $PAGE->set_heading($title);
+hilfe_link::fuer_seite('berufsbildung-globale-gruppen');
 
 if (optional_param('bestaetigt', 0, PARAM_BOOL) && confirm_sesskey()) {
     api::loesche_kohorten_link($id);

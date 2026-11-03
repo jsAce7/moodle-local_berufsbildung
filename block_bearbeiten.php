@@ -26,6 +26,7 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 
 use local_berufsbildung\form\block_form;
+use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\persistent\block;
 use local_berufsbildung\service\block_kopie_service;
 use local_berufsbildung\service\block_kurs_service;
@@ -48,6 +49,7 @@ if ($id) {
 }
 $PAGE->set_title($titel);
 $PAGE->set_heading($titel);
+hilfe_link::fuer_seite('berufsbildung-ausbildungsbloecke');
 $PAGE->navbar->add(
     get_string('bloecke:uebersicht', 'local_berufsbildung'),
     new moodle_url('/local/berufsbildung/bloecke.php')
