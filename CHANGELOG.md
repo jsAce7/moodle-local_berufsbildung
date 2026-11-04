@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.2] — 2026-11-04
+
+### Geändert
+
+- **Handlungskompetenzen zugeklappt ohne Doppeltes.** Die Zeile „Noch nicht geplant: …“ entfällt in der Übersicht auf „Meine Lernenden“, die grauen (mit Plan bis zum Lehrende gelben) Badges zeigen dasselbe. Über der ersten Bereichszeile steht keine zweite Linie mehr unter der des Abschnitts.
+- **Meine Lernenden: jedes Modul eine Karte.** Im aufgeklappten Detail stehen Bildungsberichte, Fälligkeiten, Tätigkeiten, Versetzungsplan und Handlungskompetenzen je in einer eigenen Karte auf grauem Grund (`bg-light`), wie die Abschnitte auf „Meine Lehre“; statt der Trennlinien aus 1.8.1. Die Fälligkeiten stehen darin bündig (`list-group-flush`) statt als Rahmen im Rahmen. Auf dem Telefon ist der graue Rand schmaler.
+
 ## [1.8.1] — 2026-11-04
 
 ### Geändert

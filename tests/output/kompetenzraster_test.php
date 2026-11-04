@@ -221,6 +221,10 @@ final class kompetenzraster_test extends advanced_testcase {
         $this->assertStringContainsString(get_string('raster:nicht_im_plan', 'local_berufsbildung', 'd.02'), $html);
         $this->assertStringContainsString('text-danger', $html);
         $this->assertStringContainsString(get_string('raster:status_offen_vollstaendig', 'local_berufsbildung'), $html);
+
+        // Zugeklappt zeigen das die Badges, die Zeile entfaellt.
+        $html = kompetenzraster::render($raster, time(), zugeklappt: true);
+        $this->assertStringNotContainsString(get_string('raster:noch_nicht_geplant', 'local_berufsbildung', 'd.02'), $html);
     }
 
     /**

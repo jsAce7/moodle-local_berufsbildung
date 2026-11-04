@@ -49,7 +49,9 @@ final class faelligkeiten_liste {
             $titel,
             ['class' => $kompakt ? 'h5 mb-2' : 'h4']
         );
-        $inhalt .= html_writer::start_tag('div', ['class' => 'list-group']);
+        // Im Detail einer Person steht die Liste in einer eigenen Karte
+        // (meine_lernenden.php) - buendig, statt als Rahmen im Rahmen.
+        $inhalt .= html_writer::start_tag('div', ['class' => 'list-group' . ($kompakt ? ' list-group-flush' : '')]);
         foreach ($zeilen as $zeile) {
             $status = $zeile->ueberfaellig
                 ? get_string('faelligkeiten:ueberfaellig', 'local_berufsbildung') . ' · ' . $zeile->datum
@@ -68,9 +70,6 @@ final class faelligkeiten_liste {
         }
         $inhalt .= html_writer::end_tag('div');
 
-        return html_writer::div(
-            $inhalt,
-            'local-berufsbildung-faelligkeiten' . ($kompakt ? ' mb-4' : '')
-        );
+        return html_writer::div($inhalt, 'local-berufsbildung-faelligkeiten');
     }
 }

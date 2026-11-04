@@ -1005,6 +1005,12 @@
     padding: 0.5rem 0;
 }
 
+/* Die erste Zeile ohne Linie: darueber trennt schon die des Abschnitts. */
+.local-berufsbildung-raster-uebersicht > .local-berufsbildung-raster-uebersichtzeile:first-child {
+    /* stylelint-disable-next-line declaration-no-important */
+    border-top-width: 0 !important;
+}
+
 @media (min-width: 768px) {
     .local-berufsbildung-raster-uebersichtzeile {
         grid-template-columns: minmax(0, 22rem) 1fr;
@@ -1608,25 +1614,34 @@
 }
 
 /*
- * Abschnitte einer aufgeklappten Kachel auf meine_lernenden.php: ab dem
- * zweiten mit einer Linie (.border-top) und Abstand darueber - ohne
- * liefen Bildungsberichte, Fristen, Plan und Raster ineinander.
+ * Module einer aufgeklappten Kachel auf meine_lernenden.php: je Modul eine
+ * Karte auf dem grauen Grund des Details (.bg-light), untereinander mit
+ * gleichem Abstand. Die Farben setzen .card und .bg-light.
  */
-.local-berufsbildung-kachel-abschnitt + .local-berufsbildung-kachel-abschnitt,
-.local-berufsbildung-roster-rechts.local-berufsbildung-kachel-abschnitt {
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
+.local-berufsbildung-kachel-module {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.local-berufsbildung-kachel-modul > .card-body > :last-child,
+.local-berufsbildung-kachel-modul > .card-body > :last-child > :last-child {
+    margin-bottom: 0;
+}
+
+/* Die Faelligkeiten buendig mit der Ueberschrift der Karte. */
+.local-berufsbildung-kachel-modul .list-group-flush > .list-group-item {
+    padding-right: 0;
+    padding-left: 0;
 }
 
 /*
- * Nebeneinander trennt der Spaltenabstand den Plan von den Taetigkeiten,
- * die Linie gilt nur untereinander. .border-top setzt sie mit !important.
+ * Auf dem Telefon ein schmaler grauer Rand um die Karten: Detail und Karte
+ * haben sonst beide den vollen Innenabstand von .card-body.
  */
-@media (min-width: 1200px) {
-    .local-berufsbildung-roster-spalten > .local-berufsbildung-roster-rechts.local-berufsbildung-kachel-abschnitt {
-        /* stylelint-disable-next-line declaration-no-important */
-        border-top-width: 0 !important;
-        margin-top: 0;
-        padding-top: 0;
+@media (max-width: 575.98px) {
+    /* Spezifischer als .card .card-body von Boost, das nach dem Plugin laedt. */
+    .local-berufsbildung-kachel > .local-berufsbildung-kachel-detail.card-body {
+        padding: 0.5rem;
     }
 }

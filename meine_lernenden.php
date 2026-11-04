@@ -309,12 +309,14 @@ if (empty($eintraege)) {
 
     echo html_writer::start_tag('div', ['class' => 'local-berufsbildung-roster-grid']);
 
-    // Abschnitte untereinander, ab dem zweiten mit einer Linie darueber;
-    // leere fallen weg, damit keine Linie ueber nichts steht.
-    $trenne = static function (array $teile): string {
+    // Jedes Modul der aufgeklappten Kachel als eigene Karte auf dem grauen
+    // Grund des Details, wie die Abschnitte auf meine_lehre.php - ohne
+    // liefen Bildungsberichte, Fristen, Plan und Raster ineinander. Leere
+    // Module fallen weg, statt als leere Karte dazustehen.
+    $karten = static function (array $teile): string {
         $html = '';
         foreach (array_filter($teile, static fn (string $teil): bool => trim($teil) !== '') as $teil) {
-            $html .= html_writer::div($teil, 'local-berufsbildung-kachel-abschnitt' . ($html !== '' ? ' border-top' : ''));
+            $html .= html_writer::div(html_writer::div($teil, 'card-body'), 'card local-berufsbildung-kachel-modul');
         }
         return $html;
     };
@@ -355,11 +357,9 @@ if (empty($eintraege)) {
             echo html_writer::end_tag('div');
         }
 
-        // Die Abschnitte der Kachel, durch eine Linie getrennt - ohne
-        // liefen Bildungsberichte, Fristen, Plan und Raster ineinander.
-        $abschnitte = [];
+        $module = [];
         foreach ($stationen as $quellekey => $einzelstationen) {
-            $abschnitte[] = stationen_leiste::render($einzelstationen, $stationenaktionen[$quellekey] ?? null);
+            $module[] = $karten([stationen_leiste::render($einzelstationen, $stationenaktionen[$quellekey] ?? null)]);
         }
 
         // Externe Personen haben hier keinen Ausbildungsstand und damit
@@ -408,18 +408,17 @@ if (empty($eintraege)) {
         // Inhaltsbereich sonst zu schmal fuer zwei Spalten. Ohne Plan
         // nimmt die linke Liste die volle Breite, statt neben einer leeren
         // Haelfte zu stehen.
-        $links = $trenne([$faelligkeiten, $taetigkeiten]);
+        $links = $karten([$faelligkeiten, $taetigkeiten]);
         if ($rechts !== '') {
-            // Untereinander (unter xl) trennt dieselbe Linie den Plan von
-            // den Taetigkeiten; nebeneinander der Spaltenabstand.
-            $abschnitte[] = html_writer::div(
-                html_writer::div($links, 'col-12 col-xl-6')
-                    . html_writer::div($rechts, 'col-12 col-xl-6 local-berufsbildung-roster-rechts'
-                        . ($links !== '' ? ' local-berufsbildung-kachel-abschnitt border-top' : '')),
+            // Untereinander (unter xl) steht der Plan mit demselben Abstand
+            // unter den Taetigkeiten wie die Karten untereinander.
+            $module[] = html_writer::div(
+                html_writer::div($links, 'col-12 col-xl-6 local-berufsbildung-kachel-module')
+                    . html_writer::div($karten([$rechts]), 'col-12 col-xl-6' . ($links !== '' ? ' mt-3 mt-xl-0' : '')),
                 'row local-berufsbildung-roster-spalten'
             );
         } else {
-            $abschnitte[] = $links;
+            $module[] = $links;
         }
 
         if (!empty($raster[$lernendeid])) {
@@ -431,7 +430,7 @@ if (empty($eintraege)) {
             // meine_lehre.php. Was fehlt, zeigt es selbst: die Badges ohne
             // Flaeche, und je Zelle die fehlenden LK im Dialog. Die Zahl
             // der fehlenden Pflicht-HK traegt das Badge der Kachel.
-            $abschnitte[] = kompetenzraster::render(
+            $module[] = $karten([kompetenzraster::render(
                 $raster[$lernendeid],
                 api::get_planungshorizont($lernendeid),
                 wahlpflicht: $stand !== null ? ($wahlpflicht[$stand->beruf] ?? null) : null,
@@ -441,9 +440,9 @@ if (empty($eintraege)) {
                     : [],
                 planvollstaendig: $planvollstaendig[$lernendeid] ?? false,
                 zugeklappt: true
-            );
+            )]);
         }
-        echo $trenne($abschnitte);
+        echo html_writer::div(implode('', $module), 'local-berufsbildung-kachel-module');
 
         $profilurl = new moodle_url('/user/profile.php', ['id' => $lernendeid]);
         echo html_writer::div(html_writer::link(

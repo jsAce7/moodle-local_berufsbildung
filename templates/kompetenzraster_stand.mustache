@@ -22,7 +22,7 @@
     Hinweis, wenn nichts im Plan vorkommt, und bis wann der Plan reicht.
     Im Raster ueber der Tabelle; zugeklappt klein unter der Uebersicht,
     dort ohne den Satz zur Zusammenfassung - den traegt die Zahl neben
-    dem Titel.
+    dem Titel - und ohne die HK ohne Einsatz, die zeigen die Badges.
 
     Context variables required for this template: siehe
     local_berufsbildung/kompetenzraster.
@@ -48,13 +48,14 @@
 {{^zugeklappt}}{{#haszusammenfassung}}
     <p class="local-berufsbildung-raster-zusammenfassung mb-1">{{zusammenfassung}}</p>
 {{/haszusammenfassung}}{{/zugeklappt}}
-{{#hatohneeinsatz}}
+{{^zugeklappt}}{{#hatohneeinsatz}}
     {{! Vor dem letzten Lehrjahr ist das der Normalfall und steht ruhig da;
-        reicht der Plan bis zum Lehrende, ist es eine Luecke. }}
+        reicht der Plan bis zum Lehrende, ist es eine Luecke. Zugeklappt
+        zeigen es die grauen, dann gelben Badges der Uebersicht. }}
     <p class="local-berufsbildung-raster-zusammenfassung mb-1{{#ohneeinsatzwarnung}} text-danger{{/ohneeinsatzwarnung}}{{^ohneeinsatzwarnung}} text-muted{{/ohneeinsatzwarnung}}">
         {{#ohneeinsatzwarnung}}<i class="icon fa fa-exclamation-triangle fa-fw" aria-hidden="true"></i>{{/ohneeinsatzwarnung}}{{ohneeinsatz}}
     </p>
-{{/hatohneeinsatz}}
+{{/hatohneeinsatz}}{{/zugeklappt}}
 {{#hatwahlpflichtwahl}}
     <p class="local-berufsbildung-raster-zusammenfassung mb-1">{{wahlpflichtwahl}}</p>
 {{/hatwahlpflichtwahl}}
