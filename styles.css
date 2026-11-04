@@ -1427,24 +1427,51 @@
     display: grid;
 }
 
-@media (max-width: 767.98px) {
-    .local-berufsbildung-stationen-aktuell-spalten {
-        display: block;
-    }
-}
-
+/*
+ * Der Kasten so breit wie sein Inhalt, unter dem Punkt seiner Station
+ * angehaengt: eingerueckt um eine halbe Spalte (die Mitte der Spalte, in
+ * der er beginnt oder endet), abzueglich 1.25rem - so trifft die Linie
+ * vom Punkt kurz hinter seiner Ecke auf. Die Prozente beziehen sich auf
+ * den Bereich, den grid-column ihm gibt; dessen Spaltenzahl steht im
+ * Markup.
+ */
 .local-berufsbildung-stationen-aktuell {
+    --local-berufsbildung-kasten-einzug: calc(100% / var(--local-berufsbildung-kasten-spalten, 1) / 2 - 1.25rem);
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem 1.5rem;
+    width: max-content;
+    max-width: calc(100% - var(--local-berufsbildung-kasten-einzug));
     padding: 0.75rem 1rem;
 }
 
+.local-berufsbildung-stationen-aktuell-start {
+    justify-self: start;
+    margin-left: var(--local-berufsbildung-kasten-einzug);
+}
+
+.local-berufsbildung-stationen-aktuell-end {
+    justify-self: end;
+    margin-right: var(--local-berufsbildung-kasten-einzug);
+}
+
 .local-berufsbildung-stationen-aktuell-text {
-    flex: 1 1 18rem;
+    flex: 1 1 auto;
     min-width: 0;
+}
+
+@media (max-width: 767.98px) {
+    .local-berufsbildung-stationen-aktuell-spalten {
+        display: block;
+    }
+
+    .local-berufsbildung-stationen-aktuell {
+        width: auto;
+        max-width: none;
+        margin: 0;
+    }
 }
 
 /*
@@ -1629,8 +1656,8 @@
     margin-bottom: 0;
 }
 
-/* Die Faelligkeiten buendig mit der Ueberschrift der Karte. */
-.local-berufsbildung-kachel-modul .list-group-flush > .list-group-item {
+/* Die Faelligkeiten buendig mit der Ueberschrift ihrer Karte. */
+.local-berufsbildung-faelligkeiten .list-group-flush > .list-group-item {
     padding-right: 0;
     padding-left: 0;
 }

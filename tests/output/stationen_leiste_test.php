@@ -94,8 +94,10 @@ final class stationen_leiste_test extends advanced_testcase {
         $this->assertSame(1, substr_count($html, 'local-berufsbildung-station-verbinder'));
         $this->assertMatchesRegularExpression('/station-verbinder[^"]*border-primary/', $html);
         $this->assertMatchesRegularExpression('/stationen-aktuell[^"]*border-primary/', $html);
-        // Zweite von drei Stationen: zwei Spalten, mittig ab der ersten.
-        $this->assertStringContainsString('grid-column: 1 / span 2;', $html);
+        // Zweite von drei Stationen, links der Mitte: der Kasten haengt an
+        // ihrer Spalte und waechst nach rechts.
+        $this->assertStringContainsString('grid-column: 2 / span 2;', $html);
+        $this->assertStringContainsString('local-berufsbildung-stationen-aktuell-start', $html);
         // Die aktuelle Station mit Stand und der Aktion der Quelle.
         $this->assertStringContainsString('Fällig bis 31. August 2026', $html);
         $this->assertStringContainsString('Semester 2 weiter erfassen', $html);
@@ -109,19 +111,21 @@ final class stationen_leiste_test extends advanced_testcase {
     }
 
     /**
-     * Der Kasten der aktuellen Station steht ueber die Haelfte der Spalten
-     * mittig unter seinem Punkt, an den Raendern aber innerhalb der Leiste.
+     * Der Kasten der aktuellen Station haengt an ihrer Spalte: links der
+     * Mitte waechst er von dort nach rechts, sonst nach links - so bleibt
+     * er innerhalb der Leiste.
      */
     public function test_kasten_spalten(): void {
-        // Neun Stationen (Probezeit, acht Semester): fuenf Spalten breit.
-        $this->assertSame([1, 5], stationen_leiste::kasten_spalten(0, 9));
-        $this->assertSame([1, 5], stationen_leiste::kasten_spalten(1, 9));
-        $this->assertSame([3, 5], stationen_leiste::kasten_spalten(4, 9));
-        $this->assertSame([5, 5], stationen_leiste::kasten_spalten(7, 9));
-        $this->assertSame([5, 5], stationen_leiste::kasten_spalten(8, 9));
-        // Randfaelle: eine Station nimmt ihre Spalte ganz.
-        $this->assertSame([1, 1], stationen_leiste::kasten_spalten(0, 1));
-        $this->assertSame([2, 2], stationen_leiste::kasten_spalten(2, 3));
+        // Neun Stationen (Probezeit, acht Semester).
+        $this->assertSame([1, 9, 'start'], stationen_leiste::kasten_spalten(0, 9));
+        $this->assertSame([2, 8, 'start'], stationen_leiste::kasten_spalten(1, 9));
+        $this->assertSame([5, 5, 'start'], stationen_leiste::kasten_spalten(4, 9));
+        $this->assertSame([1, 6, 'end'], stationen_leiste::kasten_spalten(5, 9));
+        $this->assertSame([1, 9, 'end'], stationen_leiste::kasten_spalten(8, 9));
+        // Randfaelle: eine einzige Station, die Mitte bei gerader Zahl.
+        $this->assertSame([1, 1, 'start'], stationen_leiste::kasten_spalten(0, 1));
+        $this->assertSame([2, 3, 'start'], stationen_leiste::kasten_spalten(1, 4));
+        $this->assertSame([1, 3, 'end'], stationen_leiste::kasten_spalten(2, 4));
     }
 
     /**

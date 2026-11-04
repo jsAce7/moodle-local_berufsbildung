@@ -67,13 +67,14 @@ class stationen_leiste {
                 $index = $i;
             }
         }
-        [$kastenstart, $kastenbreite] = self::kasten_spalten($index, count($eintraege));
+        [$kastenstart, $kastenbreite, $kastenseite] = self::kasten_spalten($index, count($eintraege));
 
         return $OUTPUT->render_from_template('local_berufsbildung/stationen_leiste', [
             'titel' => $stationen->titel,
             'anzahl' => count($eintraege),
             'kastenstart' => $kastenstart,
             'kastenbreite' => $kastenbreite,
+            'kastenseite' => $kastenseite,
             'hasverlauf' => $stationen->verlaufurl !== null,
             'verlaufurl' => $stationen->verlaufurl ?? '',
             'eintraege' => array_map([self::class, 'station_daten'], $stationen->eintraege),
@@ -89,21 +90,25 @@ class stationen_leiste {
     }
 
     /**
-     * Wo der Kasten der aktuellen Station unter der Zeitleiste steht: ueber
-     * die Haelfte der Spalten, mittig unter ihrem Punkt, am Rand aber
-     * innerhalb der Leiste. Ueber die volle Breite stuende er unter allen
-     * Stationen und gehoerte sichtbar zu keiner.
+     * Wo der Kasten der aktuellen Station unter der Zeitleiste steht: so
+     * breit wie sein Inhalt, unter ihrem Punkt angehaengt. Steht die
+     * Station links der Mitte, beginnt er in ihrer Spalte und waechst nach
+     * rechts, sonst endet er in ihrer Spalte und waechst nach links - so
+     * bleibt er innerhalb der Leiste. Ueber die volle Breite stuende er
+     * unter allen Stationen und gehoerte sichtbar zu keiner.
      *
      * @param int $index Position der aktuellen Station, ab 0
      * @param int $anzahl Zahl der Stationen
-     * @return int[] Erste Spalte (ab 1) und Zahl der Spalten fuer grid-column
+     * @return array Erste Spalte (ab 1), Zahl der Spalten fuer grid-column
+     *               und die Seite, an der der Kasten haengt: 'start' oder 'end'
      */
     public static function kasten_spalten(int $index, int $anzahl): array {
         $anzahl = max(1, $anzahl);
-        $breite = (int) ceil($anzahl / 2);
-        $start = max(1, min($index + 1 - intdiv($breite, 2), $anzahl - $breite + 1));
-
-        return [$start, $breite];
+        $index = max(0, min($index, $anzahl - 1));
+        if ($index < $anzahl / 2) {
+            return [$index + 1, $anzahl - $index, 'start'];
+        }
+        return [1, $index + 1, 'end'];
     }
 
     /**

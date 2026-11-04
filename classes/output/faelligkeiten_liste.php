@@ -35,23 +35,20 @@ final class faelligkeiten_liste {
     /**
      * Rendert die übergebenen Fälligkeitszeilen als Aktionsliste.
      *
+     * Die Liste steht auf meine_lehre.php und meine_lernenden.php in einer
+     * eigenen Karte: Überschrift wie die der übrigen Karten, die Liste
+     * bündig darin statt als Rahmen im Rahmen.
+     *
      * @param object[] $zeilen name ist optional (bei eigenen Fälligkeiten).
      * @param string $titel Abschnittsüberschrift
-     * @param bool $kompakt Im aufgeklappten Detail einer lernenden Person.
      */
-    public static function render(array $zeilen, string $titel, bool $kompakt = false): string {
+    public static function render(array $zeilen, string $titel): string {
         if (empty($zeilen)) {
             return '';
         }
 
-        $inhalt = html_writer::tag(
-            $kompakt ? 'h3' : 'h2',
-            $titel,
-            ['class' => $kompakt ? 'h5 mb-2' : 'h4']
-        );
-        // Im Detail einer Person steht die Liste in einer eigenen Karte
-        // (meine_lernenden.php) - buendig, statt als Rahmen im Rahmen.
-        $inhalt .= html_writer::start_tag('div', ['class' => 'list-group' . ($kompakt ? ' list-group-flush' : '')]);
+        $inhalt = html_writer::tag('h3', $titel, ['class' => 'h5 mb-2']);
+        $inhalt .= html_writer::start_tag('div', ['class' => 'list-group list-group-flush']);
         foreach ($zeilen as $zeile) {
             $status = $zeile->ueberfaellig
                 ? get_string('faelligkeiten:ueberfaellig', 'local_berufsbildung') . ' · ' . $zeile->datum

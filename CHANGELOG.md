@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.3] — 2026-11-04
+
+### Geändert
+
+- **Kasten der aktuellen Station so breit wie sein Inhalt.** In der Zeitleiste der Stationen (Bildungsberichte) läuft der Kasten mit Frist und Schaltfläche nicht mehr über die halbe Leiste, sondern hängt unter dem Punkt seiner Station: links der Mitte wächst er von dort nach rechts, sonst nach links. `stationen_leiste::kasten_spalten()` liefert dazu die Seite (`start`/`end`). Auf schmalen Bildschirmen bleibt er voll breit.
+- **Meine Lehre gleich aufgebaut wie das Detail auf „Meine Lernenden“.** Fälligkeiten und Tätigkeiten links, der Versetzungsplan rechts (ab xl nebeneinander), die Handlungskompetenzen am Ende statt vor dem Plan. Ohne Plan nimmt die linke Spalte die volle Breite.
+- **Fälligkeiten bündig in ihrer Karte.** Auf „Meine Lehre“ steht die Liste wie auf „Meine Lernenden“ ohne eigenen Rahmen in der Karte, die Überschrift so gross wie die der übrigen Karten. `faelligkeiten_liste::render()` verliert dafür den Parameter `kompakt`.
+
 ## [1.8.2] — 2026-11-04
 
 ### Geändert

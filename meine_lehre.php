@@ -221,31 +221,10 @@ if ($stand !== null) {
             'url' => $faelligkeit->url,
         ];
     }
-    echo $abschnitt(faelligkeiten_liste::render(
+    $links = $abschnitt(faelligkeiten_liste::render(
         $faelligkeiten,
         get_string('faelligkeiten:titel', 'local_berufsbildung')
     ));
-
-    // Die Kompetenzuebersicht ist ein Planungsinstrument fuer die laufende
-    // Ausbildung. Nach dem Abschluss waere sie keine Planung mehr, sondern
-    // ein Urteil - und das ist nicht Sache dieses Plugins.
-    //
-    // Nur das Raster, ohne Lueckenliste daneben: beide zeigen denselben
-    // Stand, die Liste nur ohne die Kuerzel, ueber die man sie im Raster
-    // wiederfinden wuerde. Die Bezugsgroesse ("x von y abgedeckt") bringt
-    // das Raster selbst mit, welche Kompetenzen offen sind, steht in seinen
-    // Zellen. Ebenso auf meine_lernenden.php.
-    if (!$istbeendet && api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null) {
-        echo $abschnitt(kompetenzraster::render(
-            api::get_kompetenzraster($lernendeid),
-            api::get_planungshorizont($lernendeid),
-            wahlpflicht: api::get_wahlpflicht_vorgabe_for_beruf($stand->beruf),
-            vorschlaege: api::get_bloecke_je_kompetenz($stand->beruf),
-            planvollstaendig: api::ist_plan_vollstaendig($lernendeid)
-        ));
-    }
-
-    echo $abschnitt(einsatz_timeline::render_fuer_lernende($lernendeid));
 
     // Nach Quelle gruppiert, das Semester steht je Zeile - jede Art von
     // Nachweis bringt ihre eigene Zusammenfassung mit, etwa den ueK-Schnitt.
@@ -259,7 +238,7 @@ if ($stand !== null) {
         $collector->get_nachweise($lernendeid, $lernendeid, 0, time()),
         static fn ($nachweis): bool => !isset($stationen[$nachweis->quellekey])
     ));
-    echo $abschnitt(nachweis_liste::render(
+    $links .= $abschnitt(nachweis_liste::render(
         $nachweise,
         $collector->get_quelle_namen(),
         api::get_semester_grenzen($lernendeid),
@@ -267,6 +246,41 @@ if ($stand !== null) {
         $collector->get_zusammenfassungen($nachweise),
         $istbeendet ? [] : array_diff_key($collector->get_ausstehende($lernendeid, $lernendeid), $stationen)
     ));
+
+    // Dieselbe Anordnung wie im Detail einer Person auf
+    // meine_lernenden.php, damit Berufsbildner/in und Lernende im Gespraech
+    // dasselbe vor sich haben: Fristen und Taetigkeiten links, der Plan
+    // rechts, erst ab xl nebeneinander. Ohne Plan nimmt die linke Spalte
+    // die volle Breite.
+    $rechts = $abschnitt(einsatz_timeline::render_fuer_lernende($lernendeid));
+    if ($rechts !== '') {
+        echo html_writer::div(
+            html_writer::div($links, 'col-12 col-xl-6') . html_writer::div($rechts, 'col-12 col-xl-6'),
+            'row'
+        );
+    } else {
+        echo $links;
+    }
+
+    // Die Kompetenzuebersicht ist ein Planungsinstrument fuer die laufende
+    // Ausbildung. Nach dem Abschluss waere sie keine Planung mehr, sondern
+    // ein Urteil - und das ist nicht Sache dieses Plugins.
+    //
+    // Am Ende, wie auf meine_lernenden.php: das Raster ist die grosse
+    // Uebersicht zum Nachschlagen. Nur das Raster, ohne Lueckenliste
+    // daneben: beide zeigen denselben Stand, die Liste nur ohne die
+    // Kuerzel, ueber die man sie im Raster wiederfinden wuerde. Die
+    // Bezugsgroesse ("x von y abgedeckt") bringt das Raster selbst mit,
+    // welche Kompetenzen offen sind, steht in seinen Zellen.
+    if (!$istbeendet && api::get_kompetenzrahmen_for_beruf($stand->beruf) !== null) {
+        echo $abschnitt(kompetenzraster::render(
+            api::get_kompetenzraster($lernendeid),
+            api::get_planungshorizont($lernendeid),
+            wahlpflicht: api::get_wahlpflicht_vorgabe_for_beruf($stand->beruf),
+            vorschlaege: api::get_bloecke_je_kompetenz($stand->beruf),
+            planvollstaendig: api::ist_plan_vollstaendig($lernendeid)
+        ));
+    }
 } else if ($phase === api::PHASE_VOR_BEGINN) {
     // Die Lehre beginnt erst - kein Semester, aber der Versetzungsplan
     // kann bereits vorliegen und beantwortet "wo fange ich an".

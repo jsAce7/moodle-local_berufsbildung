@@ -369,8 +369,7 @@ if (empty($eintraege)) {
 
         $faelligkeiten = faelligkeiten_liste::render(
             $faelligkeitenjelernende[$lernendeid] ?? [],
-            get_string('faelligkeiten:titel', 'local_berufsbildung'),
-            kompakt: true
+            get_string('faelligkeiten:titel', 'local_berufsbildung')
         );
 
         // Ohne die Nachweise einer Quelle mit Stationen: ein freigegebener

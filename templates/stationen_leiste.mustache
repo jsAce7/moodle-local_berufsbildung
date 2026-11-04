@@ -27,8 +27,9 @@
     Schmuck (aria-hidden), Name und Statustext tragen die Bedeutung. Eine
     Linie fuehrt von der aktuellen Station hinunter in ihren Kasten, beide
     in der Randfarbe ihres Punkts, damit man sieht, wozu er gehoert. Der
-    Kasten steht in denselben Spalten wie die Leiste, ueber die Haelfte
-    davon und mittig unter seinem Punkt (stationen_leiste::kasten_spalten()),
+    Kasten steht in denselben Spalten wie die Leiste, so breit wie sein
+    Inhalt und unter seinem Punkt angehaengt, von dort nach rechts oder -
+    rechts der Mitte - nach links (stationen_leiste::kasten_spalten()),
     und rollt mit ihr; auf schmalen Bildschirmen nimmt er die ganze Breite.
     Auf schmalen Fenstern rollt die Leiste waagrecht in ihrem Kasten, statt
     die Seite zu verbreitern. Den Abstand nach aussen setzt die Seite: auf
@@ -37,8 +38,9 @@
     Context variables required for this template:
     * titel - string, Anzeigename der Quelle
     * anzahl - int, Zahl der Stationen und damit der Spalten
-    * kastenstart - int, erste Spalte des Kastens der aktuellen Station, ab 1
-    * kastenbreite - int, Zahl der Spalten des Kastens
+    * kastenstart - int, erste Spalte des Bereichs fuer den Kasten der aktuellen Station, ab 1
+    * kastenbreite - int, Zahl der Spalten dieses Bereichs
+    * kastenseite - string, start oder end: der Kasten haengt an der ersten oder letzten Spalte
     * hasverlauf - bool
     * verlaufurl - string
     * eintraege - array of {bezeichnung, kurzbezeichnung, statustext, zeigestatus, status, hasstand, stand, zeigestand,
@@ -55,6 +57,7 @@
         "anzahl": 3,
         "kastenstart": 1,
         "kastenbreite": 2,
+        "kastenseite": "end",
         "hasverlauf": true,
         "verlaufurl": "/local/bildungsbericht/verlauf.php?userid=5",
         "eintraege": [
@@ -111,7 +114,8 @@
         {{#hasaktuelle}}
             {{#aktuelle}}
                 <div class="local-berufsbildung-stationen-aktuell-spalten" style="grid-template-columns: repeat({{anzahl}}, minmax(6.5rem, 1fr));">
-                    <div class="local-berufsbildung-stationen-aktuell bg-light border {{randklasse}} rounded" style="grid-column: {{kastenstart}} / span {{kastenbreite}};">
+                    <div class="local-berufsbildung-stationen-aktuell local-berufsbildung-stationen-aktuell-{{kastenseite}} bg-light border {{randklasse}} rounded"
+                         style="grid-column: {{kastenstart}} / span {{kastenbreite}}; --local-berufsbildung-kasten-spalten: {{kastenbreite}};">
                         <div class="local-berufsbildung-stationen-aktuell-text">
                             <strong class="d-block">{{bezeichnung}} · <span class="{{#istueberfaellig}}text-danger{{/istueberfaellig}}">{{statustext}}</span></strong>
                             {{#hasstand}}<span class="d-block small text-muted">{{stand}}</span>{{/hasstand}}
