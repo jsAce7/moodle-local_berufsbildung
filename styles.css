@@ -900,7 +900,7 @@
 
 /*
  * Schmale Bildschirme: statt der Tabelle je Bereich eine Klappe, im Kopf
- * Name, Zahl und die Punktreihe, darin die HK als Liste mit Balken. Sieben
+ * Name, Zahl und die HK als Badges, darin die HK als Liste mit Balken. Sieben
  * Spalten passen auf kein Telefon, und seitwaerts schieben verliert die
  * Zeilenkoepfe.
  */
@@ -957,67 +957,90 @@
 }
 
 /*
- * Punktreihe: ein Feld je HK, von unten gefuellt - kraeftig, was vorkam,
- * blass darueber, was eingeplant ist. Die blasse Ebene liegt unten im
- * Markup und wird von der kraeftigen ueberdeckt.
+ * Die HK eines Bereichs als Badges mit Kuerzel (kompetenzraster_marken):
+ * im Kopf der Klappen auf schmalen Bildschirmen und in der zugeklappten
+ * Uebersicht. Die Farben setzen die Bootstrap-Klassen der Badges.
  */
-.local-berufsbildung-raster-punkte {
+.local-berufsbildung-raster-marken {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.2rem;
+    align-items: center;
+    gap: 0.25rem;
 }
 
-.local-berufsbildung-raster-punkt {
-    position: relative;
+.local-berufsbildung-raster-marke {
+    font-variant-numeric: tabular-nums;
+}
+
+.local-berufsbildung-raster-markenart {
+    margin-inline-start: 0.5rem;
+}
+
+.local-berufsbildung-raster-bereichkuerzel {
     display: inline-block;
-    width: 0.9rem;
-    height: 0.9rem;
-    overflow: hidden;
-    border-radius: 0.15rem;
-}
-
-.local-berufsbildung-raster-punkte .local-berufsbildung-raster-punkt-wahlpflicht {
-    /* .border setzt den Stil mit !important. */
-    /* stylelint-disable-next-line declaration-no-important */
-    border-style: dashed !important;
-}
-
-.local-berufsbildung-raster-punkt-wahlpflicht .local-berufsbildung-raster-balkengrund {
-    display: none;
-}
-
-.local-berufsbildung-raster-punktteil {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    left: 0;
+    min-width: 1.25rem;
+    font-weight: 700;
 }
 
 /*
- * Zugeklappt (meine_lernenden.php): je Bereich eine Zeile mit Name und
- * Punktreihe, auf breiten Bildschirmen in zwei Spalten, damit die Namen
- * untereinander stehen.
+ * Zugeklappt (meine_lernenden.php): die Zahl neben dem Titel, je Bereich
+ * eine Zeile mit Name und Badges - auf breiten Bildschirmen in zwei
+ * Spalten, damit die Badges untereinander beginnen.
  */
+.local-berufsbildung-raster-titelzeile {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
 .local-berufsbildung-raster-uebersicht {
     display: grid;
-    gap: 0.35rem;
 }
 
 .local-berufsbildung-raster-uebersichtzeile {
     display: grid;
-    gap: 0.15rem 1rem;
+    gap: 0.35rem 1.5rem;
+    padding: 0.5rem 0;
 }
 
 @media (min-width: 768px) {
     .local-berufsbildung-raster-uebersichtzeile {
-        grid-template-columns: minmax(0, 24rem) 1fr;
+        grid-template-columns: minmax(0, 22rem) 1fr;
         align-items: center;
     }
 }
 
-.local-berufsbildung-raster-ausklapp > summary {
+.local-berufsbildung-raster-markenlegende {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.local-berufsbildung-raster-ausklappkopf {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
     margin-bottom: 0.5rem;
+    list-style: none;
     cursor: pointer;
+}
+
+.local-berufsbildung-raster-ausklappkopf::-webkit-details-marker {
+    display: none;
+}
+
+.local-berufsbildung-raster-ausklappkopf:hover {
+    text-decoration: underline;
+}
+
+.local-berufsbildung-raster-ausklappchevron {
+    transition: transform 0.15s ease;
+}
+
+.local-berufsbildung-raster-ausklapp[open] .local-berufsbildung-raster-ausklappchevron {
+    transform: rotate(90deg);
 }
 
 /*
@@ -1582,4 +1605,28 @@
 .local-berufsbildung-hilfe-text ol li,
 .local-berufsbildung-hilfe-text ul li {
     margin-bottom: 0.25rem;
+}
+
+/*
+ * Abschnitte einer aufgeklappten Kachel auf meine_lernenden.php: ab dem
+ * zweiten mit einer Linie (.border-top) und Abstand darueber - ohne
+ * liefen Bildungsberichte, Fristen, Plan und Raster ineinander.
+ */
+.local-berufsbildung-kachel-abschnitt + .local-berufsbildung-kachel-abschnitt,
+.local-berufsbildung-roster-rechts.local-berufsbildung-kachel-abschnitt {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+}
+
+/*
+ * Nebeneinander trennt der Spaltenabstand den Plan von den Taetigkeiten,
+ * die Linie gilt nur untereinander. .border-top setzt sie mit !important.
+ */
+@media (min-width: 1200px) {
+    .local-berufsbildung-roster-spalten > .local-berufsbildung-roster-rechts.local-berufsbildung-kachel-abschnitt {
+        /* stylelint-disable-next-line declaration-no-important */
+        border-top-width: 0 !important;
+        margin-top: 0;
+        padding-top: 0;
+    }
 }

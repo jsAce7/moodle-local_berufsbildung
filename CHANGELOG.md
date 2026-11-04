@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1] — 2026-11-04
+
+### Geändert
+
+- **Meine Lernenden: Handlungskompetenzen übersichtlicher.** Zugeklappt steht je Bereich der Buchstabe und jede HK als Badge mit ihrem Kürzel statt der Punktreihe: grün mit Häkchen alle LK, Info-Farbe vorgekommen, Rand in Info-Farbe eingeplant, grau noch nicht geplant, mit Plan bis zum Lehrende gelb. Wahlpflicht steht beschriftet hinter der Pflicht, eine Legende aus denselben Badges darunter. Die Zahl „x von y Pflicht begonnen“ steht neben dem Titel, Wahlpflicht und Planhorizont klein unter der Übersicht; „Alle Handlungskompetenzen anzeigen“ mit Chevron. Dieselben Badges im Kopf der Klappen auf dem Telefon (`kompetenzraster_marken` ersetzt `kompetenzraster_punkte`, neu `kompetenzraster_stand`). Auch in Tabelle und Klappen steht der Buchstabe des Bereichs.
+- **Meine Lernenden: Abschnitte getrennt.** Bildungsberichte, Fälligkeiten, Tätigkeiten, Versetzungsplan und Handlungskompetenzen sind in der aufgeklappten Kachel durch eine Linie mit Abstand getrennt; nebeneinander trennt der Spaltenabstand.
+
 ## [1.8.0] — 2026-11-03
 
 ### Geändert

@@ -135,7 +135,9 @@ class kompetenzraster {
             $soll += $bereich->soll();
 
             $zellen = [];
+            $hatwahlpflicht = false;
             foreach ($bereich->kompetenzen as $kompetenz) {
+                $hatwahlpflicht = $hatwahlpflicht || $kompetenz->istwahlpflicht;
                 $anzeige = $kompetenz->anzeigestand();
                 $vorhandenestaende[$anzeige] = true;
                 $vorhandenearten[$kompetenz->istwahlpflicht ? 'wahlpflicht' : 'pflicht'] = true;
@@ -148,6 +150,9 @@ class kompetenzraster {
                 }
                 $zelle = self::zelle($kompetenz, $kompetenzen, $einsaetze, $kompakt, $vorschlaege, $planvollstaendig)
                     + ['zellid' => $rasterid . '-' . $kompetenz->competencyid];
+                // Ohne Kuerzel die Nummer in der Zeile: das Badge der
+                // Uebersicht braucht eine Beschriftung.
+                $zelle['marke'] = $zelle['hascode'] ? $zelle['code'] : (string) (count($zellen) + 1);
                 $mitgeplantem = $mitgeplantem || $zelle['anteileingeplant'] > 0;
                 $zellen[] = $zelle;
             }
@@ -155,8 +160,15 @@ class kompetenzraster {
                 $zellen[] = ['istleer' => true];
             }
 
+            $kuerzel = $bereich->kuerzel !== ''
+                ? $bereich->kuerzel
+                : (string) ($kompetenzen[$bereich->bereichid]['idnumber'] ?? '');
             $bereiche[] = [
                 'name' => $kompetenzen[$bereich->bereichid]['shortname'] ?? '',
+                // Die Wahlpflicht-Zeilen und "noch nicht geplant" nennen
+                // die Bereiche beim Buchstaben.
+                'haskuerzel' => $kuerzel !== '',
+                'kuerzel' => $kuerzel,
                 // Mit "Pflicht" beschriftet: ohne das liest man "0 von 3" in
                 // einer Zeile mit sechs Zellen als Fehler. Kompakt fehlt der
                 // Platz dafuer, dort erklaert es das Badge der Kachel.
@@ -172,6 +184,7 @@ class kompetenzraster {
                     ]
                 ),
                 'hatsoll' => $bereich->soll() > 0,
+                'hatwahlpflicht' => $hatwahlpflicht,
                 'zellen' => $zellen,
             ];
         }
@@ -211,6 +224,14 @@ class kompetenzraster {
             // In der kompakten Variante traegt die Roster-Kachel diese Zahl
             // bereits als Badge.
             'haszusammenfassung' => !$kompakt && $soll > 0 && $hinweis === '',
+            // Zugeklappt nur die Zahl neben dem Titel, wie die Anzahl neben
+            // den uebrigen Ueberschriften der Kachel; wie viele alle LK
+            // haben, zeigen dort die Haekchen der Badges.
+            'kurzzusammenfassung' => get_string('raster:bereich_abdeckung_pflicht', 'local_berufsbildung', (object) [
+                'abgedeckt' => $pflichtstaende[raster_kompetenz::ANZEIGE_VOLLSTAENDIG]
+                    + $pflichtstaende[raster_kompetenz::ANZEIGE_TEILWEISE],
+                'soll' => $soll,
+            ]),
             'zusammenfassung' => get_string('raster:zusammenfassung', 'local_berufsbildung', (object) [
                 'soll' => $soll,
                 'begonnen' => $pflichtstaende[raster_kompetenz::ANZEIGE_VOLLSTAENDIG]
@@ -249,6 +270,7 @@ class kompetenzraster {
                 )
                 : '',
             'legende' => self::legende($vorhandenestaende, $vorhandenearten, $mitgeplantem, $planvollstaendig),
+            'markenlegende' => self::markenlegende($vorhandenestaende, $planvollstaendig),
         ]);
     }
 
@@ -392,9 +414,7 @@ class kompetenzraster {
             'statustext' => $darstellung['text'],
             'anteilvorgekommen' => (int) round($vorgekommen * 100),
             'anteileingeplant' => (int) round($eingeplant * 100),
-            // Fuer die Punktreihe: eingeplant liegt dort ueber dem
-            // Vorgekommenen, beide von unten gefuellt.
-            'anteilbisgeplant' => (int) round(($vorgekommen + $eingeplant) * 100),
+            'markenklasse' => self::markenklasse($anzeige, $planvollstaendig && !$kompetenz->istwahlpflicht),
             // Im kompakten Raster steht nur das Kuerzel in der Zelle; der
             // Titel traegt dort die ganze Information nach.
             'titel' => $name . ' · ' . $art . ' · ' . $darstellung['text'],
@@ -537,6 +557,50 @@ class kompetenzraster {
         }
 
         return ['text' => get_string($schluessel, 'local_berufsbildung')];
+    }
+
+    /**
+     * Bootstrap-Klassen des Badges einer HK in der Uebersicht: gruen mit
+     * Haekchen, wenn alle LK vorkamen, Info-Farbe, wenn einige vorkamen,
+     * mit Rand in Info-Farbe, wenn sie eingeplant ist, und grau, wenn
+     * nichts geplant ist. Reicht der Plan bis zum Lehrende, ist eine
+     * Pflicht-HK ohne Einsatz eine Luecke und steht in der Farbe des
+     * Luecken-Badges der Kachel.
+     *
+     * @param string $anzeige Anzeigestand, siehe raster_kompetenz::anzeigestand()
+     * @param bool $istluecke Pflicht-HK und Plan bis zum Lehrende
+     * @return string
+     */
+    private static function markenklasse(string $anzeige, bool $istluecke = false): string {
+        return match ($anzeige) {
+            raster_kompetenz::ANZEIGE_VOLLSTAENDIG => 'bg-success text-white',
+            raster_kompetenz::ANZEIGE_TEILWEISE => 'bg-info text-white',
+            raster_kompetenz::ANZEIGE_EINGEPLANT => 'bg-white text-info border border-info',
+            default => $istluecke ? 'bg-warning text-dark' : 'text-muted border',
+        };
+    }
+
+    /**
+     * Legende der Badges in der Uebersicht: je vorkommender Stand ein Badge,
+     * das mit dem Stand selbst beschriftet ist.
+     *
+     * @param array $vorhandenestaende Anzeigestand => true, Struktur: array<string, bool>
+     * @param bool $planvollstaendig Siehe render()
+     * @return array Template-Kontext: je Eintrag markenklasse, istvollstaendig, text
+     */
+    private static function markenlegende(array $vorhandenestaende, bool $planvollstaendig): array {
+        $eintraege = [];
+        foreach (self::ANZEIGESTAENDE as $anzeige) {
+            if (empty($vorhandenestaende[$anzeige])) {
+                continue;
+            }
+            $eintraege[] = [
+                'markenklasse' => self::markenklasse($anzeige, $planvollstaendig),
+                'istvollstaendig' => $anzeige === raster_kompetenz::ANZEIGE_VOLLSTAENDIG,
+                'text' => self::darstellung($anzeige, $planvollstaendig)['text'],
+            ];
+        }
+        return $eintraege;
     }
 
     /**

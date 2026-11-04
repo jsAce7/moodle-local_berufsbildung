@@ -29,7 +29,7 @@
     allein traegt nie eine Information.
 
     Unter 768px Breite steht statt der Tabelle je Bereich eine Klappe mit
-    einer Punktreihe im Kopf (kompetenzraster_punkte) und einer Liste
+    den HK als Badges im Kopf (kompetenzraster_marken) und einer Liste
     darin - sieben Spalten passen auf kein Telefon.
 
     Nur ein Vorschlag fuer die Ausbildungsplanung, keine Festlegung
@@ -37,12 +37,12 @@
 
     Context variables required for this template:
     * titel - string, Ueberschrift
-    * bereiche - array of {name, abdeckung, hatsoll, zellen}
+    * bereiche - array of {name, haskuerzel, kuerzel, abdeckung, hatsoll, hatwahlpflicht, zellen}
     * zellen - array of {istleer} oder
                {istleer, name, hascode, code, istwahlpflicht, statusklasse, istvollstaendig, statustext,
                 anteilvorgekommen, anteileingeplant, titel, dialogtitel, vorschlag, haslk, lktext, lkgruppen}
       anteilvorgekommen, anteileingeplant - int, Prozent der LK fuer den Balken
-      anteilbisgeplant - int, beides zusammen, fuer die Punktreihe
+      marke, markenklasse - string, Beschriftung und Bootstrap-Klassen des Badges in der Uebersicht
       zellid - string, id der LK-Liste; die Liste fuer schmale Bildschirme oeffnet darueber deren Dialog
       vorschlag - string, bei einer HK ohne LK, die im Plan fehlt: die Bloecke, in denen sie vorkaeme
     * lkgruppen - array of {titel, statusklasse, icon, leistungskriterien}, das Fehlende zuerst
@@ -50,7 +50,9 @@
       orte - Block und Zeitraum der Einsaetze, in denen das LK vorkam oder geplant ist
       vorschlag - string, bei einem LK, das im Plan fehlt: die Bloecke, in denen es vorkaeme
     * kompakt - bool, nur Kuerzel und Balken statt der vollen Bezeichnung
-    * zugeklappt - bool, zuerst nur die Punktreihe je Bereich, Legende und Raster auf Klick
+    * zugeklappt - bool, zuerst nur die HK als Badges je Bereich, Legende und Raster auf Klick
+    * kurzzusammenfassung - string, zugeklappt neben dem Titel
+    * markenlegende - array of {markenklasse, istvollstaendig, text}
     * haszusammenfassung - bool
     * zusammenfassung - string, Pflicht-HK je Stand ueber alle Bereiche
     * hatohneeinsatz - bool, es gibt Pflicht-HK ohne jeden Einsatz
@@ -102,7 +104,10 @@
         "horizont": "Vorliegender Versetzungsplan reicht bis 20. August 2027.",
         "bereiche": [
             {
-                "name": "a Entwickeln von automatisierten Anlagen",
+                "name": "Entwickeln von automatisierten Anlagen",
+                "haskuerzel": true,
+                "kuerzel": "a",
+                "hatwahlpflicht": true,
                 "abdeckung": "1 von 2 Pflicht begonnen",
                 "hatsoll": true,
                 "zellen": [
@@ -117,7 +122,7 @@
                         "statustext": "teilweise vorgekommen",
                         "anteilvorgekommen": 50,
                         "anteileingeplant": 0,
-                        "anteilbisgeplant": 50,
+                        "marke": "a1", "markenklasse": "bg-info text-white",
                         "zellid": "raster1-11",
                         "titel": "Fertigungsunterlagen erstellen · Pflicht · teilweise vorgekommen",
                         "dialogtitel": "a1 Fertigungsunterlagen erstellen",
@@ -146,7 +151,7 @@
                         "statustext": "noch nicht geplant",
                         "anteilvorgekommen": 0,
                         "anteileingeplant": 0,
-                        "anteilbisgeplant": 0,
+                        "marke": "a2", "markenklasse": "text-muted border",
                         "zellid": "raster1-12",
                         "titel": "Skizzen von Komponenten erstellen · Wahlpflicht · noch nicht geplant"
                     },
@@ -162,63 +167,46 @@
     }
 }}
 <div class="local-berufsbildung-raster{{#kompakt}} local-berufsbildung-raster-kompakt{{/kompakt}}">
-    <h3 class="{{#kompakt}}h6{{/kompakt}}{{^kompakt}}h5{{/kompakt}} mb-1">{{titel}}</h3>
-    {{#haszusammenfassung}}
-        <p class="local-berufsbildung-raster-zusammenfassung mb-1">{{zusammenfassung}}</p>
-    {{/haszusammenfassung}}
-    {{#hatohneeinsatz}}
-        {{! Vor dem letzten Lehrjahr ist das der Normalfall und steht ruhig da;
-            reicht der Plan bis zum Lehrende, ist es eine Luecke. }}
-        <p class="local-berufsbildung-raster-zusammenfassung mb-1{{#ohneeinsatzwarnung}} text-danger{{/ohneeinsatzwarnung}}{{^ohneeinsatzwarnung}} text-muted{{/ohneeinsatzwarnung}}">
-            {{#ohneeinsatzwarnung}}<i class="icon fa fa-exclamation-triangle fa-fw" aria-hidden="true"></i>{{/ohneeinsatzwarnung}}{{ohneeinsatz}}
-        </p>
-    {{/hatohneeinsatz}}
-    {{#hatwahlpflichtwahl}}
-        <p class="local-berufsbildung-raster-zusammenfassung mb-1">{{wahlpflichtwahl}}</p>
-    {{/hatwahlpflichtwahl}}
-    {{#wahlpflichtwege}}
-        {{#hattitel}}
-            <p class="local-berufsbildung-raster-zusammenfassung mb-1">
-                {{titel}}
-                {{#erfuellt}}
-                    <span class="badge bg-success text-white">{{#pix}}i/checked, core{{/pix}}{{#str}} raster:wahlpflicht_erfuellt, local_berufsbildung {{/str}}</span>
-                {{/erfuellt}}
-            </p>
-        {{/hattitel}}
-        {{#staende}}
-            <p class="local-berufsbildung-raster-zusammenfassung mb-1{{#eingerueckt}} local-berufsbildung-raster-wahlpflicht-eingerueckt{{/eingerueckt}}">
-                {{text}}
-                {{#erfuellt}}
-                    <span class="badge bg-success text-white">{{#pix}}i/checked, core{{/pix}}{{#str}} raster:wahlpflicht_erfuellt, local_berufsbildung {{/str}}</span>
-                {{/erfuellt}}
-            </p>
-        {{/staende}}
-    {{/wahlpflichtwege}}
-    {{#hathinweis}}
-        <div class="alert alert-info py-2 mb-2" role="status">
-            {{hinweis}}
-            {{#hatbloeckelink}}<a href="{{bloeckeurl}}">{{bloeckelinktext}}</a>{{/hatbloeckelink}}
-        </div>
-    {{/hathinweis}}
-    {{#hathorizont}}
-        <p class="small text-muted mb-2">{{horizont}}</p>
-    {{/hathorizont}}
+    {{^zugeklappt}}
+        <h3 class="{{#kompakt}}h6{{/kompakt}}{{^kompakt}}h5{{/kompakt}} mb-1">{{titel}}</h3>
+        {{> local_berufsbildung/kompetenzraster_stand }}
+    {{/zugeklappt}}
     {{#zugeklappt}}
         {{! Je Person auf meine_lernenden.php: erst der Ueberblick, das
             Raster auf Klick - sonst ist jede aufgeklappte Kachel so lang
-            wie ein ganzes Raster. }}
+            wie ein ganzes Raster. Die Zahl neben dem Titel wie die Anzahl
+            neben den uebrigen Ueberschriften der Kachel, je Bereich die HK
+            als Badges, der Stand in Worten klein darunter. }}
+        <div class="local-berufsbildung-raster-titelzeile">
+            <h3 class="h5 mb-0">{{titel}}</h3>
+            {{#haszusammenfassung}}<span class="text-muted small">{{kurzzusammenfassung}}</span>{{/haszusammenfassung}}
+        </div>
         <ul class="local-berufsbildung-raster-uebersicht list-unstyled mb-2">
             {{#bereiche}}
-                <li class="local-berufsbildung-raster-uebersichtzeile">
-                    <span class="local-berufsbildung-raster-uebersichtname small">
-                        {{name}}{{#hatsoll}}<span class="d-block text-muted">{{abdeckung}}</span>{{/hatsoll}}
+                <li class="local-berufsbildung-raster-uebersichtzeile border-top">
+                    <span class="local-berufsbildung-raster-uebersichtname">
+                        <span class="d-block">{{#haskuerzel}}<strong class="local-berufsbildung-raster-bereichkuerzel">{{kuerzel}}</strong>{{/haskuerzel}}{{name}}</span>
+                        {{#hatsoll}}<span class="d-block small text-muted">{{abdeckung}}</span>{{/hatsoll}}
                     </span>
-                    {{> local_berufsbildung/kompetenzraster_punkte }}
+                    {{> local_berufsbildung/kompetenzraster_marken }}
                 </li>
             {{/bereiche}}
         </ul>
+        <ul class="local-berufsbildung-raster-markenlegende list-unstyled small text-muted mb-2" aria-hidden="true">
+            {{#markenlegende}}
+                <li><span class="badge {{markenklasse}}">{{#istvollstaendig}}<i class="icon fa fa-check fa-fw m-0"></i>{{/istvollstaendig}}{{text}}</span></li>
+            {{/markenlegende}}
+        </ul>
+        <div class="small">
+            {{> local_berufsbildung/kompetenzraster_stand }}
+        </div>
         <details class="local-berufsbildung-raster-ausklapp">
-            <summary class="small">{{#str}} raster:alle_anzeigen, local_berufsbildung {{/str}}</summary>
+            <summary class="local-berufsbildung-raster-ausklappkopf text-primary">
+                <span class="local-berufsbildung-raster-ausklappchevron" aria-hidden="true">
+                    <i class="icon fa fa-chevron-right fa-fw m-0"></i>
+                </span>
+                {{#str}} raster:alle_anzeigen, local_berufsbildung {{/str}}
+            </summary>
     {{/zugeklappt}}
     <ul class="local-berufsbildung-raster-legende list-unstyled small text-muted mb-2">
         {{#legende}}
@@ -247,7 +235,7 @@
                 {{#bereiche}}
                     <tr>
                         <th scope="row" class="local-berufsbildung-raster-bereich">
-                            <span class="local-berufsbildung-raster-bereichname">{{name}}</span>
+                            <span class="local-berufsbildung-raster-bereichname">{{#haskuerzel}}<span class="local-berufsbildung-raster-bereichkuerzel">{{kuerzel}}</span>{{/haskuerzel}}{{name}}</span>
                             {{#hatsoll}}
                                 <span class="d-block small text-muted">{{abdeckung}}</span>
                             {{/hatsoll}}
@@ -331,13 +319,13 @@
             <details class="local-berufsbildung-raster-klappe border rounded mb-2">
                 <summary class="local-berufsbildung-raster-klappenkopf">
                     <span class="local-berufsbildung-raster-klappenzeile">
-                        <strong class="local-berufsbildung-raster-bereichname">{{name}}</strong>
+                        <strong class="local-berufsbildung-raster-bereichname">{{#haskuerzel}}<span class="local-berufsbildung-raster-bereichkuerzel">{{kuerzel}}</span>{{/haskuerzel}}{{name}}</strong>
                         <span class="local-berufsbildung-raster-chevron text-muted" aria-hidden="true">
                             <i class="icon fa fa-chevron-down fa-fw m-0"></i>
                         </span>
                     </span>
                     {{#hatsoll}}<span class="small text-muted">{{abdeckung}}</span>{{/hatsoll}}
-                    {{> local_berufsbildung/kompetenzraster_punkte }}
+                    {{> local_berufsbildung/kompetenzraster_marken }}
                 </summary>
                 <ul class="list-unstyled mb-0">
                     {{#zellen}}

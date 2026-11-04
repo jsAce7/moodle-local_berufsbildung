@@ -224,23 +224,32 @@ final class kompetenzraster_test extends advanced_testcase {
     }
 
     /**
-     * Zugeklappt (je Person auf meine_lernenden.php) steht zuerst eine
-     * Punktreihe je Bereich; Legende und Raster folgen in einem Aufklapper.
+     * Zugeklappt (je Person auf meine_lernenden.php) stehen zuerst je
+     * Bereich die HK als Badges; Legende und Raster folgen in einem
+     * Aufklapper. Statt des Satzes steht die Zahl neben dem Titel.
      */
-    public function test_zugeklappt_zeigt_zuerst_die_punktreihen(): void {
+    public function test_zugeklappt_zeigt_zuerst_die_badges(): void {
         $this->resetAfterTest();
         $raster = [$this->bereich([
             [raster_kompetenz::STATUS_ABGEDECKT, false],
             [raster_kompetenz::STATUS_OFFEN, true],
         ])];
+        $zusammenfassung = get_string('raster:zusammenfassung', 'local_berufsbildung', (object) [
+            'soll' => 1, 'begonnen' => 1, 'vollstaendig' => 1,
+        ]);
 
         $offen = kompetenzraster::render($raster, time());
         $this->assertStringNotContainsString('local-berufsbildung-raster-uebersicht', $offen);
         $this->assertStringNotContainsString(get_string('raster:alle_anzeigen', 'local_berufsbildung'), $offen);
+        $this->assertStringContainsString($zusammenfassung, $offen);
 
         $zu = kompetenzraster::render($raster, time(), zugeklappt: true);
         $this->assertStringContainsString('local-berufsbildung-raster-uebersicht', $zu);
         $this->assertStringContainsString(get_string('raster:alle_anzeigen', 'local_berufsbildung'), $zu);
+        $this->assertStringNotContainsString($zusammenfassung, $zu);
+        $this->assertStringContainsString(get_string('raster:bereich_abdeckung_pflicht', 'local_berufsbildung', (object) [
+            'abgedeckt' => 1, 'soll' => 1,
+        ]), $zu);
         // Die Uebersicht steht vor dem Aufklapper, das Raster darin.
         $this->assertLessThan(
             strpos($zu, 'local-berufsbildung-raster-ausklapp'),
@@ -250,6 +259,53 @@ final class kompetenzraster_test extends advanced_testcase {
             strpos($zu, 'local-berufsbildung-raster-ausklapp'),
             strpos($zu, 'local-berufsbildung-raster-tabelle')
         );
+    }
+
+    /**
+     * Die Badges der Uebersicht tragen das Kuerzel der HK und den Stand in
+     * der Farbe; Wahlpflicht steht beschriftet hinter der Pflicht. Eine
+     * Pflicht-HK ohne Einsatz ist erst mit dem Plan bis zum Lehrende eine
+     * Luecke in Warnfarbe.
+     */
+    public function test_badges_tragen_kuerzel_und_stand(): void {
+        $this->resetAfterTest();
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $rahmen = $generator->create_framework();
+        $hkb = $generator->create_competency(['competencyframeworkid' => $rahmen->get('id'), 'idnumber' => '7777BE d']);
+        $kompetenzen = [];
+        $staende = [
+            'd.01' => [raster_kompetenz::STATUS_EINGEPLANT, false],
+            'd.02' => [raster_kompetenz::STATUS_OFFEN, false],
+            'd.03' => [raster_kompetenz::STATUS_ABGEDECKT, true],
+        ];
+        foreach ($staende as $kuerzel => [$status, $istwahlpflicht]) {
+            $kompetenzen[] = new raster_kompetenz((int) $generator->create_competency([
+                'competencyframeworkid' => $rahmen->get('id'), 'parentid' => $hkb->get('id'), 'idnumber' => '7777BE ' . $kuerzel,
+            ])->get('id'), $status, $istwahlpflicht);
+        }
+        $raster = [new raster_bereich((int) $hkb->get('id'), $kompetenzen, 'd')];
+        $marke = static fn (string $html, string $kuerzel): string =>
+            preg_match('~<span class="badge local-berufsbildung-raster-marke ([^"]+)"[^>]*>(?:<i[^>]*></i>)?'
+                . preg_quote($kuerzel, '~') . '<~', $html, $treffer) ? $treffer[1] : '';
+
+        $html = kompetenzraster::render($raster, time(), zugeklappt: true);
+        $this->assertStringContainsString('local-berufsbildung-raster-bereichkuerzel">d<', $html);
+        $this->assertSame('bg-white text-info border border-info', $marke($html, 'd.01'));
+        $this->assertSame('text-muted border', $marke($html, 'd.02'));
+        // Wahlpflicht hinter ihrer Beschriftung, nach der Pflicht.
+        $this->assertSame('bg-success text-white', $marke($html, 'd.03'));
+        $uebersicht = substr($html, strpos($html, 'local-berufsbildung-raster-uebersicht'));
+        $this->assertGreaterThan(
+            strpos($uebersicht, 'local-berufsbildung-raster-markenart'),
+            strpos($uebersicht, '>d.03<')
+        );
+        $this->assertLessThan(
+            strpos($uebersicht, 'local-berufsbildung-raster-markenart'),
+            strpos($uebersicht, '>d.02<')
+        );
+
+        $html = kompetenzraster::render($raster, time(), planvollstaendig: true, zugeklappt: true);
+        $this->assertSame('bg-warning text-dark', $marke($html, 'd.02'));
     }
 
     /**

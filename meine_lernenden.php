@@ -309,6 +309,16 @@ if (empty($eintraege)) {
 
     echo html_writer::start_tag('div', ['class' => 'local-berufsbildung-roster-grid']);
 
+    // Abschnitte untereinander, ab dem zweiten mit einer Linie darueber;
+    // leere fallen weg, damit keine Linie ueber nichts steht.
+    $trenne = static function (array $teile): string {
+        $html = '';
+        foreach (array_filter($teile, static fn (string $teil): bool => trim($teil) !== '') as $teil) {
+            $html .= html_writer::div($teil, 'local-berufsbildung-kachel-abschnitt' . ($html !== '' ? ' border-top' : ''));
+        }
+        return $html;
+    };
+
     foreach ($gefiltert as $eintrag) {
         $lernendeid = $eintrag['id'];
         $stand = $eintrag['stand'];
@@ -345,8 +355,11 @@ if (empty($eintraege)) {
             echo html_writer::end_tag('div');
         }
 
+        // Die Abschnitte der Kachel, durch eine Linie getrennt - ohne
+        // liefen Bildungsberichte, Fristen, Plan und Raster ineinander.
+        $abschnitte = [];
         foreach ($stationen as $quellekey => $einzelstationen) {
-            echo html_writer::div(stationen_leiste::render($einzelstationen, $stationenaktionen[$quellekey] ?? null), 'mb-4');
+            $abschnitte[] = stationen_leiste::render($einzelstationen, $stationenaktionen[$quellekey] ?? null);
         }
 
         // Externe Personen haben hier keinen Ausbildungsstand und damit
@@ -354,7 +367,7 @@ if (empty($eintraege)) {
         // einordnen liesse.
         $semestergrenzen = $eintrag['istextern'] ? [] : api::get_semester_grenzen($lernendeid);
 
-        $links = faelligkeiten_liste::render(
+        $faelligkeiten = faelligkeiten_liste::render(
             $faelligkeitenjelernende[$lernendeid] ?? [],
             get_string('faelligkeiten:titel', 'local_berufsbildung'),
             kompakt: true
@@ -366,7 +379,7 @@ if (empty($eintraege)) {
             $collector->get_nachweise($berufsbildnerid, $lernendeid, 0, time()),
             static fn ($nachweis): bool => !isset($stationen[$nachweis->quellekey])
         ));
-        $links .= nachweis_liste::render(
+        $taetigkeiten = nachweis_liste::render(
             $nachweise,
             $quellennamen,
             $semestergrenzen,
@@ -395,13 +408,18 @@ if (empty($eintraege)) {
         // Inhaltsbereich sonst zu schmal fuer zwei Spalten. Ohne Plan
         // nimmt die linke Liste die volle Breite, statt neben einer leeren
         // Haelfte zu stehen.
+        $links = $trenne([$faelligkeiten, $taetigkeiten]);
         if ($rechts !== '') {
-            echo html_writer::div(
-                html_writer::div($links, 'col-12 col-xl-6') . html_writer::div($rechts, 'col-12 col-xl-6 mb-4'),
+            // Untereinander (unter xl) trennt dieselbe Linie den Plan von
+            // den Taetigkeiten; nebeneinander der Spaltenabstand.
+            $abschnitte[] = html_writer::div(
+                html_writer::div($links, 'col-12 col-xl-6')
+                    . html_writer::div($rechts, 'col-12 col-xl-6 local-berufsbildung-roster-rechts'
+                        . ($links !== '' ? ' local-berufsbildung-kachel-abschnitt border-top' : '')),
                 'row local-berufsbildung-roster-spalten'
             );
         } else {
-            echo $links;
+            $abschnitte[] = $links;
         }
 
         if (!empty($raster[$lernendeid])) {
@@ -410,24 +428,22 @@ if (empty($eintraege)) {
             // wofuer man die Person aufklappt.
             //
             // Nur das Raster, ohne Lueckenliste daneben - wie auf
-            // meine_lehre.php. Was fehlt, zeigt es selbst: die leeren
-            // Balken, und je Zelle die fehlenden LK im Dialog. Die Zahl
+            // meine_lehre.php. Was fehlt, zeigt es selbst: die Badges ohne
+            // Flaeche, und je Zelle die fehlenden LK im Dialog. Die Zahl
             // der fehlenden Pflicht-HK traegt das Badge der Kachel.
-            echo html_writer::div(
-                kompetenzraster::render(
-                    $raster[$lernendeid],
-                    api::get_planungshorizont($lernendeid),
-                    wahlpflicht: $stand !== null ? ($wahlpflicht[$stand->beruf] ?? null) : null,
-                    // Je Beruf einmal geladen, nicht je Person.
-                    vorschlaege: $stand !== null
-                        ? ($vorschlaege[$stand->beruf] ??= api::get_bloecke_je_kompetenz($stand->beruf))
-                        : [],
-                    planvollstaendig: $planvollstaendig[$lernendeid] ?? false,
-                    zugeklappt: true
-                ),
-                'mb-3'
+            $abschnitte[] = kompetenzraster::render(
+                $raster[$lernendeid],
+                api::get_planungshorizont($lernendeid),
+                wahlpflicht: $stand !== null ? ($wahlpflicht[$stand->beruf] ?? null) : null,
+                // Je Beruf einmal geladen, nicht je Person.
+                vorschlaege: $stand !== null
+                    ? ($vorschlaege[$stand->beruf] ??= api::get_bloecke_je_kompetenz($stand->beruf))
+                    : [],
+                planvollstaendig: $planvollstaendig[$lernendeid] ?? false,
+                zugeklappt: true
             );
         }
+        echo $trenne($abschnitte);
 
         $profilurl = new moodle_url('/user/profile.php', ['id' => $lernendeid]);
         echo html_writer::div(html_writer::link(
