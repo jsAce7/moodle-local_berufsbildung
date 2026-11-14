@@ -281,14 +281,6 @@ class raster_analyse {
      * @return int|null Timestamp, null wenn kein Einsatz vorliegt
      */
     public function get_planungshorizont(int $lernendeid): ?int {
-        $einsaetze = (new plan_service())->get_einsaetze($lernendeid);
-        if (empty($einsaetze)) {
-            return null;
-        }
-
-        return max(array_map(
-            static fn ($einsatz): int => (int) $einsatz->get('bis'),
-            $einsaetze
-        ));
+        return (new plan_service())->get_letztes_einsatzende($lernendeid);
     }
 }

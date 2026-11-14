@@ -25,6 +25,7 @@
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 
+use local_berufsbildung\datum;
 use local_berufsbildung\form\aufbewahrung_form;
 use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\persistent\aufbewahrung;
@@ -58,21 +59,24 @@ if ($form->is_cancelled()) {
 }
 
 if (!$form->is_submitted() && $eintrag !== null) {
+    $bisher = $eintrag->get('gueltig_bis');
     $form->set_data((object) [
         'id' => $id,
         'lernendeid' => $eintrag->get('lernendeid'),
         'grund' => $eintrag->get('grund'),
         'gueltig_von' => $eintrag->get('gueltig_von'),
         // Ein date_selector mit optional => true erwartet 0 statt null fuer
-        // "kein Datum" (siehe zuordnung_beenden.php).
-        'gueltig_bis' => $eintrag->get('gueltig_bis') ?? 0,
+        // "kein Datum" (siehe zuordnung_beenden.php). Gespeichert ist das
+        // Tagesende, angezeigt wird der Tag (siehe datum).
+        'gueltig_bis' => $bisher !== null ? datum::tagesbeginn((int) $bisher) : 0,
     ]);
 } else if (!$form->is_submitted() && $lernendeid > 0) {
     $form->set_data((object) ['lernendeid' => $lernendeid]);
 }
 
 if ($data = $form->get_data()) {
-    $gueltigbis = !empty($data->gueltig_bis) ? (int) $data->gueltig_bis : null;
+    // Die Pflicht gilt am gewaehlten Tag noch ganz (siehe datum).
+    $gueltigbis = !empty($data->gueltig_bis) ? datum::tagesende((int) $data->gueltig_bis) : null;
 
     if ($eintrag === null) {
         $eintrag = new aufbewahrung(0, (object) [

@@ -28,6 +28,7 @@ namespace local_berufsbildung\import;
 
 use core_user;
 use local_berufsbildung\api;
+use local_berufsbildung\service\zuordnung_service;
 
 /**
  * Kennt weder csv_import_reader noch die Seite - nimmt eine bereits in
@@ -42,6 +43,9 @@ use local_berufsbildung\api;
 class zuordnung_csv_importer {
     /** @var string[] Erwartete Spaltennamen, kleingeschrieben. */
     public const ERWARTETE_SPALTEN = ['berufsbildner', 'lernende', 'beruf', 'gueltig_von'];
+
+    /** @var string Der Import kennt keine Rollenspalte und legt nur Hauptverantwortliche an. */
+    private const ROLLE = 'hauptverantwortlich';
 
     /**
      * Ordnet eine rohe, indizierte CSV-Zeile den erwarteten Spalten zu.
@@ -114,8 +118,27 @@ class zuordnung_csv_importer {
 
         $beruf = clean_param($zeile['beruf'], PARAM_TEXT);
 
+        // Dieselbe Pruefung wie beim Anlegen, damit die Vorschau keine Zeile
+        // als in Ordnung zeigt, die beim Bestaetigen scheitert.
+        $fehler = (new zuordnung_service())->pruefe(
+            (int) $berufsbildner->id,
+            (int) $lernende->id,
+            $gueltigvon,
+            self::ROLLE
+        );
+        if ($fehler !== null) {
+            $ergebnis['fehler'] = get_string($fehler, 'local_berufsbildung');
+            return $ergebnis;
+        }
+
         if ($anlegen) {
-            api::set_zuordnung((int) $berufsbildner->id, (int) $lernende->id, $beruf, $gueltigvon);
+            // Was die Pruefung nicht sehen kann (etwa eine fruehere Zeile
+            // derselben Datei), wird ebenfalls zum Zeilenfehler.
+            try {
+                api::set_zuordnung((int) $berufsbildner->id, (int) $lernende->id, $beruf, $gueltigvon, self::ROLLE);
+            } catch (\moodle_exception $e) {
+                $ergebnis['fehler'] = $e->getMessage();
+            }
         }
 
         return $ergebnis;

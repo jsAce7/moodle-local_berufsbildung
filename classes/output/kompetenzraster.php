@@ -731,12 +731,23 @@ class kompetenzraster {
             return [];
         }
 
-        // Ausschliesslich Integer aus der API, deshalb direkt einsetzbar.
-        $idliste = implode(',', array_map('intval', array_unique($ids)));
+        // Auf "Meine Lernenden" steht das Raster fuer jede Person, meist im
+        // selben Beruf: Bezeichnungen und formatierte Beschreibungen je
+        // Anfrage nur einmal laden (Request-Cache, db/caches.php).
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        $cache = \cache::make('local_berufsbildung', 'kompetenzen');
+        $bezeichnungen = array_filter($cache->get_many($ids), 'is_array');
+        $fehlend = array_values(array_diff($ids, array_keys($bezeichnungen)));
+        if (empty($fehlend)) {
+            return $bezeichnungen;
+        }
 
-        $bezeichnungen = [];
+        // Ausschliesslich Integer aus der API, deshalb direkt einsetzbar.
+        $idliste = implode(',', $fehlend);
+
+        $neu = [];
         foreach (competency::get_records_select("id IN ({$idliste})") as $kompetenz) {
-            $bezeichnungen[(int) $kompetenz->get('id')] = [
+            $neu[(int) $kompetenz->get('id')] = [
                 'shortname' => format_string($kompetenz->get('shortname')),
                 // Nur das Kuerzel, nicht die volle ID-Nummer: in der
                 // kompakten Variante ist es das Einzige, was in der Zelle
@@ -753,7 +764,10 @@ class kompetenzraster {
                 ), 0, false)),
             ];
         }
+        if (!empty($neu)) {
+            $cache->set_many($neu);
+        }
 
-        return $bezeichnungen;
+        return $bezeichnungen + $neu;
     }
 }

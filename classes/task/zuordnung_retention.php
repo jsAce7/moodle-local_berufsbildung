@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace local_berufsbildung\task;
 
 use core\task\scheduled_task;
+use local_berufsbildung\service\konto_bereinigung_service;
 use local_berufsbildung\service\zuordnung_retention_service;
 
 /**
@@ -47,6 +48,13 @@ class zuordnung_retention extends scheduled_task {
      *
      */
     public function execute(): void {
+        // Sicherheitsnetz fuer Konten, die am Observer auf user_deleted
+        // vorbei geloescht wurden (etwa vor dessen Einfuehrung).
+        $verwaist = (new konto_bereinigung_service())->bereinige_verwaiste();
+        if ($verwaist > 0) {
+            mtrace(sprintf('local_berufsbildung: Daten von %d geloeschten Konto/Konten bereinigt.', $verwaist));
+        }
+
         $ergebnis = (new zuordnung_retention_service())->bereinige_abgelaufene();
 
         mtrace(sprintf(

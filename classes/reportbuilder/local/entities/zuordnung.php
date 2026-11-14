@@ -29,6 +29,7 @@ namespace local_berufsbildung\reportbuilder\local\entities;
 use lang_string;
 use core_reportbuilder\local\entities\base;
 use core_reportbuilder\local\filters\{date, select, text};
+use core_reportbuilder\local\helpers\database;
 use core_reportbuilder\local\helpers\format;
 use core_reportbuilder\local\report\{column, filter};
 
@@ -38,6 +39,15 @@ use core_reportbuilder\local\report\{column, filter};
  * das erledigt die Datasource ueber zwei separate user-Entities.
  */
 class zuordnung extends base {
+    /** Status: noch nicht begonnen. */
+    public const STATUS_GEPLANT = 2;
+
+    /** Status: laeuft heute. */
+    public const STATUS_LAUFEND = 1;
+
+    /** Status: beendet. */
+    public const STATUS_BEENDET = 0;
+
     /**
      * Tabellen, auf denen diese Entity aufbaut.
      *
@@ -131,19 +141,18 @@ class zuordnung extends base {
                 );
             });
 
+        [$statussql, $statusparams] = $this->status_sql($alias);
         $columns[] = (new column(
             'status',
             new lang_string('zuordnung:status', 'local_berufsbildung'),
             $this->get_entity_name()
         ))
             ->add_joins($this->get_joins())
-            ->set_type(column::TYPE_TEXT)
-            ->add_fields("{$alias}.gueltig_bis")
+            ->set_type(column::TYPE_INTEGER)
+            ->add_field($statussql, 'status', $statusparams)
             ->set_is_sortable(true)
-            ->add_callback(static function (?string $gueltigbis): string {
-                return $gueltigbis === null
-                    ? get_string('zuordnung:status_laufend', 'local_berufsbildung')
-                    : get_string('zuordnung:status_beendet', 'local_berufsbildung');
+            ->add_callback(static function (?int $status): string {
+                return self::status_optionen()[(int) $status] ?? '';
             });
 
         $columns[] = (new column(
@@ -201,20 +210,19 @@ class zuordnung extends base {
             "{$alias}.beruf"
         ))->add_joins($this->get_joins());
 
-        // 1 = laufend (gueltig_bis IS NULL), 0 = beendet - als Ausdruck statt
-        // eigener Spalte, damit sich auch danach filtern laesst.
+        // Als Ausdruck statt eigener Spalte, damit sich auch danach filtern
+        // laesst - siehe status_sql().
+        [$statussql, $statusparams] = $this->status_sql($alias);
         $filters[] = (new filter(
             select::class,
             'status',
             new lang_string('zuordnung:status', 'local_berufsbildung'),
             $this->get_entity_name(),
-            "CASE WHEN {$alias}.gueltig_bis IS NULL THEN 1 ELSE 0 END"
+            $statussql,
+            $statusparams
         ))
             ->add_joins($this->get_joins())
-            ->set_options([
-                1 => get_string('zuordnung:status_laufend', 'local_berufsbildung'),
-                0 => get_string('zuordnung:status_beendet', 'local_berufsbildung'),
-            ]);
+            ->set_options(self::status_optionen());
 
         $filters[] = (new filter(
             date::class,
@@ -225,5 +233,39 @@ class zuordnung extends base {
         ))->add_joins($this->get_joins());
 
         return $filters;
+    }
+
+    /**
+     * Status zum jetzigen Zeitpunkt, dieselbe Bedingung wie
+     * api::is_zustaendig(): eine Zuordnung mit kuenftigem Enddatum laeuft
+     * noch, eine noch nicht begonnene ist geplant.
+     *
+     * @param string $alias
+     * @return array{0: string, 1: array} [SQL, Parameter]
+     */
+    private function status_sql(string $alias): array {
+        $jetzt = time();
+        $von = database::generate_param_name();
+        $bis = database::generate_param_name();
+
+        return [
+            "CASE WHEN {$alias}.gueltig_von > :{$von} THEN " . self::STATUS_GEPLANT . "
+                  WHEN {$alias}.gueltig_bis IS NOT NULL AND {$alias}.gueltig_bis < :{$bis} THEN " . self::STATUS_BEENDET . "
+                  ELSE " . self::STATUS_LAUFEND . " END",
+            [$von => $jetzt, $bis => $jetzt],
+        ];
+    }
+
+    /**
+     * Anzeigenamen der Status.
+     *
+     * @return array<int, string>
+     */
+    private static function status_optionen(): array {
+        return [
+            self::STATUS_GEPLANT => get_string('zuordnung:status_geplant', 'local_berufsbildung'),
+            self::STATUS_LAUFEND => get_string('zuordnung:status_laufend', 'local_berufsbildung'),
+            self::STATUS_BEENDET => get_string('zuordnung:status_beendet', 'local_berufsbildung'),
+        ];
     }
 }

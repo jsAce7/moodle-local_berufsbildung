@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace local_berufsbildung\service;
 
+use local_berufsbildung\navigation\sichtbarkeit;
 use local_berufsbildung\persistent\kohorten_link;
 use local_berufsbildung\persistent\zuordnung;
 
@@ -34,7 +35,71 @@ use local_berufsbildung\persistent\zuordnung;
  */
 class zuordnung_service {
     /**
+     * Liesse sich diese Zuordnung anlegen? Dieselbe Pruefung wie in
+     * anlegen(), ohne zu schreiben - fuer die Vorschau des CSV-Imports.
+     *
+     * @param int $berufsbildnerid
+     * @param int $lernendeid
+     * @param int $gueltigvon
+     * @param string $rolle
+     * @return string|null Schluessel des Sprachstrings, null = in Ordnung
+     *     (auch, wenn dieselbe Zuordnung schon besteht)
+     */
+    public function pruefe(int $berufsbildnerid, int $lernendeid, int $gueltigvon, string $rolle): ?string {
+        return $this->bewerte($berufsbildnerid, $lernendeid, $gueltigvon, $rolle)['fehler'];
+    }
+
+    /**
+     * Gemeinsame Pruefung von pruefe() und anlegen().
+     *
+     * @param int $berufsbildnerid
+     * @param int $lernendeid
+     * @param int $gueltigvon
+     * @param string $rolle
+     * @return array{fehler: ?string, identisch: ?zuordnung, ueberschneidend: zuordnung[]}
+     */
+    private function bewerte(int $berufsbildnerid, int $lernendeid, int $gueltigvon, string $rolle): array {
+        $ergebnis = ['fehler' => null, 'identisch' => null, 'ueberschneidend' => []];
+
+        if ($berufsbildnerid === $lernendeid) {
+            $ergebnis['fehler'] = 'zuordnung:fehler_gleiche_person';
+            return $ergebnis;
+        }
+
+        $ueberschneidend = zuordnung::get_records_select(
+            'lernendeid = :lernendeid AND rolle = :rolle
+             AND (gueltig_bis IS NULL OR gueltig_bis >= :gueltigvon)',
+            ['lernendeid' => $lernendeid, 'rolle' => $rolle, 'gueltigvon' => $gueltigvon]
+        );
+        foreach ($ueberschneidend as $einzelne) {
+            $beginn = (int) $einzelne->get('gueltig_von');
+            if ($beginn > $gueltigvon) {
+                $ergebnis['fehler'] = 'zuordnung:fehler_ueberschneidung';
+                return $ergebnis;
+            }
+            if ($beginn === $gueltigvon) {
+                // Dieselbe Zuordnung noch einmal (etwa ein erneut hochgeladener
+                // CSV-Import): nichts zu tun. Eine andere Person zum selben
+                // Beginn liesse sich nur mit einem leeren Zeitraum
+                // (gueltig_bis vor gueltig_von) verdraengen - abgelehnt.
+                if ((int) $einzelne->get('berufsbildnerid') === $berufsbildnerid) {
+                    $ergebnis['identisch'] = $einzelne;
+                } else {
+                    $ergebnis['fehler'] = 'zuordnung:fehler_gleicher_beginn';
+                }
+                return $ergebnis;
+            }
+        }
+
+        $ergebnis['ueberschneidend'] = $ueberschneidend;
+        return $ergebnis;
+    }
+
+    /**
      * Legt eine Zuordnung an und beendet dabei nur einen vorherigen Zeitraum derselben Rolle.
+     *
+     * Besteht dieselbe Zuordnung (Person, Rolle, Beginn) bereits, bleibt sie
+     * unveraendert und wird zurueckgegeben.
      *
      * @param int $berufsbildnerid
      * @param int $lernendeid
@@ -42,6 +107,8 @@ class zuordnung_service {
      * @param int $gueltigvon
      * @param string $rolle
      * @param int|null $kohortenlinkid
+     * @return zuordnung
+     * @throws \moodle_exception bei Ueberschneidung, gleichem Beginn mit anderer Person oder gleicher Person
      */
     public function anlegen(
         int $berufsbildnerid,
@@ -53,25 +120,21 @@ class zuordnung_service {
     ): zuordnung {
         global $DB;
 
-        if ($berufsbildnerid === $lernendeid) {
-            throw new \moodle_exception('zuordnung:fehler_gleiche_person', 'local_berufsbildung');
+        $bewertung = $this->bewerte($berufsbildnerid, $lernendeid, $gueltigvon, $rolle);
+        if ($bewertung['fehler'] !== null) {
+            throw new \moodle_exception($bewertung['fehler'], 'local_berufsbildung');
         }
-
-        $ueberschneidend = zuordnung::get_records_select(
-            'lernendeid = :lernendeid AND rolle = :rolle
-             AND (gueltig_bis IS NULL OR gueltig_bis >= :gueltigvon)',
-            ['lernendeid' => $lernendeid, 'rolle' => $rolle, 'gueltigvon' => $gueltigvon]
-        );
-        foreach ($ueberschneidend as $einzelne) {
-            if ((int) $einzelne->get('gueltig_von') > $gueltigvon) {
-                throw new \moodle_exception('zuordnung:fehler_ueberschneidung', 'local_berufsbildung');
-            }
+        if ($bewertung['identisch'] !== null) {
+            return $bewertung['identisch'];
         }
+        $ueberschneidend = $bewertung['ueberschneidend'];
 
         $transaktion = $DB->start_delegated_transaction();
+        $verdraengte = [];
         foreach ($ueberschneidend as $einzelne) {
             $einzelne->set('gueltig_bis', $gueltigvon - 1);
             $einzelne->update();
+            $verdraengte[(int) $einzelne->get('berufsbildnerid')] = true;
         }
         $neue = new zuordnung(0, (object) [
             'berufsbildnerid' => $berufsbildnerid,
@@ -84,8 +147,17 @@ class zuordnung_service {
         ]);
         $neue->create();
         $transaktion->allow_commit();
+        sichtbarkeit::vergiss();
 
-        (new role_sync_service())->synchronisiere_paar($berufsbildnerid, $lernendeid);
+        $rollensync = new role_sync_service();
+        $rollensync->synchronisiere_paar($berufsbildnerid, $lernendeid);
+        // War die beendete Zuordnung die letzte laufende der verdraengten
+        // Person, faellt ihre Planungsrolle sofort weg und nicht erst beim
+        // naechsten Task-Lauf - Begruendung wie in beenden().
+        unset($verdraengte[$berufsbildnerid]);
+        foreach (array_keys($verdraengte) as $verdraengtid) {
+            $rollensync->synchronisiere_planungsrolle($verdraengtid);
+        }
         return $neue;
     }
 
@@ -100,25 +172,31 @@ class zuordnung_service {
         if ($gueltigbis !== null && $gueltigbis < (int) $zuordnung->get('gueltig_von')) {
             throw new \moodle_exception('zuordnung:fehler_enddatum', 'local_berufsbildung');
         }
-        // Nur beim Wiederoeffnen pruefen - die Abfrage bleibt bewusst hinter
-        // der Null-Pruefung, damit ein normales Beenden ohne sie auskommt.
-        if ($gueltigbis === null) {
-            $ueberschneidung = zuordnung::record_exists_select(
-                'id <> :id AND lernendeid = :lernendeid AND rolle = :rolle
-                 AND (gueltig_bis IS NULL OR gueltig_bis >= :gueltigvon)',
-                [
-                    'id' => $zuordnungid,
-                    'lernendeid' => $zuordnung->get('lernendeid'),
-                    'rolle' => $zuordnung->get('rolle'),
-                    'gueltigvon' => $zuordnung->get('gueltig_von'),
-                ]
-            );
-            if ($ueberschneidung) {
+        // Nur pruefen, wenn der Zeitraum waechst (Wiederoeffnen oder spaeteres
+        // Ende): ein frueheres Ende kann keine Ueberschneidung erzeugen, und
+        // ein normales Beenden kommt so ohne die Abfrage aus.
+        $bisher = $zuordnung->get('gueltig_bis');
+        $waechst = $bisher !== null && ($gueltigbis === null || $gueltigbis > (int) $bisher);
+        if ($waechst) {
+            $select = 'id <> :id AND lernendeid = :lernendeid AND rolle = :rolle
+                       AND (gueltig_bis IS NULL OR gueltig_bis >= :gueltigvon)';
+            $params = [
+                'id' => $zuordnungid,
+                'lernendeid' => $zuordnung->get('lernendeid'),
+                'rolle' => $zuordnung->get('rolle'),
+                'gueltigvon' => $zuordnung->get('gueltig_von'),
+            ];
+            if ($gueltigbis !== null) {
+                $select .= ' AND gueltig_von <= :gueltigbis';
+                $params['gueltigbis'] = $gueltigbis;
+            }
+            if (zuordnung::record_exists_select($select, $params)) {
                 throw new \moodle_exception('zuordnung:fehler_ueberschneidung', 'local_berufsbildung');
             }
         }
         $zuordnung->set('gueltig_bis', $gueltigbis);
         $zuordnung->update();
+        sichtbarkeit::vergiss();
 
         // Auch beim Beenden abgleichen, nicht nur beim Anlegen und Loeschen:
         // sonst behaelt eine Person die systemweite Planungsrolle bis zum
@@ -140,6 +218,7 @@ class zuordnung_service {
         $berufsbildnerid = (int) $zuordnung->get('berufsbildnerid');
         $lernendeid = (int) $zuordnung->get('lernendeid');
         $zuordnung->delete();
+        sichtbarkeit::vergiss();
         (new role_sync_service())->synchronisiere_paar($berufsbildnerid, $lernendeid);
     }
 
@@ -184,7 +263,28 @@ class zuordnung_service {
             $link->set('aktiv', false);
             $link->update();
         }
+        if ($anzahl > 0) {
+            sichtbarkeit::vergiss();
+        }
 
         return $anzahl;
+    }
+
+    /**
+     * Hat die Person heute mindestens eine laufende Zuordnung als
+     * Berufsbildner/in? Bedingung wie api::is_zustaendig().
+     *
+     * @param int $berufsbildnerid
+     * @return bool
+     */
+    public function hat_laufende_als_berufsbildner(int $berufsbildnerid): bool {
+        $jetzt = time();
+
+        return zuordnung::record_exists_select(
+            'berufsbildnerid = :berufsbildnerid
+             AND gueltig_von <= :stichtag1
+             AND (gueltig_bis IS NULL OR gueltig_bis >= :stichtag2)',
+            ['berufsbildnerid' => $berufsbildnerid, 'stichtag1' => $jetzt, 'stichtag2' => $jetzt]
+        );
     }
 }

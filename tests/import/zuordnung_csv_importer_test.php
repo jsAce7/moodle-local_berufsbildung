@@ -220,4 +220,45 @@ final class zuordnung_csv_importer_test extends advanced_testcase {
 
         $this->assertNotNull($ergebnis['fehler']);
     }
+
+    /**
+     * Eine erneut hochgeladene, schon importierte Zeile ist kein Fehler und
+     * legt nichts doppelt an.
+     */
+    public function test_verarbeite_zeile_zweimal_importiert_bleibt_eine_zuordnung(): void {
+        $this->resetAfterTest();
+
+        $this->getDataGenerator()->create_user(['username' => 'bb_wieder']);
+        $lernende = $this->getDataGenerator()->create_user(['username' => 'lern_wieder']);
+        $zeile = ['berufsbildner' => 'bb_wieder', 'lernende' => 'lern_wieder', 'beruf' => 'AU_EFZ', 'gueltig_von' => '2026-08-01'];
+        $importer = new zuordnung_csv_importer();
+
+        $this->assertNull($importer->verarbeite_zeile($zeile, true)['fehler']);
+        $this->assertNull($importer->verarbeite_zeile($zeile, false)['fehler']);
+        $this->assertNull($importer->verarbeite_zeile($zeile, true)['fehler']);
+
+        $this->assertCount(1, zuordnung::get_records(['lernendeid' => (int) $lernende->id]));
+    }
+
+    /**
+     * Was beim Anlegen scheitern wuerde, meldet schon die Vorschau als
+     * Zeilenfehler, und beim Bestaetigen wirft die Zeile nicht.
+     */
+    public function test_verarbeite_zeile_konflikt_ist_zeilenfehler_in_vorschau_und_import(): void {
+        $this->resetAfterTest();
+
+        $erste = $this->getDataGenerator()->create_user(['username' => 'bb_erste']);
+        $this->getDataGenerator()->create_user(['username' => 'bb_zweite']);
+        $lernende = $this->getDataGenerator()->create_user(['username' => 'lern_konflikt']);
+        api::set_zuordnung((int) $erste->id, (int) $lernende->id, 'AU_EFZ', strtotime('2026-08-01 00:00:00'));
+        $importer = new zuordnung_csv_importer();
+
+        foreach (['2026-08-01', '2026-02-01'] as $datum) {
+            $zeile = ['berufsbildner' => 'bb_zweite', 'lernende' => 'lern_konflikt', 'beruf' => 'AU_EFZ', 'gueltig_von' => $datum];
+            $this->assertNotNull($importer->verarbeite_zeile($zeile, false)['fehler'], $datum);
+            $this->assertNotNull($importer->verarbeite_zeile($zeile, true)['fehler'], $datum);
+        }
+
+        $this->assertCount(1, zuordnung::get_records(['lernendeid' => (int) $lernende->id]));
+    }
 }

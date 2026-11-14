@@ -1291,4 +1291,121 @@ final class api_test extends advanced_testcase {
 
         $this->assertCount(6, api::get_semester_grenzen((int) $lernende->id));
     }
+
+    /**
+     * Dieselbe Zuordnung zum selben Beginn (erneut hochgeladener Import)
+     * bleibt unveraendert, statt einen leeren Zeitraum und eine Verletzung
+     * des Unique-Keys zu erzeugen.
+     */
+    public function test_set_zuordnung_gleiche_zuordnung_zum_gleichen_beginn_bleibt_unveraendert(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $von = strtotime('2026-08-01 00:00:00');
+        $erste = api::set_zuordnung((int) $berufsbildner->id, (int) $lernende->id, 'AU_EFZ', $von);
+
+        $zweite = api::set_zuordnung((int) $berufsbildner->id, (int) $lernende->id, 'AU_EFZ', $von);
+
+        $this->assertSame((int) $erste->get('id'), (int) $zweite->get('id'));
+        $alle = zuordnung::get_records(['lernendeid' => (int) $lernende->id]);
+        $this->assertCount(1, $alle);
+        $this->assertNull(reset($alle)->get('gueltig_bis'));
+    }
+
+    /**
+     * Eine andere Person zum selben Beginn wird abgelehnt; die bestehende
+     * Zuordnung bleibt laufend.
+     */
+    public function test_set_zuordnung_andere_person_zum_gleichen_beginn_wird_abgelehnt(): void {
+        $this->resetAfterTest();
+
+        $erste = $this->getDataGenerator()->create_user();
+        $zweite = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $von = strtotime('2026-08-01 00:00:00');
+        api::set_zuordnung((int) $erste->id, (int) $lernende->id, 'AU_EFZ', $von);
+
+        try {
+            api::set_zuordnung((int) $zweite->id, (int) $lernende->id, 'AU_EFZ', $von);
+            $this->fail('Erwartet: zuordnung:fehler_gleicher_beginn');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('zuordnung:fehler_gleicher_beginn', $e->errorcode);
+        }
+
+        $this->assertTrue(api::is_zustaendig((int) $erste->id, (int) $lernende->id, $von));
+        $this->assertSame(
+            'zuordnung:fehler_gleicher_beginn',
+            (new \local_berufsbildung\service\zuordnung_service())->pruefe(
+                (int) $zweite->id,
+                (int) $lernende->id,
+                $von,
+                'hauptverantwortlich'
+            )
+        );
+    }
+
+    /**
+     * Ein spaeteres Enddatum darf nicht in die naechste Zuordnung reichen.
+     */
+    public function test_beende_zuordnung_lehnt_verlaengerung_in_die_naechste_zuordnung_ab(): void {
+        $this->resetAfterTest();
+
+        $a = $this->getDataGenerator()->create_user();
+        $b = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $erste = $this->lege_zuordnung_an(
+            (int) $a->id,
+            (int) $lernende->id,
+            strtotime('2026-01-01'),
+            strtotime('2027-07-31 23:59:59')
+        );
+        $this->lege_zuordnung_an((int) $b->id, (int) $lernende->id, strtotime('2027-08-01'));
+
+        $this->expectException(\moodle_exception::class);
+        $this->expectExceptionMessage(get_string('zuordnung:fehler_ueberschneidung', 'local_berufsbildung'));
+        api::beende_zuordnung((int) $erste->get('id'), strtotime('2027-12-31 23:59:59'));
+    }
+
+    /**
+     * Randfall: verlaengert bis genau vor den Beginn der naechsten ist erlaubt.
+     */
+    public function test_beende_zuordnung_verlaengerung_bis_vor_die_naechste_ist_erlaubt(): void {
+        $this->resetAfterTest();
+
+        $a = $this->getDataGenerator()->create_user();
+        $b = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $erste = $this->lege_zuordnung_an(
+            (int) $a->id,
+            (int) $lernende->id,
+            strtotime('2026-01-01'),
+            strtotime('2027-06-30 23:59:59')
+        );
+        $naechste = strtotime('2027-08-01 00:00:00');
+        $this->lege_zuordnung_an((int) $b->id, (int) $lernende->id, $naechste);
+
+        api::beende_zuordnung((int) $erste->get('id'), $naechste - 1);
+
+        $erste->read();
+        $this->assertSame($naechste - 1, (int) $erste->get('gueltig_bis'));
+    }
+
+    /**
+     * Neue Zuordnungen und die Teilnahmeart wirken sofort auf die
+     * Navigation, trotz Cache.
+     */
+    public function test_navigation_sieht_neue_zuordnung_sofort(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $this->assertFalse(\local_berufsbildung\hook_callbacks::sieht_meine_lernenden((int) $berufsbildner->id));
+
+        $zuordnung = api::set_zuordnung((int) $berufsbildner->id, (int) $lernende->id, '', time() - 10);
+        $this->assertTrue(\local_berufsbildung\hook_callbacks::sieht_meine_lernenden((int) $berufsbildner->id));
+
+        api::beende_zuordnung((int) $zuordnung->get('id'), time() - 1);
+        $this->assertFalse(\local_berufsbildung\hook_callbacks::sieht_meine_lernenden((int) $berufsbildner->id));
+    }
 }

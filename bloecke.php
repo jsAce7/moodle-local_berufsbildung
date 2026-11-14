@@ -30,7 +30,7 @@ use local_berufsbildung\navigation\menuepunkt;
 use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\output\seitennavigation;
 use local_berufsbildung\persistent\block;
-use local_berufsbildung\persistent\block_lk;
+use local_berufsbildung\service\block_kurs_service;
 use local_berufsbildung\service\block_loesch_service;
 use local_berufsbildung\service\einrichtung_pruefung;
 use local_berufsbildung\service\lk_abdeckung_service;
@@ -99,12 +99,9 @@ $bloecke = block::get_records([], 'nummer', 'ASC');
 if (empty($bloecke)) {
     echo $OUTPUT->notification(get_string('bloecke:keine_bloecke', 'local_berufsbildung'), 'info');
 } else {
-    // Eine Abfrage fuer alle Zuordnungen statt einer je Block.
-    $anzahlkompetenzen = [];
-    foreach (block_lk::get_records() as $abdeckung) {
-        $blockid = (int) $abdeckung->get('blockid');
-        $anzahlkompetenzen[$blockid] = ($anzahlkompetenzen[$blockid] ?? 0) + 1;
-    }
+    // Eine Abfrage fuer alle Zuordnungen und alle Kurse statt je Block.
+    $anzahlkompetenzen = (new lk_abdeckung_service())->anzahl_je_block();
+    $kurse = (new block_kurs_service())->get_kurse($bloecke);
 
     // Je Beruf eine Tabelle, die berufsuebergreifenden Bloecke (Schule,
     // ueK, Ferien) zuletzt. Innerhalb eines Berufs nach Nummer, natuerlich
@@ -175,7 +172,7 @@ if (empty($bloecke)) {
             $bearbeitenurl = new moodle_url('/local/berufsbildung/block_bearbeiten.php', ['id' => $blockid]);
             $kompetenzenurl = new moodle_url('/local/berufsbildung/block_kompetenzen.php', ['id' => $blockid]);
 
-            $kurs = api::get_block_kurs($blockid);
+            $kurs = $kurse[$blockid] ?? null;
 
             // Der Zugang zur Kompetenzzuordnung ist ein beschrifteter Button in
             // der Aktionsspalte, nicht die Zahl in der LK-Spalte: auf eine "0"

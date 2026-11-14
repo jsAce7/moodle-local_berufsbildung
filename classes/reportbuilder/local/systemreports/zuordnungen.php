@@ -42,6 +42,19 @@ use local_berufsbildung\reportbuilder\local\entities\zuordnung;
  * Systemreport ueber alle Zuordnungen.
  */
 class zuordnungen extends system_report {
+    /** Alias des Teilnahmeprofils der lernenden Person. */
+    private const ALIAS_TEILNAHME = 'bbtp';
+
+    /**
+     * Teilnahmeart der lernenden Person, mit dem Standard fuer Personen
+     * ohne eigenen Eintrag.
+     *
+     * @return string
+     */
+    private static function teilnahmeart_sql(): string {
+        return "COALESCE(" . self::ALIAS_TEILNAHME . ".art, '" . api::TEILNAHMEART_LEHRE . "')";
+    }
+
     /**
      * Initialisiert den Report.
      *
@@ -73,9 +86,19 @@ class zuordnungen extends system_report {
             "LEFT JOIN {user} {$lernendealias} ON {$lernendealias}.id = {$mainalias}.lernendeid"
         ));
 
+        // Die Teilnahmeart per JOIN statt einer Abfrage je Zeile (Spalte und
+        // Aktionen). Ohne eigenen Eintrag gilt die regulaere Lehre - derselbe
+        // Standard wie api::get_teilnahmeart().
+        $this->add_join(
+            "LEFT JOIN {local_berufsbildung_teilnahmeprofil} " . self::ALIAS_TEILNAHME
+                . " ON " . self::ALIAS_TEILNAHME . ".userid = {$mainalias}.lernendeid"
+        );
+
         // Von den Aktionen und der Lehrjahr-Spalte benoetigt, unabhaengig
         // davon, ob sie als sichtbare Spalten ausgewaehlt sind.
-        $this->add_base_fields("{$mainalias}.id, {$mainalias}.lernendeid, {$mainalias}.gueltig_bis");
+        $this->add_base_fields(
+            "{$mainalias}.id, {$mainalias}.lernendeid, {$mainalias}.gueltig_bis, " . self::teilnahmeart_sql() . " AS teilnahmeart"
+        );
 
         $this->add_columns();
         $this->add_filters();
@@ -136,12 +159,12 @@ class zuordnungen extends system_report {
             new lang_string('teilnahmeart:titel', 'local_berufsbildung'),
             $this->get_entity('zuordnung')->get_entity_name()
         ))
-            ->add_fields("{$this->get_entity('zuordnung')->get_table_alias('local_berufsbildung_zuordnung')}.lernendeid")
+            ->add_field(self::teilnahmeart_sql(), 'art')
             ->set_type(column::TYPE_TEXT)
             ->set_is_sortable(false)
-            ->add_callback(static function ($unused, stdClass $row): string {
+            ->add_callback(static function (?string $art): string {
                 return get_string(
-                    api::ist_uek_extern((int) $row->lernendeid) ? 'teilnahmeart:uek_extern' : 'teilnahmeart:lehre',
+                    $art === api::TEILNAHMEART_UEK_EXTERN ? 'teilnahmeart:uek_extern' : 'teilnahmeart:lehre',
                     'local_berufsbildung'
                 );
             }));
@@ -207,7 +230,7 @@ class zuordnungen extends system_report {
                 false,
                 new lang_string($label, 'local_berufsbildung')
             ))->add_callback(static function (stdClass $row) use ($art): bool {
-                return api::get_teilnahmeart((int) $row->lernendeid) !== $art
+                return $row->teilnahmeart !== $art
                     && has_capability('local/berufsbildung:managezuordnung', context_system::instance());
             }));
         }

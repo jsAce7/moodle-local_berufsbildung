@@ -52,6 +52,20 @@ class role_sync_service {
     public function synchronisiere_paar(int $berufsbildnerid, int $lernendeid): void {
         global $DB;
 
+        // Ein geloeschtes Konto bekommt keine Rolle mehr (role_assign() lehnt
+        // es ab), und der User-Kontext geloeschter Lernender verschwindet mit
+        // dem naechsten context_cleanup_task. delete_user() hat die Rollen
+        // des Kontos ohnehin entfernt - es bleibt nur die Planungsrolle der
+        // betreuenden Person nachzufuehren.
+        $geloescht = $this->geloeschte_konten([$berufsbildnerid, $lernendeid]);
+        if (isset($geloescht[$berufsbildnerid])) {
+            return;
+        }
+        if (isset($geloescht[$lernendeid])) {
+            $this->synchronisiere_planungsrolle($berufsbildnerid);
+            return;
+        }
+
         $roleid = $DB->get_field('role', 'id', ['shortname' => 'berufsbildner'], MUST_EXIST);
         $context = context_user::instance($lernendeid);
         $besteht = zuordnung::record_exists_select(
@@ -89,6 +103,9 @@ class role_sync_service {
      * @param int $berufsbildnerid
      */
     public function synchronisiere_planungsrolle(int $berufsbildnerid): void {
+        if ($this->geloeschte_konten([$berufsbildnerid])) {
+            return;
+        }
         $jetzt = time();
 
         // Laufende, nicht bloss begonnene Zuordnung - siehe
@@ -99,6 +116,22 @@ class role_sync_service {
                 AND (gueltig_bis IS NULL OR gueltig_bis >= :stichtag2)',
             ['berufsbildnerid' => $berufsbildnerid, 'stichtag1' => $jetzt, 'stichtag2' => $jetzt]
         ));
+    }
+
+    /**
+     * Welche der Konten sind geloescht oder fehlen ganz?
+     *
+     * @param int[] $userids
+     * @return array<int, true> User-ID => true
+     */
+    private function geloeschte_konten(array $userids): array {
+        global $DB;
+
+        $userids = array_values(array_unique(array_map('intval', $userids)));
+        [$insql, $params] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+        $vorhanden = $DB->get_fieldset_select('user', 'id', "id $insql AND deleted = 0", $params);
+
+        return array_fill_keys(array_diff($userids, array_map('intval', $vorhanden)), true);
     }
 
     /**
@@ -219,16 +252,25 @@ class role_sync_service {
 
         // Die Rolle liefert nur die Moodle-Capability. Der konkrete Zugriff
         // bleibt an api::is_zustaendig() zum jeweiligen Stichtag gebunden.
-        $aktive = zuordnung::get_records_select(
-            'gueltig_von <= :jetzt',
+        // Zuordnungen mit einem geloeschten Konto auf einer der beiden Seiten
+        // fallen heraus: role_assign() lehnt ein geloeschtes Konto ab, und
+        // der User-Kontext geloeschter Lernender verschwindet mit dem
+        // naechsten context_cleanup_task. Beides liesse sonst jeden Lauf
+        // scheitern, bis die Zuordnung bereinigt ist.
+        $aktive = $DB->get_records_sql(
+            "SELECT z.id, z.lernendeid, z.berufsbildnerid, z.gueltig_bis
+               FROM {local_berufsbildung_zuordnung} z
+               JOIN {user} ub ON ub.id = z.berufsbildnerid AND ub.deleted = 0
+               JOIN {user} ul ON ul.id = z.lernendeid AND ul.deleted = 0
+              WHERE z.gueltig_von <= :jetzt",
             ['jetzt' => $jetzt]
         );
 
         $soll = [];
         $planungssoll = [];
         foreach ($aktive as $einzelne) {
-            $lernendeid = (int) $einzelne->get('lernendeid');
-            $berufsbildnerid = (int) $einzelne->get('berufsbildnerid');
+            $lernendeid = (int) $einzelne->lernendeid;
+            $berufsbildnerid = (int) $einzelne->berufsbildnerid;
             $soll["{$lernendeid}:{$berufsbildnerid}"] = [
                 'lernendeid' => $lernendeid,
                 'berufsbildnerid' => $berufsbildnerid,
@@ -240,7 +282,7 @@ class role_sync_service {
             // stichtagsgepruefter Lesezugriff, fuer den eine beendete
             // Zuordnung noch zaehlen muss. Bedingung wie in
             // api::is_zustaendig().
-            $bis = $einzelne->get('gueltig_bis');
+            $bis = $einzelne->gueltig_bis;
             if ($bis === null || (int) $bis >= $jetzt) {
                 $planungssoll[$berufsbildnerid] = true;
             }
@@ -258,14 +300,23 @@ class role_sync_service {
             $ist["{$context->instanceid}:{$zuweisung->userid}"] = $zuweisung;
         }
 
+        // Ein einzelnes Paar, das scheitert, haelt den Abgleich der uebrigen
+        // und den Planungsrollen-Abgleich dahinter nicht auf.
         $zugewiesen = 0;
         foreach ($soll as $schluessel => $paar) {
             if (isset($ist[$schluessel])) {
                 continue;
             }
-            $context = context_user::instance($paar['lernendeid']);
-            role_assign($roleid, $paar['berufsbildnerid'], $context->id, 'local_berufsbildung');
-            $zugewiesen++;
+            try {
+                $context = context_user::instance($paar['lernendeid']);
+                role_assign($roleid, $paar['berufsbildnerid'], $context->id, 'local_berufsbildung');
+                $zugewiesen++;
+            } catch (\moodle_exception $e) {
+                debugging(
+                    "local_berufsbildung: Rolle fuer Paar {$schluessel} nicht zugewiesen: " . $e->getMessage(),
+                    DEBUG_DEVELOPER
+                );
+            }
         }
 
         $entzogen = 0;

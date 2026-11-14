@@ -439,4 +439,113 @@ final class role_sync_service_test extends advanced_testcase {
             'component' => '',
         ]));
     }
+
+    /**
+     * Ein geloeschtes Konto mit begonnener Zuordnung liess jeden Lauf an
+     * role_assign() scheitern, und damit auch alle Paare dahinter.
+     */
+    public function test_geloeschte_berufsbildnerin_haelt_den_abgleich_nicht_auf(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $roleid = $this->stelle_rolle_sicher();
+
+        $geloescht = $this->getDataGenerator()->create_user();
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $this->lege_zuordnung_an((int) $geloescht->id, (int) $lernende->id, strtotime('-2 years'), strtotime('-1 year'));
+        delete_user($geloescht);
+        $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $lernende->id, strtotime('-1 year') + 1);
+
+        $ergebnis = (new role_sync_service())->synchronisiere();
+
+        $this->assertSame(1, $ergebnis['zugewiesen']);
+        $this->assertTrue($DB->record_exists('role_assignments', [
+            'roleid' => $roleid,
+            'userid' => (int) $berufsbildner->id,
+            'contextid' => context_user::instance((int) $lernende->id)->id,
+        ]));
+        $this->assertFalse($DB->record_exists('role_assignments', ['userid' => (int) $geloescht->id]));
+    }
+
+    /**
+     * Auch eine Zuordnung zu einer geloeschten lernenden Person, deren
+     * User-Kontext schon entfernt ist, bricht den Lauf nicht ab.
+     */
+    public function test_geloeschte_lernende_ohne_kontext_haelt_den_abgleich_nicht_auf(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->stelle_rolle_sicher();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $geloescht = $this->getDataGenerator()->create_user();
+        delete_user($geloescht);
+        \context_helper::delete_instance(CONTEXT_USER, (int) $geloescht->id);
+        // Wie ein Bestand aus der Zeit vor dem Observer: die Zuordnung blieb stehen.
+        $DB->insert_record('local_berufsbildung_zuordnung', (object) [
+            'berufsbildnerid' => (int) $berufsbildner->id,
+            'lernendeid' => (int) $geloescht->id,
+            'beruf' => '',
+            'rolle' => 'stellvertretung',
+            'gueltig_von' => strtotime('-1 year'),
+            'gueltig_bis' => null,
+            'timecreated' => time(),
+            'timemodified' => time(),
+            'usermodified' => 0,
+        ]);
+        $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $lernende->id, strtotime('-1 year'));
+
+        $ergebnis = (new role_sync_service())->synchronisiere();
+
+        $this->assertSame(1, $ergebnis['zugewiesen']);
+    }
+
+    /**
+     * synchronisiere_paar() fuer ein geloeschtes Konto wirft nicht mehr.
+     */
+    public function test_synchronisiere_paar_mit_geloeschtem_konto_wirft_nicht(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->stelle_rolle_sicher();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $this->lege_zuordnung_an((int) $berufsbildner->id, (int) $lernende->id, strtotime('-1 year'));
+        delete_user($berufsbildner);
+
+        (new role_sync_service())->synchronisiere_paar((int) $berufsbildner->id, (int) $lernende->id);
+
+        $this->assertFalse($DB->record_exists('role_assignments', ['userid' => (int) $berufsbildner->id]));
+    }
+
+    /**
+     * Wer von einer neuen Zuordnung verdraengt wird und sonst niemanden
+     * betreut, verliert die Planungsrolle sofort, nicht erst beim Task.
+     */
+    public function test_verdraengte_berufsbildnerin_verliert_die_planungsrolle_sofort(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->stelle_rolle_sicher();
+        $planungsroleid = $this->stelle_planungsrolle_sicher();
+
+        $alt = $this->getDataGenerator()->create_user();
+        $neu = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        \local_berufsbildung\api::set_zuordnung((int) $alt->id, (int) $lernende->id, '', strtotime('-1 year'));
+        $this->assertTrue($DB->record_exists('role_assignments', [
+            'roleid' => $planungsroleid,
+            'userid' => (int) $alt->id,
+        ]));
+
+        \local_berufsbildung\api::set_zuordnung((int) $neu->id, (int) $lernende->id, '', strtotime('-1 day'));
+
+        $this->assertFalse($DB->record_exists('role_assignments', [
+            'roleid' => $planungsroleid,
+            'userid' => (int) $alt->id,
+        ]));
+        $this->assertTrue($DB->record_exists('role_assignments', [
+            'roleid' => $planungsroleid,
+            'userid' => (int) $neu->id,
+        ]));
+    }
 }

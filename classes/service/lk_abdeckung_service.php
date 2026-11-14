@@ -223,4 +223,19 @@ class lk_abdeckung_service {
             'zaehlt' => (bool) $block->get('aktiv') && (bool) $block->get('ist_betrieb'),
         ];
     }
+
+    /**
+     * Anzahl zugeordneter Kompetenzen je Block, in einer Abfrage.
+     *
+     * @return array<int, int> Block-ID => Anzahl
+     */
+    public function anzahl_je_block(): array {
+        global $DB;
+
+        $zeilen = $DB->get_records_sql(
+            'SELECT blockid, COUNT(1) AS anzahl FROM {' . block_lk::TABLE . '} GROUP BY blockid'
+        );
+
+        return array_map(static fn ($zeile): int => (int) $zeile->anzahl, $zeilen);
+    }
 }

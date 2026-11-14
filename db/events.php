@@ -30,4 +30,15 @@ $observers = [
         'eventname' => '\core\event\capability_unassigned',
         'callback' => '\local_berufsbildung\observer::capability_unassigned',
     ],
+    [
+        // Architekturregel 2: bei einer Account-Loeschung sofort bereinigen,
+        // nicht erst ueber einen Loeschantrag in tool_dataprivacy.
+        'eventname' => '\core\event\user_deleted',
+        'callback' => '\local_berufsbildung\observer::user_deleted',
+    ],
+    [
+        // Beruf, Jahrgang und Lehrbeginn stehen im Profil (api::profil()).
+        'eventname' => '\core\event\user_updated',
+        'callback' => '\local_berufsbildung\observer::user_updated',
+    ],
 ];

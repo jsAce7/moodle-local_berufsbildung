@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.9.0] — 2026-11-14
+
+Behebt die Befunde aus dem Code-Audit vom 2026-11-14.
+
+### Behoben
+
+- **Kontolöschung räumt sofort auf.** Ein Observer auf `\core\event\user_deleted` entfernt Zuordnungen, Aufbewahrungsvermerke, Teilnahmeart und Termine einer gelöschten lernenden Person und beendet die Zuständigkeit einer gelöschten Berufsbildner/in (`service\konto_bereinigung_service`). Bisher geschah das nur über einen genehmigten Löschantrag in `tool_dataprivacy`, und gar nicht mehr, sobald der User-Kontext entfernt war. Bereits gelöschte Konten mit Restdaten bereinigt `task\zuordnung_retention` beim nächsten Lauf.
+- **Rollenabgleich scheitert nicht mehr an gelöschten Konten.** `role_sync_service` überspringt Zuordnungen mit gelöschtem Konto, ein einzelnes fehlerhaftes Paar hält den Lauf nicht mehr auf.
+- **Kohorten-Abgleich bricht nicht mehr ab**, wenn ein Mitglied eine erst künftig beginnende Zuordnung derselben Rolle hat; ein scheiterndes Mitglied oder ein scheiternder Link hält die übrigen nicht auf. Eine von Hand beendete Zuordnung aus einer Kohorte entsteht nicht mehr neu, solange die Person Mitglied bleibt; erst ein erneuter Eintritt ordnet sie wieder zu.
+- **Gleiches Startdatum.** Dieselbe Zuordnung zum selben Beginn bleibt unverändert (erneut hochgeladener CSV-Import), eine andere Person zum selben Beginn wird mit eigener Meldung abgelehnt statt einen leeren Zeitraum und einen Datenbankfehler zu erzeugen. CSV-Import und Vorschau melden solche Konflikte als Zeilenfehler, die Sammelzuordnung legt die übrigen Personen trotzdem an.
+- **Enddatum nicht in die nächste Zuordnung.** Ein späteres «Gültig bis» wird wie das Wiederöffnen auf Überschneidung geprüft.
+- **«Gültig bis» gilt den ganzen Tag**, bei Zuordnungen und Aufbewahrungspflichten (`datum::tagesende()`), auch am Tag der Zeitumstellung. Bestehende Einträge bleiben unverändert.
+- **Verdrängte Berufsbildner/in verliert die Planungsrolle sofort**, nicht erst beim nächsten Task-Lauf.
+- **Berufsfilter auf «Meine Lernenden»** trifft auch ausgeschriebene Berufe wie «Automatiker/in EFZ».
+- **Versetzungsplan: korrigierte Mailadresse wird beim nächsten Upload aufgelöst.** Der Fingerabdruck einer Lieferung umfasst die Moodle-Konten; dieselbe Datei gilt nach einer Kontoänderung nicht mehr als unverändert.
+- **Ungültige Kalenderwochen** (`W00`, `W53` in einem Jahr mit 52 Wochen) sind ein Zeilenfehler statt still ins Nachbarjahr zu rollen.
+- **Wartende Lieferung** wird bei einer Löschanfrage nur noch bei exakt gleicher Mailadresse verworfen, nicht bei einem Teilstring-Treffer.
+- **Manueller Upload mit UTF-8-BOM** (Excel «CSV UTF-8») wird gelesen.
+- **Status im Zuordnungsbericht** aus Beginn und Ende gegen jetzt: geplant, laufend, beendet.
+
+### Datenschutz
+
+- `usermodified` aller Tabellen ist im Privacy-Provider deklariert, wird gefunden, exportiert (Anzahl und letzter Zeitpunkt je Tabelle) und bei einer Löschanfrage auf 0 gesetzt.
+
+### Performance
+
+- Sichtbarkeit von «Meine Lehre» und «Meine Lernenden» in der Navigation gecacht (`navigation\sichtbarkeit`, Cache `navigation`, fünf Minuten, geleert bei jeder Änderung an Zuordnungen und Teilnahmeart, je Person bei einer Profiländerung).
+- Profilfelder auf «Meine Lernenden» je Anfrage nur einmal gelesen (Request-Cache `profil`, eingeschaltet mit `api::profile_vorhalten()`, weil Core Profilfelder ohne Event speichert), Zuständigkeit im Nachweis-Collector je Paar nur einmal geprüft, Bezeichnungen der Kompetenzen im Raster je Anfrage einmal formatiert (Request-Cache `kompetenzen`), Planungshorizont als eine Abfrage.
+- Versetzungsplan-Import löst jede Mailadresse einmal auf statt jede Zeile einzeln.
+- Zuordnungsbericht holt die Teilnahmeart per JOIN; Blockliste und Versetzungsplan-Verlauf zählen mit `GROUP BY` und laden die Kurse in einer Abfrage.
+
 ## [1.8.3] — 2026-11-04
 
 ### Geändert

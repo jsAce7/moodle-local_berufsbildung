@@ -54,14 +54,65 @@ class csv_parser {
     }
 
     /**
+     * Alle Mailadressen der Spalte 'email', kleingeschrieben - auch aus
+     * Zeilen, die parsen() wegen anderer Fehler verwerfen wuerde.
+     *
+     * @param string $inhalt Roher CSV-Text wie bei parsen()
+     * @return string[]
+     */
+    public function mailadressen(string $inhalt): array {
+        $zeilen = $this->zeilen($inhalt);
+        if (empty($zeilen)) {
+            return [];
+        }
+
+        $kopf = array_map(
+            static fn ($name): string => trim(mb_strtolower((string) $name)),
+            str_getcsv((string) array_shift($zeilen), ';', '"', '\\')
+        );
+        $index = array_search('email', $kopf, true);
+        if ($index === false) {
+            return [];
+        }
+
+        $adressen = [];
+        foreach ($zeilen as $roh) {
+            $werte = str_getcsv($roh, ';', '"', '\\');
+            $email = trim(mb_strtolower((string) ($werte[$index] ?? '')));
+            if ($email !== '') {
+                $adressen[$email] = true;
+            }
+        }
+
+        return array_keys($adressen);
+    }
+
+    /**
+     * Nicht leere Zeilen der Lieferung, ohne Byte Order Mark.
+     *
+     * @param string $inhalt
+     * @return string[]
+     */
+    private function zeilen(string $inhalt): array {
+        // Excel speichert «CSV UTF-8» mit Byte Order Mark. Das Skript der
+        // Schnittstelle entfernt es, der Upload von Hand nicht - ohne diese
+        // Zeilen hiesse die erste Spalte nicht 'email'.
+        if (str_starts_with($inhalt, "\xEF\xBB\xBF")) {
+            $inhalt = substr($inhalt, 3);
+        }
+        $zeilen = preg_split('/\r\n|\r|\n/', trim($inhalt));
+
+        return array_values(array_filter($zeilen, static fn (string $z): bool => trim($z) !== ''));
+    }
+
+    /**
      * Zerlegt die CSV-Lieferung in gepruefte Zeilen.
      *
      * @param string $inhalt Roher CSV-Text, Semikolon-getrennt, mit Kopfzeile
      * @return array{eintraege: array, fehler: string[], zeilen_gelesen: int}
      */
     public function parsen(string $inhalt): array {
-        $zeilen = preg_split('/\r\n|\r|\n/', trim($inhalt));
-        $zeilen = array_values(array_filter($zeilen, static fn (string $z): bool => trim($z) !== ''));
+        $zeilen = $this->zeilen($inhalt);
 
         if (empty($zeilen)) {
             return ['eintraege' => [], 'fehler' => [], 'zeilen_gelesen' => 0];

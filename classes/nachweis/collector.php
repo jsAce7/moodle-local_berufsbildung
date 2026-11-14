@@ -39,6 +39,9 @@ class collector {
     /** @var provider[] */
     private readonly array $providers;
 
+    /** @var array<string, bool> Zustaendigkeit heute je "abrufende:lernende", fuer die Lebensdauer dieses Objekts. */
+    private array $zustaendigjetzt = [];
+
     /**
      * Konstruktor.
      *
@@ -90,7 +93,9 @@ class collector {
     ): array {
         if (
             $abrufendeid !== $lernendeid
-            && !api::is_zustaendig($abrufendeid, $lernendeid, $berechtigungsstichtag)
+            && !($berechtigungsstichtag === null
+                ? $this->ist_zustaendig_jetzt($abrufendeid, $lernendeid)
+                : api::is_zustaendig($abrufendeid, $lernendeid, $berechtigungsstichtag))
         ) {
             throw new moodle_exception('error:keinezustaendigkeit', 'local_berufsbildung');
         }
@@ -105,6 +110,20 @@ class collector {
         usort($ergebnis, static fn (nachweis $a, nachweis $b): int => $b->datum <=> $a->datum);
 
         return $ergebnis;
+    }
+
+    /**
+     * api::is_zustaendig() zum jetzigen Zeitpunkt, je Paar nur einmal
+     * gefragt: "Meine Lernenden" ruft fuer jede Person mehrere Methoden
+     * dieses Objekts auf, die alle dieselbe Pruefung brauchen.
+     *
+     * @param int $abrufendeid
+     * @param int $lernendeid
+     * @return bool
+     */
+    private function ist_zustaendig_jetzt(int $abrufendeid, int $lernendeid): bool {
+        return $this->zustaendigjetzt["{$abrufendeid}:{$lernendeid}"]
+            ??= api::is_zustaendig($abrufendeid, $lernendeid);
     }
 
     /**
@@ -170,7 +189,7 @@ class collector {
      * @return array<string, ausstehend[]> Quelle-Key => Ausstehendes, nur Quellen mit Eintraegen
      */
     public function get_ausstehende(int $abrufendeid, int $lernendeid): array {
-        if ($abrufendeid !== $lernendeid && !api::is_zustaendig($abrufendeid, $lernendeid)) {
+        if ($abrufendeid !== $lernendeid && !$this->ist_zustaendig_jetzt($abrufendeid, $lernendeid)) {
             throw new moodle_exception('error:keinezustaendigkeit', 'local_berufsbildung');
         }
 
@@ -261,7 +280,7 @@ class collector {
         if ($abrufendeid === $lernendeid) {
             return [];
         }
-        if (!api::is_zustaendig($abrufendeid, $lernendeid)) {
+        if (!$this->ist_zustaendig_jetzt($abrufendeid, $lernendeid)) {
             throw new moodle_exception('error:keinezustaendigkeit', 'local_berufsbildung');
         }
 
@@ -305,7 +324,7 @@ class collector {
         if ($abrufendeid === $lernendeid) {
             return [];
         }
-        if (!api::is_zustaendig($abrufendeid, $lernendeid)) {
+        if (!$this->ist_zustaendig_jetzt($abrufendeid, $lernendeid)) {
             throw new moodle_exception('error:keinezustaendigkeit', 'local_berufsbildung');
         }
 
@@ -370,7 +389,7 @@ class collector {
      * @return array<string, stationen> Quelle-Key => Stationen, nur Quellen mit Stationen
      */
     public function get_stationen(int $abrufendeid, int $lernendeid): array {
-        if ($abrufendeid !== $lernendeid && !api::is_zustaendig($abrufendeid, $lernendeid)) {
+        if ($abrufendeid !== $lernendeid && !$this->ist_zustaendig_jetzt($abrufendeid, $lernendeid)) {
             throw new moodle_exception('error:keinezustaendigkeit', 'local_berufsbildung');
         }
 
@@ -412,7 +431,7 @@ class collector {
      * @return faelligkeit[]
      */
     public function get_faelligkeiten(int $abrufendeid, int $lernendeid): array {
-        if ($abrufendeid !== $lernendeid && !api::is_zustaendig($abrufendeid, $lernendeid)) {
+        if ($abrufendeid !== $lernendeid && !$this->ist_zustaendig_jetzt($abrufendeid, $lernendeid)) {
             throw new moodle_exception('error:keinezustaendigkeit', 'local_berufsbildung');
         }
 

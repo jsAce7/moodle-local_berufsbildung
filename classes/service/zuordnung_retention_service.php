@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace local_berufsbildung\service;
 
 use local_berufsbildung\api;
+use local_berufsbildung\navigation\sichtbarkeit;
 use local_berufsbildung\persistent\aufbewahrung;
 use local_berufsbildung\persistent\einsatz_aenderung;
 use local_berufsbildung\persistent\teilnahmeprofil;
@@ -151,6 +152,7 @@ class zuordnung_retention_service {
         // Die Kalendertermine zu ihren Faelligkeiten tragen ihren Namen, auch
         // in den Kalendern der zustaendigen Personen.
         (new termin_service())->loesche_fuer($lernendeid);
+        sichtbarkeit::vergiss();
 
         // War das die letzte laufende Zuordnung einer betreuenden Person,
         // faellt damit auch ihr systemweiter Zugang zur Blockverwaltung weg -

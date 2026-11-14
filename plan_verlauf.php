@@ -29,7 +29,6 @@ require_once($CFG->libdir . '/adminlib.php');
 
 use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\output\plan_aenderungen;
-use local_berufsbildung\persistent\einsatz_aenderung;
 use local_berufsbildung\persistent\plan_import;
 use local_berufsbildung\versetzungsplan\import_service;
 
@@ -123,6 +122,8 @@ $table->head = [
     get_string('planimport:einsaetze_erzeugt', 'local_berufsbildung'),
     get_string('planverlauf:aenderungen', 'local_berufsbildung'),
 ];
+// Eine Abfrage fuer alle Laeufe statt einer je Zeile.
+$anzahlaenderungen = (new import_service())->anzahl_aenderungen_je_import(array_keys($importe));
 foreach ($importe as $import) {
     $importid = (int) $import->get('id');
     $table->data[] = [
@@ -131,7 +132,7 @@ foreach ($importe as $import) {
         $statusname((string) $import->get('status')),
         (int) $import->get('personen_verarbeitet'),
         (int) $import->get('einsaetze_erzeugt'),
-        einsatz_aenderung::count_records(['importid' => $importid]),
+        $anzahlaenderungen[$importid] ?? 0,
     ];
 }
 echo html_writer::table($table);

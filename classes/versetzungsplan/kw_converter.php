@@ -98,6 +98,17 @@ class kw_converter {
             throw new coding_exception("Ungueltiges Kalenderwochenformat: '{$kw}', erwartet 'JJJJ-Wnn'");
         }
 
-        return [(int) $treffer[1], (int) $treffer[2]];
+        $jahr = (int) $treffer[1];
+        $woche = (int) $treffer[2];
+        // Die Funktion setISODate() rollt eine Woche 0 oder 53 eines Jahres
+        // mit nur 52 Wochen still ins Nachbarjahr - der Einsatz landete in
+        // der falschen Woche. Der 28. Dezember liegt immer in der letzten
+        // ISO-Woche.
+        $letztewoche = (int) (new DateTime("{$jahr}-12-28"))->format('W');
+        if ($woche < 1 || $woche > $letztewoche) {
+            throw new coding_exception("Kalenderwoche '{$kw}' gibt es nicht, das Jahr {$jahr} hat {$letztewoche} Wochen");
+        }
+
+        return [$jahr, $woche];
     }
 }

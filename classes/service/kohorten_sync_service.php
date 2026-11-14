@@ -44,6 +44,12 @@ use local_berufsbildung\persistent\zuordnung;
  * bewusst keine neue Zuordnung mehr (siehe synchronisiere_link()) - sonst
  * wuerde eine vom Retention-Task bereits geloeschte Zuordnung bei jedem
  * weiteren Lauf einfach wieder auferstehen.
+ *
+ * Aus demselben Grund entsteht keine neue Zuordnung, wenn die letzte
+ * Zuordnung der Person in dieser Rolle von diesem Link stammt und von Hand
+ * beendet wurde, waehrend sie Mitglied blieb. Erst ein erneuter Eintritt in
+ * die Kohorte (cohort_members.timeadded nach dem Ende) laesst den Link
+ * wieder greifen.
  */
 class kohorten_sync_service {
     /**
@@ -55,7 +61,16 @@ class kohorten_sync_service {
         $ergebnis = ['erzeugt' => 0, 'beendet' => 0];
 
         foreach (kohorten_link::get_records(['aktiv' => true]) as $link) {
-            $einzelergebnis = $this->synchronisiere_link($link);
+            // Ein Link, der scheitert, haelt die uebrigen nicht auf.
+            try {
+                $einzelergebnis = $this->synchronisiere_link($link);
+            } catch (\moodle_exception $e) {
+                debugging(
+                    'local_berufsbildung: Kohorten-Link ' . $link->get('id') . ' nicht abgeglichen: ' . $e->getMessage(),
+                    DEBUG_DEVELOPER
+                );
+                continue;
+            }
             $ergebnis['erzeugt'] += $einzelergebnis['erzeugt'];
             $ergebnis['beendet'] += $einzelergebnis['beendet'];
         }
@@ -92,8 +107,10 @@ class kohorten_sync_service {
 
         $erzeugt = 0;
         $jetzt = time();
+        $rolle = (string) $link->get('rolle');
         foreach ($neu as $lernendeid) {
-            if (api::ist_ausbildung_beendet((int) $lernendeid)) {
+            $lernendeid = (int) $lernendeid;
+            if (api::ist_ausbildung_beendet($lernendeid)) {
                 // Abgeschlossene Lehre: keine neue Zuordnung mehr erzeugen -
                 // siehe Klassendocblock.
                 continue;
@@ -102,24 +119,39 @@ class kohorten_sync_service {
             // Ein Kohorten-Link darf eine manuelle Zuordnung oder einen
             // anderen Link derselben Rolle nicht verdraengen. Erst wenn
             // die andere Zuordnung endet, darf dieser Link wieder greifen.
+            // Auch eine erst kuenftig beginnende zaehlt: anlegen() lehnt
+            // eine Zuordnung vor einer spaeter beginnenden ab.
             $hatanderezustaendigkeit = zuordnung::record_exists_select(
                 'lernendeid = :lernendeid AND rolle = :rolle
-                 AND gueltig_von <= :jetzt1 AND (gueltig_bis IS NULL OR gueltig_bis >= :jetzt2)',
-                ['lernendeid' => $lernendeid, 'rolle' => $link->get('rolle'), 'jetzt1' => $jetzt, 'jetzt2' => $jetzt]
+                 AND (gueltig_bis IS NULL OR gueltig_bis >= :jetzt)',
+                ['lernendeid' => $lernendeid, 'rolle' => $rolle, 'jetzt' => $jetzt]
             );
             if ($hatanderezustaendigkeit) {
                 continue;
             }
 
-            api::set_zuordnung(
-                $berufsbildnerid,
-                (int) $lernendeid,
-                (string) $link->get('beruf'),
-                $jetzt,
-                (string) $link->get('rolle'),
-                $linkid
-            );
-            $erzeugt++;
+            if ($this->ist_von_hand_beendet($link, $lernendeid)) {
+                continue;
+            }
+
+            // Ein einzelnes Mitglied, das scheitert, haelt die uebrigen nicht auf.
+            try {
+                api::set_zuordnung(
+                    $berufsbildnerid,
+                    $lernendeid,
+                    (string) $link->get('beruf'),
+                    $jetzt,
+                    $rolle,
+                    $linkid
+                );
+                $erzeugt++;
+            } catch (\moodle_exception $e) {
+                debugging(
+                    "local_berufsbildung: Kohorten-Link {$linkid}, Zuordnung fuer {$lernendeid} nicht angelegt: "
+                        . $e->getMessage(),
+                    DEBUG_DEVELOPER
+                );
+            }
         }
 
         foreach ($getrackt as $einzelne) {
@@ -129,5 +161,43 @@ class kohorten_sync_service {
         }
 
         return ['erzeugt' => $erzeugt, 'beendet' => count($entfernt)];
+    }
+
+    /**
+     * Hat die Administration die Zuordnung dieses Links von Hand beendet,
+     * waehrend die Person Mitglied der Kohorte blieb?
+     *
+     * Massgebend ist die zuletzt beginnende Zuordnung der Person in dieser
+     * Rolle. Stammt sie von einem anderen Link oder ist sie manuell, darf der
+     * Link nach deren Ende wieder greifen. Stammt sie von diesem Link, gilt
+     * sie als von Hand beendet, sofern die Person nicht erst nach dem Ende
+     * (wieder) in die Kohorte eingetreten ist - ein Austritt beendet die
+     * Zuordnung ja ebenfalls.
+     *
+     * @param kohorten_link $link
+     * @param int $lernendeid
+     * @return bool
+     */
+    private function ist_von_hand_beendet(kohorten_link $link, int $lernendeid): bool {
+        global $DB;
+
+        $letzte = zuordnung::get_records(
+            ['lernendeid' => $lernendeid, 'rolle' => $link->get('rolle')],
+            'gueltig_von',
+            'DESC',
+            0,
+            1
+        );
+        $letzte = reset($letzte);
+        if (!$letzte || (int) $letzte->get('kohorten_link_id') !== (int) $link->get('id')) {
+            return false;
+        }
+
+        $eintritt = (int) $DB->get_field('cohort_members', 'timeadded', [
+            'cohortid' => $link->get('cohortid'),
+            'userid' => $lernendeid,
+        ]);
+
+        return $eintritt <= (int) $letzte->get('gueltig_bis');
     }
 }

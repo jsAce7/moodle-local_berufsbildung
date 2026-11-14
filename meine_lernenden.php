@@ -58,9 +58,16 @@ use local_berufsbildung\output\stationen_leiste;
 
 require_login();
 
+// Die Seite liest Beruf und Jahrgang jeder Person mehrmals und schreibt kein
+// Profil - siehe api::profile_vorhalten().
+api::profile_vorhalten();
+
 $berufsbildnerid = (int) $USER->id;
 $suchbegriff = optional_param('suche', '', PARAM_TEXT);
-$berufsfilter = optional_param('beruf', '', PARAM_ALPHANUMEXT);
+// Freitext wie im Profil (etwa «Automatiker/in EFZ»): PARAM_ALPHANUMEXT
+// entfernte Leerzeichen und Schraegstriche, der Filter traf dann nie. Geprueft
+// wird weiter unten gegen die Berufe der eigenen Lernenden.
+$berufsfilter = optional_param('beruf', '', PARAM_TEXT);
 $nurhandlungsbedarf = optional_param('handlungsbedarf', false, PARAM_BOOL);
 
 // Der Systemkontext zeigt keinen Avatar der betreuenden Person im Moodle-
@@ -261,6 +268,9 @@ if (empty($eintraege)) {
     $berufoptions = ['' => get_string('meine_lernenden:beruf_alle', 'local_berufsbildung')];
     foreach (lernenden_roster::berufe($eintraege) as $beruf) {
         $berufoptions[$beruf] = $beruf;
+    }
+    if (!isset($berufoptions[$berufsfilter])) {
+        $berufsfilter = '';
     }
     // Ohne eigene Klasse: html_writer::select() setzt je nach Moodle-Version
     // custom-select (Bootstrap 4) oder form-select (Bootstrap 5) selbst.

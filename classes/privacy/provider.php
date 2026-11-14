@@ -36,10 +36,10 @@ use core_privacy\local\request\transform;
 use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 use local_berufsbildung\api;
+use local_berufsbildung\service\konto_bereinigung_service;
 use local_berufsbildung\service\termin_service;
 use local_berufsbildung\service\zuordnung_retention_service;
 use local_berufsbildung\service\zuordnung_service;
-use local_berufsbildung\versetzungsplan\import_service;
 
 /**
  * Alle personenbezogenen Daten dieses Plugins haengen an context_user, nie
@@ -67,18 +67,21 @@ class provider implements
             'rolle' => 'privacy:metadata:zuordnung:rolle',
             'gueltig_von' => 'privacy:metadata:zuordnung:gueltig_von',
             'gueltig_bis' => 'privacy:metadata:zuordnung:gueltig_bis',
+            'usermodified' => 'privacy:metadata:zuordnung:usermodified',
         ], 'privacy:metadata:zuordnung');
 
         $collection->add_database_table('local_berufsbildung_kohorten_link', [
             'berufsbildnerid' => 'privacy:metadata:kohortenlink:berufsbildnerid',
             'rolle' => 'privacy:metadata:kohortenlink:rolle',
             'beruf' => 'privacy:metadata:kohortenlink:beruf',
+            'usermodified' => 'privacy:metadata:kohortenlink:usermodified',
         ], 'privacy:metadata:kohortenlink');
 
         $collection->add_database_table('local_berufsbildung_einsatz', [
             'userid' => 'privacy:metadata:einsatz:userid',
             'von' => 'privacy:metadata:einsatz:von',
             'bis' => 'privacy:metadata:einsatz:bis',
+            'usermodified' => 'privacy:metadata:einsatz:usermodified',
         ], 'privacy:metadata:einsatz');
 
         $collection->add_database_table('local_berufsbildung_einsatz_aenderung', [
@@ -87,6 +90,7 @@ class provider implements
             'block' => 'privacy:metadata:einsatzaenderung:block',
             'kw_von' => 'privacy:metadata:einsatzaenderung:kw_von',
             'kw_bis' => 'privacy:metadata:einsatzaenderung:kw_bis',
+            'usermodified' => 'privacy:metadata:einsatzaenderung:usermodified',
         ], 'privacy:metadata:einsatzaenderung');
 
         $collection->add_database_table('local_berufsbildung_plan_import', [
@@ -95,6 +99,7 @@ class provider implements
             'zeitpunkt' => 'privacy:metadata:planimport:zeitpunkt',
             'csvdaten' => 'privacy:metadata:planimport:csvdaten',
             'entschieden_von' => 'privacy:metadata:planimport:entschieden_von',
+            'usermodified' => 'privacy:metadata:planimport:usermodified',
         ], 'privacy:metadata:planimport');
 
         // Meldung an die Administration, wenn eine Lieferung auf Freigabe wartet.
@@ -105,11 +110,13 @@ class provider implements
             'grund' => 'privacy:metadata:aufbewahrung:grund',
             'gueltig_von' => 'privacy:metadata:aufbewahrung:gueltig_von',
             'gueltig_bis' => 'privacy:metadata:aufbewahrung:gueltig_bis',
+            'usermodified' => 'privacy:metadata:aufbewahrung:usermodified',
         ], 'privacy:metadata:aufbewahrung');
 
         $collection->add_database_table('local_berufsbildung_teilnahmeprofil', [
             'userid' => 'privacy:metadata:teilnahmeprofil:userid',
             'art' => 'privacy:metadata:teilnahmeprofil:art',
+            'usermodified' => 'privacy:metadata:teilnahmeprofil:usermodified',
         ], 'privacy:metadata:teilnahmeprofil');
 
         $collection->add_database_table('local_berufsbildung_block', [
@@ -136,6 +143,7 @@ class provider implements
     public static function get_contexts_for_userid(int $userid): contextlist {
         $contextlist = new contextlist();
 
+        [$bearbeitet, $bearbeitetparams] = self::sql_bearbeitet($userid);
         $sql = "SELECT ctx.id
                   FROM {context} ctx
                  WHERE ctx.contextlevel = :userlevel
@@ -153,6 +161,7 @@ class provider implements
                      OR EXISTS (SELECT 1 FROM {local_berufsbildung_block_lk} bl WHERE bl.usermodified = :uid9)
                      OR EXISTS (SELECT 1 FROM {event} ev WHERE ev.component = :komponente AND ev.instance = :uid10)
                      OR EXISTS (SELECT 1 FROM {local_berufsbildung_einsatz_aenderung} ea WHERE ea.userid = :uid12)
+                     OR {$bearbeitet}
                    )";
 
         $contextlist->add_from_sql($sql, [
@@ -162,7 +171,7 @@ class provider implements
             'uid6' => $userid, 'uid7' => $userid, 'uid8' => $userid, 'uid9' => $userid, 'uid10' => $userid,
             'uid11' => $userid, 'uid12' => $userid,
             'komponente' => termin_service::KOMPONENTE,
-        ]);
+        ] + $bearbeitetparams);
 
         return $contextlist;
     }
@@ -196,10 +205,9 @@ class provider implements
             )
             || $DB->record_exists('local_berufsbildung_aufbewahrung', ['lernendeid' => $userid])
             || $DB->record_exists('local_berufsbildung_teilnahmeprofil', ['userid' => $userid])
-            || $DB->record_exists('local_berufsbildung_block', ['usermodified' => $userid])
-            || $DB->record_exists('local_berufsbildung_block_lk', ['usermodified' => $userid])
             || $DB->record_exists('event', ['component' => termin_service::KOMPONENTE, 'instance' => $userid])
-            || $DB->record_exists('local_berufsbildung_einsatz_aenderung', ['userid' => $userid]);
+            || $DB->record_exists('local_berufsbildung_einsatz_aenderung', ['userid' => $userid])
+            || self::hat_bearbeitet($userid);
 
         if ($hasdata) {
             $userlist->add_user($userid);
@@ -397,6 +405,68 @@ class provider implements
                 ]
             );
         }
+
+        // Was die Person in den uebrigen Tabellen zuletzt geaendert hat. Nur
+        // Anzahl und Zeitpunkt: die Datensaetze selbst gehoeren zu anderen
+        // Personen und werden dort exportiert.
+        $bearbeitungen = [];
+        foreach (konto_bereinigung_service::TABELLEN_MIT_BEARBEITUNG as $tabelle) {
+            if (in_array($tabelle, ['local_berufsbildung_block', 'local_berufsbildung_block_lk'], true)) {
+                continue;
+            }
+            $stand = $DB->get_record_sql(
+                "SELECT COUNT(1) AS anzahl, MAX(timemodified) AS zuletzt FROM {{$tabelle}} WHERE usermodified = :userid",
+                ['userid' => $userid]
+            );
+            if ((int) $stand->anzahl > 0) {
+                $bearbeitungen[] = [
+                    'tabelle' => $tabelle,
+                    'anzahl' => (int) $stand->anzahl,
+                    'zuletzt_geaendert' => transform::datetime((int) $stand->zuletzt),
+                ];
+            }
+        }
+        if (!empty($bearbeitungen)) {
+            writer::with_context($context)->export_data(
+                [get_string('privacy:pfad_bearbeitungen', 'local_berufsbildung')],
+                (object) ['bearbeitungen' => $bearbeitungen]
+            );
+        }
+    }
+
+    /**
+     * SQL-Bedingung: die Person steht in einer der Tabellen als usermodified.
+     *
+     * @param int $userid
+     * @return array{0: string, 1: array} [SQL, Parameter]
+     */
+    private static function sql_bearbeitet(int $userid): array {
+        $teile = [];
+        $params = [];
+        foreach (konto_bereinigung_service::TABELLEN_MIT_BEARBEITUNG as $i => $tabelle) {
+            $teile[] = "EXISTS (SELECT 1 FROM {{$tabelle}} WHERE usermodified = :bearbeitet{$i})";
+            $params["bearbeitet{$i}"] = $userid;
+        }
+
+        return ['(' . implode(' OR ', $teile) . ')', $params];
+    }
+
+    /**
+     * Steht die Person in einer der Tabellen als usermodified?
+     *
+     * @param int $userid
+     * @return bool
+     */
+    private static function hat_bearbeitet(int $userid): bool {
+        global $DB;
+
+        foreach (konto_bereinigung_service::TABELLEN_MIT_BEARBEITUNG as $tabelle) {
+            if ($DB->record_exists($tabelle, ['usermodified' => $userid])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -468,9 +538,10 @@ class provider implements
      * sich ohne Verlust des Protokollwerts anonymisieren - wer den Import
      * ausgeloest hat, ist fuer die Aussagekraft des Protokolls unerheblich.
      * Ebenso, wer eine zurueckgehaltene Lieferung freigegeben oder verworfen
-     * hat. Dasselbe gilt fuer die letzte Aenderung an Ausbildungsbloecken und
-     * deren Kompetenzzuordnungen: die Struktur bleibt, nur die Spur der
-     * bearbeitenden Person verschwindet.
+     * hat. Dasselbe gilt fuer die letzte Aenderung (usermodified) an allen
+     * Datensaetzen des Plugins, von Ausbildungsbloecken bis zu Zuordnungen:
+     * die Daten bleiben, nur die Spur der bearbeitenden Person verschwindet
+     * (konto_bereinigung_service::TABELLEN_MIT_BEARBEITUNG).
      *
      * Eine noch wartende Lieferung, die die Mailadresse der Person enthaelt,
      * wird verworfen: sie liesse sich nicht teilweise bereinigen.
@@ -479,14 +550,11 @@ class provider implements
      */
     protected static function anonymisiere_bearbeitungsspuren(int $userid): void {
         global $DB;
-        $DB->set_field('local_berufsbildung_plan_import', 'ausgefuehrt_von', 0, ['ausgefuehrt_von' => $userid]);
-        $DB->set_field('local_berufsbildung_plan_import', 'entschieden_von', 0, ['entschieden_von' => $userid]);
         $email = $DB->get_field('user', 'email', ['id' => $userid]);
-        if (is_string($email) && $email !== '') {
-            (new import_service())->verwerfe_wartende_mit_mailadresse($email);
-        }
-        $DB->set_field('local_berufsbildung_block', 'usermodified', 0, ['usermodified' => $userid]);
-        $DB->set_field('local_berufsbildung_block_lk', 'usermodified', 0, ['usermodified' => $userid]);
+        (new konto_bereinigung_service())->anonymisiere_bearbeitungsspuren(
+            $userid,
+            is_string($email) ? $email : null
+        );
     }
 
     /**

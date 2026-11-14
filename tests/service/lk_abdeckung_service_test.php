@@ -206,4 +206,41 @@ final class lk_abdeckung_service_test extends advanced_testcase {
         set_config('beruf_rahmen_mapping', 'AU_EFZ=gibt-es-nicht', 'local_berufsbildung');
         $this->assertNull($service->fuer_beruf('AU_EFZ'));
     }
+
+    /**
+     * Die Blockliste zaehlt die Kompetenzen je Block in einer Abfrage.
+     */
+    public function test_anzahl_je_block(): void {
+        $this->resetAfterTest();
+        $this->lege_rahmen_an();
+
+        $zwei = $this->block(['nummer' => '4'], ['lk-a1-01', 'lk-a1-02']);
+        $eine = $this->block(['nummer' => '5'], ['7777BE a.02']);
+        $keine = $this->block(['nummer' => '6'], []);
+
+        $anzahl = (new lk_abdeckung_service())->anzahl_je_block();
+
+        $this->assertSame(2, $anzahl[(int) $zwei->get('id')]);
+        $this->assertSame(1, $anzahl[(int) $eine->get('id')]);
+        $this->assertArrayNotHasKey((int) $keine->get('id'), $anzahl);
+    }
+
+    /**
+     * Die Kurse aller Bloecke in einer Abfrage; ein geloeschter Kurs fehlt.
+     */
+    public function test_kurse_der_bloecke(): void {
+        $this->resetAfterTest();
+
+        $kurs = $this->getDataGenerator()->create_course(['fullname' => 'ueK 1']);
+        $weg = $this->getDataGenerator()->create_course();
+        $mit = $this->block(['nummer' => '4', 'courseid' => (int) $kurs->id], []);
+        $geloescht = $this->block(['nummer' => '5', 'courseid' => (int) $weg->id], []);
+        $ohne = $this->block(['nummer' => '6'], []);
+        delete_course($weg, false);
+
+        $kurse = (new block_kurs_service())->get_kurse([$mit, $geloescht, $ohne]);
+
+        $this->assertSame(['ueK 1'], array_column($kurse, 'fullname'));
+        $this->assertSame((int) $kurs->id, (int) $kurse[(int) $mit->get('id')]->id);
+    }
 }

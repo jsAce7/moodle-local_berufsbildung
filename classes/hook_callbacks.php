@@ -30,6 +30,7 @@ use core\hook\navigation\primary_extend;
 use core_user\hook\extend_user_menu;
 use local_berufsbildung\hilfe\sammlung;
 use local_berufsbildung\navigation\menuepunkt;
+use local_berufsbildung\navigation\sichtbarkeit;
 use moodle_url;
 use navigation_node;
 
@@ -171,24 +172,25 @@ class hook_callbacks {
      * Lehrbeginn und nach dem Abschluss - die Seite zeigt dann "Lehre
      * beginnt erst" bzw. den Rueckblick. Ohne Beruf und Jahrgang
      * (PHASE_UNBEKANNT, etwa bei Berufsbildner/innen) gibt es nichts zu
-     * zeigen, externen üK-Teilnehmenden ebenso wenig.
+     * zeigen, externen üK-Teilnehmenden ebenso wenig. Gecacht, siehe
+     * navigation\sichtbarkeit.
      *
      * @param int $userid
      * @return bool
      */
     public static function sieht_meine_lehre(int $userid): bool {
-        return !api::ist_uek_extern($userid) && api::get_ausbildungsphase($userid) !== api::PHASE_UNBEKANNT;
+        return sichtbarkeit::meine_lehre($userid);
     }
 
     /**
      * Ob "Meine Lernenden" erscheint: fuer alle, die heute mindestens eine
-     * laufende Zuordnung haben.
+     * laufende Zuordnung haben. Gecacht, siehe navigation\sichtbarkeit.
      *
      * @param int $userid
      * @return bool
      */
     public static function sieht_meine_lernenden(int $userid): bool {
-        return !empty(api::get_lernende_for($userid));
+        return sichtbarkeit::meine_lernenden($userid);
     }
 
     /**

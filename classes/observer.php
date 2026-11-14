@@ -27,6 +27,9 @@ declare(strict_types=1);
 namespace local_berufsbildung;
 
 use core\event\capability_unassigned;
+use core\event\user_deleted;
+use core\event\user_updated;
+use local_berufsbildung\service\konto_bereinigung_service;
 use local_berufsbildung\service\leitungsrolle_service;
 
 /**
@@ -46,5 +49,31 @@ class observer {
         }
 
         $service->stelle_sicher();
+    }
+
+    /**
+     * Bereinigt die Daten eines geloeschten Kontos sofort - siehe
+     * konto_bereinigung_service.
+     *
+     * @param user_deleted $event
+     */
+    public static function user_deleted(user_deleted $event): void {
+        $email = $event->other['email'] ?? null;
+        (new konto_bereinigung_service())->bereinige_geloeschtes_konto(
+            (int) $event->objectid,
+            is_string($email) ? $email : null
+        );
+    }
+
+    /**
+     * Ein geaendertes Profil kann Beruf, Jahrgang oder Lehrbeginn betreffen:
+     * der Request-Cache der Profilfelder und die Sichtbarkeit von "Meine
+     * Lehre" in der Navigation werden geleert.
+     *
+     * @param user_updated $event
+     */
+    public static function user_updated(user_updated $event): void {
+        api::vergiss_profile();
+        navigation\sichtbarkeit::vergiss_person((int) $event->objectid);
     }
 }

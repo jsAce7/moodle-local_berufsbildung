@@ -33,11 +33,12 @@
 </ol>
 <h4>Zuordnung beenden oder löschen</h4>
 <ul>
-    <li><strong>Beenden</strong> ist der Normalfall, etwa bei einem Wechsel: <em>Gültig bis</em> setzen. Frühere Berichte bleiben der damals zuständigen Person zugeordnet. Ohne Datum wird eine beendete Zuordnung wieder laufend.</li>
+    <li><strong>Beenden</strong> ist der Normalfall, etwa bei einem Wechsel: <em>Gültig bis</em> setzen. Der gewählte Tag zählt noch ganz dazu. Frühere Berichte bleiben der damals zuständigen Person zugeordnet. Ohne Datum wird eine beendete Zuordnung wieder laufend. Ein späteres Enddatum ist nur möglich, solange es nicht in die nächste Zuordnung derselben Rolle reicht.</li>
+    <li>Stammt die Zuordnung aus einer verknüpften globalen Gruppe, legt der stündliche Abgleich nach dem Beenden keine neue an, solange die Person in der Gruppe bleibt. Erst ein erneuter Eintritt in die Gruppe ordnet sie wieder zu.</li>
     <li><strong>Löschen</strong> nur für eindeutig falsch erfasste Zuordnungen. Es entfernt sie endgültig.</li>
 </ul>
 <h4>Jahreswechsel: CSV-Import</h4>
-<p>Für einen ganzen Jahrgang: <em>CSV-Import</em>, erste Zeile mit den Spalten <code>berufsbildner</code>, <code>lernende</code> (je der Moodle-Benutzername), <code>beruf</code> (leer = aus dem Profil) und <code>gueltig_von</code> (JJJJ-MM-TT). Die Vorschau zeigt jede Zeile; übernommen werden nur die fehlerfreien.</p>
+<p>Für einen ganzen Jahrgang: <em>CSV-Import</em>, erste Zeile mit den Spalten <code>berufsbildner</code>, <code>lernende</code> (je der Moodle-Benutzername), <code>beruf</code> (leer = aus dem Profil) und <code>gueltig_von</code> (JJJJ-MM-TT). Die Vorschau zeigt jede Zeile; übernommen werden nur die fehlerfreien. Eine schon importierte Zeile darf erneut in der Datei stehen, sie wird nicht doppelt angelegt.</p>
 <h4>Teilnahmeart</h4>
 <p>Personen, die extern nur an überbetrieblichen Kursen teilnehmen, markierst du in der Übersicht als <em>Extern · nur üK</em>. Sie bleiben bei ihrer Berufsbildnerin oder ihrem Berufsbildner sichtbar, haben aber weder „Meine Lehre“ noch Kompetenzraster oder Lerndokumentation.</p>
 {{/darfaendern}}

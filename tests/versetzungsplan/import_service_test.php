@@ -840,4 +840,54 @@ final class import_service_test extends advanced_testcase {
         $this->assertCount(1, plan_import::get_records([])); // Fehlschlag wird protokolliert ...
         $this->assertCount(0, einsatz::get_records([])); // ... aber nichts an Einsaetzen erzeugt.
     }
+
+    /**
+     * Die Mailadresse wird im Konto korrigiert und dieselbe Datei erneut
+     * hochgeladen: die Lieferung gilt nicht als unveraendert, die Einsaetze
+     * der Person kommen dazu.
+     */
+    public function test_dieselbe_datei_nach_korrigierter_mailadresse_wird_neu_aufgeloest(): void {
+        global $CFG, $DB;
+        require_once($CFG->dirroot . '/user/lib.php');
+        $this->resetAfterTest();
+
+        $admin = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user(['email' => 'anna.mustr@firma.ch']);
+        $this->lege_aktive_zuordnung_an($lernende);
+        $csv = "email;block;kw_von;kw_bis\nanna.muster@firma.ch;4;2027-W15;2027-W16\n";
+        $service = new import_service();
+
+        $erstes = $service->verarbeiten($csv, 'upload', (int) $admin->id);
+        $this->assertCount(0, einsatz::get_records(['userid' => (int) $lernende->id]));
+        $this->assertSame('mit_warnungen', $erstes['status']);
+
+        // Die Funktion user_update_user() setzt timemodified auf jetzt. Im Test faellt das
+        // in dieselbe Sekunde wie das Anlegen, deshalb danach spaeter gesetzt.
+        user_update_user((object) ['id' => $lernende->id, 'email' => 'anna.muster@firma.ch'], false, false);
+        $DB->set_field('user', 'timemodified', time() + 5, ['id' => $lernende->id]);
+        $zweites = $service->verarbeiten($csv, 'upload', (int) $admin->id);
+
+        $this->assertFalse($zweites['unveraendert']);
+        $this->assertCount(1, einsatz::get_records(['userid' => (int) $lernende->id]));
+    }
+
+    /**
+     * Mehrere Einsaetze derselben Person werden zusammen aufgeloest - die
+     * Mailadresse einmal je Lieferung, nicht je Zeile.
+     */
+    public function test_mailadresse_wird_einmal_je_person_aufgeloest(): void {
+        $this->resetAfterTest();
+
+        $admin = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user(['email' => 'beat.beispiel@firma.ch']);
+        $this->lege_aktive_zuordnung_an($lernende);
+        $csv = "email;block;kw_von;kw_bis\n"
+            . "beat.beispiel@firma.ch;4;2027-W15;2027-W16\n"
+            . "beat.beispiel@firma.ch;5;2027-W17;2027-W18\n";
+
+        $ergebnis = (new import_service())->verarbeiten($csv, 'upload', (int) $admin->id);
+
+        $this->assertSame(1, $ergebnis['personen_verarbeitet']);
+        $this->assertCount(2, einsatz::get_records(['userid' => (int) $lernende->id]));
+    }
 }

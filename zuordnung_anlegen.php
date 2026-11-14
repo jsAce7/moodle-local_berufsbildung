@@ -67,21 +67,32 @@ if ($data = $form->get_data()) {
     // Kohorte passieren, das Formular prueft die Einzelauswahl bereits.
     $alle = array_diff($alle, [(int) $data->berufsbildnerid]);
 
+    // Eine Person, die nicht zugeordnet werden kann (etwa weil sie schon
+    // eine kuenftige Zuordnung hat), haelt die uebrigen nicht auf.
+    $angelegt = 0;
     foreach ($alle as $lernendeid) {
-        api::set_zuordnung(
-            (int) $data->berufsbildnerid,
-            (int) $lernendeid,
-            $data->beruf,
-            (int) $data->gueltig_von,
-            $data->rolle
-        );
+        try {
+            api::set_zuordnung(
+                (int) $data->berufsbildnerid,
+                (int) $lernendeid,
+                $data->beruf,
+                (int) $data->gueltig_von,
+                $data->rolle
+            );
+            $angelegt++;
+        } catch (moodle_exception $e) {
+            \core\notification::warning(get_string('zuordnung:nicht_angelegt', 'local_berufsbildung', (object) [
+                'name' => fullname(core_user::get_user((int) $lernendeid)),
+                'grund' => $e->getMessage(),
+            ]));
+        }
     }
 
     redirect(
         $returnurl,
-        get_string('zuordnung:angelegt', 'local_berufsbildung', count($alle)),
+        get_string('zuordnung:angelegt', 'local_berufsbildung', $angelegt),
         null,
-        \core\output\notification::NOTIFY_SUCCESS
+        $angelegt === count($alle) ? \core\output\notification::NOTIFY_SUCCESS : \core\output\notification::NOTIFY_WARNING
     );
 }
 

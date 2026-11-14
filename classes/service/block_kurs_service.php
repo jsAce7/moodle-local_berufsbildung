@@ -81,4 +81,39 @@ class block_kurs_service {
 
         return $kurs === false ? null : $kurs;
     }
+
+    /**
+     * Die Kurse mehrerer Bloecke in einer Abfrage - fuer die Blockliste,
+     * die sonst je Block zwei Abfragen braucht (get_kurs()).
+     *
+     * @param \local_berufsbildung\persistent\block[] $bloecke
+     * @return array<int, \stdClass> Block-ID => Kurs mit id, fullname und shortname;
+     *         Bloecke ohne (noch existierenden) Kurs fehlen
+     */
+    public function get_kurse(array $bloecke): array {
+        global $DB;
+
+        $kursids = [];
+        foreach ($bloecke as $block) {
+            $courseid = (int) $block->get('courseid');
+            if ($courseid > 0) {
+                $kursids[(int) $block->get('id')] = $courseid;
+            }
+        }
+        if (empty($kursids)) {
+            return [];
+        }
+
+        [$insql, $params] = $DB->get_in_or_equal(array_unique($kursids), SQL_PARAMS_NAMED);
+        $kurse = $DB->get_records_select('course', "id {$insql}", $params, '', 'id, fullname, shortname');
+
+        $ergebnis = [];
+        foreach ($kursids as $blockid => $courseid) {
+            if (isset($kurse[$courseid])) {
+                $ergebnis[$blockid] = $kurse[$courseid];
+            }
+        }
+
+        return $ergebnis;
+    }
 }

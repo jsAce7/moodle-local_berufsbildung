@@ -128,10 +128,12 @@ class api {
         $profil = teilnahmeprofil::get_record(['userid' => $userid]);
         if ($profil === false) {
             (new teilnahmeprofil(0, (object) ['userid' => $userid, 'art' => $art]))->create();
-            return;
+        } else {
+            $profil->set('art', $art);
+            $profil->update();
         }
-        $profil->set('art', $art);
-        $profil->update();
+        // Fuer externe üK-Teilnehmende erscheint "Meine Lehre" nicht.
+        navigation\sichtbarkeit::vergiss();
     }
 
     /** Ausbildungsphase: Lehre beginnt zum Stichtag erst noch. */
@@ -323,6 +325,57 @@ class api {
         );
     }
 
+    /** @var bool Ob profil() den Request-Cache nutzt - siehe profile_vorhalten(). */
+    private static bool $profilcache = false;
+
+    /**
+     * Haelt die Profilfelder fuer den Rest der Anfrage vor, statt sie bei
+     * jedem Aufruf neu zu lesen.
+     *
+     * Nur fuer Seiten, die viele Personen lesen und kein Profil schreiben
+     * ("Meine Lernenden" las sie sonst mehrmals je Person: Stand, Raster,
+     * Planungshorizont, Semestergrenzen). Bewusst nicht immer an: Core
+     * speichert Profilfelder (profile_save_data(),
+     * profile_save_custom_fields()) ohne Event, ein spaeterer Aufruf in
+     * derselben Anfrage saehe sonst den alten Stand.
+     */
+    public static function profile_vorhalten(): void {
+        self::$profilcache = true;
+    }
+
+    /**
+     * Profilfelder einer Person - mit profile_vorhalten() je Anfrage nur
+     * einmal gelesen.
+     *
+     * @param int $userid
+     * @return \stdClass
+     */
+    private static function profil(int $userid): \stdClass {
+        global $CFG;
+        require_once($CFG->dirroot . '/user/profile/lib.php');
+
+        if (!self::$profilcache) {
+            return profile_user_record($userid, false);
+        }
+
+        $cache = \cache::make('local_berufsbildung', 'profil');
+        $profil = $cache->get($userid);
+        if (!$profil instanceof \stdClass) {
+            $profil = profile_user_record($userid, false);
+            $cache->set($userid, $profil);
+        }
+
+        return $profil;
+    }
+
+    /**
+     * Leert den Request-Cache der Profilfelder, nachdem ein Profil
+     * geaendert wurde.
+     */
+    public static function vergiss_profile(): void {
+        \cache::make('local_berufsbildung', 'profil')->purge();
+    }
+
     /**
      * Beruf, Jahrgang und die zur Semesterberechnung noetigen
      * Konfigurationswerte einer lernenden Person - die gemeinsame
@@ -334,15 +387,12 @@ class api {
      * @return array{beruf: string, jahrgang: int, startmonat: int, lehrdauer: int}|null
      */
     private static function resolve_ausbildungsparameter(int $lernendeid): ?array {
-        global $CFG;
-        require_once($CFG->dirroot . '/user/profile/lib.php');
-
         $feldbeziehung = get_config('local_berufsbildung', 'profilefield_beruf');
         $feldjahrgang = get_config('local_berufsbildung', 'profilefield_jahrgang');
         $feldbeziehung = $feldbeziehung !== false ? $feldbeziehung : 'beruf';
         $feldjahrgang = $feldjahrgang !== false ? $feldjahrgang : 'jahrgang';
 
-        $profil = profile_user_record($lernendeid, false);
+        $profil = self::profil($lernendeid);
         $beruf = $profil->{$feldbeziehung} ?? null;
         $jahrgangroh = $profil->{$feldjahrgang} ?? null;
 
@@ -449,12 +499,9 @@ class api {
      * @return int|null Null, wenn weder das Profilfeld noch Beruf und Jahrgang aufloesbar sind
      */
     public static function get_lehrbeginn(int $lernendeid): ?int {
-        global $CFG;
-
         $feld = (string) get_config('local_berufsbildung', 'profilefield_lehrbeginn');
         if ($feld !== '') {
-            require_once($CFG->dirroot . '/user/profile/lib.php');
-            $wert = profile_user_record($lernendeid, false)->{$feld} ?? null;
+            $wert = self::profil($lernendeid)->{$feld} ?? null;
             $datum = self::lies_datum($wert);
             if ($datum !== null) {
                 return $datum;

@@ -27,6 +27,7 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 
 use local_berufsbildung\api;
+use local_berufsbildung\datum;
 use local_berufsbildung\form\zuordnung_beenden_form;
 use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\persistent\zuordnung;
@@ -49,9 +50,11 @@ $returnurl = new moodle_url('/local/berufsbildung/zuordnung.php');
 
 $form = new zuordnung_beenden_form(null, ['gueltig_von' => (int) $zuordnung->get('gueltig_von')]);
 // Ein date_selector mit optional => true erwartet 0 statt null fuer "kein Datum".
+// Gespeichert ist das Tagesende, angezeigt wird der Tag (siehe datum).
+$bisher = $zuordnung->get('gueltig_bis');
 $form->set_data((object) [
     'id' => $id,
-    'gueltig_bis' => $zuordnung->get('gueltig_bis') ?? 0,
+    'gueltig_bis' => $bisher !== null ? datum::tagesbeginn((int) $bisher) : 0,
 ]);
 
 if ($form->is_cancelled()) {
@@ -59,7 +62,8 @@ if ($form->is_cancelled()) {
 }
 
 if ($data = $form->get_data()) {
-    $gueltigbis = !empty($data->gueltig_bis) ? (int) $data->gueltig_bis : null;
+    // Der gewaehlte Tag zaehlt noch ganz: gueltig_bis ist der letzte gueltige Zeitpunkt.
+    $gueltigbis = !empty($data->gueltig_bis) ? datum::tagesende((int) $data->gueltig_bis) : null;
     api::beende_zuordnung((int) $data->id, $gueltigbis);
 
     $meldung = $gueltigbis !== null

@@ -205,4 +205,29 @@ final class csv_parser_test extends advanced_testcase {
         $this->assertSame([], $ergebnis['fehler']);
         $this->assertSame('Vertretung; nur zur Info', $ergebnis['eintraege'][0]['bemerkung']);
     }
+
+    /**
+     * Excel speichert «CSV UTF-8» mit Byte Order Mark - die erste Spalte
+     * muss trotzdem 'email' heissen.
+     */
+    public function test_byte_order_mark_wird_entfernt(): void {
+        $csv = "\xEF\xBB\xBFemail;block;kw_von;kw_bis\nanna.muster@firma.ch;4;2027-W15;2027-W26\n";
+
+        $ergebnis = (new csv_parser())->parsen($csv);
+
+        $this->assertSame([], $ergebnis['fehler']);
+        $this->assertCount(1, $ergebnis['eintraege']);
+    }
+
+    /**
+     * Mailadressen der Lieferung, auch aus fehlerhaften Zeilen, ohne Doppelte.
+     */
+    public function test_mailadressen_liefert_die_spalte_email(): void {
+        $csv = "\xEF\xBB\xBFblock;email;kw_von;kw_bis\n"
+            . "4;Anna@Firma.ch;2027-W15;2027-W26\n"
+            . "5;anna@firma.ch;2027-W99;2027-W99\n"
+            . "6;joanna@firma.ch;2027-W30;2027-W31\n";
+
+        $this->assertSame(['anna@firma.ch', 'joanna@firma.ch'], (new csv_parser())->mailadressen($csv));
+    }
 }

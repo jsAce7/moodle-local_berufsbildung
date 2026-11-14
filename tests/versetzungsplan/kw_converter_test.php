@@ -82,4 +82,34 @@ final class kw_converter_test extends advanced_testcase {
         $this->assertLessThan($converter->sortierschluessel('2027-W02'), $converter->sortierschluessel('2027-W01'));
         $this->assertLessThan($converter->sortierschluessel('2028-W01'), $converter->sortierschluessel('2027-W52'));
     }
+
+    /**
+     * Randfall: eine Woche 53 in einem Jahr mit nur 52 Wochen rollte still
+     * ins Folgejahr.
+     */
+    public function test_woche_53_in_jahr_mit_52_wochen_wirft(): void {
+        $converter = new kw_converter();
+
+        $this->expectException(coding_exception::class);
+        $converter->zu_zeitraum('2027-W53');
+    }
+
+    /**
+     * Randfall: Woche 0 gibt es nicht.
+     */
+    public function test_woche_0_wirft(): void {
+        $converter = new kw_converter();
+
+        $this->expectException(coding_exception::class);
+        $converter->zu_zeitraum('2027-W00');
+    }
+
+    /**
+     * Randfall: die letzte Woche eines Jahres mit 52 Wochen gilt.
+     */
+    public function test_woche_52_in_jahr_mit_52_wochen_gilt(): void {
+        [$von] = (new kw_converter())->zu_zeitraum('2027-W52');
+
+        $this->assertSame('2027-12-27', date('Y-m-d', $von));
+    }
 }

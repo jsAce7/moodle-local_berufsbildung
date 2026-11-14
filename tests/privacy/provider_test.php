@@ -507,4 +507,113 @@ final class provider_test extends \core_privacy\tests\provider_testcase {
         $this->assertSame($jetzt - WEEKSECS, (int) (new zuordnung((int) $beendet->get('id')))->get('gueltig_bis'));
         $this->assertFalse((bool) (new kohorten_link((int) $link->get('id')))->get('aktiv'));
     }
+
+    /**
+     * Die Account-Loeschung allein - ohne Loeschantrag in tool_dataprivacy -
+     * entfernt die Daten der lernenden Person sofort (Observer auf
+     * user_deleted), auch eine dokumentierte Aufbewahrungspflicht.
+     */
+    public function test_account_loeschung_ohne_loeschantrag_bereinigt_sofort(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung');
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $generator->create_zuordnung([
+            'berufsbildnerid' => (int) $berufsbildner->id,
+            'lernendeid' => (int) $lernende->id,
+        ]);
+        \local_berufsbildung\api::set_teilnahmeart((int) $lernende->id, 'uek_extern');
+        (new aufbewahrung(0, (object) [
+            'lernendeid' => (int) $lernende->id, 'grund' => 'Verfahren', 'gueltig_von' => time() - DAYSECS,
+            'gueltig_bis' => null,
+        ]))->create();
+
+        delete_user($lernende);
+
+        $this->assertCount(0, zuordnung::get_records(['lernendeid' => (int) $lernende->id]));
+        $this->assertCount(0, aufbewahrung::get_records(['lernendeid' => (int) $lernende->id]));
+        $this->assertFalse($DB->record_exists('local_berufsbildung_teilnahmeprofil', ['userid' => (int) $lernende->id]));
+    }
+
+    /**
+     * Was vor dem Observer geloescht wurde, holt das Sicherheitsnetz nach.
+     */
+    public function test_bereinige_verwaiste_holt_altbestand_nach(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        // Als waere das Konto vor dem Observer geloescht worden.
+        $DB->set_field('user', 'deleted', 1, ['id' => $lernende->id]);
+        $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_zuordnung([
+            'berufsbildnerid' => (int) $berufsbildner->id,
+            'lernendeid' => (int) $lernende->id,
+        ]);
+
+        $service = new \local_berufsbildung\service\konto_bereinigung_service();
+        $this->assertSame(1, $service->bereinige_verwaiste());
+        $this->assertCount(0, zuordnung::get_records(['lernendeid' => (int) $lernende->id]));
+        $this->assertSame(0, $service->bereinige_verwaiste());
+    }
+
+    /**
+     * Wer nur als bearbeitende Person (usermodified) in einer Zuordnung
+     * steht, wird gefunden, exportiert und bei der Loeschung anonymisiert.
+     */
+    public function test_usermodified_wird_gefunden_exportiert_und_anonymisiert(): void {
+        $this->resetAfterTest();
+
+        $verwaltung = $this->getDataGenerator()->create_user();
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        $this->setUser($verwaltung);
+        $zuordnung = \local_berufsbildung\api::set_zuordnung((int) $berufsbildner->id, (int) $lernende->id, '', time() - DAYSECS);
+        $this->setUser(null);
+        $this->assertSame((int) $verwaltung->id, (int) $zuordnung->get('usermodified'));
+
+        $kontexte = provider::get_contexts_for_userid((int) $verwaltung->id);
+        $this->assertSame([context_user::instance((int) $verwaltung->id)->id], array_map('intval', $kontexte->get_contextids()));
+
+        $this->export_all_data_for_user((int) $verwaltung->id, 'local_berufsbildung');
+        $writer = writer::with_context(context_user::instance((int) $verwaltung->id));
+        $bearbeitungen = $writer->get_data([get_string('privacy:pfad_bearbeitungen', 'local_berufsbildung')])->bearbeitungen;
+        $this->assertSame('local_berufsbildung_zuordnung', $bearbeitungen[0]['tabelle']);
+        $this->assertSame(1, $bearbeitungen[0]['anzahl']);
+
+        provider::delete_data_for_user($this->loeschanfrage_fuer($verwaltung));
+
+        $zuordnung->read();
+        $this->assertSame(0, (int) $zuordnung->get('usermodified'));
+        $this->assertTrue(\local_berufsbildung\api::is_zustaendig((int) $berufsbildner->id, (int) $lernende->id));
+    }
+
+    /**
+     * Eine wartende Lieferung wird nur bei exakt gleicher Mailadresse
+     * verworfen, nicht bei einem Teilstring-Treffer.
+     */
+    public function test_loeschanfrage_verwirft_keine_lieferung_mit_aehnlicher_mailadresse(): void {
+        $this->resetAfterTest();
+
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user(['email' => 'anna@firma.ch']);
+        $this->getDataGenerator()->get_plugin_generator('local_berufsbildung')->create_zuordnung([
+            'berufsbildnerid' => (int) $berufsbildner->id,
+            'lernendeid' => (int) $lernende->id,
+            'gueltig_von' => strtotime('-1 year'),
+        ]);
+        $mitjoanna = new plan_import(0, (object) [
+            'quelle' => 'webservice', 'daten_hash' => str_repeat('e', 64), 'zeitpunkt' => time(),
+            'ausgefuehrt_von' => 0, 'status' => 'zur_freigabe', 'protokoll' => '',
+            'csvdaten' => "email;block;kw_von;kw_bis\njoanna@firma.ch;4;2027-W15;2027-W16\n",
+        ]);
+        $mitjoanna->create();
+
+        provider::delete_data_for_user($this->loeschanfrage_fuer($lernende));
+
+        $mitjoanna->read();
+        $this->assertSame('zur_freigabe', $mitjoanna->get('status'));
+    }
 }

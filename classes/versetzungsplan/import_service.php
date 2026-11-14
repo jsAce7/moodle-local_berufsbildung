@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace local_berufsbildung\versetzungsplan;
 
+use core_text;
 use local_berufsbildung\api;
 use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\einsatz;
@@ -102,7 +103,7 @@ class import_service {
         bool $testlauf = false,
         bool $rueckgangbestaetigt = false
     ): array {
-        $hash = hash('sha256', $csvinhalt . "\x00" . $this->zuordnungs_fingerabdruck());
+        $hash = hash('sha256', $csvinhalt . "\x00" . $this->zuordnungs_fingerabdruck() . "\x00" . $this->konten_fingerabdruck());
         $letztererfolgreicher = $this->letzter_erfolgreicher_import();
 
         if ($letztererfolgreicher !== null && $letztererfolgreicher->get('daten_hash') === $hash) {
@@ -464,6 +465,31 @@ class import_service {
     }
 
     /**
+     * Anzahl geaenderter Einsaetze je Importlauf, in einer Abfrage - fuer
+     * die Liste im Verlauf.
+     *
+     * @param int[] $importids
+     * @return array<int, int> Import-ID => Anzahl; Laeufe ohne Aenderung fehlen
+     */
+    public function anzahl_aenderungen_je_import(array $importids): array {
+        global $DB;
+
+        if (empty($importids)) {
+            return [];
+        }
+        [$insql, $params] = $DB->get_in_or_equal(array_map('intval', $importids), SQL_PARAMS_NAMED);
+        $zeilen = $DB->get_records_sql(
+            'SELECT importid, COUNT(1) AS anzahl
+               FROM {' . einsatz_aenderung::TABLE . "}
+              WHERE importid {$insql}
+           GROUP BY importid",
+            $params
+        );
+
+        return array_map(static fn ($zeile): int => (int) $zeile->anzahl, $zeilen);
+    }
+
+    /**
      * Raeumt den Verlauf auf, was aelter als VERLAUF_MONATE ist: loescht die
      * geaenderten Einsaetze und leert den Protokolltext der Laeufe - er kann
      * nicht zugeordnete Mailadressen enthalten. Die Laeufe selbst bleiben,
@@ -569,8 +595,11 @@ class import_service {
      * @param string $email
      */
     public function verwerfe_wartende_mit_mailadresse(string $email): void {
+        // Exakt gegen die Spalte 'email' - ein Teilstring-Treffer verwuerfe
+        // fuer anna@firma.ch auch eine Lieferung mit joanna@firma.ch.
+        $email = trim(mb_strtolower($email));
         foreach (plan_import::get_records(['status' => 'zur_freigabe']) as $wartend) {
-            if (stripos((string) $wartend->get('csvdaten'), $email) !== false) {
+            if (in_array($email, $this->parser->mailadressen((string) $wartend->get('csvdaten')), true)) {
                 $this->entscheide($wartend, 'verworfen', null);
             }
         }
@@ -639,16 +668,20 @@ class import_service {
      * @return array{nachuserid: array<int,array>, ausserhalb_geltungsbereich: int, protokoll: string[]}
      */
     private function zeilen_aufloesen(array $eintraege): array {
-        global $DB;
-
         $nachuserid = [];
         $ausserhalbgeltungsbereich = 0;
         $protokoll = [];
         $bekanntebloecke = [];
         $gemeldeteadressen = [];
+        $imgeltungsbereich = [];
+
+        // Je Mailadresse einmal aufloesen, nicht je Zeile: eine Person hat
+        // meist dutzende Einsaetze, und die Freigabeseite ruft das bei jedem
+        // Aufruf auf.
+        $konten = $this->konten_je_mailadresse(array_column($eintraege, 'email'));
 
         foreach ($eintraege as $eintrag) {
-            $nutzer = $DB->get_records('user', ['email' => $eintrag['email'], 'deleted' => 0], '', 'id');
+            $nutzer = $konten[core_text::strtolower($eintrag['email'])] ?? [];
             if (count($nutzer) !== 1) {
                 // Eine Person hat meist mehrere Einsaetze - die Adresse
                 // trotzdem nur einmal melden.
@@ -659,9 +692,10 @@ class import_service {
                 continue;
             }
 
-            $userid = (int) reset($nutzer)->id;
+            $userid = (int) reset($nutzer);
 
-            if (empty(api::get_berufsbildner_for($userid))) {
+            $imgeltungsbereich[$userid] ??= !empty(api::get_berufsbildner_for($userid));
+            if (!$imgeltungsbereich[$userid]) {
                 $ausserhalbgeltungsbereich++;
                 continue;
             }
@@ -681,6 +715,28 @@ class import_service {
             'ausserhalb_geltungsbereich' => $ausserhalbgeltungsbereich,
             'protokoll' => $protokoll,
         ];
+    }
+
+    /**
+     * Nicht geloeschte Konten je Mailadresse, in wenigen Abfragen.
+     *
+     * @param string[] $adressen
+     * @return array<string, int[]> kleingeschriebene Mailadresse => User-IDs
+     */
+    private function konten_je_mailadresse(array $adressen): array {
+        global $DB;
+
+        $adressen = array_values(array_unique(array_filter($adressen, static fn ($a): bool => $a !== '')));
+        $konten = [];
+        foreach (array_chunk($adressen, 500) as $teil) {
+            [$insql, $params] = $DB->get_in_or_equal($teil, SQL_PARAMS_NAMED);
+            $treffer = $DB->get_records_select('user', "deleted = 0 AND email {$insql}", $params, '', 'id, email');
+            foreach ($treffer as $konto) {
+                $konten[core_text::strtolower((string) $konto->email)][] = (int) $konto->id;
+            }
+        }
+
+        return $konten;
     }
 
     /**
@@ -907,6 +963,25 @@ class import_service {
               WHERE gueltig_von <= :stichtag1
                 AND (gueltig_bis IS NULL OR gueltig_bis >= :stichtag2)',
             ['stichtag1' => $jetzt, 'stichtag2' => $jetzt]
+        );
+
+        return $zeile->anzahl . ':' . $zeile->letzteaenderung;
+    }
+
+    /**
+     * Anzahl und juengste Aenderung der Moodle-Konten. Die Lieferung wird
+     * ueber Mailadressen aufgeloest: wird eine Adresse im Konto korrigiert
+     * oder ein Konto neu angelegt, muss dieselbe Datei neu verarbeitet
+     * werden, sonst fehlten die Einsaetze der Person bis zur naechsten
+     * geaenderten Lieferung. user_update_user() setzt timemodified.
+     */
+    private function konten_fingerabdruck(): string {
+        global $DB;
+
+        $zeile = $DB->get_record_sql(
+            'SELECT COUNT(*) AS anzahl, COALESCE(MAX(timemodified), 0) AS letzteaenderung
+               FROM {user}
+              WHERE deleted = 0'
         );
 
         return $zeile->anzahl . ':' . $zeile->letzteaenderung;

@@ -64,6 +64,24 @@ class plan_service {
     }
 
     /**
+     * Ende des spaetesten Einsatzes - als Abfrage statt alle Einsaetze zu
+     * laden, weil "Meine Lernenden" es je Person mehrmals braucht.
+     *
+     * @param int $lernendeid
+     * @return int|null Null ohne Einsaetze
+     */
+    public function get_letztes_einsatzende(int $lernendeid): ?int {
+        global $DB;
+
+        $bis = $DB->get_field_sql(
+            'SELECT MAX(bis) FROM {' . einsatz::TABLE . '} WHERE userid = :userid',
+            ['userid' => $lernendeid]
+        );
+
+        return $bis !== false && $bis !== null ? (int) $bis : null;
+    }
+
+    /**
      * Vereinigung der Kompetenzen aller betrieblichen Einsaetze im
      * Zeitraum (Architekturregel 6: Vorschlag, keine Festlegung). Blöcke
      * ohne Kompetenzabdeckung - z.B. weil ihre Nummer beim Import unbekannt

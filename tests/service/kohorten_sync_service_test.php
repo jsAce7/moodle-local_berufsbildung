@@ -219,4 +219,89 @@ final class kohorten_sync_service_test extends advanced_testcase {
         $this->assertSame(0, $ergebnis['erzeugt']);
         $this->assertFalse(api::is_zustaendig((int) $berufsbildner->id, (int) $lernende->id));
     }
+
+    /**
+     * Eine erst kuenftig beginnende Zuordnung derselben Rolle (etwa aus dem
+     * Jahreswechsel-Import) liess anlegen() werfen und brach den ganzen
+     * Abgleich ab.
+     */
+    public function test_kuenftige_zuordnung_bricht_den_abgleich_nicht_ab(): void {
+        $this->resetAfterTest();
+
+        $kohorte = $this->getDataGenerator()->create_cohort();
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $andere = $this->getDataGenerator()->create_user();
+        $mitkuenftiger = $this->getDataGenerator()->create_user();
+        $ohne = $this->getDataGenerator()->create_user();
+        cohort_add_member($kohorte->id, $mitkuenftiger->id);
+        cohort_add_member($kohorte->id, $ohne->id);
+        api::set_zuordnung((int) $andere->id, (int) $mitkuenftiger->id, '', strtotime('+1 month'));
+
+        $this->lege_link_an((int) $kohorte->id, (int) $berufsbildner->id);
+        $ergebnis = (new kohorten_sync_service())->synchronisiere_alle();
+
+        $this->assertSame(1, $ergebnis['erzeugt']);
+        $this->assertTrue(api::is_zustaendig((int) $berufsbildner->id, (int) $ohne->id));
+        $this->assertFalse(api::is_zustaendig((int) $berufsbildner->id, (int) $mitkuenftiger->id, strtotime('+2 months')));
+    }
+
+    /**
+     * Von Hand beendet, Person bleibt in der Kohorte: der naechste Lauf legt
+     * keine neue Zuordnung an.
+     */
+    public function test_von_hand_beendete_zuordnung_entsteht_nicht_neu(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        $kohorte = $this->getDataGenerator()->create_cohort();
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        cohort_add_member($kohorte->id, $lernende->id);
+        $link = $this->lege_link_an((int) $kohorte->id, (int) $berufsbildner->id);
+        $service = new kohorten_sync_service();
+        $service->synchronisiere_link($link);
+
+        // Beginn und Eintritt zehn Tage zurueck, damit das Ende sicher
+        // danach liegt und nicht in dieselbe Sekunde faellt.
+        $DB->set_field('local_berufsbildung_zuordnung', 'gueltig_von', time() - 10 * DAYSECS, ['lernendeid' => $lernende->id]);
+        $DB->set_field('cohort_members', 'timeadded', time() - 10 * DAYSECS, ['userid' => $lernende->id]);
+        $zuordnung = zuordnung::get_record(['lernendeid' => (int) $lernende->id]);
+        api::beende_zuordnung((int) $zuordnung->get('id'), time() - 1);
+
+        $ergebnis = $service->synchronisiere_link($link);
+
+        $this->assertSame(0, $ergebnis['erzeugt']);
+        $this->assertCount(1, zuordnung::get_records(['lernendeid' => (int) $lernende->id]));
+    }
+
+    /**
+     * Ein erneuter Eintritt nach dem Ende laesst den Link wieder greifen.
+     */
+    public function test_erneuter_eintritt_legt_wieder_eine_zuordnung_an(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        $kohorte = $this->getDataGenerator()->create_cohort();
+        $berufsbildner = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user();
+        cohort_add_member($kohorte->id, $lernende->id);
+        $link = $this->lege_link_an((int) $kohorte->id, (int) $berufsbildner->id);
+        $service = new kohorten_sync_service();
+        $service->synchronisiere_link($link);
+        $DB->set_field('local_berufsbildung_zuordnung', 'gueltig_von', time() - 10 * DAYSECS, ['lernendeid' => $lernende->id]);
+
+        // Austritt: der Abgleich beendet die Zuordnung.
+        cohort_remove_member($kohorte->id, $lernende->id);
+        $this->assertSame(1, $service->synchronisiere_link($link)['beendet']);
+
+        // Im Betrieb liegen Austritt und Wiedereintritt Stunden auseinander,
+        // im Test in derselben Sekunde: das Ende wird zurueckgelegt.
+        $DB->set_field('local_berufsbildung_zuordnung', 'gueltig_bis', time() - HOURSECS, ['lernendeid' => $lernende->id]);
+
+        // Wiedereintritt spaeter als das Ende.
+        cohort_add_member($kohorte->id, $lernende->id);
+
+        $this->assertSame(1, $service->synchronisiere_link($link)['erzeugt']);
+        $this->assertTrue(api::is_zustaendig((int) $berufsbildner->id, (int) $lernende->id, time() + 1));
+    }
 }
