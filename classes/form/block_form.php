@@ -69,7 +69,7 @@ class block_form extends \moodleform {
             'fachvorgesetzte',
             get_string('block:fachvorgesetzte', 'local_berufsbildung'),
             $this->_customdata['fachvorgesetzte'] ?? [],
-            ['ajax' => 'core_user/form_user_selector', 'multiple' => true]
+            ['ajax' => 'local_berufsbildung/fachvorgesetzte_auswahl', 'multiple' => true]
         );
         $mform->addHelpButton('fachvorgesetzte', 'block_fachvorgesetzte', 'local_berufsbildung');
         $mform->hideIf('fachvorgesetzte', 'ist_betrieb', 'notchecked');

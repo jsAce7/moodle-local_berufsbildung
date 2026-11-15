@@ -34,6 +34,15 @@ $functions = [
         'capabilities' => 'local/berufsbildung:importplan',
         'ajax' => false,
     ],
+    // Fuer das Feld "Fachvorgesetzte" im Blockformular (amd/src/fachvorgesetzte_auswahl.js).
+    'local_berufsbildung_fachvorgesetzte_suchen' => [
+        'classname' => 'local_berufsbildung\external\fachvorgesetzte_suchen',
+        'methodname' => 'execute',
+        'description' => 'Sucht Personen fuer die Fachvorgesetzten eines Ausbildungsblocks.',
+        'type' => 'read',
+        'capabilities' => 'local/berufsbildung:manageblocks',
+        'ajax' => true,
+    ],
 ];
 
 // Eigener Dienst statt Anhaengen an einen bestehenden - nur das

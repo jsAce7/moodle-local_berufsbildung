@@ -75,7 +75,8 @@ $fvoptionen = [];
 foreach (array_unique(array_merge($fachvorgesetzte, $gewaehlt)) as $fvid) {
     $fvuser = core_user::get_user((int) $fvid);
     if ($fvuser && !$fvuser->deleted) {
-        $fvoptionen[(int) $fvid] = fullname($fvuser);
+        // Wie die Treffer der Suche (amd/src/fachvorgesetzte_auswahl.js).
+        $fvoptionen[(int) $fvid] = fullname($fvuser) . ' (' . $fvuser->email . ')';
     }
 }
 

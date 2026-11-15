@@ -8,6 +8,7 @@ Grundlage für die Arbeitsplatzberichte der Fachvorgesetzten (`local_bildungsber
 
 - **Fachvorgesetzte je Abteilung.** Bei einem betrieblichen Ausbildungsblock lassen sich die Fachvorgesetzten eintragen (Tabelle `local_berufsbildung_block_fv`); die Blockübersicht zeigt sie in einer eigenen Spalte. Fachvorgesetzte sind bewusst keine Zuordnung und damit nie für die ganze lernende Person zuständig.
 - **Rolle «Fachvorgesetzte/r»** (`berufsbildung_fachvorgesetzt`, Systemkontext): wird jeder eingetragenen Person automatisch zugewiesen und wieder entzogen (`service\fachvorgesetztenrolle_service`, auch im Task `sync_role_assignments`). Aufsetzende Plugins melden ihre Capabilities über den Callback `<plugin>_berufsbildung_fachvorgesetzt_capabilities()`; fehlende stellt der Task wieder her.
+- **Eigene Personensuche** für das Feld (Webservice `local_berufsbildung_fachvorgesetzte_suchen`, AMD `fachvorgesetzte_auswahl`): verlangt nur `local/berufsbildung:manageblocks`, liefert höchstens 20 aktive Konten mit Name und Mailadresse. Die Standardsuche von Moodle hätte `moodle/user:viewalldetails` verlangt, das die Ausbildungsplanung nicht haben soll.
 - **API:** `get_fachvorgesetzte()`, `ist_fachvorgesetzt_fuer_block()`, `ist_fachvorgesetzt()`, `get_bloecke_als_fachvorgesetzt()`, `get_block_kompetenzen()` und `ist_betrieblicher_block()`.
 - **Mehrere Quellen je Plugin.** Der Callback `<plugin>_berufsbildung_nachweis_provider()` darf neu auch eine Liste von Providern liefern.
 

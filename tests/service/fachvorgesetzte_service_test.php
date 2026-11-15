@@ -205,4 +205,34 @@ final class fachvorgesetzte_service_test extends advanced_testcase {
         $this->assertTrue(api::ist_betrieblicher_block((int) $a->get('id')));
         $this->assertFalse(api::ist_betrieblicher_block(0));
     }
+
+    public function test_suche_personen_nur_aktive_und_nur_mit_blockverwaltung(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        $fritz = $this->getDataGenerator()->create_user([
+            'firstname' => 'Fritz',
+            'lastname' => 'Vorgesetzter',
+            'email' => 'fritz@example.com',
+        ]);
+        $this->getDataGenerator()->create_user(['firstname' => 'Fritz', 'lastname' => 'Gesperrt', 'suspended' => 1]);
+        $service = new fachvorgesetzte_service();
+
+        $this->assertSame([], $service->suche_personen('F'));
+        $treffer = $service->suche_personen('fritz vorg');
+        $this->assertCount(1, $treffer);
+        $this->assertSame((int) $fritz->id, $treffer[0]['id']);
+        $this->assertSame('fritz@example.com', $treffer[0]['email']);
+
+        // Der Webservice verlangt die Blockverwaltung, nicht mehr.
+        $planer = $this->getDataGenerator()->create_user();
+        $roleid = (int) $DB->get_field('role', 'id', ['shortname' => 'berufsbildung_planung'], MUST_EXIST);
+        role_assign($roleid, $planer->id, context_system::instance()->id);
+        $this->setUser($planer);
+        $this->assertCount(1, \local_berufsbildung\external\fachvorgesetzte_suchen::execute('Vorgesetzter'));
+
+        $this->setUser($this->getDataGenerator()->create_user());
+        $this->expectException(\required_capability_exception::class);
+        \local_berufsbildung\external\fachvorgesetzte_suchen::execute('Vorgesetzter');
+    }
 }

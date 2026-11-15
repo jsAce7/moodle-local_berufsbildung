@@ -120,6 +120,54 @@ class fachvorgesetzte_service {
     }
 
     /**
+     * Sucht Personen fuer das Feld "Fachvorgesetzte": aktive Konten, deren
+     * Name oder Mailadresse den Suchtext enthaelt. Bewusst eigene Suche
+     * statt core_user_search_identity - jene verlangt
+     * moodle/user:viewalldetails, das die Planungsrolle nicht haben soll.
+     *
+     * @param string $suche Mindestens zwei Zeichen
+     * @param int $hoechstens
+     * @return array[] Je Treffer ['id' => int, 'name' => string, 'email' => string]
+     */
+    public function suche_personen(string $suche, int $hoechstens = 20): array {
+        global $DB, $CFG;
+
+        $suche = trim($suche);
+        if (\core_text::strlen($suche) < 2) {
+            return [];
+        }
+
+        $namensfelder = \core_user\fields::for_name()->get_sql('u', false, '', '', false)->selects;
+        $vollname = $DB->sql_fullname('u.firstname', 'u.lastname');
+        $bedingungen = [];
+        $params = ['guest' => (int) $CFG->siteguest];
+        foreach (preg_split('/\s+/u', $suche) as $i => $wort) {
+            $muster = '%' . $DB->sql_like_escape($wort) . '%';
+            $bedingungen[] = '(' . $DB->sql_like($vollname, ':name' . $i, false, false)
+                . ' OR ' . $DB->sql_like('u.email', ':mail' . $i, false, false) . ')';
+            $params['name' . $i] = $muster;
+            $params['mail' . $i] = $muster;
+        }
+
+        $treffer = $DB->get_records_sql(
+            "SELECT u.id, u.email, {$namensfelder}
+               FROM {user} u
+              WHERE u.deleted = 0 AND u.suspended = 0 AND u.confirmed = 1 AND u.id <> :guest
+                AND " . implode(' AND ', $bedingungen) . '
+           ORDER BY u.lastname, u.firstname, u.id',
+            $params,
+            0,
+            $hoechstens
+        );
+
+        return array_values(array_map(static fn($u): array => [
+            'id' => (int) $u->id,
+            'name' => fullname($u),
+            'email' => (string) $u->email,
+        ], $treffer));
+    }
+
+    /**
      * Die Bloecke, in denen die Person fachvorgesetzt ist.
      *
      * @param int $userid
