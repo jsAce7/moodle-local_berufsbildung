@@ -235,4 +235,26 @@ final class fachvorgesetzte_service_test extends advanced_testcase {
         $this->expectException(\required_capability_exception::class);
         \local_berufsbildung\external\fachvorgesetzte_suchen::execute('Vorgesetzter');
     }
+
+    public function test_einsaetze_in_bloecken(): void {
+        $this->resetAfterTest();
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung');
+        $a = $this->block('A1');
+        $b = $this->block('B1');
+        $person = (int) $this->getDataGenerator()->create_user()->id;
+        $stichtag = 1772406000;
+        $einsatz = static fn(int $blockid, int $von, int $bis) => $generator->create_einsatz(
+            ['userid' => $person, 'blockid' => $blockid, 'von' => $von, 'bis' => $bis]
+        );
+        $einsatz((int) $a->get('id'), $stichtag, $stichtag + WEEKSECS - 1);
+        $einsatz((int) $b->get('id'), $stichtag, $stichtag + WEEKSECS - 1);
+        // Endet genau vor dem Zeitraum: nicht dabei.
+        $einsatz((int) $a->get('id'), $stichtag - WEEKSECS, $stichtag - 1);
+
+        $einsaetze = api::get_einsaetze_in_bloecken([(int) $a->get('id')], $stichtag, $stichtag + DAYSECS);
+
+        $this->assertCount(1, $einsaetze);
+        $this->assertSame((int) $a->get('id'), (int) $einsaetze[0]->get('blockid'));
+        $this->assertSame([], api::get_einsaetze_in_bloecken([], $stichtag, $stichtag + DAYSECS));
+    }
 }

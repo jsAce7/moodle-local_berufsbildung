@@ -100,6 +100,31 @@ class plan_service {
     }
 
     /**
+     * Die Einsaetze in bestimmten Bloecken, die einen Zeitraum schneiden -
+     * etwa fuer die Abteilungsuebersicht der Fachvorgesetzten.
+     *
+     * @param int[] $blockids
+     * @param int $von
+     * @param int $bis
+     * @return einsatz[] nach Beginn
+     */
+    public function get_einsaetze_in_bloecken(array $blockids, int $von, int $bis): array {
+        global $DB;
+
+        $blockids = array_values(array_unique(array_map('intval', $blockids)));
+        if (empty($blockids)) {
+            return [];
+        }
+        [$insql, $params] = $DB->get_in_or_equal($blockids, SQL_PARAMS_NAMED);
+
+        return array_values(einsatz::get_records_select(
+            "blockid {$insql} AND bis >= :von AND von <= :bis",
+            $params + ['von' => $von, 'bis' => $bis],
+            'von'
+        ));
+    }
+
+    /**
      * Die Kompetenzen, die einem Ausbildungsblock zugeordnet sind, samt
      * ihren uebergeordneten Handlungskompetenzen - wie
      * get_ausgebildete_kompetenzen(), aber fuer einen einzelnen Block und

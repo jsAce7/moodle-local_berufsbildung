@@ -53,9 +53,15 @@ class menuepunkt {
     public const BERUFSBILDUNG = 'berufsbildung';
 
     /**
+     * Eigener Eintrag zuoberst in der Leiste, vor "Berufsbildung" - fuer
+     * Personen, die sonst keinen Einstieg haben, etwa Fachvorgesetzte.
+     */
+    public const EIGENSTAENDIG = 'eigenstaendig';
+
+    /**
      * Konstruktor.
      *
-     * @param string $menue self::MEINE_LEHRE, self::MEINE_LERNENDEN oder self::BERUFSBILDUNG
+     * @param string $menue self::MEINE_LEHRE, self::MEINE_LERNENDEN, self::BERUFSBILDUNG oder self::EIGENSTAENDIG
      * @param string $text Beschriftung
      * @param moodle_url $url Ziel
      * @param string $schluessel Eindeutiger Schluessel des Knotens, z.B. 'local_uekkn_jahrgaenge'
@@ -70,7 +76,7 @@ class menuepunkt {
         /** @var string Eindeutiger Schluessel des Knotens. */
         public readonly string $schluessel,
     ) {
-        if (!in_array($menue, [self::MEINE_LEHRE, self::MEINE_LERNENDEN, self::BERUFSBILDUNG], true)) {
+        if (!in_array($menue, [self::MEINE_LEHRE, self::MEINE_LERNENDEN, self::BERUFSBILDUNG, self::EIGENSTAENDIG], true)) {
             throw new \coding_exception('Unbekanntes Menue: ' . $menue);
         }
     }

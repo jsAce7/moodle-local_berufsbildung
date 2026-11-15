@@ -1093,6 +1093,20 @@ class api {
     }
 
     /**
+     * Die Einsaetze in den Bloecken, die einen Zeitraum schneiden - fuer die
+     * Abteilungsuebersicht der Fachvorgesetzten. Wer sie sehen darf, prueft
+     * das aufrufende Plugin (ist_fachvorgesetzt_fuer_block()).
+     *
+     * @param int[] $blockids
+     * @param int $von
+     * @param int $bis
+     * @return einsatz[] nach Beginn
+     */
+    public static function get_einsaetze_in_bloecken(array $blockids, int $von, int $bis): array {
+        return (new plan_service())->get_einsaetze_in_bloecken($blockids, $von, $bis);
+    }
+
+    /**
      * Die Bloecke, in denen die Person fachvorgesetzt ist.
      *
      * @param int $userid

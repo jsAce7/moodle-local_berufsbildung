@@ -135,6 +135,28 @@ final class hook_callbacks_test extends \advanced_testcase {
         $this->assertFalse($primary->find('local_berufsbildung_meine_lernenden', null));
     }
 
+    public function test_eigenstaendige_punkte_als_direkter_link(): void {
+        $this->resetAfterTest();
+
+        // Fachvorgesetzte haben weder Lehre noch Lernende; ihr Einstieg kommt
+        // als eigenstaendiger Punkt, sofern ein aufsetzendes Plugin ihn meldet.
+        $generator = $this->getDataGenerator()->get_plugin_generator('local_berufsbildung');
+        $fv = $this->getDataGenerator()->create_user();
+        $block = $generator->create_block(['nummer' => 'A1', 'name' => 'Abteilung', 'ist_betrieb' => true]);
+        $generator->create_fachvorgesetzt(['blockid' => $block->get('id'), 'userid' => $fv->id]);
+        $this->setUser($fv);
+
+        $gemeldet = hook_callbacks::gemeldete_menuepunkte()[menuepunkt::EIGENSTAENDIG] ?? [];
+        $primary = $this->primaere_navigation();
+        foreach ($gemeldet as $punkt) {
+            $knoten = $primary->find($punkt->schluessel, null);
+            $this->assertNotFalse($knoten);
+            $this->assertSame([], $this->kinder($knoten));
+            $this->assertSame($punkt->url->out(false), $knoten->action->out(false));
+        }
+        $this->assertFalse($primary->find('local_berufsbildung_meine_lernenden', null));
+    }
+
     public function test_unbekanntes_menue_wird_abgelehnt(): void {
         $this->expectException(\coding_exception::class);
         new menuepunkt('irgendwo', 'Text', new \moodle_url('/'), 'schluessel');

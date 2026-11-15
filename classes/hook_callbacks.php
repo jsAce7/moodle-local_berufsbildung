@@ -97,6 +97,11 @@ class hook_callbacks {
             ];
         }
 
+        // Eigenstaendige Eintraege der aufsetzenden Plugins, je ein Link.
+        foreach ($unterpunkte[menuepunkt::EIGENSTAENDIG] ?? [] as $punkt) {
+            $eintraege[$punkt->schluessel] = [$punkt->text, $punkt->url, []];
+        }
+
         if (!empty($unterpunkte[menuepunkt::BERUFSBILDUNG])) {
             $eintraege[self::KNOTEN_PRAEFIX . menuepunkt::BERUFSBILDUNG] = [
                 'nav:berufsbildung', null, $unterpunkte[menuepunkt::BERUFSBILDUNG],
@@ -113,8 +118,14 @@ class hook_callbacks {
         $vor = $primaryview->find(self::SITEADMIN_KEY, null) ? self::SITEADMIN_KEY : null;
 
         foreach ($eintraege as $schluessel => [$stringkey, $seite, $punkte]) {
-            $text = get_string($stringkey, 'local_berufsbildung');
-            $url = $seite !== null ? new moodle_url('/local/berufsbildung/' . $seite) : null;
+            if ($seite instanceof moodle_url) {
+                // Eigenstaendiger Eintrag: Text und Ziel kommen vom Plugin.
+                $text = $stringkey;
+                $url = $seite;
+            } else {
+                $text = get_string($stringkey, 'local_berufsbildung');
+                $url = $seite !== null ? new moodle_url('/local/berufsbildung/' . $seite) : null;
+            }
 
             if (empty($punkte)) {
                 $primaryview->add_node(
