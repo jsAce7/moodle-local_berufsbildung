@@ -33,6 +33,7 @@ use local_berufsbildung\persistent\block;
 use local_berufsbildung\service\block_kurs_service;
 use local_berufsbildung\service\block_loesch_service;
 use local_berufsbildung\service\einrichtung_pruefung;
+use local_berufsbildung\service\fachvorgesetzte_service;
 use local_berufsbildung\service\lk_abdeckung_service;
 
 admin_externalpage_setup('local_berufsbildung_bloecke');
@@ -102,6 +103,9 @@ if (empty($bloecke)) {
     // Eine Abfrage fuer alle Zuordnungen und alle Kurse statt je Block.
     $anzahlkompetenzen = (new lk_abdeckung_service())->anzahl_je_block();
     $kurse = (new block_kurs_service())->get_kurse($bloecke);
+    $fvnamen = (new fachvorgesetzte_service())->namen_fuer_bloecke(
+        array_map(static fn (block $b): int => (int) $b->get('id'), $bloecke)
+    );
 
     // Je Beruf eine Tabelle, die berufsuebergreifenden Bloecke (Schule,
     // ueK, Ferien) zuletzt. Innerhalb eines Berufs nach Nummer, natuerlich
@@ -161,6 +165,7 @@ if (empty($bloecke)) {
             get_string('block:ist_betrieb', 'local_berufsbildung'),
             get_string('block:aktiv', 'local_berufsbildung'),
             get_string('block:kurs', 'local_berufsbildung'),
+            get_string('block:fachvorgesetzte', 'local_berufsbildung'),
             get_string('block:kompetenzen', 'local_berufsbildung'),
             get_string('block:aktionen', 'local_berufsbildung'),
         ];
@@ -221,6 +226,11 @@ if (empty($bloecke)) {
                         format_string($kurs->fullname)
                     )
                     : html_writer::span(get_string('block:kein_kurs', 'local_berufsbildung'), 'text-muted'),
+                !$block->get('ist_betrieb')
+                    ? ''
+                    : (!empty($fvnamen[$blockid])
+                        ? s(implode(', ', $fvnamen[$blockid]))
+                        : html_writer::span(get_string('block:keine_fachvorgesetzten', 'local_berufsbildung'), 'text-muted')),
                 html_writer::span(
                     (string) $anzahl,
                     'badge ' . ($anzahl > 0 ? 'bg-primary text-white' : 'bg-light text-dark border')

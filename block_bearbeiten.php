@@ -30,6 +30,7 @@ use local_berufsbildung\output\hilfe_link;
 use local_berufsbildung\persistent\block;
 use local_berufsbildung\service\block_kopie_service;
 use local_berufsbildung\service\block_kurs_service;
+use local_berufsbildung\service\fachvorgesetzte_service;
 use local_berufsbildung\service\rahmen_resolver;
 
 admin_externalpage_setup('local_berufsbildung_bloecke');
@@ -63,9 +64,25 @@ $quelle = $kopie ? new block($kopie) : null;
 $konfiguration = get_config('local_berufsbildung', 'beruf_rahmen_mapping');
 $berufe = (new rahmen_resolver())->alle_codes($konfiguration !== false ? (string) $konfiguration : '');
 
+$fvservice = new fachvorgesetzte_service();
+$vorbelegung = $block ?? $quelle;
+$fachvorgesetzte = $vorbelegung !== null ? $fvservice->get_fuer_block((int) $vorbelegung->get('id')) : [];
+
+// Auch beim Absenden: die neu gewaehlten Personen muessen als Option
+// bekannt sein, sonst verwirft das Formular sie.
+$gewaehlt = optional_param_array('fachvorgesetzte', [], PARAM_INT);
+$fvoptionen = [];
+foreach (array_unique(array_merge($fachvorgesetzte, $gewaehlt)) as $fvid) {
+    $fvuser = core_user::get_user((int) $fvid);
+    if ($fvuser && !$fvuser->deleted) {
+        $fvoptionen[(int) $fvid] = fullname($fvuser);
+    }
+}
+
 $form = new block_form(null, [
     'berufe' => $berufe,
     'kurse' => (new block_kurs_service())->get_kursauswahl(),
+    'fachvorgesetzte' => $fvoptionen,
 ]);
 
 if ($form->is_cancelled()) {
@@ -81,6 +98,7 @@ if (!$form->is_submitted() && $block !== null) {
         'ist_betrieb' => $block->get('ist_betrieb') ? 1 : 0,
         'aktiv' => $block->get('aktiv') ? 1 : 0,
         'courseid' => $block->get('courseid') ?? 0,
+        'fachvorgesetzte' => $fachvorgesetzte,
     ]);
 }
 
@@ -94,10 +112,17 @@ if (!$form->is_submitted() && $quelle !== null) {
         'ist_betrieb' => $quelle->get('ist_betrieb') ? 1 : 0,
         'aktiv' => $quelle->get('aktiv') ? 1 : 0,
         'courseid' => $quelle->get('courseid') ?? 0,
+        'fachvorgesetzte' => $fachvorgesetzte,
     ]);
 }
 
 if ($data = $form->get_data()) {
+    // Fachvorgesetzte gibt es nur bei einem betrieblichen Block, nicht bei
+    // Schule, üK oder Ferien.
+    $neuefv = !empty($data->ist_betrieb) && !empty($data->fachvorgesetzte)
+        ? array_map('intval', (array) $data->fachvorgesetzte)
+        : [];
+
     if ($block === null) {
         $block = new block(0, (object) [
             'nummer' => $data->nummer,
@@ -108,6 +133,7 @@ if ($data = $form->get_data()) {
             'courseid' => !empty($data->courseid) ? (int) $data->courseid : null,
         ]);
         $block->create();
+        $fvservice->setze_fuer_block((int) $block->get('id'), $neuefv);
 
         if ($quelle !== null) {
             $ergebnis = (new block_kopie_service())->uebernimm_kompetenzen($quelle, $block);
@@ -125,6 +151,7 @@ if ($data = $form->get_data()) {
         $block->set('aktiv', (bool) $data->aktiv);
         $block->set('courseid', !empty($data->courseid) ? (int) $data->courseid : null);
         $block->update();
+        $fvservice->setze_fuer_block((int) $block->get('id'), $neuefv);
     }
 
     redirect($returnurl, get_string('block:angelegt', 'local_berufsbildung'), null, \core\output\notification::NOTIFY_SUCCESS);

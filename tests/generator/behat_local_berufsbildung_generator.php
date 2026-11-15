@@ -59,6 +59,13 @@ class behat_local_berufsbildung_generator extends behat_generator_base {
                 'required' => ['block', 'competency'],
                 'switchids' => ['block' => 'blockid', 'competency' => 'competencyid'],
             ],
+            // Fachvorgesetzte einer Abteilung, mit Rolle.
+            'department supervisors' => [
+                'singular' => 'department supervisor',
+                'datagenerator' => 'fachvorgesetzt',
+                'required' => ['block', 'user'],
+                'switchids' => ['block' => 'blockid', 'user' => 'userid'],
+            ],
             // Mit Beruf und Jahrgang im Profil, damit sich ihr
             // Ausbildungsstand aufloesen laesst.
             'learners' => [

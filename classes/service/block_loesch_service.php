@@ -124,6 +124,8 @@ class block_loesch_service {
             foreach ($einsaetze as $einsatz) {
                 $einsatz->delete();
             }
+            // Die Rolle der Personen haelt der Service gleich mit nach.
+            (new fachvorgesetzte_service())->loesche_fuer_block($blockid);
             $block->delete();
 
             $transaktion->allow_commit();

@@ -136,6 +136,22 @@ class local_berufsbildung_generator extends component_generator_base {
     }
 
     /**
+     * Traegt eine Person als fachvorgesetzt in einem Ausbildungsblock ein -
+     * ueber den Service, damit auch die Rolle nachgefuehrt wird.
+     *
+     * @param array $record Muss blockid und userid enthalten.
+     */
+    public function create_fachvorgesetzt(array $record): void {
+        if (empty($record['blockid']) || empty($record['userid'])) {
+            throw new coding_exception('create_fachvorgesetzt() benoetigt blockid und userid');
+        }
+
+        $service = new \local_berufsbildung\service\fachvorgesetzte_service();
+        $bisher = $service->get_fuer_block((int) $record['blockid']);
+        $service->setze_fuer_block((int) $record['blockid'], array_merge($bisher, [(int) $record['userid']]));
+    }
+
+    /**
      * Legt einen Einsatz aus dem Versetzungsplan an.
      *
      * @param array $record Muss userid, blockid, von und bis enthalten.

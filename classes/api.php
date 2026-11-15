@@ -32,6 +32,7 @@ use local_berufsbildung\persistent\einsatz;
 use local_berufsbildung\persistent\teilnahmeprofil;
 use local_berufsbildung\persistent\zuordnung;
 use local_berufsbildung\service\beruf_katalog;
+use local_berufsbildung\service\fachvorgesetzte_service;
 use local_berufsbildung\service\kohorten_resolver;
 use local_berufsbildung\service\lk_abdeckung_service;
 use local_berufsbildung\service\kompetenz_baum;
@@ -1023,6 +1024,82 @@ class api {
         $block = block::get_record(['id' => $blockid]);
 
         return $block !== false ? (string) $block->get('name') : null;
+    }
+
+    /**
+     * Ist der Block eine betriebliche Abteilung (und nicht Schule, üK oder
+     * Ferien)?
+     *
+     * @param int $blockid
+     * @return bool false auch, wenn der Block nicht existiert
+     */
+    public static function ist_betrieblicher_block(int $blockid): bool {
+        $block = block::get_record(['id' => $blockid]);
+
+        return $block !== false && (bool) $block->get('ist_betrieb');
+    }
+
+    /**
+     * Die Kompetenzen eines Ausbildungsblocks samt uebergeordneten
+     * Handlungskompetenzen - ein Vorschlag, keine Festlegung
+     * (Architekturregel 6).
+     *
+     * @param int $blockid
+     * @return int[] Deduplizierte competencyids
+     */
+    public static function get_block_kompetenzen(int $blockid): array {
+        return (new plan_service())->get_block_kompetenzen($blockid);
+    }
+
+    /**
+     * Die Fachvorgesetzten einer Abteilung (Ausbildungsblock), die deren
+     * Arbeitsplatzberichte schreiben. Einzige Quelle fuer aufsetzende
+     * Plugins: kommen die Fachvorgesetzten spaeter aus dem Versetzungsplan,
+     * aendert sich nur diese Methode.
+     *
+     * Fachvorgesetzte sind nie zustaendig im Sinn von is_zustaendig(): sie
+     * sehen nur, was ihre Abteilung betrifft.
+     *
+     * @param int $blockid
+     * @return int[] User-IDs mit nicht geloeschtem Konto
+     */
+    public static function get_fachvorgesetzte(int $blockid): array {
+        return (new fachvorgesetzte_service())->get_fuer_block($blockid);
+    }
+
+    /**
+     * Ist die Person in diesem Block fachvorgesetzt? Bewusst ohne Einsatz
+     * und Stichtag: ein Arbeitsplatzbericht haelt seinen Block fest, und
+     * ein neu importierter Versetzungsplan darf einen begonnenen Bericht
+     * nicht unerreichbar machen.
+     *
+     * @param int $userid
+     * @param int $blockid
+     * @return bool
+     */
+    public static function ist_fachvorgesetzt_fuer_block(int $userid, int $blockid): bool {
+        return (new fachvorgesetzte_service())->ist_fachvorgesetzt_fuer_block($userid, $blockid);
+    }
+
+    /**
+     * Ist die Person in irgendeinem Block fachvorgesetzt - etwa fuer einen
+     * Menuepunkt?
+     *
+     * @param int $userid
+     * @return bool
+     */
+    public static function ist_fachvorgesetzt(int $userid): bool {
+        return (new fachvorgesetzte_service())->ist_fachvorgesetzt($userid);
+    }
+
+    /**
+     * Die Bloecke, in denen die Person fachvorgesetzt ist.
+     *
+     * @param int $userid
+     * @return int[] blockids
+     */
+    public static function get_bloecke_als_fachvorgesetzt(int $userid): array {
+        return (new fachvorgesetzte_service())->get_bloecke_fuer($userid);
     }
 
     /**

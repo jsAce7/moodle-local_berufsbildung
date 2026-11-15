@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.10.0] — 2026-11-15
+
+Grundlage für die Arbeitsplatzberichte der Fachvorgesetzten (`local_bildungsbericht` 0.26.0).
+
+### Neu
+
+- **Fachvorgesetzte je Abteilung.** Bei einem betrieblichen Ausbildungsblock lassen sich die Fachvorgesetzten eintragen (Tabelle `local_berufsbildung_block_fv`); die Blockübersicht zeigt sie in einer eigenen Spalte. Fachvorgesetzte sind bewusst keine Zuordnung und damit nie für die ganze lernende Person zuständig.
+- **Rolle «Fachvorgesetzte/r»** (`berufsbildung_fachvorgesetzt`, Systemkontext): wird jeder eingetragenen Person automatisch zugewiesen und wieder entzogen (`service\fachvorgesetztenrolle_service`, auch im Task `sync_role_assignments`). Aufsetzende Plugins melden ihre Capabilities über den Callback `<plugin>_berufsbildung_fachvorgesetzt_capabilities()`; fehlende stellt der Task wieder her.
+- **API:** `get_fachvorgesetzte()`, `ist_fachvorgesetzt_fuer_block()`, `ist_fachvorgesetzt()`, `get_bloecke_als_fachvorgesetzt()`, `get_block_kompetenzen()` und `ist_betrieblicher_block()`.
+- **Mehrere Quellen je Plugin.** Der Callback `<plugin>_berufsbildung_nachweis_provider()` darf neu auch eine Liste von Providern liefern.
+
+### Datenschutz
+
+- Fachvorgesetzte sind im Privacy-Provider deklariert und exportiert; ein Löschantrag oder eine Kontolöschung entfernt die Person aus allen Abteilungen.
+
 ## [1.9.0] — 2026-11-14
 
 Behebt die Befunde aus dem Code-Audit vom 2026-11-14.

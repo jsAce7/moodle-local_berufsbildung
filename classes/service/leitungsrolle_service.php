@@ -48,7 +48,7 @@ class leitungsrolle_service {
     public const SHORTNAME = 'berufsbildung_leitung';
 
     /** Callback in der lib.php der aufsetzenden Plugins. */
-    private const CALLBACK = 'berufsbildung_leitung_capabilities';
+    protected const CALLBACK = 'berufsbildung_leitung_capabilities';
 
     /**
      * Stellt Kontextlevel und Capabilities der Rolle wieder her.
@@ -101,7 +101,7 @@ class leitungsrolle_service {
      */
     public function gemeldete_capabilities(): array {
         $capabilities = [];
-        foreach (get_plugins_with_function(self::CALLBACK) as $funktionenjetyp) {
+        foreach (get_plugins_with_function(static::CALLBACK) as $funktionenjetyp) {
             foreach ($funktionenjetyp as $funktion) {
                 foreach ($funktion() as $capability) {
                     $capabilities[] = (string) $capability;
@@ -121,7 +121,7 @@ class leitungsrolle_service {
     public function rolle_id(): ?int {
         global $DB;
 
-        $roleid = $DB->get_field('role', 'id', ['shortname' => self::SHORTNAME], IGNORE_MISSING);
+        $roleid = $DB->get_field('role', 'id', ['shortname' => static::SHORTNAME], IGNORE_MISSING);
 
         return $roleid ? (int) $roleid : null;
     }

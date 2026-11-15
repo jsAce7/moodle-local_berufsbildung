@@ -29,6 +29,7 @@ namespace local_berufsbildung;
 use core\event\capability_unassigned;
 use core\event\user_deleted;
 use core\event\user_updated;
+use local_berufsbildung\service\fachvorgesetztenrolle_service;
 use local_berufsbildung\service\konto_bereinigung_service;
 use local_berufsbildung\service\leitungsrolle_service;
 
@@ -37,18 +38,18 @@ use local_berufsbildung\service\leitungsrolle_service;
  */
 class observer {
     /**
-     * Stellt die Rechte der Leitungsrolle wieder her, sobald ihr eine
-     * Capability entzogen wurde - siehe leitungsrolle_service.
+     * Stellt die Rechte der Leitungs- und der Fachvorgesetztenrolle wieder
+     * her, sobald ihr eine Capability entzogen wurde - siehe
+     * leitungsrolle_service.
      *
      * @param capability_unassigned $event
      */
     public static function capability_unassigned(capability_unassigned $event): void {
-        $service = new leitungsrolle_service();
-        if ((int) $event->objectid !== $service->rolle_id()) {
-            return;
+        foreach ([new leitungsrolle_service(), new fachvorgesetztenrolle_service()] as $service) {
+            if ((int) $event->objectid === $service->rolle_id()) {
+                $service->stelle_sicher();
+            }
         }
-
-        $service->stelle_sicher();
     }
 
     /**

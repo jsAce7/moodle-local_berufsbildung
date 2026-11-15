@@ -61,6 +61,19 @@ class block_form extends \moodleform {
         $mform->addHelpButton('ist_betrieb', 'block_ist_betrieb', 'local_berufsbildung');
         $mform->setDefault('ist_betrieb', 1);
 
+        // Wer die Arbeitsplatzberichte schreibt. Die bisher eingetragenen
+        // Personen kommen als Optionen mit, sonst zeigte das Ajax-Feld nur
+        // ihre ID.
+        $mform->addElement(
+            'autocomplete',
+            'fachvorgesetzte',
+            get_string('block:fachvorgesetzte', 'local_berufsbildung'),
+            $this->_customdata['fachvorgesetzte'] ?? [],
+            ['ajax' => 'core_user/form_user_selector', 'multiple' => true]
+        );
+        $mform->addHelpButton('fachvorgesetzte', 'block_fachvorgesetzte', 'local_berufsbildung');
+        $mform->hideIf('fachvorgesetzte', 'ist_betrieb', 'notchecked');
+
         $mform->addElement('advcheckbox', 'aktiv', get_string('block:aktiv', 'local_berufsbildung'));
         $mform->setDefault('aktiv', 1);
 

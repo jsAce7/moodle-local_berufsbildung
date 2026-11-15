@@ -47,6 +47,7 @@ class konto_bereinigung_service {
         'local_berufsbildung_kohorten_link',
         'local_berufsbildung_block',
         'local_berufsbildung_block_lk',
+        'local_berufsbildung_block_fv',
         'local_berufsbildung_einsatz',
         'local_berufsbildung_plan_import',
         'local_berufsbildung_einsatz_aenderung',
@@ -65,6 +66,8 @@ class konto_bereinigung_service {
         $this->anonymisiere_bearbeitungsspuren($userid, $email);
         (new zuordnung_retention_service())->loesche_fuer_lernende($userid);
         (new zuordnung_service())->beende_fuer_geloeschtes_konto($userid);
+        // Ein geloeschtes Konto ist nirgends mehr fachvorgesetzt.
+        (new fachvorgesetzte_service())->entferne_person($userid);
     }
 
     /**
@@ -109,7 +112,8 @@ class konto_bereinigung_service {
                      OR EXISTS (SELECT 1 FROM {local_berufsbildung_kohorten_link} k
                                  WHERE k.berufsbildnerid = u.id AND k.aktiv = 1)
                      OR EXISTS (SELECT 1 FROM {local_berufsbildung_aufbewahrung} a WHERE a.lernendeid = u.id)
-                     OR EXISTS (SELECT 1 FROM {local_berufsbildung_teilnahmeprofil} t WHERE t.userid = u.id))",
+                     OR EXISTS (SELECT 1 FROM {local_berufsbildung_teilnahmeprofil} t WHERE t.userid = u.id)
+                     OR EXISTS (SELECT 1 FROM {local_berufsbildung_block_fv} f WHERE f.userid = u.id))",
             ['jetzt' => time()]
         );
 

@@ -100,6 +100,27 @@ class plan_service {
     }
 
     /**
+     * Die Kompetenzen, die einem Ausbildungsblock zugeordnet sind, samt
+     * ihren uebergeordneten Handlungskompetenzen - wie
+     * get_ausgebildete_kompetenzen(), aber fuer einen einzelnen Block und
+     * unabhaengig von Person und Einsatz.
+     *
+     * @param int $blockid
+     * @return int[] Deduplizierte competencyids
+     */
+    public function get_block_kompetenzen(int $blockid): array {
+        $zugeordnet = array_map(
+            static fn (block_lk $abdeckung): int => (int) $abdeckung->get('competencyid'),
+            block_lk::get_records(['blockid' => $blockid])
+        );
+        if (empty($zugeordnet)) {
+            return [];
+        }
+
+        return $this->mit_uebergeordneten_kompetenzen(array_values($zugeordnet));
+    }
+
+    /**
      * Die Kompetenzen, die den betrieblichen Bloecken der Einsaetze im
      * Zeitraum zugeordnet sind - so, wie sie zugeordnet sind, ohne die
      * uebergeordneten. Erst damit laesst sich sagen, welche

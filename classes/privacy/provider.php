@@ -36,6 +36,7 @@ use core_privacy\local\request\transform;
 use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 use local_berufsbildung\api;
+use local_berufsbildung\service\fachvorgesetzte_service;
 use local_berufsbildung\service\konto_bereinigung_service;
 use local_berufsbildung\service\termin_service;
 use local_berufsbildung\service\zuordnung_retention_service;
@@ -127,6 +128,12 @@ class provider implements
             'usermodified' => 'privacy:metadata:block_lk:usermodified',
         ], 'privacy:metadata:block_lk');
 
+        $collection->add_database_table('local_berufsbildung_block_fv', [
+            'blockid' => 'privacy:metadata:block_fv:blockid',
+            'userid' => 'privacy:metadata:block_fv:userid',
+            'usermodified' => 'privacy:metadata:block_fv:usermodified',
+        ], 'privacy:metadata:block_fv');
+
         // Faelligkeitstermine (service\termin_service) liegen in der
         // Kalendertabelle, mit dem Namen der lernenden Person im Titel.
         $collection->add_subsystem_link('core_calendar', [], 'privacy:metadata:core_calendar');
@@ -161,6 +168,7 @@ class provider implements
                      OR EXISTS (SELECT 1 FROM {local_berufsbildung_block_lk} bl WHERE bl.usermodified = :uid9)
                      OR EXISTS (SELECT 1 FROM {event} ev WHERE ev.component = :komponente AND ev.instance = :uid10)
                      OR EXISTS (SELECT 1 FROM {local_berufsbildung_einsatz_aenderung} ea WHERE ea.userid = :uid12)
+                     OR EXISTS (SELECT 1 FROM {local_berufsbildung_block_fv} fv WHERE fv.userid = :uid13)
                      OR {$bearbeitet}
                    )";
 
@@ -169,7 +177,7 @@ class provider implements
             'userid' => $userid,
             'uid1' => $userid, 'uid2' => $userid, 'uid3' => $userid, 'uid4' => $userid, 'uid5' => $userid,
             'uid6' => $userid, 'uid7' => $userid, 'uid8' => $userid, 'uid9' => $userid, 'uid10' => $userid,
-            'uid11' => $userid, 'uid12' => $userid,
+            'uid11' => $userid, 'uid12' => $userid, 'uid13' => $userid,
             'komponente' => termin_service::KOMPONENTE,
         ] + $bearbeitetparams);
 
@@ -207,6 +215,7 @@ class provider implements
             || $DB->record_exists('local_berufsbildung_teilnahmeprofil', ['userid' => $userid])
             || $DB->record_exists('event', ['component' => termin_service::KOMPONENTE, 'instance' => $userid])
             || $DB->record_exists('local_berufsbildung_einsatz_aenderung', ['userid' => $userid])
+            || $DB->record_exists('local_berufsbildung_block_fv', ['userid' => $userid])
             || self::hat_bearbeitet($userid);
 
         if ($hasdata) {
@@ -406,6 +415,26 @@ class provider implements
             );
         }
 
+        // In welchen Abteilungen die Person fachvorgesetzt ist.
+        $alsfachvorgesetzt = $DB->get_records_sql(
+            'SELECT fv.id, b.nummer, b.name, fv.timecreated
+               FROM {local_berufsbildung_block_fv} fv
+               JOIN {local_berufsbildung_block} b ON b.id = fv.blockid
+              WHERE fv.userid = :userid
+           ORDER BY b.nummer',
+            ['userid' => $userid]
+        );
+        if (!empty($alsfachvorgesetzt)) {
+            writer::with_context($context)->export_data(
+                [get_string('privacy:pfad_fachvorgesetzt', 'local_berufsbildung')],
+                (object) ['abteilungen' => array_map(static fn ($fv): array => [
+                    'nummer' => $fv->nummer,
+                    'name' => $fv->name,
+                    'seit' => transform::datetime((int) $fv->timecreated),
+                ], array_values($alsfachvorgesetzt))]
+            );
+        }
+
         // Was die Person in den uebrigen Tabellen zuletzt geaendert hat. Nur
         // Anzahl und Zeitpunkt: die Datensaetze selbst gehoeren zu anderen
         // Personen und werden dort exportiert.
@@ -480,6 +509,7 @@ class provider implements
         }
         $userid = (int) $context->instanceid;
         static::anonymisiere_bearbeitungsspuren($userid);
+        (new fachvorgesetzte_service())->entferne_person($userid);
         static::zuordnung_loeschen_falls_account_geloescht($userid);
         static::zuordnung_loeschen_falls_ausbildung_beendet($userid);
     }
@@ -494,6 +524,7 @@ class provider implements
         foreach ($contextlist->get_contexts() as $context) {
             if ($context instanceof context_user && (int) $context->instanceid === $userid) {
                 static::anonymisiere_bearbeitungsspuren($userid);
+                (new fachvorgesetzte_service())->entferne_person($userid);
                 static::zuordnung_loeschen_falls_account_geloescht($userid);
                 static::zuordnung_loeschen_falls_ausbildung_beendet($userid);
                 break;
@@ -513,6 +544,7 @@ class provider implements
         foreach ($userlist->get_userids() as $userid) {
             $userid = (int) $userid;
             static::anonymisiere_bearbeitungsspuren($userid);
+            (new fachvorgesetzte_service())->entferne_person($userid);
             static::zuordnung_loeschen_falls_account_geloescht($userid);
             static::zuordnung_loeschen_falls_ausbildung_beendet($userid);
         }

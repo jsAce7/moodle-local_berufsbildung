@@ -12,7 +12,7 @@ Geplant sind mehrere Anwendungen auf derselben Grundlage:
 
 - `local_bildungsbericht` — halbjährliche Standortbestimmung (in Umsetzung)
 - `local_lerndokumentation` — laufendes Journal der Lernenden (geplant)
-- später: Arbeitsplatzberichte der Fachvorgesetzten aus den Rotationseinsätzen
+- Arbeitsplatzberichte der Fachvorgesetzten aus den Rotationseinsätzen (in `local_bildungsbericht`, seit dessen 0.26.0)
 
 Alle drei brauchen dieselbe Antwort auf „wer darf hier was sehen". Würde jedes Plugin seine eigene Zuordnungstabelle führen, müsste die Ausbildungsadministration dieselbe Zuweisung mehrfach pflegen — und die Stände würden auseinanderlaufen. Genau das soll dieses Plugin verhindern.
 
@@ -70,7 +70,7 @@ Endgültig gelöscht wird eine Zuordnung nur in drei Fällen (`CLAUDE.md` Archit
 
 Früher, auf eine Löschanfrage hin, wird nur gelöscht, wenn die Ausbildung abgeschlossen und keine Aufbewahrungspflicht dokumentiert ist (`api::darf_personendaten_geloescht_werden()`).
 
-**Feld `rolle`**: `hauptverantwortlich` ist der Normalfall, `stellvertretung` eine zusätzliche Zuständigkeit, etwa während einer Ferienabwesenheit. Je Lernende/r und Rolle läuft höchstens eine Zuordnung, verschiedene Rollen dürfen gleichzeitig laufen. Weitere Werte, etwa für Fachvorgesetzte (Arbeitsplatzberichte), brauchen keine Schema-Migration. Aufrufende Plugins müssen den Wert abfragen, nicht annehmen.
+**Feld `rolle`**: `hauptverantwortlich` ist der Normalfall, `stellvertretung` eine zusätzliche Zuständigkeit, etwa während einer Ferienabwesenheit. Je Lernende/r und Rolle läuft höchstens eine Zuordnung, verschiedene Rollen dürfen gleichzeitig laufen. Aufrufende Plugins müssen den Wert abfragen, nicht annehmen. Fachvorgesetzte (Arbeitsplatzberichte) sind bewusst **kein** weiterer Wert: sie sind nicht für die ganze lernende Person zuständig, sondern nur für deren Einsatz in ihrer Abteilung. Sie stehen je Ausbildungsblock in `local_berufsbildung_block_fv` und kommen über `api::get_fachvorgesetzte()` und `api::ist_fachvorgesetzt_fuer_block()`; die Systemrolle `berufsbildung_fachvorgesetzt` wird automatisch gepflegt und trägt nur die Capabilities, die aufsetzende Plugins über `<plugin>_berufsbildung_fachvorgesetzt_capabilities()` melden.
 
 ---
 

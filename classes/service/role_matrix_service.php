@@ -40,7 +40,9 @@ namespace local_berufsbildung\service;
  * Zuordnungstabelle; von Hand vergeben oeffnet sie ohnehin nichts, weil
  * die aufsetzenden Plugins neben ihrer Capability immer auch
  * api::is_zustaendig() pruefen (Architekturregel 2: die Zuordnungstabelle
- * ist die einzige Wahrheit). Sichtbar sind alle drei, damit ihre Namen in
+ * ist die einzige Wahrheit). Ebenso die Rolle 'berufsbildung_fachvorgesetzt',
+ * die der fachvorgesetztenrolle_service aus den Fachvorgesetzten der
+ * Ausbildungsbloecke pflegt. Sichtbar sind alle vier, damit ihre Namen in
  * Rollenuebersichten nicht leer bleiben.
  */
 class role_matrix_service {
@@ -55,7 +57,7 @@ class role_matrix_service {
     private const ZUWEISBAR = ['berufsbildung_planung', 'berufsbildung_leitung'];
 
     /** Rollen, deren Namen die Verwaltung sehen darf. */
-    private const SICHTBAR = ['berufsbildung_planung', 'berufsbildung_leitung', 'berufsbildner'];
+    private const SICHTBAR = ['berufsbildung_planung', 'berufsbildung_leitung', 'berufsbildner', 'berufsbildung_fachvorgesetzt'];
 
     /**
      * Laeuft aus db/install.php und db/upgrade.php.

@@ -23,12 +23,13 @@
  */
 
 /**
- * Legt die drei Rollen des Plugins an, sofern sie nicht existieren:
+ * Legt die vier Rollen des Plugins an, sofern sie nicht existieren:
  *
  * - 'berufsbildner' im User-Kontext einer lernenden Person, ohne eigene
  *   Capabilities - die vergeben die aufsetzenden Plugins.
  * - 'berufsbildung_planung' im Systemkontext, traegt die Blockverwaltung.
  * - 'berufsbildung_leitung' im Systemkontext, ohne eigene Capabilities.
+ * - 'berufsbildung_fachvorgesetzt' im Systemkontext, ohne eigene Capabilities.
  *
  * und macht sie anschliessend fuer die Rollenverwaltung sichtbar bzw.
  * vergebbar - siehe role_matrix_service.
@@ -74,6 +75,7 @@ function xmldb_local_berufsbildung_install() {
     }
 
     xmldb_local_berufsbildung_lege_leitungsrolle_an();
+    xmldb_local_berufsbildung_lege_fachvorgesetztenrolle_an();
 
     // Moodles create_role() traegt in role_allow_assign und role_allow_view nichts
     // ein. Ohne diesen Schritt bekommt nur eine Administratorin die Rollen
@@ -111,6 +113,35 @@ function xmldb_local_berufsbildung_lege_leitungsrolle_an(): void {
         get_string('role:leitung', 'local_berufsbildung'),
         'berufsbildung_leitung',
         get_string('role:leitung_desc', 'local_berufsbildung')
+    );
+    set_role_contextlevels($roleid, [CONTEXT_SYSTEM]);
+}
+
+/**
+ * Legt die Rolle 'berufsbildung_fachvorgesetzt' an, sofern sie nicht existiert.
+ *
+ * Fuer die Fachvorgesetzten einer Abteilung, die die Arbeitsplatzberichte
+ * schreiben. Der fachvorgesetztenrolle_service weist sie jeder Person zu,
+ * die bei mindestens einem Ausbildungsblock als fachvorgesetzt eingetragen
+ * ist, und entzieht sie wieder. Die aufsetzenden Plugins vergeben ihr ihre
+ * Capabilities selbst (Callback <plugin>_berufsbildung_fachvorgesetzt_capabilities()).
+ *
+ * Bewusst getrennt von 'berufsbildner': Fachvorgesetzte sind nicht fuer die
+ * lernende Person zustaendig, sondern nur fuer ihren Einsatz in der Abteilung.
+ *
+ * Auch aus db/upgrade.php aufgerufen.
+ */
+function xmldb_local_berufsbildung_lege_fachvorgesetztenrolle_an(): void {
+    global $DB;
+
+    if ($DB->record_exists('role', ['shortname' => 'berufsbildung_fachvorgesetzt'])) {
+        return;
+    }
+
+    $roleid = create_role(
+        get_string('role:fachvorgesetzt', 'local_berufsbildung'),
+        'berufsbildung_fachvorgesetzt',
+        get_string('role:fachvorgesetzt_desc', 'local_berufsbildung')
     );
     set_role_contextlevels($roleid, [CONTEXT_SYSTEM]);
 }

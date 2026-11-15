@@ -57,6 +57,10 @@ class collector {
     /**
      * Laedt die registrierten Nachweis-Provider.
      *
+     * Der Callback eines Plugins liefert einen Provider oder eine Liste
+     * davon - ein Plugin mit mehreren Quellen (z.B. Bildungsberichte und
+     * Arbeitsplatzberichte) meldet jede als eigene Quelle.
+     *
      * @return provider[]
      */
     private static function lade_registrierte_provider(): array {
@@ -64,7 +68,12 @@ class collector {
 
         foreach (get_plugins_with_function('berufsbildung_nachweis_provider') as $funktionenjetyp) {
             foreach ($funktionenjetyp as $funktion) {
-                $providers[] = $funktion();
+                $ergebnis = $funktion();
+                foreach (is_array($ergebnis) ? $ergebnis : [$ergebnis] as $provider) {
+                    if ($provider instanceof provider) {
+                        $providers[] = $provider;
+                    }
+                }
             }
         }
 
