@@ -77,6 +77,7 @@ $string['block:beruf'] = 'Occupation';
 $string['block:beruf_leer'] = 'cross-occupation';
 $string['block:beruf_leer_label'] = 'Cross-occupation';
 $string['block:fachvorgesetzte'] = 'Department supervisors';
+$string['block:fehler_fachvorgesetzte'] = 'At least one of the selected people cannot be added. Only choose people from the search.';
 $string['block:fehler_nummer_existiert'] = 'A block with this number already exists.';
 $string['block:geloescht'] = 'Block {$a->nummer} deleted, along with {$a->kompetenzen} competency assignments and {$a->einsaetze} planned placements.';
 $string['block:ist_betrieb'] = 'Company placement';

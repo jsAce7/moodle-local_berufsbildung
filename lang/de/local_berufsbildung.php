@@ -77,6 +77,7 @@ $string['block:beruf'] = 'Beruf';
 $string['block:beruf_leer'] = 'berufsübergreifend';
 $string['block:beruf_leer_label'] = 'Berufsübergreifend';
 $string['block:fachvorgesetzte'] = 'Fachvorgesetzte';
+$string['block:fehler_fachvorgesetzte'] = 'Mindestens eine der gewählten Personen lässt sich nicht eintragen. Wähle nur Personen aus der Suche.';
 $string['block:fehler_nummer_existiert'] = 'Ein Block mit dieser Nummer besteht bereits.';
 $string['block:geloescht'] = 'Block {$a->nummer} gelöscht, samt {$a->kompetenzen} Kompetenzzuordnungen und {$a->einsaetze} geplanten Einsätzen.';
 $string['block:ist_betrieb'] = 'Betrieblicher Einsatz';

@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.10.1] — 2026-11-16
+
+Ergänzungen und Korrekturen zu den Fachvorgesetzten (für `local_bildungsbericht` 0.26.1).
+
+### Neu
+
+- **Eigenständige Menüpunkte** (`navigation\menuepunkt::EIGENSTAENDIG`): ein aufsetzendes Plugin kann einen eigenen Eintrag in der Leiste melden, etwa „Meine Arbeitsplatzberichte“ für Fachvorgesetzte. `api::get_einsaetze_in_bloecken()` für deren Abteilungsübersicht.
+
+### Sicherheit
+
+- **Fachvorgesetzte nur aus der Suche.** Das Blockformular nahm jede übergebene User-ID an, auch Gastkonto, gesperrte, unbestätigte und nicht existierende Konten. Neu lässt sich nur eintragen, wen auch die Personensuche liefert (`fachvorgesetzte_service::waehlbare()`); das Formular meldet es, `setze_fuer_block()` übergeht solche IDs zusätzlich.
+- **Keine Abfrage von Name und Mailadresse über die Adresse.** `block_bearbeiten.php` baute die Optionen des Feldes auch aus einem GET-Parameter ohne sesskey auf. Neu nur aus dem abgesendeten Formular und nur für wählbare Konten; die Beschriftung wird maskiert.
+- **Personensuche begrenzt** auf 100 Zeichen und fünf Wörter.
+
+### Geändert
+
+- **Gesperrte Konten zählen nicht als Fachvorgesetzte.** `api::get_fachvorgesetzte()` und `ist_fachvorgesetzt_fuer_block()` liefern nur noch aktive Konten - ein Block, dessen Fachvorgesetzte alle gesperrt sind, gilt nicht mehr als besetzt. Eingetragen bleiben sie (die Sperre kann vorübergehend sein), das Blockformular zeigt sie weiter.
+
+### Behoben
+
+- Speichern eines Blocks ohne Fachvorgesetzte löste eine Debugging-Meldung aus (`optional_param_array()` mit dem Platzhalter des leeren Feldes).
+- Der Nachweis-Collector meldet per `debugging()`, wenn ein Plugin etwas anderes als einen Provider liefert, statt die Quelle lautlos wegzulassen.
+
 ## [1.10.0] — 2026-11-15
 
 Grundlage für die Arbeitsplatzberichte der Fachvorgesetzten (`local_bildungsbericht` 0.26.0).
@@ -10,7 +33,6 @@ Grundlage für die Arbeitsplatzberichte der Fachvorgesetzten (`local_bildungsber
 - **Rolle «Fachvorgesetzte/r»** (`berufsbildung_fachvorgesetzt`, Systemkontext): wird jeder eingetragenen Person automatisch zugewiesen und wieder entzogen (`service\fachvorgesetztenrolle_service`, auch im Task `sync_role_assignments`). Aufsetzende Plugins melden ihre Capabilities über den Callback `<plugin>_berufsbildung_fachvorgesetzt_capabilities()`; fehlende stellt der Task wieder her.
 - **Eigene Personensuche** für das Feld (Webservice `local_berufsbildung_fachvorgesetzte_suchen`, AMD `fachvorgesetzte_auswahl`): verlangt nur `local/berufsbildung:manageblocks`, liefert höchstens 20 aktive Konten mit Name und Mailadresse. Die Standardsuche von Moodle hätte `moodle/user:viewalldetails` verlangt, das die Ausbildungsplanung nicht haben soll.
 - **API:** `get_fachvorgesetzte()`, `ist_fachvorgesetzt_fuer_block()`, `ist_fachvorgesetzt()`, `get_bloecke_als_fachvorgesetzt()`, `get_block_kompetenzen()` und `ist_betrieblicher_block()`.
-- **Eigenständige Menüpunkte** (`navigation\menuepunkt::EIGENSTAENDIG`): ein aufsetzendes Plugin kann einen eigenen Eintrag in der Leiste melden, etwa „Meine Arbeitsplatzberichte“ für Fachvorgesetzte. `api::get_einsaetze_in_bloecken()` für deren Abteilungsübersicht.
 - **Mehrere Quellen je Plugin.** Der Callback `<plugin>_berufsbildung_nachweis_provider()` darf neu auch eine Liste von Providern liefern.
 
 ### Datenschutz

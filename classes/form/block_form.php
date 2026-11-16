@@ -110,6 +110,15 @@ class block_form extends \moodleform {
             }
         }
 
+        // Das Ajax-Feld prueft die Werte nicht gegen seine Optionen. Erlaubt
+        // ist nur, wer schon eingetragen ist oder waehlbar ist - beides steht
+        // in den Optionen (block_bearbeiten.php).
+        $erlaubt = array_keys($this->_customdata['fachvorgesetzte'] ?? []);
+        $gewaehlt = array_filter(array_map('intval', (array) ($data['fachvorgesetzte'] ?? [])));
+        if (!empty(array_diff($gewaehlt, $erlaubt))) {
+            $errors['fachvorgesetzte'] = get_string('block:fehler_fachvorgesetzte', 'local_berufsbildung');
+        }
+
         return $errors;
     }
 }

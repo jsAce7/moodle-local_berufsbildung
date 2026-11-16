@@ -39,23 +39,60 @@ use local_berufsbildung\persistent\block_fv;
  * Fachvorgesetzter nur fuer ihren Einsatz in seiner Abteilung.
  */
 class fachvorgesetzte_service {
+    /** Laengster Suchtext der Personensuche. */
+    private const SUCHE_MAX_ZEICHEN = 100;
+
+    /** Hoechstzahl der Woerter, nach denen die Personensuche filtert. */
+    private const SUCHE_MAX_WOERTER = 5;
+
     /**
-     * Die Fachvorgesetzten eines Blocks mit nicht geloeschtem Konto.
+     * Welche dieser Konten sich als Fachvorgesetzte eintragen lassen:
+     * dieselben, die die Personensuche liefert - bestehend, bestaetigt,
+     * weder geloescht noch gesperrt, nicht das Gastkonto.
+     *
+     * @param int[] $userids
+     * @return int[] Die waehlbaren davon, aufsteigend
+     */
+    public function waehlbare(array $userids): array {
+        global $DB, $CFG;
+
+        $userids = array_values(array_unique(array_filter(array_map('intval', $userids), static fn(int $id): bool => $id > 0)));
+        if (empty($userids)) {
+            return [];
+        }
+        [$insql, $params] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+
+        return array_map('intval', $DB->get_fieldset_select(
+            'user',
+            'id',
+            "id {$insql} AND deleted = 0 AND suspended = 0 AND confirmed = 1 AND id <> :guest ORDER BY id",
+            $params + ['guest' => (int) $CFG->siteguest]
+        ));
+    }
+
+    /**
+     * Die Fachvorgesetzten eines Blocks mit aktivem Konto - wer den
+     * Arbeitsplatzbericht tatsaechlich schreiben kann. Gesperrte Konten
+     * zaehlen nur mit $auchgesperrte: sie bleiben eingetragen (die Sperre
+     * kann voruebergehend sein), aber ein Block, dessen Fachvorgesetzte
+     * alle gesperrt sind, soll nicht als besetzt gelten.
      *
      * @param int $blockid
+     * @param bool $auchgesperrte Fuer die Pflege im Blockformular
      * @return int[] User-IDs, aufsteigend
      */
-    public function get_fuer_block(int $blockid): array {
-        return $this->get_fuer_bloecke([$blockid])[$blockid] ?? [];
+    public function get_fuer_block(int $blockid, bool $auchgesperrte = false): array {
+        return $this->get_fuer_bloecke([$blockid], $auchgesperrte)[$blockid] ?? [];
     }
 
     /**
      * Die Fachvorgesetzten mehrerer Bloecke in einer Abfrage.
      *
      * @param int[] $blockids
+     * @param bool $auchgesperrte Siehe get_fuer_block()
      * @return array<int, int[]> blockid => User-IDs; Bloecke ohne fehlen
      */
-    public function get_fuer_bloecke(array $blockids): array {
+    public function get_fuer_bloecke(array $blockids, bool $auchgesperrte = false): array {
         global $DB;
 
         $blockids = array_values(array_unique(array_map('intval', $blockids)));
@@ -68,8 +105,8 @@ class fachvorgesetzte_service {
             'SELECT fv.id, fv.blockid, fv.userid
                FROM {' . block_fv::TABLE . "} fv
                JOIN {user} u ON u.id = fv.userid AND u.deleted = 0
-              WHERE fv.blockid {$insql}
-           ORDER BY fv.blockid, fv.userid",
+              WHERE fv.blockid {$insql}" . ($auchgesperrte ? '' : ' AND u.suspended = 0') . '
+           ORDER BY fv.blockid, fv.userid',
             $params
         );
         $ergebnis = [];
@@ -132,7 +169,8 @@ class fachvorgesetzte_service {
     public function suche_personen(string $suche, int $hoechstens = 20): array {
         global $DB, $CFG;
 
-        $suche = trim($suche);
+        // Begrenzt: jedes Wort kostet zwei LIKE ueber die ganze User-Tabelle.
+        $suche = trim(\core_text::substr(trim($suche), 0, self::SUCHE_MAX_ZEICHEN));
         if (\core_text::strlen($suche) < 2) {
             return [];
         }
@@ -141,7 +179,7 @@ class fachvorgesetzte_service {
         $vollname = $DB->sql_fullname('u.firstname', 'u.lastname');
         $bedingungen = [];
         $params = ['guest' => (int) $CFG->siteguest];
-        foreach (preg_split('/\s+/u', $suche) as $i => $wort) {
+        foreach (array_slice(preg_split('/\s+/u', $suche), 0, self::SUCHE_MAX_WOERTER) as $i => $wort) {
             $muster = '%' . $DB->sql_like_escape($wort) . '%';
             $bedingungen[] = '(' . $DB->sql_like($vollname, ':name' . $i, false, false)
                 . ' OR ' . $DB->sql_like('u.email', ':mail' . $i, false, false) . ')';
@@ -205,7 +243,9 @@ class fachvorgesetzte_service {
 
     /**
      * Setzt die Fachvorgesetzten eines Blocks und haelt die Rolle der
-     * Betroffenen nach.
+     * Betroffenen nach. Neu eintragen laesst sich nur, wer waehlbar ist
+     * (waehlbare()); alles andere wird uebergangen - das Formular meldet es
+     * vorher, hier ist es die Absicherung gegen eingeschleuste IDs.
      *
      * @param int $blockid
      * @param int[] $userids
@@ -218,7 +258,7 @@ class fachvorgesetzte_service {
         }
 
         $betroffen = [];
-        foreach (array_keys(array_diff_key($soll, $ist)) as $userid) {
+        foreach ($this->waehlbare(array_keys(array_diff_key($soll, $ist))) as $userid) {
             (new block_fv(0, (object) ['blockid' => $blockid, 'userid' => $userid]))->create();
             $betroffen[] = $userid;
         }

@@ -147,7 +147,8 @@ class local_berufsbildung_generator extends component_generator_base {
         }
 
         $service = new \local_berufsbildung\service\fachvorgesetzte_service();
-        $bisher = $service->get_fuer_block((int) $record['blockid']);
+        // Auch gesperrte, sonst entfernte ein weiterer Eintrag sie stillschweigend.
+        $bisher = $service->get_fuer_block((int) $record['blockid'], true);
         $service->setze_fuer_block((int) $record['blockid'], array_merge($bisher, [(int) $record['userid']]));
     }
 

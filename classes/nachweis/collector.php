@@ -67,12 +67,18 @@ class collector {
         $providers = [];
 
         foreach (get_plugins_with_function('berufsbildung_nachweis_provider') as $funktionenjetyp) {
-            foreach ($funktionenjetyp as $funktion) {
+            foreach ($funktionenjetyp as $plugin => $funktion) {
                 $ergebnis = $funktion();
                 foreach (is_array($ergebnis) ? $ergebnis : [$ergebnis] as $provider) {
                     if ($provider instanceof provider) {
                         $providers[] = $provider;
+                        continue;
                     }
+                    // Sonst fehlte die Quelle lautlos.
+                    debugging(
+                        "{$plugin}_berufsbildung_nachweis_provider() liefert etwas anderes als einen nachweis\\provider.",
+                        DEBUG_DEVELOPER
+                    );
                 }
             }
         }

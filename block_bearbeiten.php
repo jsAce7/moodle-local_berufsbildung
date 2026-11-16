@@ -66,17 +66,26 @@ $berufe = (new rahmen_resolver())->alle_codes($konfiguration !== false ? (string
 
 $fvservice = new fachvorgesetzte_service();
 $vorbelegung = $block ?? $quelle;
-$fachvorgesetzte = $vorbelegung !== null ? $fvservice->get_fuer_block((int) $vorbelegung->get('id')) : [];
+// Auch gesperrte: sie bleiben eingetragen, bis jemand sie entfernt.
+$fachvorgesetzte = $vorbelegung !== null ? $fvservice->get_fuer_block((int) $vorbelegung->get('id'), true) : [];
 
-// Auch beim Absenden: die neu gewaehlten Personen muessen als Option
-// bekannt sein, sonst verwirft das Formular sie.
-$gewaehlt = optional_param_array('fachvorgesetzte', [], PARAM_INT);
+// Beim Absenden muessen die neu gewaehlten Personen als Option bekannt
+// sein, damit das Feld sie mit Namen zeigt. Nur aus dem abgesendeten
+// Formular (mit sesskey) und nur, wen auch die Suche liefert - sonst
+// liesse sich ueber die Adresse zu jeder ID Name und Mailadresse abfragen.
+// Das Formular lehnt jede ID ab, die hier keine Option ist.
+$gewaehlt = [];
+$gesendet = data_submitted();
+if ($gesendet && confirm_sesskey() && is_array($gesendet->fachvorgesetzte ?? null)) {
+    // Ohne Auswahl sendet das Feld einen einzelnen Platzhalter, keine Liste.
+    $gewaehlt = $fvservice->waehlbare(clean_param_array($gesendet->fachvorgesetzte, PARAM_INT));
+}
 $fvoptionen = [];
 foreach (array_unique(array_merge($fachvorgesetzte, $gewaehlt)) as $fvid) {
     $fvuser = core_user::get_user((int) $fvid);
     if ($fvuser && !$fvuser->deleted) {
         // Wie die Treffer der Suche (amd/src/fachvorgesetzte_auswahl.js).
-        $fvoptionen[(int) $fvid] = fullname($fvuser) . ' (' . $fvuser->email . ')';
+        $fvoptionen[(int) $fvid] = s(fullname($fvuser) . ' (' . $fvuser->email . ')');
     }
 }
 

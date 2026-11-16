@@ -257,4 +257,57 @@ final class fachvorgesetzte_service_test extends advanced_testcase {
         $this->assertSame((int) $a->get('id'), (int) $einsaetze[0]->get('blockid'));
         $this->assertSame([], api::get_einsaetze_in_bloecken([], $stichtag, $stichtag + DAYSECS));
     }
+
+    public function test_nur_waehlbare_konten_lassen_sich_eintragen(): void {
+        global $CFG, $DB;
+        $this->resetAfterTest();
+        $service = new fachvorgesetzte_service();
+        $block = $this->block('A1');
+        $blockid = (int) $block->get('id');
+        $gut = (int) $this->getDataGenerator()->create_user()->id;
+        $gesperrt = (int) $this->getDataGenerator()->create_user(['suspended' => 1])->id;
+        $unbestaetigt = (int) $this->getDataGenerator()->create_user(['confirmed' => 0])->id;
+        $geloescht = $this->getDataGenerator()->create_user();
+        delete_user($geloescht);
+        $gibtesnicht = (int) $DB->get_field_sql('SELECT MAX(id) FROM {user}') + 1000;
+        $alle = [$gut, $gesperrt, $unbestaetigt, (int) $geloescht->id, (int) $CFG->siteguest, $gibtesnicht, -5, 0];
+
+        $this->assertSame([$gut], $service->waehlbare($alle));
+
+        $service->setze_fuer_block($blockid, $alle);
+
+        $this->assertSame([$gut], $service->get_fuer_block($blockid, true));
+        $this->assertSame(1, \local_berufsbildung\persistent\block_fv::count_records(['blockid' => $blockid]));
+        $this->assertFalse($this->hat_rolle((int) $CFG->siteguest));
+        $this->assertFalse($service->ist_fachvorgesetzt($gibtesnicht));
+    }
+
+    public function test_gesperrtes_konto_bleibt_eingetragen_zaehlt_aber_nicht(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $service = new fachvorgesetzte_service();
+        $blockid = (int) $this->block('A1')->get('id');
+        $person = (int) $this->getDataGenerator()->create_user()->id;
+        $service->setze_fuer_block($blockid, [$person]);
+
+        $DB->set_field('user', 'suspended', 1, ['id' => $person]);
+
+        // Niemand, der den Bericht schreiben koennte.
+        $this->assertSame([], api::get_fachvorgesetzte($blockid));
+        $this->assertFalse(api::ist_fachvorgesetzt_fuer_block($person, $blockid));
+        // Im Formular steht die Person weiter und uebersteht das Speichern.
+        $this->assertSame([$person], $service->get_fuer_block($blockid, true));
+        $service->setze_fuer_block($blockid, [$person]);
+        $this->assertSame([$person], $service->get_fuer_block($blockid, true));
+    }
+
+    public function test_suche_begrenzt_den_suchtext(): void {
+        $this->resetAfterTest();
+        $this->getDataGenerator()->create_user(['firstname' => 'Fritz', 'lastname' => 'Vorgesetzter']);
+        $service = new fachvorgesetzte_service();
+
+        // Mehr Woerter als die Suche auswertet: die ueberzaehligen fallen weg.
+        $this->assertCount(1, $service->suche_personen('Fritz Vorgesetzter Fritz Vorgesetzter Fritz gibtesnicht'));
+        $this->assertSame([], $service->suche_personen(str_repeat('x', 500)));
+    }
 }
