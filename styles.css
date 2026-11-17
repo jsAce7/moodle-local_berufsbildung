@@ -1414,6 +1414,41 @@
     border-left-width: 2px !important;
 }
 
+/* Unterpunkte einer Station (etwa die Arbeitsplatzberichte des Semesters):
+   Badges unter der Station, zentriert wie sie. Ein Name, der breiter ist
+   als die Spalte, wird mit Auslassungspunkten gekuerzt - der ganze Name
+   steht im title und im Kasten der aktuellen Station. */
+.local-berufsbildung-station-unterpunkte {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.2rem;
+    max-width: 100%;
+}
+
+.local-berufsbildung-station-unterpunkte li {
+    max-width: 100%;
+}
+
+.local-berufsbildung-station-unterpunkte .badge {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    font-weight: 400;
+    text-overflow: ellipsis;
+}
+
+/* Legende der Unterpunkte unter der Leiste. */
+.local-berufsbildung-stationen-legende {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.5rem;
+}
+
+.local-berufsbildung-stationen-legende .badge {
+    font-weight: 400;
+}
+
 .local-berufsbildung-station-punkt-klein {
     width: 1.5rem;
     height: 1.5rem;

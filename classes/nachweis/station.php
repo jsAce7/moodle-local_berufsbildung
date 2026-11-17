@@ -69,6 +69,10 @@ class station {
      *        auch in der geschlossenen Kachel. Hoechstens eine je Quelle.
      * @param string|null $kurzbezeichnung z.B. "3. Semester", fuer die Zeitleiste unter dem
      *        Namen der Quelle; null nimmt dort $bezeichnung.
+     * @param unterpunkt[] $unterpunkte Was zu dieser Station gehoert, etwa die
+     *        Arbeitsplatzberichte des Semesters; die Zeitleiste zeigt sie klein darunter.
+     * @param string|null $unterpunktetitel Was die Unterpunkte sind, z.B.
+     *        "Arbeitsplatzberichte" - Beschriftung der Liste fuer Screenreader.
      */
     public function __construct(
         /** @var string Schluessel der liefernden Quelle. */
@@ -87,7 +91,16 @@ class station {
         public readonly bool $aktuell = false,
         /** @var string|null Kurz fuer die Zeitleiste, z.B. "3. Semester". */
         public readonly ?string $kurzbezeichnung = null,
+        /** @var unterpunkt[] Was zu dieser Station gehoert. */
+        public readonly array $unterpunkte = [],
+        /** @var string|null Was die Unterpunkte sind. */
+        public readonly ?string $unterpunktetitel = null,
     ) {
+        foreach ($unterpunkte as $unterpunkt) {
+            if (!$unterpunkt instanceof unterpunkt) {
+                throw new \coding_exception('station: unterpunkte muessen nachweis\\unterpunkt sein.');
+            }
+        }
     }
 
     /**
@@ -106,7 +119,9 @@ class station {
             $this->stand,
             $this->url,
             $this->aktuell,
-            $this->kurzbezeichnung
+            $this->kurzbezeichnung,
+            $this->unterpunkte,
+            $this->unterpunktetitel
         );
     }
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.11.0] — 2026-11-17
+
+### Neu
+
+- **Unterpunkte in der Zeitleiste.** Eine Station (`nachweis\station`) kann Unterpunkte tragen (`nachweis\unterpunkt`: Bezeichnung, Status, Statustext, Ziel) - was zu ihr gehört, ohne selbst eine Station zu sein. `output\stationen_leiste` zeigt sie als Badges unter der Station, in der Farbe ihres Stands; der Stand steht für Screenreader im Badge, in einer Legende unter der Leiste und ausgeschrieben im Kasten der aktuellen Station. Für `local_bildungsbericht` 0.27.0: die Arbeitsplatzberichte stehen beim Bildungsbericht ihres Semesters statt in einer eigenen Zeitleiste.
+
 ## [1.10.1] — 2026-11-16
 
 Ergänzungen und Korrekturen zu den Fachvorgesetzten (für `local_bildungsbericht` 0.26.1).

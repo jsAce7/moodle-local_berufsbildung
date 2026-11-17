@@ -30,6 +30,7 @@ use advanced_testcase;
 use local_berufsbildung\nachweis\erfassen_aktion;
 use local_berufsbildung\nachweis\station;
 use local_berufsbildung\nachweis\stationen;
+use local_berufsbildung\nachweis\unterpunkt;
 
 #[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\stationen_leiste::class)]
 /**
@@ -214,5 +215,78 @@ final class stationen_leiste_test extends advanced_testcase {
         $this->assertStringNotContainsString('local-berufsbildung-kachel-stationen', $ohne);
         $this->assertStringContainsString('local-berufsbildung-kachel-stationen', $leer);
         $this->assertStringNotContainsString('local-berufsbildung-kachel-station ', $leer);
+    }
+
+    public function test_unterpunkte_stehen_unter_ihrer_station(): void {
+        $this->resetAfterTest();
+        $stationen = new stationen('bildungsbericht', 'Bildungsbericht', [
+            new station(
+                'bildungsbericht',
+                'Bildungsbericht 1. Semester',
+                station::STATUS_ERLEDIGT,
+                'freigegeben',
+                null,
+                null,
+                true,
+                '1. Semester',
+                [
+                    new unterpunkt('Werkstatt', station::STATUS_ERLEDIGT, 'besprochen', '/local/test/apb.php?id=7'),
+                    new unterpunkt('Lager', station::STATUS_ENTFAELLT, 'verzichtet'),
+                ],
+                'Arbeitsplatzberichte 1. Semester'
+            ),
+            new station('bildungsbericht', 'Bildungsbericht 2. Semester', station::STATUS_GEPLANT, 'geplant'),
+        ]);
+
+        $html = stationen_leiste::render($stationen);
+
+        $this->assertSame(1, substr_count($html, 'local-berufsbildung-station-unterpunkte'));
+        $this->assertStringContainsString('aria-label="Arbeitsplatzberichte 1. Semester"', $html);
+        $this->assertStringContainsString('/local/test/apb.php?id=7', $html);
+        $this->assertStringContainsString('Werkstatt', $html);
+        $this->assertStringContainsString('besprochen', $html);
+        $this->assertStringContainsString('verzichtet', $html);
+        // Badges in der Farbe des Stands, der Stand in Worten fuer Screenreader.
+        $this->assertStringContainsString('class="badge bg-success text-white"', $html);
+        $this->assertStringContainsString('class="badge bg-secondary text-dark"', $html);
+        $this->assertStringContainsString('title="Lager: verzichtet"', $html);
+        // Im Kasten der aktuellen Station stehen sie ausgeschrieben, darunter die Legende.
+        $this->assertStringContainsString('Arbeitsplatzberichte 1. Semester: Werkstatt besprochen · Lager verzichtet', $html);
+        $this->assertSame(1, substr_count($html, 'local-berufsbildung-stationen-legende'));
+    }
+
+    public function test_ohne_unterpunkte_keine_legende(): void {
+        $this->resetAfterTest();
+
+        $html = stationen_leiste::render($this->stationen());
+
+        $this->assertStringNotContainsString('local-berufsbildung-stationen-legende', $html);
+        $this->assertStringNotContainsString('local-berufsbildung-station-unterpunkte', $html);
+    }
+
+    public function test_station_nimmt_nur_unterpunkte(): void {
+        $this->expectException(\coding_exception::class);
+        new station('q', 'Station', station::STATUS_GEPLANT, 'geplant', null, null, false, null, ['kein Unterpunkt']);
+    }
+
+    public function test_unterpunkte_bleiben_beim_setzen_des_quellekeys(): void {
+        $station = new station(
+            'fremd',
+            'Station',
+            station::STATUS_GEPLANT,
+            'geplant',
+            null,
+            null,
+            false,
+            null,
+            [new unterpunkt('Werkstatt', station::STATUS_GEPLANT, 'geplant')],
+            'Titel'
+        );
+
+        $kopie = $station->mit_quellekey('bildungsbericht');
+
+        $this->assertSame('bildungsbericht', $kopie->quellekey);
+        $this->assertCount(1, $kopie->unterpunkte);
+        $this->assertSame('Titel', $kopie->unterpunktetitel);
     }
 }

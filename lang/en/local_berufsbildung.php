@@ -527,6 +527,7 @@ $string['stationen:tabelle_legende'] = 'Legend';
 $string['stationen:tabelle_legende_aktuell'] = 'Larger dot: current';
 $string['stationen:tabelle_lernende'] = 'Learners';
 $string['stationen:tabelle_naechster_schritt'] = 'Next step';
+$string['stationen:unterpunkte'] = 'Belongs to {$a}';
 $string['stationen:verlauf'] = 'History over the whole apprenticeship';
 $string['stepper:lehrjahr'] = 'Year {$a}';
 $string['task:bereinige_planverlauf'] = 'Clean up the rotation plan history after one year';

@@ -527,6 +527,7 @@ $string['stationen:tabelle_legende'] = 'Legende';
 $string['stationen:tabelle_legende_aktuell'] = 'Grösserer Punkt: zählt gerade';
 $string['stationen:tabelle_lernende'] = 'Lernende';
 $string['stationen:tabelle_naechster_schritt'] = 'Nächster Schritt';
+$string['stationen:unterpunkte'] = 'Gehört zu {$a}';
 $string['stationen:verlauf'] = 'Verlauf über die ganze Lehre';
 $string['stepper:lehrjahr'] = '{$a}. Lehrjahr';
 $string['task:bereinige_planverlauf'] = 'Versetzungsplan-Verlauf nach einem Jahr bereinigen';

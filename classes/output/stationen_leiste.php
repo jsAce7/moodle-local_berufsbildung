@@ -29,6 +29,7 @@ namespace local_berufsbildung\output;
 use local_berufsbildung\nachweis\erfassen_aktion;
 use local_berufsbildung\nachweis\station;
 use local_berufsbildung\nachweis\stationen;
+use local_berufsbildung\nachweis\unterpunkt;
 
 /**
  * Zuoberst im Detail einer Person: alle Stationen einer Quelle als
@@ -68,6 +69,7 @@ class stationen_leiste {
             }
         }
         [$kastenstart, $kastenbreite, $kastenseite] = self::kasten_spalten($index, count($eintraege));
+        $legende = self::unterpunkte_legende($eintraege);
 
         return $OUTPUT->render_from_template('local_berufsbildung/stationen_leiste', [
             'titel' => $stationen->titel,
@@ -78,6 +80,8 @@ class stationen_leiste {
             'hasverlauf' => $stationen->verlaufurl !== null,
             'verlaufurl' => $stationen->verlaufurl ?? '',
             'eintraege' => array_map([self::class, 'station_daten'], $stationen->eintraege),
+            'haslegende' => !empty($legende),
+            'legende' => $legende,
             'hasaktuelle' => $aktuelle !== null,
             'aktuelle' => $aktuelle !== null ? self::station_daten($aktuelle) : null,
             'hasaktion' => $aktion !== null,
@@ -155,7 +159,84 @@ class stationen_leiste {
             'punktklasse' => $punktklasse,
             'randklasse' => $randklasse,
             'istueberfaellig' => $station->status === station::STATUS_UEBERFAELLIG,
+            'hasunterpunkte' => !empty($station->unterpunkte),
+            'unterpunktetitel' => $station->unterpunktetitel
+                ?? get_string('stationen:unterpunkte', 'local_berufsbildung', $station->bezeichnung),
+            'unterpunkte' => array_map([self::class, 'unterpunkt_daten'], array_values($station->unterpunkte)),
+            'unterpunktetext' => self::unterpunkte_text($station),
         ];
+    }
+
+    /**
+     * Darstellungsdaten eines Unterpunkts: ein Badge mit der Bezeichnung,
+     * die Farbe zeigt den Stand - wie bei den Handlungskompetenzen im
+     * Kompetenzraster. Der Statustext steht fuer Screenreader im Badge, beim
+     * Darueberfahren und in der Legende; Farbe allein traegt keine
+     * Information (WCAG 1.4.1).
+     *
+     * @param unterpunkt $unterpunkt
+     * @return array
+     */
+    public static function unterpunkt_daten(unterpunkt $unterpunkt): array {
+        return [
+            'bezeichnung' => $unterpunkt->bezeichnung,
+            'statustext' => $unterpunkt->statustext,
+            'hasurl' => $unterpunkt->url !== null,
+            'url' => $unterpunkt->url ?? '',
+            'badgeklasse' => self::unterpunkt_klasse($unterpunkt->status),
+        ];
+    }
+
+    /**
+     * Bootstrap-Klassen des Badges je Status.
+     *
+     * @param string $status Eine der Konstanten station::STATUS_*
+     * @return string
+     */
+    private static function unterpunkt_klasse(string $status): string {
+        return match ($status) {
+            station::STATUS_ERLEDIGT => 'bg-success text-white',
+            station::STATUS_OFFEN => 'bg-info text-white',
+            station::STATUS_UEBERFAELLIG => 'bg-danger text-white',
+            // Das Grau von Boost ist hell: dunkle Schrift, sonst fehlt der Kontrast.
+            station::STATUS_ENTFAELLT => 'bg-secondary text-dark',
+            default => 'bg-white text-dark border',
+        };
+    }
+
+    /**
+     * Legende der Unterpunkte einer Leiste: je vorkommendem Stand ein Badge
+     * mit seinem Statustext, so wie die Quelle ihn formuliert.
+     *
+     * @param station[] $stationen
+     * @return array Je Eintrag badgeklasse und text
+     */
+    public static function unterpunkte_legende(array $stationen): array {
+        $legende = [];
+        foreach ($stationen as $station) {
+            foreach ($station->unterpunkte as $unterpunkt) {
+                $legende[$unterpunkt->status . '|' . $unterpunkt->statustext] ??= [
+                    'badgeklasse' => self::unterpunkt_klasse($unterpunkt->status),
+                    'text' => $unterpunkt->statustext,
+                ];
+            }
+        }
+
+        return array_values($legende);
+    }
+
+    /**
+     * Die Unterpunkte einer Station in Worten, fuer den Kasten der
+     * aktuellen Station: "Verkauf angefordert · AVOR geplant".
+     *
+     * @param station $station
+     * @return string Leer ohne Unterpunkte
+     */
+    public static function unterpunkte_text(station $station): string {
+        return implode(' · ', array_map(
+            static fn(unterpunkt $u): string => $u->bezeichnung . ' ' . $u->statustext,
+            array_values($station->unterpunkte)
+        ));
     }
 
     /**
