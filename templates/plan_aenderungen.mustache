@@ -23,14 +23,15 @@
 
     Context variables required for this template:
     * personen - array of {name, einsaetze}, alphabetisch
-      * einsaetze - array of {entfaellt, block, zeitraum}; entfaellt false heisst neu
+      * einsaetze - array of {entfaellt, block, zeitraum}; entfaellt false heisst neu,
+        block ist die Nummer mit dem Namen dahinter, sofern einer gepflegt ist
 
     Example context (json):
     {
         "personen": [
             {"name": "Anna Muster", "einsaetze": [
-                {"entfaellt": true, "block": "4", "zeitraum": "2027-W15 – 2027-W16"},
-                {"entfaellt": false, "block": "4", "zeitraum": "2027-W20 – 2027-W21"}
+                {"entfaellt": true, "block": "4 – Montage", "zeitraum": "2027-W15 – 2027-W16"},
+                {"entfaellt": false, "block": "4 – Montage", "zeitraum": "2027-W20 – 2027-W21"}
             ]}
         ]
     }

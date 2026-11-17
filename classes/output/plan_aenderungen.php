@@ -28,6 +28,7 @@ namespace local_berufsbildung\output;
 
 use core_collator;
 use core_user;
+use local_berufsbildung\persistent\block;
 use local_berufsbildung\persistent\einsatz_aenderung;
 
 /**
@@ -58,14 +59,20 @@ class plan_aenderungen {
      *  'block' => string, 'kw_von' => string, 'kw_bis' => string], je Person in der
      *  Reihenfolge, in der sie erscheinen sollen
      * @return array[] je Person ['name' => string, 'einsaetze' => [['entfaellt' => bool,
-     *  'block' => string, 'zeitraum' => string]]], alphabetisch
+     *  'block' => string, 'zeitraum' => string]]], alphabetisch; block ist die
+     *  Nummer, mit dem Namen dahinter, sofern einer gepflegt ist (blockbezeichnung())
      */
     public static function personen(array $aenderungen): array {
+        if (empty($aenderungen)) {
+            return [];
+        }
+
+        $blocknamen = self::blocknamen();
         $jeperson = [];
         foreach ($aenderungen as $aenderung) {
             $jeperson[(int) $aenderung['userid']][] = [
                 'entfaellt' => $aenderung['art'] === einsatz_aenderung::ENTFAELLT,
-                'block' => (string) $aenderung['block'],
+                'block' => self::blockbezeichnung((string) $aenderung['block'], $blocknamen),
                 'zeitraum' => $aenderung['kw_von'] === $aenderung['kw_bis']
                     ? (string) $aenderung['kw_von']
                     : $aenderung['kw_von'] . ' – ' . $aenderung['kw_bis'],
@@ -78,6 +85,37 @@ class plan_aenderungen {
         }
 
         return $personen;
+    }
+
+    /**
+     * Blocknummer mit Namen, etwa "4 – Montage". Nur die Nummer, wenn der
+     * Block inzwischen geloescht ist, keinen Namen hat oder der Name nur die
+     * Nummer wiederholt - so legt der Import einen unbekannten Block an.
+     *
+     * @param string $nummer wie im Versetzungsplan
+     * @param array<string, string> $blocknamen Nummer => Name, siehe blocknamen()
+     * @return string
+     */
+    public static function blockbezeichnung(string $nummer, array $blocknamen): string {
+        $name = trim($blocknamen[$nummer] ?? '');
+
+        return $name === '' || $name === $nummer ? $nummer : $nummer . ' – ' . $name;
+    }
+
+    /**
+     * Die Namen aller Bloecke, auch inaktiver: eine Aenderung im Verlauf
+     * kann einen Block betreffen, der seither deaktiviert wurde. Es sind nur
+     * einige Dutzend, deshalb alle auf einmal statt einer Abfrage je Zeile.
+     *
+     * @return array<string, string> Nummer => Name
+     */
+    private static function blocknamen(): array {
+        $namen = [];
+        foreach (block::get_records() as $block) {
+            $namen[(string) $block->get('nummer')] = (string) $block->get('name');
+        }
+
+        return $namen;
     }
 
     /**

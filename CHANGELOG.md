@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.11.2] — 2026-11-17
+
+### Geändert
+
+- **Blockname bei den geänderten Einsätzen.** Verlauf, Freigabe und Upload des Versetzungsplans zeigen neben der Blocknummer den in Moodle gepflegten Namen, etwa „4 – Montage“ (`output\plan_aenderungen::blockbezeichnung()`). Ohne Namen, bei einem gelöschten Block oder wenn der Name nur die Nummer wiederholt, bleibt es bei der Nummer.
+
 ## [1.11.1] — 2026-11-17
 
 ### Behoben

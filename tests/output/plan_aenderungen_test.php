@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace local_berufsbildung\output;
 
 use advanced_testcase;
+use local_berufsbildung\persistent\block;
 
 #[\PHPUnit\Framework\Attributes\CoversClass(\local_berufsbildung\output\plan_aenderungen::class)]
 /**
@@ -58,6 +59,33 @@ final class plan_aenderungen_test extends advanced_testcase {
                 ['entfaellt' => false, 'block' => '5', 'zeitraum' => '2027-W20'],
             ],
             $personen[1]['einsaetze']
+        );
+    }
+
+    /**
+     * Ein gepflegter Name steht hinter der Nummer, auch bei einem
+     * inaktiven Block. Ein unbekannter (z.B. geloeschter) Block und einer,
+     * dessen Name nur die Nummer wiederholt - so legt der Import ihn an -,
+     * zeigen nur die Nummer.
+     */
+    public function test_block_mit_namen_sofern_vorhanden(): void {
+        $this->resetAfterTest();
+
+        $anna = $this->getDataGenerator()->create_user();
+        (new block(0, (object) ['nummer' => '4', 'name' => 'Montage', 'ist_betrieb' => true, 'aktiv' => true]))->create();
+        (new block(0, (object) ['nummer' => '5', 'name' => 'Lager', 'ist_betrieb' => true, 'aktiv' => false]))->create();
+        (new block(0, (object) ['nummer' => '6', 'name' => '6', 'ist_betrieb' => true, 'aktiv' => true]))->create();
+
+        $personen = plan_aenderungen::personen([
+            ['userid' => (int) $anna->id, 'art' => 'neu', 'block' => '4', 'kw_von' => '2027-W15', 'kw_bis' => '2027-W15'],
+            ['userid' => (int) $anna->id, 'art' => 'neu', 'block' => '5', 'kw_von' => '2027-W16', 'kw_bis' => '2027-W16'],
+            ['userid' => (int) $anna->id, 'art' => 'neu', 'block' => '6', 'kw_von' => '2027-W17', 'kw_bis' => '2027-W17'],
+            ['userid' => (int) $anna->id, 'art' => 'neu', 'block' => 'X9', 'kw_von' => '2027-W18', 'kw_bis' => '2027-W18'],
+        ]);
+
+        $this->assertSame(
+            ['4 – Montage', '5 – Lager', '6', 'X9'],
+            array_column($personen[0]['einsaetze'], 'block')
         );
     }
 
