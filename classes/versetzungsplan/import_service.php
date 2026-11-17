@@ -38,8 +38,9 @@ use local_berufsbildung\persistent\zuordnung;
 /**
  * Reihenfolge (siehe docs/schnittstelle_versetzungsplan.md):
  * 1. Hash aus CSV-Inhalt und aktuellem Zuordnungsstand gegen den letzten
- *    erfolgreichen Import - unveraendert -> nichts tun. Der Zuordnungsstand
- *    fliesst mit ein, damit eine inhaltlich identische Lieferung trotzdem
+ *    erfolgreichen Import - unveraendert -> nichts verarbeiten, nur beim
+ *    letzten Import festhalten, dass er bestaetigt wurde (Alterungshinweis).
+ *    Der Zuordnungsstand fliesst mit ein, damit eine inhaltlich identische Lieferung trotzdem
  *    neu verarbeitet wird, wenn seither eine Zuordnung dazugekommen oder
  *    beendet wurde - sonst wuerde eine neu zugeordnete Person erst mit der
  *    naechsten inhaltlich abweichenden Lieferung erfasst, nicht schon mit
@@ -107,6 +108,9 @@ class import_service {
         $letztererfolgreicher = $this->letzter_erfolgreicher_import();
 
         if ($letztererfolgreicher !== null && $letztererfolgreicher->get('daten_hash') === $hash) {
+            if (!$testlauf) {
+                $this->bestaetige($letztererfolgreicher);
+            }
             return $this->ergebnis('ok', true, 0, 0, 0, 0, []);
         }
 
@@ -1005,6 +1009,24 @@ class import_service {
         );
 
         return !empty($treffer) ? reset($treffer) : null;
+    }
+
+    /**
+     * Haelt fest, dass eine unveraenderte Lieferung den Import bestaetigt hat.
+     * Sonst haelt der Alterungshinweis einen Plan, der sich wochenlang nicht
+     * aendert, fuer ein ausgefallenes Skript (alterung_service).
+     *
+     * Direkt ins Feld statt ueber update(): das wuerde usermodified auf das
+     * liefernde Konto setzen und den Import einer weiteren Person zuordnen.
+     *
+     * @param plan_import $import der letzte erfolgreiche Import
+     */
+    private function bestaetige(plan_import $import): void {
+        global $DB;
+
+        $jetzt = time();
+        $DB->set_field(plan_import::TABLE, 'zuletzt_bestaetigt', $jetzt, ['id' => (int) $import->get('id')]);
+        $import->set('zuletzt_bestaetigt', $jetzt);
     }
 
     /**

@@ -246,6 +246,7 @@ local_berufsbildung_plan_import
   csvdaten           text           -- nur solange eine Lieferung auf Freigabe wartet
   entschieden_von    int(10)        -- wer freigegeben oder verworfen hat
   entschieden_am     int(10)
+  zuletzt_bestaetigt int(10)        -- letzte unveränderte Lieferung, die diesen Import bestätigt hat; 0 = keine
   timecreated, timemodified, usermodified
 
   INDEX (status, zeitpunkt)
@@ -319,13 +320,15 @@ Nicht zuordenbare Mailadressen von Personen, die eine Zuordnung haben sollten, l
 
 Beide Wege enden im selben Importvorgang. Die Verarbeitungslogik kennt den Weg nicht.
 
-**Alterungshinweis**: Liegt der letzte erfolgreiche Import länger als eine konfigurierbare Frist zurück, erscheint ein Hinweis auf der Übersichtsseite. Keine Sperre — aber es soll niemandem entgehen, dass die Vorbelegung im Bildungsbericht auf einem veralteten Plan beruht.
+**Alterungshinweis**: Liegt die letzte erfolgreiche Lieferung länger als eine konfigurierbare Frist zurück, erscheint ein Hinweis auf der Übersichtsseite. Keine Sperre — aber es soll niemandem entgehen, dass die Vorbelegung im Bildungsbericht auf einem veralteten Plan beruht.
 
 ### 5.5 Verantwortung für Fehler
 
 Läuft das Skript per Zeitplan, muss ein Fehlschlag auf der Skript-Seite gemeldet werden — nicht erreichbarer Endpunkt, abgelaufenes Token, abgewiesene Lieferung. Moodle kann nur melden, was bei ihm ankommt; eine Lieferung, die nie versucht wurde, sieht es nicht.
 
-Der Alterungshinweis aus 5.4 ist die Rückversicherung dagegen: Er greift auch dann, wenn auf der anderen Seite niemand etwas bemerkt hat. Weil die Übersichtsseite im Regelbetrieb niemand öffnet, meldet `task\pruefe_planalterung` einen veralteten Plan zusätzlich den Site-Admins, sofern `versetzungsplan_alterung_meldung` eingeschaltet ist: einmal je veraltetem Import, bis wieder einer erfolgreich ist (`versetzungsplan\alterung_service`).
+Der Alterungshinweis aus 5.4 ist die Rückversicherung dagegen: Er greift auch dann, wenn auf der anderen Seite niemand etwas bemerkt hat. Weil die Übersichtsseite im Regelbetrieb niemand öffnet, meldet `task\pruefe_planalterung` einen veralteten Plan zusätzlich den Site-Admins, sofern `versetzungsplan_alterung_meldung` eingeschaltet ist: einmal je Ausfall, bis wieder eine Lieferung ankommt (`versetzungsplan\alterung_service`).
+
+Als Lieferung zählt auch eine unveränderte: Sie legt keinen eigenen Lauf an, setzt aber `zuletzt_bestaetigt` beim letzten erfolgreichen Import, und die Frist läuft ab dem späteren von `zeitpunkt` und `zuletzt_bestaetigt` (`plan_import::zuletzt_aktuell()`). Sonst hielte der Hinweis einen Plan, der sich wochenlang nicht ändert — bei wöchentlicher Lieferung der Normalfall —, für ein ausgefallenes Skript, und nach dieser einen Fehlmeldung bliebe ein echter Ausfall stumm. Ein Testlauf, eine fehlgeschlagene und eine zurückgehaltene Lieferung bestätigen nichts. Das Feld wird direkt geschrieben, nicht über `persistent::update()`, damit `usermodified` nicht auf das liefernde Konto wechselt.
 
 ### 5.6 API
 

@@ -30,7 +30,9 @@ use core\persistent;
 
 /**
  * Ein Datensatz je tatsaechlich verarbeitetem Importlauf. Ein Testlauf
- * (nur pruefen, nichts schreiben) erzeugt bewusst keinen Datensatz.
+ * (nur pruefen, nichts schreiben) erzeugt bewusst keinen Datensatz, eine
+ * unveraenderte Lieferung auch nicht: sie setzt nur zuletzt_bestaetigt beim
+ * letzten erfolgreichen Import.
  *
  * 'abgewiesen' kommt nur noch in Datensaetzen vor Version 1.4.0 vor; seither
  * wird eine solche Lieferung zurueckgehalten ('zur_freigabe') und endet als
@@ -110,6 +112,20 @@ class plan_import extends persistent {
                 'default' => null,
                 'null' => NULL_ALLOWED,
             ],
+            'zuletzt_bestaetigt' => [
+                'type' => PARAM_INT,
+                'default' => 0,
+            ],
         ];
+    }
+
+    /**
+     * Wann dieser Import zuletzt als aktueller Plan bestaetigt wurde: durch
+     * den Import selbst oder durch eine spaetere unveraenderte Lieferung.
+     *
+     * @return int Timestamp
+     */
+    public function zuletzt_aktuell(): int {
+        return max((int) $this->get('zeitpunkt'), (int) $this->get('zuletzt_bestaetigt'));
     }
 }

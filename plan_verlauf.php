@@ -54,6 +54,13 @@ $statusname = static function (string $status): string {
         : s($status);
 };
 
+// Eine unveraenderte Lieferung erscheint nicht als eigener Lauf, sondern
+// bestaetigt den letzten erfolgreichen.
+$bestaetigt = static function (plan_import $import): string {
+    $zeitpunkt = (int) $import->get('zuletzt_bestaetigt');
+    return $zeitpunkt > 0 ? userdate($zeitpunkt) : '-';
+};
+
 echo $OUTPUT->header();
 
 if ($id > 0) {
@@ -76,6 +83,7 @@ if ($id > 0) {
             (int) $import->get('zeilen_ausserhalb_geltungsbereich'),
         ],
         [get_string('planimport:einsaetze_erzeugt', 'local_berufsbildung'), (int) $import->get('einsaetze_erzeugt')],
+        [get_string('planimport:zuletzt_bestaetigt', 'local_berufsbildung'), $bestaetigt($import)],
     ];
     echo html_writer::table($table);
 
@@ -121,6 +129,7 @@ $table->head = [
     get_string('planimport:personen_verarbeitet', 'local_berufsbildung'),
     get_string('planimport:einsaetze_erzeugt', 'local_berufsbildung'),
     get_string('planverlauf:aenderungen', 'local_berufsbildung'),
+    get_string('planimport:zuletzt_bestaetigt', 'local_berufsbildung'),
 ];
 // Eine Abfrage fuer alle Laeufe statt einer je Zeile.
 $anzahlaenderungen = (new import_service())->anzahl_aenderungen_je_import(array_keys($importe));
@@ -133,6 +142,7 @@ foreach ($importe as $import) {
         (int) $import->get('personen_verarbeitet'),
         (int) $import->get('einsaetze_erzeugt'),
         $anzahlaenderungen[$importid] ?? 0,
+        $bestaetigt($import),
     ];
 }
 echo html_writer::table($table);

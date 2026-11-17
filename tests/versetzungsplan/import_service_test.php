@@ -372,6 +372,63 @@ final class import_service_test extends advanced_testcase {
     }
 
     /**
+     * Eine unveraenderte Lieferung bestaetigt den letzten erfolgreichen
+     * Import, ohne ihn sonst anzufassen: usermodified bleibt bei dem, der
+     * ihn angelegt hat, auch wenn jemand anders liefert.
+     */
+    public function test_unveraenderte_lieferung_bestaetigt_den_letzten_import(): void {
+        $this->resetAfterTest();
+
+        $admin = $this->getDataGenerator()->create_user();
+        $skript = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user(['email' => 'anna.muster@firma.ch']);
+        $this->lege_aktive_zuordnung_an($lernende);
+
+        $csv = "email;block;kw_von;kw_bis\nanna.muster@firma.ch;4;2027-W15;2027-W16\n";
+        $service = new import_service();
+
+        $this->setUser($admin);
+        $service->verarbeiten($csv, 'upload', (int) $admin->id);
+        $import = $service->letzter_erfolgreicher_import();
+        $this->assertSame(0, (int) $import->get('zuletzt_bestaetigt'));
+        $this->assertSame((int) $import->get('zeitpunkt'), $import->zuletzt_aktuell());
+
+        $this->setUser($skript);
+        $vorher = time();
+        $ergebnis = $service->verarbeiten($csv, 'webservice', (int) $skript->id);
+
+        $this->assertTrue($ergebnis['unveraendert']);
+        $bestaetigt = new plan_import((int) $import->get('id'));
+        $this->assertGreaterThanOrEqual($vorher, (int) $bestaetigt->get('zuletzt_bestaetigt'));
+        $this->assertSame((int) $bestaetigt->get('zuletzt_bestaetigt'), $bestaetigt->zuletzt_aktuell());
+        $this->assertSame((int) $admin->id, (int) $bestaetigt->get('usermodified'));
+        $this->assertSame((int) $admin->id, (int) $bestaetigt->get('ausgefuehrt_von'));
+        $this->assertSame((int) $import->get('timemodified'), (int) $bestaetigt->get('timemodified'));
+        $this->assertCount(1, plan_import::get_records([]));
+    }
+
+    /**
+     * Randfall: ein unveraenderter Testlauf schreibt nichts, auch keine
+     * Bestaetigung - er sagt nichts darueber, ob das Skript noch liefert.
+     */
+    public function test_unveraenderter_testlauf_bestaetigt_nichts(): void {
+        $this->resetAfterTest();
+
+        $admin = $this->getDataGenerator()->create_user();
+        $lernende = $this->getDataGenerator()->create_user(['email' => 'anna.muster@firma.ch']);
+        $this->lege_aktive_zuordnung_an($lernende);
+
+        $csv = "email;block;kw_von;kw_bis\nanna.muster@firma.ch;4;2027-W15;2027-W16\n";
+        $service = new import_service();
+        $service->verarbeiten($csv, 'upload', (int) $admin->id);
+
+        $ergebnis = $service->verarbeiten($csv, 'upload', (int) $admin->id, true);
+
+        $this->assertTrue($ergebnis['unveraendert']);
+        $this->assertSame(0, (int) $service->letzter_erfolgreicher_import()->get('zuletzt_bestaetigt'));
+    }
+
+    /**
      * Abnahmekriterium: eine inhaltlich unveraenderte CSV wird trotzdem neu
      * verarbeitet, wenn zwischen den Lieferungen eine Zuordnung dazugekommen
      * ist - sonst wuerde eine neu zugeordnete Person erst mit der naechsten

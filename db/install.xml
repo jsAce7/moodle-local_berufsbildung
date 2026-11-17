@@ -148,6 +148,7 @@
         <FIELD NAME="csvdaten" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Die Lieferung selbst, nur solange sie auf Freigabe wartet"/>
         <FIELD NAME="entschieden_von" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="FK auf user.id, wer eine zurueckgehaltene Lieferung freigegeben oder verworfen hat"/>
         <FIELD NAME="entschieden_am" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Zeitpunkt der Freigabe, des Verwerfens oder des Ueberholens"/>
+        <FIELD NAME="zuletzt_bestaetigt" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Letzte unveraenderte Lieferung, die diesen erfolgreichen Import bestaetigt hat; 0 = keine"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

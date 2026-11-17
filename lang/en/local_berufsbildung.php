@@ -327,10 +327,10 @@ $string['planfreigabe:verwerfen'] = 'Discard';
 $string['planfreigabe:verwerfen_bestaetigung'] = 'Discard this delivery? The current plan stays unchanged, the delivery is deleted.';
 $string['planfreigabe:verworfen'] = 'The delivery was discarded.';
 $string['planfreigabe:zeitraum'] = 'Calendar weeks';
-$string['planimport:alterung_hinweis'] = 'The last successful rotation-plan import was more than {$a} days ago. The pre-filled data in the education report may be based on a stale plan.';
+$string['planimport:alterung_hinweis'] = 'No rotation-plan delivery has arrived successfully for more than {$a} days, not even an unchanged one. The pre-filled data in the education report may be based on a stale plan.';
 $string['planimport:alterung_nachricht_betreff'] = 'Rotation plan no longer updated';
-$string['planimport:alterung_nachricht_kurz'] = 'Last successful rotation-plan import: {$a->zeitpunkt}.';
-$string['planimport:alterung_nachricht_text'] = 'The last successful rotation-plan import was on {$a->zeitpunkt}, more than {$a->tage} days ago. Check whether the script still delivers, for example whether the token has expired or the endpoint is unreachable. There will be no further notification until an import succeeds again.
+$string['planimport:alterung_nachricht_kurz'] = 'Last successful rotation-plan delivery: {$a->zeitpunkt}.';
+$string['planimport:alterung_nachricht_text'] = 'The last successful rotation-plan delivery arrived on {$a->zeitpunkt}, more than {$a->tage} days ago. An unchanged delivery counts as well. Check whether the script still delivers, for example whether the token has expired or the endpoint is unreachable. There will be no further notification until a delivery arrives again.
 
 Last import and manual upload: {$a->url}';
 $string['planimport:ausserhalb_geltungsbereich'] = 'Without an active assignment (skipped, not logged)';
@@ -355,11 +355,12 @@ $string['planimport:status_verworfen'] = 'discarded';
 $string['planimport:status_zur_freigabe'] = 'awaiting approval';
 $string['planimport:testlauf'] = 'Dry run (only check, write nothing)';
 $string['planimport:titel'] = 'Rotation-plan import';
-$string['planimport:unveraendert'] = 'Unchanged compared to the last successful import - nothing was written.';
+$string['planimport:unveraendert'] = 'Unchanged compared to the last successful import - nothing was processed, the delivery only confirms the existing plan.';
 $string['planimport:zeilen_gelesen'] = 'Rows read';
+$string['planimport:zuletzt_bestaetigt'] = 'Last delivered unchanged';
 $string['planimport:zur_freigabe_hinweis'] = 'This delivery contains significantly fewer people than the last successful import. It was not applied but is awaiting <a href="{$a}">approval by the administration</a>, who have been notified. If the drop is intended, you can instead confirm it below and upload again.';
 $string['planverlauf:aenderungen'] = 'Changed placements';
-$string['planverlauf:beschreibung'] = 'The last {$a} import runs, most recent first. An unchanged delivery is not processed again and therefore does not appear. Select a run to see whose placements changed and how.';
+$string['planverlauf:beschreibung'] = 'The last {$a} import runs, most recent first. An unchanged delivery is not processed again and does not appear as a run of its own; it confirms the last successful one (column "Last delivered unchanged"). Select a run to see whose placements changed and how.';
 $string['planverlauf:keine'] = 'No rotation plan has been imported yet.';
 $string['planverlauf:keine_aenderungen'] = 'No changed placements are recorded for this run: either nothing changed, the run did not write anything, or it is older than one year or predates this log.';
 $string['planverlauf:titel'] = 'Rotation plan history';
@@ -509,9 +510,9 @@ $string['settings:retention_monate_desc'] = 'How many months after the computed 
 $string['settings:startmonat'] = 'Training start month';
 $string['settings:startmonat_desc'] = 'Month in which all training programmes start (1 = January, 12 = December). Default: 8 (August).';
 $string['settings:versetzungsplan_alterung_meldung'] = 'Notify site admins of an aging plan';
-$string['settings:versetzungsplan_alterung_meldung_desc'] = 'If the last successful import is older than the period above, site admins receive a notification, once until the next successful import. When off, the warning only appears on the "Rotation-plan import" page.';
+$string['settings:versetzungsplan_alterung_meldung_desc'] = 'If the last successful delivery is older than the period above, site admins receive a notification, once until the next delivery. An unchanged delivery counts as well. When off, the warning only appears on the "Rotation-plan import" page.';
 $string['settings:versetzungsplan_alterung_tage'] = 'Aging warning after (days)';
-$string['settings:versetzungsplan_alterung_tage_desc'] = 'If the last successful rotation-plan import is older than this, a warning is shown. Not a block, just a reminder that pre-filled data may be based on a stale plan.';
+$string['settings:versetzungsplan_alterung_tage_desc'] = 'If the last successful rotation-plan delivery is older than this, a warning is shown. An unchanged delivery counts as well. Not a block, just a reminder that pre-filled data may be based on a stale plan.';
 $string['settings:versetzungsplan_schwelle_prozent'] = 'Threshold for incomplete deliveries (%)';
 $string['settings:versetzungsplan_schwelle_prozent_desc'] = 'If a delivery contains significantly fewer people than the previous one, it is not processed but awaits approval under "Rotation-plan approval". The administration is notified. Default: 20 (a drop of more than 20% counts as suspicious).';
 

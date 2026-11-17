@@ -63,6 +63,14 @@ echo get_string('planimport:letzter_import', 'local_berufsbildung') . ': ';
 echo $letzter !== null ? userdate((int) $letzter->get('zeitpunkt')) : get_string('planimport:noch_nie', 'local_berufsbildung');
 echo html_writer::end_tag('p');
 
+if ($letzter !== null && (int) $letzter->get('zuletzt_bestaetigt') > 0) {
+    echo html_writer::tag(
+        'p',
+        get_string('planimport:zuletzt_bestaetigt', 'local_berufsbildung') . ': '
+            . userdate((int) $letzter->get('zuletzt_bestaetigt'))
+    );
+}
+
 $alterung = new alterung_service();
 if ($alterung->veralteter_import() !== null) {
     echo $OUTPUT->notification(

@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.11.1] — 2026-11-17
+
+### Behoben
+
+- **Kein Alterungshinweis mehr bei unverändertem Plan.** Der Hinweis und die Meldung an die Site-Admins rechneten ab dem letzten *verarbeiteten* Import. Eine unveränderte Lieferung hinterliess keine Spur, also galt ein Plan, der sich wochenlang nicht ändert - bei wöchentlicher Lieferung der Normalfall -, nach der Frist als veraltet, obwohl das Skript lief. Nach dieser einen Fehlmeldung blieb ein späterer echter Ausfall stumm. Neu setzt eine unveränderte Lieferung `zuletzt_bestaetigt` beim letzten erfolgreichen Import (neues Feld in `local_berufsbildung_plan_import`), und die Frist läuft ab dem späteren der beiden Zeitpunkte (`persistent\plan_import::zuletzt_aktuell()`). Gemeldet wird einmal je Ausfall statt einmal je Import; die Sperre steht neu in der Einstellung `alterung_gemeldet` (Import und Zeitpunkt), das Upgrade übernimmt eine bereits erfolgte Meldung. Testlauf, fehlgeschlagene und zurückgehaltene Lieferungen bestätigen nichts.
+
+### Geändert
+
+- **Versetzungsplan-Verlauf und -Import zeigen „Zuletzt unverändert geliefert“**, damit sichtbar ist, dass das Skript weiterhin liefert, auch wenn kein neuer Lauf erscheint.
+
 ## [1.11.0] — 2026-11-17
 
 ### Neu

@@ -132,7 +132,7 @@ Eine unbekannte Mailadresse wird im Protokoll nur einmal genannt, auch wenn sie 
 
 `status` ist `ok`, `mit_warnungen`, `zur_freigabe` oder `fehlgeschlagen`. Bei `fehlgeschlagen` und `zur_freigabe` wurde nichts geschrieben.
 
-`unveraendert` ist `true`, wenn die Daten dem letzten erfolgreichen Import entsprechen — dann passiert nichts. Das ist bei wöchentlicher Lieferung der Normalfall, weil der Plan sich nur einige Male im Jahr ändert.
+`unveraendert` ist `true`, wenn die Daten dem letzten erfolgreichen Import entsprechen — dann wird nichts verarbeitet, und alle Zähler sind 0, weil die Datei gar nicht erst gelesen wird. Das ist bei wöchentlicher Lieferung der Normalfall, weil der Plan sich nur einige Male im Jahr ändert. Eine solche Lieferung erscheint nicht als eigener Lauf im Versetzungsplan-Verlauf, bestätigt aber den letzten erfolgreichen Import (Spalte *Zuletzt unverändert geliefert*) und hält damit den Alterungshinweis zurück.
 
 ### Schutz vor unvollständigen Lieferungen
 

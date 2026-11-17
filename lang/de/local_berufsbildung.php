@@ -327,10 +327,10 @@ $string['planfreigabe:verwerfen'] = 'Verwerfen';
 $string['planfreigabe:verwerfen_bestaetigung'] = 'Diese Lieferung verwerfen? Der bisherige Plan bleibt unverändert, die Lieferung wird gelöscht.';
 $string['planfreigabe:verworfen'] = 'Die Lieferung wurde verworfen.';
 $string['planfreigabe:zeitraum'] = 'Kalenderwochen';
-$string['planimport:alterung_hinweis'] = 'Der letzte erfolgreiche Versetzungsplan-Import liegt mehr als {$a} Tage zurück. Die Vorbelegung im Bildungsbericht könnte auf einem veralteten Plan beruhen.';
+$string['planimport:alterung_hinweis'] = 'Seit mehr als {$a} Tagen ist keine Versetzungsplan-Lieferung mehr erfolgreich angekommen, auch keine unveränderte. Die Vorbelegung im Bildungsbericht könnte auf einem veralteten Plan beruhen.';
 $string['planimport:alterung_nachricht_betreff'] = 'Versetzungsplan wird nicht mehr aktualisiert';
-$string['planimport:alterung_nachricht_kurz'] = 'Letzter erfolgreicher Versetzungsplan-Import: {$a->zeitpunkt}.';
-$string['planimport:alterung_nachricht_text'] = 'Der letzte erfolgreiche Versetzungsplan-Import war am {$a->zeitpunkt} und liegt damit mehr als {$a->tage} Tage zurück. Prüfe, ob das Skript noch liefert, etwa ob das Token abgelaufen oder der Endpunkt nicht erreichbar ist. Bis wieder ein Import erfolgreich ist, kommt keine weitere Meldung.
+$string['planimport:alterung_nachricht_kurz'] = 'Letzte erfolgreiche Versetzungsplan-Lieferung: {$a->zeitpunkt}.';
+$string['planimport:alterung_nachricht_text'] = 'Die letzte erfolgreiche Versetzungsplan-Lieferung kam am {$a->zeitpunkt} an und liegt damit mehr als {$a->tage} Tage zurück. Eine unveränderte Lieferung zählt dabei mit. Prüfe, ob das Skript noch liefert, etwa ob das Token abgelaufen oder der Endpunkt nicht erreichbar ist. Bis wieder eine Lieferung ankommt, kommt keine weitere Meldung.
 
 Letzter Import und Upload von Hand: {$a->url}';
 $string['planimport:ausserhalb_geltungsbereich'] = 'Ohne aktive Zuordnung (übersprungen, nicht protokolliert)';
@@ -355,11 +355,12 @@ $string['planimport:status_verworfen'] = 'verworfen';
 $string['planimport:status_zur_freigabe'] = 'wartet auf Freigabe';
 $string['planimport:testlauf'] = 'Testlauf (nur prüfen, nichts schreiben)';
 $string['planimport:titel'] = 'Versetzungsplan-Import';
-$string['planimport:unveraendert'] = 'Unverändert gegenüber dem letzten erfolgreichen Import - nichts wurde geschrieben.';
+$string['planimport:unveraendert'] = 'Unverändert gegenüber dem letzten erfolgreichen Import - nichts wurde verarbeitet, die Lieferung bestätigt nur den bisherigen Plan.';
 $string['planimport:zeilen_gelesen'] = 'Zeilen gelesen';
+$string['planimport:zuletzt_bestaetigt'] = 'Zuletzt unverändert geliefert';
 $string['planimport:zur_freigabe_hinweis'] = 'Diese Lieferung enthält deutlich weniger Personen als der letzte erfolgreiche Import. Sie wurde nicht übernommen, sondern wartet auf die <a href="{$a}">Freigabe durch die Administration</a>; diese ist benachrichtigt. Ist der Rückgang beabsichtigt, kannst du stattdessen unten bestätigen und erneut hochladen.';
 $string['planverlauf:aenderungen'] = 'Geänderte Einsätze';
-$string['planverlauf:beschreibung'] = 'Die letzten {$a} Importläufe, der jüngste zuerst. Eine unveränderte Lieferung wird nicht erneut verarbeitet und erscheint deshalb nicht. Wähle einen Lauf, um zu sehen, bei wem sich welche Einsätze geändert haben.';
+$string['planverlauf:beschreibung'] = 'Die letzten {$a} Importläufe, der jüngste zuerst. Eine unveränderte Lieferung wird nicht erneut verarbeitet und erscheint nicht als eigener Lauf; sie bestätigt den letzten erfolgreichen (Spalte „Zuletzt unverändert geliefert“). Wähle einen Lauf, um zu sehen, bei wem sich welche Einsätze geändert haben.';
 $string['planverlauf:keine'] = 'Es wurde noch kein Versetzungsplan importiert.';
 $string['planverlauf:keine_aenderungen'] = 'Für diesen Lauf sind keine geänderten Einsätze festgehalten: Entweder hat sich nichts geändert, der Lauf hat nichts geschrieben, oder er ist älter als ein Jahr oder liegt vor der Einführung dieses Protokolls.';
 $string['planverlauf:titel'] = 'Versetzungsplan-Verlauf';
@@ -509,9 +510,9 @@ $string['settings:retention_monate_desc'] = 'Wie viele Monate nach dem berechnet
 $string['settings:startmonat'] = 'Startmonat der Lehre';
 $string['settings:startmonat_desc'] = 'Monat, in dem alle Lehren beginnen (1 = Januar, 12 = Dezember). Standard: 8 (August).';
 $string['settings:versetzungsplan_alterung_meldung'] = 'Alterung den Site-Admins melden';
-$string['settings:versetzungsplan_alterung_meldung_desc'] = 'Liegt der letzte erfolgreiche Import länger als die Frist oben zurück, erhalten die Site-Admins eine Benachrichtigung, einmal bis zum nächsten erfolgreichen Import. Ausgeschaltet erscheint der Hinweis nur auf der Seite „Versetzungsplan-Import“.';
+$string['settings:versetzungsplan_alterung_meldung_desc'] = 'Liegt die letzte erfolgreiche Lieferung länger als die Frist oben zurück, erhalten die Site-Admins eine Benachrichtigung, einmal bis zur nächsten Lieferung. Eine unveränderte Lieferung zählt mit. Ausgeschaltet erscheint der Hinweis nur auf der Seite „Versetzungsplan-Import“.';
 $string['settings:versetzungsplan_alterung_tage'] = 'Alterungshinweis nach (Tagen)';
-$string['settings:versetzungsplan_alterung_tage_desc'] = 'Liegt der letzte erfolgreiche Versetzungsplan-Import länger zurück, erscheint ein Hinweis. Keine Sperre, nur eine Erinnerung, dass die Vorbelegung auf einem veralteten Plan beruhen könnte.';
+$string['settings:versetzungsplan_alterung_tage_desc'] = 'Liegt die letzte erfolgreiche Versetzungsplan-Lieferung länger zurück, erscheint ein Hinweis. Eine unveränderte Lieferung zählt mit. Keine Sperre, nur eine Erinnerung, dass die Vorbelegung auf einem veralteten Plan beruhen könnte.';
 $string['settings:versetzungsplan_schwelle_prozent'] = 'Schwelle für unvollständige Lieferungen (%)';
 $string['settings:versetzungsplan_schwelle_prozent_desc'] = 'Enthält eine Lieferung deutlich weniger Personen als die vorherige, wird sie nicht verarbeitet, sondern wartet auf die Freigabe unter „Versetzungsplan-Freigabe“. Die Administration wird benachrichtigt. Standard: 20 (Rückgang über 20 % gilt als verdächtig).';
 

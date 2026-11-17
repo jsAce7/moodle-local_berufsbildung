@@ -102,8 +102,8 @@ final class alterung_service_test extends advanced_testcase {
 
     /**
      * Gemeldet wird nur den Site-Admins, nicht wer den Plan freigeben darf,
-     * und je veraltetem Import nur einmal. Erst ein neuer Import, der
-     * seinerseits veraltet, meldet wieder.
+     * und je Ausfall nur einmal. Erst ein neuer Import, der seinerseits
+     * veraltet, meldet wieder.
      */
     public function test_meldet_den_site_admins_einmal_je_veraltetem_import(): void {
         $this->resetAfterTest();
@@ -133,5 +133,72 @@ final class alterung_service_test extends advanced_testcase {
         $this->assertNotSame((int) $erster->get('id'), (int) $zweiter->get('id'));
         $this->assertSame(1, $service->melde_falls_veraltet((int) $zweiter->get('zeitpunkt') + 11 * DAYSECS));
         $this->assertCount(2, $sink->get_messages());
+    }
+
+    /**
+     * Schiebt den Zeitpunkt eines Imports in die Vergangenheit, als laege
+     * er so lange zurueck.
+     *
+     * @param plan_import $import
+     * @param int $tage
+     */
+    private function altere(plan_import $import, int $tage): void {
+        $import->set('zeitpunkt', time() - $tage * DAYSECS);
+        $import->update();
+    }
+
+    /**
+     * Ein Plan, der sich wochenlang nicht aendert, ist nicht veraltet,
+     * solange das Skript ihn unveraendert weiter liefert. Randfall: genau an
+     * der Frist ab der Bestaetigung noch aktuell, eine Sekunde spaeter
+     * veraltet.
+     */
+    public function test_unveraenderte_lieferung_haelt_den_hinweis_zurueck(): void {
+        $this->resetAfterTest();
+        set_config('versetzungsplan_alterung_tage', 10, 'local_berufsbildung');
+        $service = new alterung_service();
+
+        $import = $this->importiere('2027-W15');
+        $this->altere($import, 30);
+        $this->assertNotNull($service->veralteter_import());
+
+        $bestaetigt = $this->importiere('2027-W15');
+        $this->assertSame((int) $import->get('id'), (int) $bestaetigt->get('id'));
+        $zuletzt = (int) $bestaetigt->get('zuletzt_bestaetigt');
+        $this->assertGreaterThan((int) $bestaetigt->get('zeitpunkt'), $zuletzt);
+
+        $this->assertNull($service->veralteter_import());
+        $this->assertNull($service->veralteter_import($zuletzt + 10 * DAYSECS));
+        $this->assertNotNull($service->veralteter_import($zuletzt + 10 * DAYSECS + 1));
+    }
+
+    /**
+     * Nach einer Meldung bestaetigt eine unveraenderte Lieferung den Plan
+     * wieder. Bleibt das Skript danach aus, wird dieser neue Ausfall erneut
+     * gemeldet - mit dem Zeitpunkt der Bestaetigung, nicht des Imports.
+     */
+    public function test_nach_bestaetigung_wird_ein_neuer_ausfall_wieder_gemeldet(): void {
+        $this->resetAfterTest();
+        set_config('versetzungsplan_alterung_meldung', 1, 'local_berufsbildung');
+        set_config('versetzungsplan_alterung_tage', 10, 'local_berufsbildung');
+        $sink = $this->redirectMessages();
+        $service = new alterung_service();
+
+        $import = $this->importiere('2027-W15');
+        $this->altere($import, 30);
+        $this->assertSame(1, $service->melde_falls_veraltet());
+        $this->assertSame(0, $service->melde_falls_veraltet());
+
+        $zuletzt = (int) $this->importiere('2027-W15')->get('zuletzt_bestaetigt');
+        $this->assertSame(0, $service->melde_falls_veraltet());
+        $this->assertSame(0, $service->melde_falls_veraltet($zuletzt + 10 * DAYSECS));
+
+        $this->assertSame(1, $service->melde_falls_veraltet($zuletzt + 11 * DAYSECS));
+        $nachrichten = $sink->get_messages();
+        $this->assertCount(2, $nachrichten);
+        $this->assertStringContainsString(userdate($zuletzt), $nachrichten[1]->fullmessage);
+
+        // Taeglicher Lauf, derselbe Ausfall: keine weitere Meldung.
+        $this->assertSame(0, $service->melde_falls_veraltet($zuletzt + 12 * DAYSECS));
     }
 }

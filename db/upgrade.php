@@ -544,5 +544,31 @@ function xmldb_local_berufsbildung_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026111500, 'local', 'berufsbildung');
     }
 
+    if ($oldversion < 2026111700) {
+        // Eine unveraenderte Lieferung bestaetigt den letzten erfolgreichen
+        // Import, statt spurlos zu verschwinden. Sonst haelt der
+        // Alterungshinweis einen gleichbleibenden Plan fuer ein
+        // ausgefallenes Skript.
+        $table = new xmldb_table('local_berufsbildung_plan_import');
+        $field = new xmldb_field('zuletzt_bestaetigt', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'entschieden_am');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Die Sperre gegen wiederholte Meldungen merkt sich neu den Stand
+        // "Import:Zeitpunkt" statt nur den Import. Ein bereits gemeldeter
+        // Import soll nach dem Upgrade nicht noch einmal gemeldet werden.
+        $gemeldet = (int) get_config('local_berufsbildung', 'alterung_gemeldet_importid');
+        if ($gemeldet > 0) {
+            $zeitpunkt = $DB->get_field('local_berufsbildung_plan_import', 'zeitpunkt', ['id' => $gemeldet]);
+            if ($zeitpunkt !== false) {
+                set_config('alterung_gemeldet', $gemeldet . ':' . (int) $zeitpunkt, 'local_berufsbildung');
+            }
+        }
+        unset_config('alterung_gemeldet_importid', 'local_berufsbildung');
+
+        upgrade_plugin_savepoint(true, 2026111700, 'local', 'berufsbildung');
+    }
+
     return true;
 }

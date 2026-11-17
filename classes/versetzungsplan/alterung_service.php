@@ -36,8 +36,12 @@ use local_berufsbildung\persistent\plan_import;
  * Liefert das Skript nicht mehr - Token abgelaufen, Endpunkt nicht
  * erreichbar -, sieht Moodle keinen Fehler, nur das Ausbleiben. Der Hinweis
  * auf import_plan.php allein reicht dafuer nicht: im Regelbetrieb oeffnet
- * die Seite niemand. Deshalb zusaetzlich eine Nachricht, einmal je
- * veraltetem Import, bis wieder ein Import erfolgreich ist.
+ * die Seite niemand. Deshalb zusaetzlich eine Nachricht, einmal je Ausfall,
+ * bis wieder eine Lieferung ankommt.
+ *
+ * Gemessen wird ab der letzten erfolgreichen Lieferung, auch einer
+ * unveraenderten: der Plan aendert sich nur einige Male im Jahr, das Skript
+ * liefert aber woechentlich.
  */
 class alterung_service {
     /** Nachrichtentyp, siehe db/messages.php. */
@@ -67,9 +71,11 @@ class alterung_service {
 
     /**
      * Der letzte erfolgreiche Import, wenn er zum Stichtag laenger als die
-     * Frist zurueckliegt. Genau an der Frist gilt er noch als aktuell. Null
-     * auch, wenn es noch nie einen gab: ohne Import ist der Plan keine
-     * Voraussetzung (§5.8), also auch nicht veraltet.
+     * Frist nicht mehr bestaetigt wurde - weder durch sich selbst noch durch
+     * eine unveraenderte Lieferung (plan_import::zuletzt_aktuell()). Genau an
+     * der Frist gilt er noch als aktuell. Null auch, wenn es noch nie einen
+     * gab: ohne Import ist der Plan keine Voraussetzung (§5.8), also auch
+     * nicht veraltet.
      *
      * @param int|null $stichtag Timestamp, null bedeutet "jetzt"
      * @return plan_import|null
@@ -77,7 +83,7 @@ class alterung_service {
     public function veralteter_import(?int $stichtag = null): ?plan_import {
         $stichtag ??= time();
         $letzter = $this->importservice->letzter_erfolgreicher_import();
-        if ($letzter === null || (int) $letzter->get('zeitpunkt') >= $stichtag - $this->frist_tage() * DAYSECS) {
+        if ($letzter === null || $letzter->zuletzt_aktuell() >= $stichtag - $this->frist_tage() * DAYSECS) {
             return null;
         }
 
@@ -86,9 +92,10 @@ class alterung_service {
 
     /**
      * Meldet einen veralteten Plan den Site-Admins, wenn die Einstellung
-     * versetzungsplan_alterung_meldung eingeschaltet ist. Je veraltetem
-     * Import nur einmal: erst ein neuer erfolgreicher Import, der seinerseits
-     * veraltet, loest die naechste Meldung aus.
+     * versetzungsplan_alterung_meldung eingeschaltet ist. Je Ausfall nur
+     * einmal: erst eine neue Lieferung - ein Import oder eine unveraenderte
+     * Bestaetigung -, nach der wieder nichts mehr kommt, loest die naechste
+     * Meldung aus.
      *
      * @param int|null $stichtag Timestamp, null bedeutet "jetzt"
      * @return int Anzahl benachrichtigter Personen
@@ -103,14 +110,16 @@ class alterung_service {
             return 0;
         }
 
-        $importid = (int) $veraltet->get('id');
-        if ((int) get_config('local_berufsbildung', 'alterung_gemeldet_importid') === $importid) {
+        // Import und Zeitpunkt zusammen: eine Bestaetigung aendert nur den
+        // Zeitpunkt, ein neuer Import auch die ID.
+        $stand = (int) $veraltet->get('id') . ':' . $veraltet->zuletzt_aktuell();
+        if ((string) get_config('local_berufsbildung', 'alterung_gemeldet') === $stand) {
             return 0;
         }
 
         $url = new \moodle_url('/local/berufsbildung/import_plan.php');
         $a = (object) [
-            'zeitpunkt' => userdate((int) $veraltet->get('zeitpunkt')),
+            'zeitpunkt' => userdate($veraltet->zuletzt_aktuell()),
             'tage' => $this->frist_tage(),
             'url' => $url->out(false),
         ];
@@ -133,7 +142,7 @@ class alterung_service {
             message_send($nachricht);
         }
 
-        set_config('alterung_gemeldet_importid', $importid, 'local_berufsbildung');
+        set_config('alterung_gemeldet', $stand, 'local_berufsbildung');
 
         return count($admins);
     }
