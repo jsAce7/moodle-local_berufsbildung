@@ -93,7 +93,7 @@ class plan_aenderungen {
      * Nummer wiederholt - so legt der Import einen unbekannten Block an.
      *
      * @param string $nummer wie im Versetzungsplan
-     * @param array<string, string> $blocknamen Nummer => Name, siehe blocknamen()
+     * @param string[] $blocknamen Nummer => Name, siehe blocknamen()
      * @return string
      */
     public static function blockbezeichnung(string $nummer, array $blocknamen): string {
@@ -107,7 +107,7 @@ class plan_aenderungen {
      * kann einen Block betreffen, der seither deaktiviert wurde. Es sind nur
      * einige Dutzend, deshalb alle auf einmal statt einer Abfrage je Zeile.
      *
-     * @return array<string, string> Nummer => Name
+     * @return string[] Nummer => Name
      */
     private static function blocknamen(): array {
         $namen = [];
