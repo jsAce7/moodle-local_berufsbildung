@@ -570,5 +570,72 @@ function xmldb_local_berufsbildung_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026111700, 'local', 'berufsbildung');
     }
 
+    if ($oldversion < 2026112300) {
+        // Die Rollenbeschreibungen stimmten nicht mehr: Leitungs- und
+        // Fachvorgesetztenrolle sagten, sie trugen keine Capabilities, obwohl
+        // das Basis-Plugin die gemeldeten Capabilities selbst vergibt; die
+        // Berufsbildnerrolle verschwieg, dass sie nach dem Ende der Zuordnung
+        // bleibt, die Planungsrolle die Rechte der aufsetzenden Plugins.
+        // create_role() hat den Text bei der Installation in die Datenbank
+        // kopiert; ersetzt wird er nur, solange er noch dem alten Wortlaut
+        // entspricht - eine von Hand angepasste Beschreibung bleibt.
+        $bisher = [
+            'berufsbildner' => [
+                'Zugewiesen im Nutzerkontext einer lernenden Person, sobald eine Zuordnung besteht. '
+                    . 'Traegt selbst keine Capabilities - die vergeben die aufsetzenden Plugins.',
+                'Assigned in a trainee\'s user context once an assignment exists. Carries no capabilities '
+                    . 'of its own - those come from the plugins built on top.',
+            ],
+            'berufsbildung_planung' => [
+                'Systemweite Rolle für die Pflege der Ausbildungsblöcke und ihrer Kompetenzabdeckung. Wird '
+                    . 'automatisch jeder Person zugewiesen, die mindestens eine laufende Zuordnung als '
+                    . 'Berufsbildner/in hat, und wieder entzogen, sobald die letzte davon beendet ist. Bewusst '
+                    . 'getrennt von der Rolle "Berufsbildner/in": diese hängt am Nutzerkontext der einzelnen '
+                    . 'lernenden Person, bleibt für die stichtagsgeprüfte Einsicht auch nach dem Ende bestehen '
+                    . 'und darf keine systemweiten Rechte tragen.',
+                'Site-wide role for maintaining the training blocks and their competency coverage. Assigned '
+                    . 'automatically to every person who has at least one current assignment as a trainer, and '
+                    . 'withdrawn again as soon as the last of them has ended. Deliberately separate from the '
+                    . '"Trainer" role: that one hangs off an individual trainee\'s user context, stays in place '
+                    . 'after the assignment ends so historical access can still be checked against a reference '
+                    . 'date, and must not carry site-wide rights.',
+            ],
+            'berufsbildung_leitung' => [
+                'Systemweite Rolle für die Leitung der Berufsbildung, etwa für Übersichten über alle Lernenden '
+                    . 'eines Jahrgangs. Trägt selbst keine Capabilities - die vergeben die aufsetzenden Plugins. '
+                    . 'Wird nie automatisch zugewiesen, sondern von Hand als globale Rolle.',
+                'Site-wide role for the management of vocational training, for example for overviews of all '
+                    . 'trainees of one year. Carries no capabilities of its own - those come from the plugins '
+                    . 'built on top. Never assigned automatically, only by hand as a system role.',
+            ],
+            'berufsbildung_fachvorgesetzt' => [
+                'Systemweite Rolle für die Fachvorgesetzten der Abteilungen. Wird automatisch jeder Person '
+                    . 'zugewiesen, die bei mindestens einem Ausbildungsblock als fachvorgesetzt eingetragen ist, '
+                    . 'und wieder entzogen, sobald sie es bei keinem mehr ist. Trägt selbst keine Capabilities - '
+                    . 'die vergeben die aufsetzenden Plugins. Öffnet nur, was die Abteilung der Person betrifft, '
+                    . 'nie die Berichte der Berufsbildner/innen.',
+                'Site-wide role for the supervisors of the departments. Assigned automatically to every person '
+                    . 'entered as department supervisor on at least one training block, and withdrawn again once '
+                    . 'they are no longer entered on any. Carries no capabilities of its own - those come from the '
+                    . 'plugins built on top. Only opens what concerns the person\'s department, never the '
+                    . 'trainers\' reports.',
+            ],
+        ];
+        $neu = [
+            'berufsbildner' => get_string('role:berufsbildner_desc', 'local_berufsbildung'),
+            'berufsbildung_planung' => get_string('role:planung_desc', 'local_berufsbildung'),
+            'berufsbildung_leitung' => get_string('role:leitung_desc', 'local_berufsbildung'),
+            'berufsbildung_fachvorgesetzt' => get_string('role:fachvorgesetzt_desc', 'local_berufsbildung'),
+        ];
+        foreach ($bisher as $shortname => $alttexte) {
+            $rolle = $DB->get_record('role', ['shortname' => $shortname], 'id, description');
+            if ($rolle && in_array(trim((string) $rolle->description), $alttexte, true)) {
+                $DB->set_field('role', 'description', $neu[$shortname], ['id' => $rolle->id]);
+            }
+        }
+
+        upgrade_plugin_savepoint(true, 2026112300, 'local', 'berufsbildung');
+    }
+
     return true;
 }

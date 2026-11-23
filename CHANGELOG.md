@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.11.3] — 2026-11-23
+
+### Behoben
+
+- **Die Rollenbeschreibungen stimmen wieder.** *Leitung Berufsbildung* und *Fachvorgesetzte/r* behaupteten, die Rolle trage selbst keine Capabilities. Tatsächlich vergibt das Basis-Plugin die von den aufsetzenden Plugins gemeldeten Capabilities automatisch und stellt sie wieder her (`service\leitungsrolle_service`, `service\fachvorgesetztenrolle_service`). Die Leitungsrolle beschreibt nun auch, wie ein Recht bewusst entzogen wird („Verhindern“ oder „Verbieten“). *Berufsbildner/in* sagt neu, dass die Rolle nach dem Ende der Zuordnung bis zur Datenbereinigung bleibt. *Ausbildungsplanung* nennt die Kompetenzrahmen je Beruf, die Rechte aus aufsetzenden Plugins, dass eine von Hand vergebene Zuweisung bleibt, und dass die Rolle kein Recht ohne Zuständigkeitsprüfung tragen darf. Das Upgrade ersetzt die gespeicherte Beschreibung nur, solange sie noch dem alten Wortlaut entspricht; eine von Hand angepasste bleibt.
+
 ## [1.11.2] — 2026-11-17
 
 ### Geändert
