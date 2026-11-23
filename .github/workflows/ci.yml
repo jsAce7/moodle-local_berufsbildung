@@ -55,9 +55,13 @@ jobs:
           ini-values: max_input_vars=5000
           coverage: none
 
+      # Fest auf 4.5.11: Unter 4.5.12 bricht der Schritt Grunt beim
+      # Zuruecksichern des Plugins ab ("Failed to copy .../.git/objects/pack/...:
+      # Permission denied"), unabhaengig vom Code. Wieder auf ^4 stellen,
+      # sobald eine neuere Version den Fehler behebt.
       - name: Deploy moodle-plugin-ci
         run: |
-          composer create-project -n --no-dev --prefer-dist moodlehq/moodle-plugin-ci ci ^4
+          composer create-project -n --no-dev --prefer-dist moodlehq/moodle-plugin-ci ci 4.5.11
           echo $(cd ci/bin; pwd) >> $GITHUB_PATH
           echo $(cd ci/vendor/bin; pwd) >> $GITHUB_PATH
           sudo locale-gen en_AU.UTF-8
