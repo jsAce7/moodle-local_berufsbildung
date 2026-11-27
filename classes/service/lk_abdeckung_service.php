@@ -39,11 +39,13 @@ use local_berufsbildung\persistent\block_lk;
  * ohne jeden Block einzeln zu oeffnen.
  *
  * Ein LK gilt als zugeordnet, wenn ein aktiver betrieblicher Block es
- * selbst oder seine ganze Handlungskompetenz abdeckt - dieselbe Regel wie
- * im Kompetenzraster (plan_service::get_kompetenzen_je_einsatz()). Inaktive
- * und nicht betriebliche Bloecke werden trotzdem aufgefuehrt, aber
- * gekennzeichnet: sonst sucht man vergeblich, warum eine Zuordnung nicht
- * zaehlt.
+ * selbst oder seine ganze Handlungskompetenz abdeckt. Anders als im
+ * Kompetenzraster einer Person (plan_service::get_kompetenzen_je_einsatz())
+ * zaehlen inaktive Bloecke hier nicht: das ist die Planungssicht, ein
+ * inaktiver Block wirkt nur nach vorne (api::ist_aktiver_block()), vergangene
+ * Einsaetze in ihm zaehlen im Raster weiter. Inaktive und nicht
+ * betriebliche Bloecke werden trotzdem aufgefuehrt, aber gekennzeichnet:
+ * sonst sucht man vergeblich, warum eine Zuordnung nicht zaehlt.
  */
 class lk_abdeckung_service {
     /**

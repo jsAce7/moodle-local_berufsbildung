@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.12.0] — 2026-11-27
+
+### Neu
+
+- **`api::ist_aktiver_block()`** für aufsetzende Plugins. Ein inaktiver Block wirkt nur nach vorne: Aus ihm entsteht nichts Neues mehr, etwa kein neuer Arbeitsplatzbericht (`local_bildungsbericht` 0.29.0). Vergangene Einsätze zählen weiter im Kompetenzraster und in der Vorbelegung. Das war schon bisher so und ist jetzt mit einem Test abgesichert.
+
+### Geändert
+
+- **Das Kästchen „Aktiv“ im Blockformular erklärt sich selbst.** Der neue Hilfetext sagt, wofür es da ist: für eine Abteilung, die es nicht mehr gibt, aber nicht gelöscht werden kann. Er sagt auch, was es bewirkt und was nicht. Die Anleitung „Ausbildungsblöcke“ beschreibt das Deaktivieren neu ausführlich. Bisher sagte sie nur „Inaktive Blöcke zählen nicht mehr“, und das versprach mehr, als das Kästchen tut.
+
 ## [1.11.3] — 2026-11-23
 
 ### Behoben

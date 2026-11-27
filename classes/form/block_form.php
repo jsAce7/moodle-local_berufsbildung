@@ -75,6 +75,7 @@ class block_form extends \moodleform {
         $mform->hideIf('fachvorgesetzte', 'ist_betrieb', 'notchecked');
 
         $mform->addElement('advcheckbox', 'aktiv', get_string('block:aktiv', 'local_berufsbildung'));
+        $mform->addHelpButton('aktiv', 'block_aktiv', 'local_berufsbildung');
         $mform->setDefault('aktiv', 1);
 
         $kursauswahl = [0 => get_string('block:kein_kurs', 'local_berufsbildung')]

@@ -132,6 +132,23 @@ final class plan_service_test extends advanced_testcase {
         $this->assertSame([10, 20], $kompetenzen);
     }
 
+    /**
+     * Ein inaktiver Block wirkt nur nach vorne: der Einsatz darin bleibt
+     * vorgekommen und liefert weiter seine Kompetenzen.
+     */
+    public function test_get_ausgebildete_kompetenzen_auch_aus_inaktivem_block(): void {
+        $this->resetAfterTest();
+
+        $lernende = $this->getDataGenerator()->create_user();
+        $block = $this->lege_block_an('4');
+        (new block_lk(0, (object) ['blockid' => $block->get('id'), 'competencyid' => 10]))->create();
+        $this->lege_einsatz_an((int) $lernende->id, (int) $block->get('id'), 1000, 2000);
+        $block->set('aktiv', false);
+        $block->update();
+
+        $this->assertSame([10], (new plan_service())->get_ausgebildete_kompetenzen((int) $lernende->id, 900, 2100));
+    }
+
     public function test_get_ausgebildete_kompetenzen_ohne_einsatz_leer(): void {
         $this->resetAfterTest();
 

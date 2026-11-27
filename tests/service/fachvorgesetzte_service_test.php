@@ -206,6 +206,22 @@ final class fachvorgesetzte_service_test extends advanced_testcase {
         $this->assertFalse(api::ist_betrieblicher_block(0));
     }
 
+    public function test_ist_aktiver_block(): void {
+        $this->resetAfterTest();
+
+        $aktiv = $this->block('A1');
+        $inaktiv = $this->block('B1');
+        $inaktiv->set('aktiv', false);
+        $inaktiv->update();
+
+        $this->assertTrue(api::ist_aktiver_block((int) $aktiv->get('id')));
+        $this->assertFalse(api::ist_aktiver_block((int) $inaktiv->get('id')));
+        // Randfall: ein Block, den es nicht gibt, ist nicht aktiv.
+        $this->assertFalse(api::ist_aktiver_block(0));
+        // Inaktiv bleibt er betrieblich - die Abschnitte der Arbeitsplatzberichte trennt er weiter.
+        $this->assertTrue(api::ist_betrieblicher_block((int) $inaktiv->get('id')));
+    }
+
     public function test_suche_personen_nur_aktive_und_nur_mit_blockverwaltung(): void {
         global $DB;
         $this->resetAfterTest();

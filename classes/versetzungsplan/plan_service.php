@@ -197,6 +197,8 @@ class plan_service {
             $einsaetze
         )));
         [$insql, $params] = $DB->get_in_or_equal($blockids, SQL_PARAMS_NAMED);
+        // Bewusst auch inaktive Bloecke: inaktiv wirkt nur nach vorne, was
+        // vorgekommen ist, bleibt (api::ist_aktiver_block()).
         $betrieblich = [];
         foreach (block::get_records_select("id {$insql} AND ist_betrieb = 1", $params) as $block) {
             $betrieblich[(int) $block->get('id')] = [];

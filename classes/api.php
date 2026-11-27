@@ -1040,6 +1040,25 @@ class api {
     }
 
     /**
+     * Ist der Block aktiv? Ein inaktiver Block ist eine Abteilung, die es
+     * nicht mehr gibt, die sich aber nicht loeschen laesst, weil dort schon
+     * ein Einsatz begonnen hat (service\block_loesch_service). Er wirkt nur
+     * nach vorne: Es entsteht nichts Neues mehr aus ihm (etwa ein
+     * Arbeitsplatzbericht), und in der Planungssicht deckt er nichts mehr
+     * ab. Vergangene Einsaetze zaehlen weiter, im Kompetenzraster wie in der
+     * Vorbelegung - bewusst ohne Stichtag, denn wann ein Block deaktiviert
+     * wurde, ist nicht festgehalten.
+     *
+     * @param int $blockid
+     * @return bool false auch, wenn der Block nicht existiert
+     */
+    public static function ist_aktiver_block(int $blockid): bool {
+        $block = block::get_record(['id' => $blockid]);
+
+        return $block !== false && (bool) $block->get('aktiv');
+    }
+
+    /**
      * Die Kompetenzen eines Ausbildungsblocks samt uebergeordneten
      * Handlungskompetenzen - ein Vorschlag, keine Festlegung
      * (Architekturregel 6).
